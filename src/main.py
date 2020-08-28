@@ -18,7 +18,6 @@ import sys
 
 from subprocess import check_output
 
-from files.scripts.wifi_select import WifiSelectScreen
 from files.scripts.login import LoginScreen
 from files.scripts.registration import RegistrationScreen
 from files.scripts.firebase import FireDatabase
@@ -33,8 +32,9 @@ class MainApp(App):
 
 		self.fb = FireDatabase()
 		
-		self.wifi_select = WifiSelectScreen(self, name="wifi_select")
-		self.sm.add_widget(self.wifi_select)
+		# I use WifiSelectScreen no more 
+		#self.wifi_select = WifiSelectScreen(self, name="wifi_select")
+		#self.sm.add_widget(self.wifi_select)
         
 		self.login=LoginScreen(self, name="login")
 

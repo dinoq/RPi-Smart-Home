@@ -23,8 +23,9 @@ Je třeba ještě doplnit následující funkcionality:
 - [x] změnit kde to jde sm.switch_to()  
 - [ ] když rozkliknu světlo, slider při odkliknutí/zvolení musí zmizet!  
 - [ ] když je otevřený slider a jdu do jine mistnosti, děla to při návratu krpu (je za obrázkem)  
-- [ ] jiné zařízení než světlo  
-- [] módy  
+- [ ] jiná zařízení než světla  
+- [ ] Přidat tlačítko "Ukončit aplikaci" do hlavního menu (i přihlašovací stránky) 
+- [ ] módy  
 - [ ] přidávání módů  
 - [ ] přidávání pravidel  
 - [ ] přidávání místností  

@@ -30,7 +30,7 @@ from subprocess import check_output
 class LoginScreen(Screen): 
 	def __init__(self, m_app, **kwargs):
 		super(LoginScreen, self).__init__(**kwargs)
-		self.wifi_ssid = " (Nejste připojeni!)"
+		#self.wifi_ssid = " (Nejste připojeni!)"
 		self.main_app = m_app
 		self.load()
                 
@@ -64,23 +64,22 @@ class LoginScreen(Screen):
 		self.register=Button(text="Zaregistrovat!", size_hint=(0.2, 0.05),
 							pos_hint={"x":0.52, "top":0.45})
 
-		try:
+		# I use WifiSelectScreen no more 
+		"""try:
 			process_out = check_output(["iwgetid","-r"])        
 			out = process_out.decode("utf-8").rstrip()
+			
 			self.wifi_ssid = " (" + out + ")"
 		except:
-			self.wifi_ssid = " (Nejste připojeni!)"
+			self.wifi_ssid = " (Nejste připojeni!)"""
 			
 		font_size = self.register.font_size #get default font size to count go_back_btn size (from length of SSID)
-		self.go_back_btn=Button(text="Zpět na volbu Wi-Fi" + self.wifi_ssid, size_hint=(0.2 + ((font_size*len(self.wifi_ssid)*0.5)/Window.width), 0.05),
-							pos_hint={"x":0.0, "top":1.0})
-		print("vypocet")
-		print((font_size*len(self.wifi_ssid))/Window.width)
-		print((Window.width))
-							
+		
+		#self.go_back_btn=Button(text="Zpět na volbu Wi-Fi" + self.wifi_ssid, size_hint=(0.2 + ((font_size*len(self.wifi_ssid)*0.5)/Window.width), 0.05),pos_hint={"x":0.0, "top":1.0})
+
 		self.register.bind(on_press=self.registration_screen)
 		self.login.bind(on_press=self.login_user_into_account)
-		self.go_back_btn.bind(on_press=self.go_back)
+		#self.go_back_btn.bind(on_press=self.go_back)
 
 		self.layout.add_widget(self.login_label)
 		self.layout.add_widget(self.login_input)
@@ -89,7 +88,7 @@ class LoginScreen(Screen):
 		self.layout.add_widget(self.show_pwd_icon)
 		self.layout.add_widget(self.login)
 		self.layout.add_widget(self.register)
-		self.layout.add_widget(self.go_back_btn)
+		#self.layout.add_widget(self.go_back_btn)
 
 		
 		#Nasleduje popup okno pro oznameni chyb pri prihlasovani
@@ -159,5 +158,7 @@ class LoginScreen(Screen):
 					self.pwd_input.text = \"\""""
 			self.popup_window.dismiss()
 			
-	def go_back(self, btn):
-		self.main_app.sm.switch_to(self.main_app.wifi_select, direction="right")
+	def go_back(self, btn):		
+		# I use WifiSelectScreen no more 
+		#self.main_app.sm.switch_to(self.main_app.wifi_select, direction="right")
+		pass
