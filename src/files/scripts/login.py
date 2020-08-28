@@ -24,6 +24,9 @@ import sys
 import time
 import threading
 
+from kivy.clock import Clock
+from functools import partial
+
 #potřebné importy
 from subprocess import check_output
 
@@ -78,7 +81,7 @@ class LoginScreen(Screen):
 		#self.go_back_btn=Button(text="Zpět na volbu Wi-Fi" + self.wifi_ssid, size_hint=(0.2 + ((font_size*len(self.wifi_ssid)*0.5)/Window.width), 0.05),pos_hint={"x":0.0, "top":1.0})
 
 		self.register_btn.bind(on_press=self.registration_screen)
-		self.login_btn.bind(on_press=self.login_user_into_account)
+		self.login_btn.bind(on_release=self.login_user_into_account)
 		#self.go_back_btn.bind(on_press=self.go_back)
 
 		self.layout.add_widget(self.login_label)
@@ -127,11 +130,9 @@ class LoginScreen(Screen):
 		
 		self.login_btn.disabled = True
 		self.register_btn.disabled = True
-		login_result = ""
-		print("NOOO")
-		print(login_result)
-		print(self.register_btn.disabled)
+		Clock.schedule_once(lambda dt: self.login_and_rebuild())
 		
+	def login_and_rebuild(self):
 		login_result = self.main_app.fb.login_user(self.login_input.text, self.pwd_input.text)
 		if(login_result != "SUCCESS"):                        
 				if(login_result == "EMAIL_NOT_FOUND"):
@@ -154,18 +155,14 @@ class LoginScreen(Screen):
 						print(login_result)
 				self.popup_window.open()
 		else:
-				print("def")
 				self.home_screen = HomeScreen(self.main_app, name="home")
-				print("111")
-				#self.home_screen.reload_screen()
-				print("22222")
-				#self.main_app.sm.switch_to(self.home_screen, direction="left")
-				print("333333333")
+				self.home_screen.reload_screen()
+				self.main_app.sm.switch_to(self.home_screen, direction="left")
 				
 		
-		#self.login_btn.disabled = False
+		self.login_btn.disabled = False
 		self.register_btn.disabled = False
-					
+			
 	def close_popup(self, btn):
 		
 			#next part only if we want to remove email or password when it is incorrect
