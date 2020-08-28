@@ -25,7 +25,6 @@ Je třeba ještě doplnit následující funkcionality:
 - [ ] když je otevřený slider a jdu do jine mistnosti, děla to při návratu krpu (je za obrázkem)  
 - [ ] jiná zařízení než světla  
 - [ ] Přidat tlačítko "Ukončit aplikaci" do hlavního menu (i přihlašovací stránky) 
-- [ ] módy  
 - [ ] přidávání módů  
 - [ ] přidávání pravidel  
 - [ ] přidávání místností  
