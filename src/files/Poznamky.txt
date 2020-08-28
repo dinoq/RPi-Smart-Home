@@ -1,0 +1,35 @@
+Jedním z cílů práce bude vytvořit samostaný program pro Raspberry Pi, který se sám dále postará o vše nutné k vytvoření centrálního prvku automatizace domácnosti. Nebude tedy nutné provádět žádné složité instalace, nahrávat do RPi nějak upravený obraz operačního systému, ani nic podobného. Vše co uživatel bude muset udělat pro běh systému je spustit program, který se už o vše postará sám (i o případné instalace chybějících knihoven). Rovněž odpadne nepříjemný zážitek, kdy bude potřeba zadávat hesla wifi, jak to často systémy automatizace vyžadují pro svou funkci (například tyto údaje musí poslat koncovým zaříením, aby se mohli připojit do stejné sítě a komunikovat spolu), jelikož program si tyto údaje sám najde v operačním systému (pokud se již dříve uživatel připojoval daným RPi k wifi síti).
+
+Při spuštění operačního systému (po startu) je potřeba zkontrolovat(sudo rfkill list), zdaje možné softwarově zapnout wifi (Raspbian má tuto možnost ve výchozím nastavení zablokovanou). Za tímto účelem program zkontroluje seznam rf zařízení, u kterých při snaze zapnout softwarově přeruší daný proces, který o to usiluje. Je-li možnost "soft blocked" nastavená na "yes", musíme ji změnit (to totiž znamená právě ten kill) - změníme ji "sudo rfkill unblock wifi". Je-li nastavená na "no", znamená to, že je možné wifi zapínat softwarově. 
+
+Je-li tedy povolené zapínání síťové karty wifi, zapneme ji (sudo ifconfig wlan0 up). wlan0 nazev nemusme zjistovat, jelikoz je to nazev rozhrani z dokumentace
+
+
+heslo wifi:(/etc/wpa_supplicant/wpa_supplicant.conf)
+
+Pro připojen k wifi je potřeba mít pro daný AP záznam v souboru (/etc/wpa_supplicant/wpa_supplicant.conf). OS však nereaguje na změny okamžitě, ale až po opětnovném spuštění systému. Pro připojení k wifi tedy bylo potřeba restartovat dhcpcd:
+sudo systemctl daemon-reload 
+sudo systemctl restart dhcpcd
+
+
+--------------
+v configu nastavit:
+exit_on_escape = 0
+allow_screensaver = 0??
+
+musel jsem upravit citlivost scrollpanelu:
+[widgets]
+scroll_timeout = 250 na 150
+scroll_distance = 20 na 30
+
+--------------------
+zminit ze jsem musel opravovat pyrebase modul (close())
+
+
+------------
+/ukoly:
+rozdelit .py soubory podle trid
+pokud je pripojeny k wifi, preskocit uvodni stranu
+update wpa_supplicant.conf
+při změně hesla jej upravit i v wpa_supplicant.conf a restartovat dhcpcd
+odstranit tlacitko pokracovat-pokracuje se automaticky po připojeni k wifi
