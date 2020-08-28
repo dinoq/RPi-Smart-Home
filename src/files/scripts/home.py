@@ -66,7 +66,7 @@ class HomeScreen(Screen):
 		self.tp.add_widget(self.th)
 		self.room_overview_height = 250
 		self.room_overview_tab_layout=BoxLayout(orientation='vertical', size_hint=(1.0, None), height=len(rooms)*self.room_overview_height)
-		self.rooms_scroll_panel = ScrollView(size_hint=(1, 1))
+		self.rooms_scroll_panel = ScrollView(size_hint=(1.0, 1.0))
 		self.rooms_scroll_panel.add_widget(self.room_overview_tab_layout)
 		
 		self.tp.default_tab_text = "Přehled"
@@ -99,13 +99,9 @@ class HomeScreen(Screen):
 			self.rules_tab_layout.add_widget(Rule(rule_name, rules[rule_name], self, size_hint=(1.0, None), height=80, y=(1024-self.tp.tab_height-80-i*80)))			
 			i = i+1
 			
-			
 		bottom = BoxLayout(orientation='horizontal', size_hint=(1.0, None),height=150, pos_hint={"left":1.0, "bottom": 1.0})#FloatLayout(size_hint=(1.0, None),height=150, pos_hint={"left":1.0, "bottom": 1.0})
 		
-		print(scenes)
-		
 		for scene in scenes:
-			print(scene)
 			scene_btn = Button(text=scene)
 			bottom.add_widget(scene_btn)
 			buttoncallback = partial(self.set_scene, scenes[scene])

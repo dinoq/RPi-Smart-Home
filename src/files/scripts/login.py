@@ -21,7 +21,7 @@ from .room import RoomOverview
 from .home import HomeScreen
 
 import sys
-
+import time
 import threading
 
 #potřebné importy
@@ -58,10 +58,10 @@ class LoginScreen(Screen):
 		self.show_pwd_icon = ShowHideIcon(self.show_pwd_flag,self.pwd_input, size_hint=(0.07, 0.05), pos_hint={"x":0.75,"top":0.55})
 		
 		
-		self.login=Button(text="Přihlásit", size_hint=(0.2, 0.05),
+		self.login_btn=Button(text="Přihlásit", size_hint=(0.2, 0.05),
 							pos_hint={"x":0.28, "top":0.45})
 		
-		self.register=Button(text="Zaregistrovat!", size_hint=(0.2, 0.05),
+		self.register_btn=Button(text="Zaregistrovat!", size_hint=(0.2, 0.05),
 							pos_hint={"x":0.52, "top":0.45})
 
 		# I use WifiSelectScreen no more 
@@ -73,12 +73,12 @@ class LoginScreen(Screen):
 		except:
 			self.wifi_ssid = " (Nejste připojeni!)"""
 			
-		font_size = self.register.font_size #get default font size to count go_back_btn size (from length of SSID)
+		font_size = self.register_btn.font_size #get default font size to count go_back_btn size (from length of SSID)
 		
 		#self.go_back_btn=Button(text="Zpět na volbu Wi-Fi" + self.wifi_ssid, size_hint=(0.2 + ((font_size*len(self.wifi_ssid)*0.5)/Window.width), 0.05),pos_hint={"x":0.0, "top":1.0})
 
-		self.register.bind(on_press=self.registration_screen)
-		self.login.bind(on_press=self.login_user_into_account)
+		self.register_btn.bind(on_press=self.registration_screen)
+		self.login_btn.bind(on_press=self.login_user_into_account)
 		#self.go_back_btn.bind(on_press=self.go_back)
 
 		self.layout.add_widget(self.login_label)
@@ -86,8 +86,8 @@ class LoginScreen(Screen):
 		self.layout.add_widget(self.pwd_label)
 		self.layout.add_widget(self.pwd_input)
 		self.layout.add_widget(self.show_pwd_icon)
-		self.layout.add_widget(self.login)
-		self.layout.add_widget(self.register)
+		self.layout.add_widget(self.login_btn)
+		self.layout.add_widget(self.register_btn)
 		#self.layout.add_widget(self.go_back_btn)
 
 		
@@ -117,37 +117,54 @@ class LoginScreen(Screen):
 		self.add_widget(self.layout)
 		self.home_screen = None
 		#zbytecne... self.main_app.sm.add_widget(self.home_screen)
-		
+		self.log_res = None
 		
 	def registration_screen(self, btn):
 		self.main_app.sm.switch_to(self.main_app.registration, direction="left")
+	
+	def login_user_into_account(self, btn):		
+		self.login_btn.text = "Přihlašuji"
 		
-	def login_user_into_account(self, btn):
-			login_result = self.main_app.fb.login_user(self.login_input.text, self.pwd_input.text)
-			if(login_result != "SUCCESS"):                        
-					if(login_result == "EMAIL_NOT_FOUND"):
-							self.error_label.text = "Email nenalezen!"
-							self.remove = "email"
-					elif(login_result == "INVALID_PASSWORD"):
-							self.error_label.text = "Špatné heslo!"
-							self.remove = "pwd"
-					elif(login_result == "INVALID_EMAIL"):
-							self.error_label.text = "Neplatný email!"
-					elif(login_result == "USER_DISABLED"):
-							self.error_label.text = "účet byl deaktivován!"
+		self.login_btn.disabled = True
+		self.register_btn.disabled = True
+		login_result = ""
+		print("NOOO")
+		print(login_result)
+		print(self.register_btn.disabled)
+		
+		login_result = self.main_app.fb.login_user(self.login_input.text, self.pwd_input.text)
+		if(login_result != "SUCCESS"):                        
+				if(login_result == "EMAIL_NOT_FOUND"):
+						self.error_label.text = "Email nenalezen!"
+						self.remove = "email"
+				elif(login_result == "INVALID_PASSWORD"):
+						self.error_label.text = "Špatné heslo!"
+						self.remove = "pwd"
+				elif(login_result == "INVALID_EMAIL"):
+						self.error_label.text = "Neplatný email!"
+				elif(login_result == "USER_DISABLED"):
+						self.error_label.text = "účet byl deaktivován!"
+				else:
+					if(self.login_input.text == ""):
+						self.error_label.text = "Musíte zadat login (email)!"
+					elif(self.pwd_input.text == ""):
+						self.error_label.text = "Musíte zadat heslo!"
 					else:
-						if(self.login_input.text == ""):
-							self.error_label.text = "Musíte zadat login (email)!"
-						elif(self.pwd_input.text == ""):
-							self.error_label.text = "Musíte zadat heslo!"
-						else:
-							self.error_label.text = "Došlo k neznámé chybě!"
-							print(login_result)
-					self.popup_window.open()
-			else:
-					self.home_screen = HomeScreen(self.main_app, name="home")
-					self.home_screen.reload_screen()
-					self.main_app.sm.switch_to(self.home_screen, direction="left")
+						self.error_label.text = "Došlo k neznámé chybě!"
+						print(login_result)
+				self.popup_window.open()
+		else:
+				print("def")
+				self.home_screen = HomeScreen(self.main_app, name="home")
+				print("111")
+				#self.home_screen.reload_screen()
+				print("22222")
+				#self.main_app.sm.switch_to(self.home_screen, direction="left")
+				print("333333333")
+				
+		
+		#self.login_btn.disabled = False
+		self.register_btn.disabled = False
 					
 	def close_popup(self, btn):
 		
