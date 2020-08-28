@@ -15,6 +15,7 @@ python main.py
 - Práci s knihovnou kivy (pro vývoj GUI v Pythonu)
 - Práci s NoSQL databází Firebase realtime database a PYthon knihovnou pyrebase (pro přístup k Firebase databázi)
 - Síťové programování v Pythonu
+- Práci s git v konzoli (Ubuntu)
 
 # TODO list
 Je třeba ještě doplnit následující funkcionality:
