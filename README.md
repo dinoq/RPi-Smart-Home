@@ -24,7 +24,7 @@ Je třeba ještě doplnit následující funkcionality:
 - [ ] když rozkliknu světlo, slider při odkliknutí/zvolení musí zmizet!  
 - [ ] když je otevřený slider a jdu do jine mistnosti, děla to při návratu krpu (je za obrázkem)  
 - [ ] jiné zařízení než světlo  
-- [x] módy  
+- [] módy  
 - [ ] přidávání módů  
 - [ ] přidávání pravidel  
 - [ ] přidávání místností  
