@@ -1,0 +1,33 @@
+OUT:
+Relé
+-obrazky: 
+relé, znak dimmable, žárovka se znakem dimmable, bzučák,
+
+Mosfet
+tranzistor, spínač, žárovka se znakem spínače,žaluzie (čtverec)
+
+INPUT:
+Analog-symboly před,možnost mít jeden hlavní
+Digital
+Senzory: teplotní, vlhkosti
+
+-------------------
+Podmínky:
+
+POKUD:
+-|Podmínka| |název| je |aktivní/neaktivní| 
+-|Vstup| |název| je |</>/=/BETWEEN| |hodnota| (|2. hodnota|)
+-|Čas| |</>/=/BETWEEN| |xx:xx:xx|
+
+Přidat podmínku
+
+TAK:
+-|Nastav výstup| |název| |hodnota|
+Přidat důsledek (+ goto Tak)
+
+Vykonat: Jednou, Každých X sekund/minut, 
+----------------
+Módy:
+On/Off/keep:zařízení/podmínka
+
+----------------
