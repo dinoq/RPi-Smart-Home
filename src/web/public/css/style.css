@@ -1,0 +1,116 @@
+html header #header-wrapper {
+  width: 100%;
+  height: 50px;
+  background-color: #5CE1E6;
+}
+
+html main #form-alert-wrapper {
+  display: none;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  margin-top: 25px;
+}
+
+html main #form-wrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  margin-top: 25px;
+}
+
+html main #form-wrapper form {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  max-width: 300px;
+  width: 90%;
+  border: 1px solid #00aaff;
+  padding: 20px;
+}
+
+html main #form-wrapper form .form-label {
+  position: relative;
+  width: 100%;
+}
+
+html main #form-wrapper form .form-label .form-name-label {
+  top: calc(-20px - 0.75em);
+  margin-top: 0;
+  background-color: white;
+  left: -10px;
+}
+
+html main #form-wrapper form .form-label label {
+  position: absolute;
+  -webkit-transition: all 0.5s;
+  transition: all 0.5s;
+  margin-top: 20px;
+  padding: 0 10px;
+  top: 0.5em;
+  left: 0px;
+  font-size: 1em;
+}
+
+html main #form-wrapper form .form-label .active-label, html main #form-wrapper form .form-label .permanent-active-label {
+  top: -0.75em;
+  left: 10px;
+  background-color: white;
+  border-radius: 25px;
+  font-size: 0.8em;
+}
+
+html main #form-wrapper form input:not([type=checkbox]) {
+  margin-top: 20px;
+  border: 1px solid gray;
+  height: 2.5rem;
+  width: 100%;
+  padding-left: 5px;
+}
+
+html main #form-wrapper form input:focus {
+  outline: none;
+  border: 2px solid #00aaff;
+}
+
+html main #form-wrapper form .chekbox-wrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  width: 90%;
+  margin-top: 0.5em;
+}
+
+html main #form-wrapper form .chekbox-wrapper input {
+  margin-right: 0.5em;
+  height: 1.3em;
+  width: 1.3em;
+}
+
+html main #form-wrapper form .chekbox-wrapper label {
+  margin: 0;
+}
+
+html main #form-wrapper form input[type=button] {
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  padding: 0 20px;
+}
+/*# sourceMappingURL=style.css.map */
