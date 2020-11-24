@@ -1,5 +1,5 @@
-import { PageElement } from "./page-element.js";
-export class DashboardElement extends PageElement {
+import { PageComponent } from "./page-element.js";
+export class DashboardElement extends PageComponent {
     constructor() {
         super();
     }

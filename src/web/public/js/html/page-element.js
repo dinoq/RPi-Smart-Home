@@ -1,4 +1,4 @@
-export class PageElement {
+export class PageComponent {
     constructor() {
         this.firebase = firebase;
         this.element = document.createElement("div");

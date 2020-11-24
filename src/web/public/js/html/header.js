@@ -1,5 +1,5 @@
-import { PageElement } from "./page-element.js";
-export class HeaderElement extends PageElement {
+import { PageComponent } from "./page-element.js";
+export class HeaderElement extends PageComponent {
     constructor() {
         super();
     }

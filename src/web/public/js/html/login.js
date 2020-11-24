@@ -1,5 +1,5 @@
-import { PageElement } from "./page-element.js";
-export class LoginElement extends PageElement {
+import { PageComponent } from "./page-element.js";
+export class LoginElement extends PageComponent {
     constructor() {
         super();
         this.login = (event) => {
@@ -18,8 +18,6 @@ export class LoginElement extends PageElement {
                     localStorage.setItem("login", login);
                     localStorage.setItem("password", password);
                     document.getElementById("login-form").submit();
-                    // Signed in 
-                    // ...
                 })
                     .catch((error) => {
                     var errorCode = error.code;

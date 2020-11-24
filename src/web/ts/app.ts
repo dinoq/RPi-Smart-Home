@@ -9,17 +9,19 @@ class AutoHomeApp{
         this.createPageElements();
     }
 
+    renderPage(){
+
+    }
     createPageElements(){
         let router = new AutoHomeRouter();
         let page : Pages = router.getActualPage();
-        console.log("P:",Pages[page]);
         switch(page){
             case Pages.LOGIN:
                 if(!router.isLoginPath()){
-                    location.replace("/user/login");
-                }else{
-                    this.pageCreator.createElement("main", PageElements.LOGIN_FORM);
+                    window.history.pushState("login", "login", "/user/login");
                 }
+                this.pageCreator.createElement("main", PageElements.LOGIN_FORM);
+                
             break;
             case Pages.DASHBOARD:
                 this.pageCreator.createDashboard();

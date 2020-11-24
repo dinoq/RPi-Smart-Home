@@ -6,9 +6,9 @@ export interface IPageElement{
 
 }
 
-export class PageElement implements IPageElement{
-    protected element: HTMLDivElement;
+export class PageComponent implements IPageElement{
     protected firebase:any = firebase;
+    protected element: HTMLDivElement;
 
     constructor(){
         this.element = document.createElement("div");
