@@ -40,6 +40,12 @@ export class LoginElement extends PageComponent{
         `;
         return element;
     }
+    mountComponent(containerID: string) {
+        document.getElementById(containerID).innerHTML="";
+        document.getElementById(containerID).appendChild(this.getElement());
+        this.addListeners();
+        throw new Error("Method not implemented.");
+    }
 
     login = (event: any)=>{
         console.log("DDD",this.firebase);
@@ -83,8 +89,11 @@ export class LoginElement extends PageComponent{
 
     }
     addListeners = () => {
-        document.getElementById("login-form")?.addEventListener('submit', this.login);
-        document.getElementById("login")?.addEventListener('input', this.inputChange);
-        document.getElementById("password")?.addEventListener('input', this.inputChange);
+        let lf = document.getElementById("login-form");
+        let l = document.getElementById("login");
+        let p = document.getElementById("password");
+        lf.addEventListener('submit', this.login);
+        l.addEventListener('input', this.inputChange);
+        p.addEventListener('input', this.inputChange);
     }
 }

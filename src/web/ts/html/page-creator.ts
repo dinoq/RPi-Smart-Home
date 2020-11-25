@@ -40,6 +40,11 @@ export class PageCreator{
         header.innerHTML = "";
         header.appendChild(this.header.getElement());
     }
+
+    createLogin(){
+        this.header.unmountComponent();
+        this.login.mountComponent("main");
+    }
 }
 
 export enum PageElements{

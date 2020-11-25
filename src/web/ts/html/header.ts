@@ -1,6 +1,6 @@
 import { PageComponent } from "./page-element.js";
 
-export class HeaderElement extends PageComponent{    
+export class HeaderElement extends PageComponent{
     constructor(){
         super();
     }

@@ -17,4 +17,8 @@ export class PageComponent implements IPageElement{
     getElement() : HTMLDivElement{
         return this.element;
     }
+    
+    unmountComponent() {
+        throw new Error("Method not implemented.");
+    }    
 }
