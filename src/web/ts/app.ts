@@ -15,6 +15,7 @@ class AutoHomeApp{
     createPageElements(){
         let router = new AutoHomeRouter();
         let page : Pages = router.getActualPage();
+        
         switch(page){
             case Pages.LOGIN:
                 if(!router.isLoginPath()){
