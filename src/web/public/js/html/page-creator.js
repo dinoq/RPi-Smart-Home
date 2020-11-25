@@ -28,6 +28,10 @@ export class PageCreator {
                 break;
         }
     }
+    createLogin() {
+        this.header.unmountComponent();
+        this.login.mountComponent("main");
+    }
 }
 export var PageElements;
 (function (PageElements) {

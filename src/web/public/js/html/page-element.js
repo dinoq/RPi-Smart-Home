@@ -6,4 +6,7 @@ export class PageComponent {
     getElement() {
         return this.element;
     }
+    unmountComponent() {
+        throw new Error("Method not implemented.");
+    }
 }

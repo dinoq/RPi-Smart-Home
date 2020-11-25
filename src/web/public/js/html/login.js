@@ -30,10 +30,12 @@ export class LoginElement extends PageComponent {
             }
         };
         this.addListeners = () => {
-            var _a, _b, _c;
-            (_a = document.getElementById("login-form")) === null || _a === void 0 ? void 0 : _a.addEventListener('submit', this.login);
-            (_b = document.getElementById("login")) === null || _b === void 0 ? void 0 : _b.addEventListener('input', this.inputChange);
-            (_c = document.getElementById("password")) === null || _c === void 0 ? void 0 : _c.addEventListener('input', this.inputChange);
+            let lf = document.getElementById("login-form");
+            let l = document.getElementById("login");
+            let p = document.getElementById("password");
+            lf.addEventListener('submit', this.login);
+            l.addEventListener('input', this.inputChange);
+            p.addEventListener('input', this.inputChange);
         };
     }
     getElement() {
@@ -69,6 +71,12 @@ export class LoginElement extends PageComponent {
         </div>
         `;
         return element;
+    }
+    mountComponent(containerID) {
+        document.getElementById(containerID).innerHTML = "";
+        document.getElementById(containerID).appendChild(this.getElement());
+        this.addListeners();
+        throw new Error("Method not implemented.");
     }
     inputChange(event) {
         let input = event.target;
