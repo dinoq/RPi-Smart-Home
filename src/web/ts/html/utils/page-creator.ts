@@ -1,6 +1,6 @@
-import { DashboardElement } from "./dashboard.js";
-import { HeaderElement } from "./header.js";
-import { LoginElement } from "./login.js";
+import { DashboardElement } from "../components/dashboard.js";
+import { HeaderElement } from "../components/header.js";
+import { LoginElement } from "../components/login.js";
 
 
 export class PageCreator{
@@ -23,8 +23,7 @@ export class PageCreator{
 
         switch(elementType){
             case PageElements.LOGIN_FORM:
-                container.append(this.login.getElement());
-                this.login.addListeners();
+                this.login.mountComponent("main");
             break;
             case PageElements.DIV:
 
@@ -36,9 +35,7 @@ export class PageCreator{
     }
 
     createDashboard = ()=>{
-        let header: HTMLDivElement = <HTMLDivElement>document.getElementById("header");
-        header.innerHTML = "";
-        header.appendChild(this.header.getElement());
+        this.header.mountComponent("header");
     }
 
     createLogin(){

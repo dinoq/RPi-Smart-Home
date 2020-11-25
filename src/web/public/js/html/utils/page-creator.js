@@ -1,6 +1,6 @@
-import { DashboardElement } from "./components/dashboard.js";
-import { HeaderElement } from "./components/header.js";
-import { LoginElement } from "./components/login.js";
+import { DashboardElement } from "../components/dashboard.js";
+import { HeaderElement } from "../components/header.js";
+import { LoginElement } from "../components/login.js";
 export class PageCreator {
     constructor() {
         this.createDashboard = () => {

@@ -1,38 +1,48 @@
-import { PageCreator, PageElements } from "./html/page-creator.js";
-import {AutoHomeRouter, Pages} from "./html/router.js";
+import { PageCreator, PageElements } from "./html/utils/page-creator.js";
+import { AutoHomeRouter, IRoute, Pages } from "./html/utils/router.js";
+import { URLManager } from "./html/utils/url-manager.js";
 
-export var app : null | AutoHomeApp = null;
-class AutoHomeApp{
+export var app: null | AutoHomeApp = null;
+class AutoHomeApp {
     private pageCreator: PageCreator;
-    constructor(){
+    private router: AutoHomeRouter;
+    private urlManager: URLManager;
+
+    constructor() {
         this.pageCreator = new PageCreator();
-        this.createPageElements();
+        this.urlManager = new URLManager();
+        this.urlManager.registerURLChangeListener(this.renderPage);
+        this.router = new AutoHomeRouter();
+        this.renderPage();
+        
+        document.onclick = () => {
+            this.urlManager.setURL("/user/login" + Math.random());
+        }
+
     }
 
-    renderPage(){
-
-    }
-    createPageElements(){
-        let router = new AutoHomeRouter();
-        let page : Pages = router.getActualPage();
-        switch(page){
+    renderPage = () => {
+        let route: IRoute = this.router.getRoute();
+        let page: Pages = this.router.getRoute().path;
+        return;
+        switch (page) {
             case Pages.LOGIN:
-                if(!router.isLoginPath()){
+                if (!this.router.isLoginPath()) {
                     window.history.pushState("login", "login", "/user/login");
                 }
                 this.pageCreator.createElement("main", PageElements.LOGIN_FORM);
-                
-            break;
+
+                break;
             case Pages.DASHBOARD:
                 this.pageCreator.createDashboard();
-            break;
+                break;
             default:
-                if(!router.isLoginPath()){
+                if (!this.router.isLoginPath()) {
                     location.replace("/user/login");
-                }else{
+                } else {
                     this.pageCreator.createDashboard();
                 }
-            break;
+                break;
         }
     }
 }

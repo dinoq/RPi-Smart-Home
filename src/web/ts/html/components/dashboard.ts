@@ -1,12 +1,13 @@
 import { PageComponent } from "./page-element.js";
-export class DashboardElement extends PageComponent {
-    constructor() {
+
+export class DashboardElement extends PageComponent{    
+    constructor(){
         super();
     }
-    initElement() {
+    initElement(): void {
         //throw new Error("Method not implemented.");
     }
-    addListeners() {
+    addListeners(): void {
         //throw new Error("Method not implemented.");
     }
 }

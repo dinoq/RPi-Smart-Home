@@ -1,17 +1,14 @@
 import { PageComponent } from "./page-element.js";
 
 export class LoginElement extends PageComponent{
-    
     constructor(){
         super();
     }
 
-    getElement() : HTMLDivElement{
-        let element : HTMLDivElement;
+    initElement(): void {
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
-        element = document.createElement("div");
-        element.innerHTML = `
+        this.element.innerHTML = `
         <div id="form-alert-wrapper">
             <div id="form-alert" class="alert alert-danger" role="alert">
             Nesprávné přihlašovací údaje!
@@ -38,13 +35,14 @@ export class LoginElement extends PageComponent{
             </form>
         </div>
         `;
-        return element;
     }
-    mountComponent(containerID: string) {
-        document.getElementById(containerID).innerHTML="";
-        document.getElementById(containerID).appendChild(this.getElement());
-        this.addListeners();
-        throw new Error("Method not implemented.");
+    addListeners = () => {
+        let lf = document.getElementById("login-form");
+        let l = document.getElementById("login");
+        let p = document.getElementById("password");
+        lf.addEventListener('submit', this.login);
+        l.addEventListener('input', this.inputChange);
+        p.addEventListener('input', this.inputChange);
     }
 
     login = (event: any)=>{
@@ -87,13 +85,5 @@ export class LoginElement extends PageComponent{
         }
         
 
-    }
-    addListeners = () => {
-        let lf = document.getElementById("login-form");
-        let l = document.getElementById("login");
-        let p = document.getElementById("password");
-        lf.addEventListener('submit', this.login);
-        l.addEventListener('input', this.inputChange);
-        p.addEventListener('input', this.inputChange);
     }
 }

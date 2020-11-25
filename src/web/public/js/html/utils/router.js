@@ -1,10 +1,21 @@
 export class AutoHomeRouter {
     constructor() {
     }
-    getActualPage() {
-        let path = window.location.pathname.split("/");
+    getRoute() {
+        let route;
+        let path = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase(); });
         console.log('path: ', path);
-        return null;
+        let topLevel = path[0];
+        if (topLevel == "user") {
+            switch (path[1]) {
+                case "login":
+                    route.path = Pages.LOGIN;
+                    break;
+                default:
+                    break;
+            }
+        }
+        return route;
         /*let logged = localStorage.getItem("logged");
         let page: Pages;
         if(logged){
