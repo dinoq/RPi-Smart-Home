@@ -15,7 +15,6 @@ class AutoHomeApp{
     createPageElements(){
         let router = new AutoHomeRouter();
         let page : Pages = router.getActualPage();
-        
         switch(page){
             case Pages.LOGIN:
                 if(!router.isLoginPath()){
@@ -35,7 +34,6 @@ class AutoHomeApp{
                 }
             break;
         }
-        
     }
 }
 window.addEventListener('load', () => {
