@@ -4,19 +4,21 @@ import { URLManager } from "./url-manager.js";
 
 export class AutoHomeRouter {
     public desiredPage: Pages;
-
+    public route: IRoute;
     constructor() {
     }
 
     getRoute(): IRoute {
-        let route: IRoute;
-        let path = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase() });
-        console.log('path: ', path);
-        let topLevel: string = path[0];
+        this.route = {page: Pages.UNKNOWN, path: ""};
+        let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase() });
+        let entirePath = window.location.pathname.toLocaleLowerCase();
+        
+        let topLevel: string = pathArr[0];
         if (topLevel == "user") {
-            switch (path[1]) {
+            switch (pathArr[1]) {
                 case "login":
-                    route.path = Pages.LOGIN;
+                    this.route.page = Pages.LOGIN;
+                    this.route.path = entirePath;
                 break;
                 default:
 
@@ -24,7 +26,13 @@ export class AutoHomeRouter {
             }
 
         }
-        return route;
+        let logged = localStorage.getItem("logged");
+        if(!logged){
+            this.route.afterLoginPage = this.route.page;
+            this.route.page = Pages.LOGIN;
+            this.route.afterLoginPath = this.route.path;
+        }
+        return this.route;
         /*let logged = localStorage.getItem("logged");
         let page: Pages;
         if(logged){
@@ -48,10 +56,14 @@ export class AutoHomeRouter {
 }
 
 export interface IRoute{
-    path: Pages
+    page: Pages,
+    afterLoginPage?: Pages,
+    path: string,
+    afterLoginPath?: string,
 }
 
 export enum Pages {
+    UNKNOWN,
     LOGIN,
     REGISTER,
     DASHBOARD,

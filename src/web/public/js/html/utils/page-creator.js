@@ -10,6 +10,9 @@ export class PageCreator {
         this.dashboard = new DashboardElement();
         this.header = new HeaderElement();
     }
+    redirectAfterLogin(path) {
+        throw new Error("Method not implemented.");
+    }
     createElement(containerId, elementType, elementConfig) {
         let container = document.getElementById(containerId);
         if (!container)

@@ -6,7 +6,12 @@ class AutoHomeApp {
     constructor() {
         this.renderPage = () => {
             let route = this.router.getRoute();
-            let page = this.router.getRoute().path;
+            let page = route.page;
+            if (page == Pages.LOGIN) {
+                if (route.afterLoginPage) {
+                    this.pageCreator.redirectAfterLogin(route.path);
+                }
+            }
             return;
             switch (page) {
                 case Pages.LOGIN:
@@ -29,12 +34,11 @@ class AutoHomeApp {
             }
         };
         this.pageCreator = new PageCreator();
-        this.urlManager = new URLManager();
-        this.urlManager.registerURLChangeListener(this.renderPage);
+        URLManager.registerURLChangeListener(this.renderPage);
         this.router = new AutoHomeRouter();
         this.renderPage();
         document.onclick = () => {
-            this.urlManager.setURL("/user/login" + Math.random());
+            URLManager.setURL("/user/login" + Math.random());
         };
     }
 }

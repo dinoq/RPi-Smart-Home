@@ -7,13 +7,14 @@ export class URLManager {
         }
         return this.instance;
     }
-    registerURLChangeListener(callback) {
-        this.onURLChange = callback;
+    static registerURLChangeListener(callback) {
+        let urlManager = URLManager.getManager();
+        urlManager.onURLChange = callback;
         window.addEventListener('popstate', callback);
     }
-    setURL(newURL, title = "") {
-        console.log('setURL: ');
+    static setURL(newURL, title = "") {
+        let urlManager = URLManager.getManager();
         window.history.pushState("", title, newURL);
-        this.onURLChange();
+        urlManager.onURLChange();
     }
 }

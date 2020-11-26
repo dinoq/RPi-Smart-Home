@@ -12,13 +12,14 @@ export class URLManager{
     	return this.instance;
     }
 
-    public registerURLChangeListener(callback): void{
-        this.onURLChange = callback;
+    public static registerURLChangeListener(callback): void{
+        let urlManager = URLManager.getManager();
+        urlManager.onURLChange = callback;
         window.addEventListener('popstate', callback);
     }
-    public setURL(newURL: string, title: string=""): void{
-        console.log('setURL: ');
+    public static setURL(newURL: string, title: string=""): void{
+        let urlManager = URLManager.getManager();
         window.history.pushState("", title, newURL);
-        this.onURLChange();
+        urlManager.onURLChange();
     }
 }

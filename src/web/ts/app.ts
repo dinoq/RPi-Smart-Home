@@ -10,20 +10,24 @@ class AutoHomeApp {
 
     constructor() {
         this.pageCreator = new PageCreator();
-        this.urlManager = new URLManager();
-        this.urlManager.registerURLChangeListener(this.renderPage);
+        URLManager.registerURLChangeListener(this.renderPage);
         this.router = new AutoHomeRouter();
         this.renderPage();
-        
+
         document.onclick = () => {
-            this.urlManager.setURL("/user/login" + Math.random());
+            URLManager.setURL("/user/login" + Math.random());
         }
 
     }
 
     renderPage = () => {
         let route: IRoute = this.router.getRoute();
-        let page: Pages = this.router.getRoute().path;
+        let page: Pages = route.page;
+        if (page == Pages.LOGIN) {
+            if(route.afterLoginPage){
+                this.pageCreator.redirectAfterLogin(route.path);
+            }
+        }
         return;
         switch (page) {
             case Pages.LOGIN:

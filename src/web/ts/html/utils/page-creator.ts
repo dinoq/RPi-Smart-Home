@@ -3,48 +3,51 @@ import { HeaderElement } from "../components/header.js";
 import { LoginElement } from "../components/login.js";
 
 
-export class PageCreator{
+export class PageCreator {
     private login: LoginElement;
     private dashboard: DashboardElement;
     private header: HeaderElement;
-    constructor(){
+    constructor() {
         this.login = new LoginElement();
         this.dashboard = new DashboardElement();
         this.header = new HeaderElement();
     }
-    
 
-    createElement(containerId: string, elementType: PageElements, elementConfig?: elementConfig){
+    redirectAfterLogin(path: string): void {
+        throw new Error("Method not implemented.");
+    }
+
+    createElement(containerId: string, elementType: PageElements, elementConfig?: elementConfig) {
         let container = document.getElementById(containerId);
-        if(!container)
+        if (!container)
             return;
-        
+
         container.innerHTML = "";
 
-        switch(elementType){
+        switch (elementType) {
             case PageElements.LOGIN_FORM:
                 this.login.mountComponent("main");
-            break;
+                break;
             case PageElements.DIV:
 
-            break;
+                break;
             case PageElements.DEVICES_LIST:
 
-            break;
+                break;
         }
     }
 
-    createDashboard = ()=>{
+    createDashboard = () => {
         this.header.mountComponent("header");
     }
 
-    createLogin(){
+    createLogin() {
         this.header.unmountComponent();
         this.login.mountComponent("main");
     }
 }
 
-export enum PageElements{
+export enum PageElements {
     LOGIN_FORM,
     REGISTER_FORM,
     DIV,
@@ -52,7 +55,7 @@ export enum PageElements{
     DEVICES_LIST
 }
 
-interface elementConfig{
+interface elementConfig {
     width?: number;
     height?: number;
 

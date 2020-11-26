@@ -2,20 +2,27 @@ export class AutoHomeRouter {
     constructor() {
     }
     getRoute() {
-        let route;
-        let path = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase(); });
-        console.log('path: ', path);
-        let topLevel = path[0];
+        this.route = { page: Pages.UNKNOWN, path: "" };
+        let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase(); });
+        let entirePath = window.location.pathname.toLocaleLowerCase();
+        let topLevel = pathArr[0];
         if (topLevel == "user") {
-            switch (path[1]) {
+            switch (pathArr[1]) {
                 case "login":
-                    route.path = Pages.LOGIN;
+                    this.route.page = Pages.LOGIN;
+                    this.route.path = entirePath;
                     break;
                 default:
                     break;
             }
         }
-        return route;
+        let logged = localStorage.getItem("logged");
+        if (!logged) {
+            this.route.afterLoginPage = this.route.page;
+            this.route.page = Pages.LOGIN;
+            this.route.afterLoginPath = this.route.path;
+        }
+        return this.route;
         /*let logged = localStorage.getItem("logged");
         let page: Pages;
         if(logged){
@@ -35,8 +42,9 @@ export class AutoHomeRouter {
 }
 export var Pages;
 (function (Pages) {
-    Pages[Pages["LOGIN"] = 0] = "LOGIN";
-    Pages[Pages["REGISTER"] = 1] = "REGISTER";
-    Pages[Pages["DASHBOARD"] = 2] = "DASHBOARD";
-    Pages[Pages["DEVICES"] = 3] = "DEVICES";
+    Pages[Pages["UNKNOWN"] = 0] = "UNKNOWN";
+    Pages[Pages["LOGIN"] = 1] = "LOGIN";
+    Pages[Pages["REGISTER"] = 2] = "REGISTER";
+    Pages[Pages["DASHBOARD"] = 3] = "DASHBOARD";
+    Pages[Pages["DEVICES"] = 4] = "DEVICES";
 })(Pages || (Pages = {}));
