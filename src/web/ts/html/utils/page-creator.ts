@@ -1,20 +1,20 @@
 import { DashboardElement } from "../components/dashboard.js";
-import { HeaderElement } from "../components/header.js";
-import { LoginElement } from "../components/login.js";
+import { HeaderComponent } from "../components/header.js";
+import { LoginComponent } from "../components/login.js";
 
 
 export class PageCreator {
-    private login: LoginElement;
+    private login: LoginComponent;
     private dashboard: DashboardElement;
-    private header: HeaderElement;
+    private header: HeaderComponent;
     constructor() {
-        this.login = new LoginElement();
+        this.login = new LoginComponent();
         this.dashboard = new DashboardElement();
-        this.header = new HeaderElement();
+        this.header = new HeaderComponent();
     }
 
     redirectAfterLogin(path: string): void {
-        throw new Error("Method not implemented.");
+        console.error("Method not implemented.");
     }
 
     createElement(containerId: string, elementType: PageElements, elementConfig?: elementConfig) {

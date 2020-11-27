@@ -1,7 +1,10 @@
 import { PageComponent } from "./page-element.js";
-export class LoginElement extends PageComponent {
+export class LoginComponent extends PageComponent {
     constructor() {
-        super();
+        /*constructor(){
+            super();
+        }*/
+        super(...arguments);
         this.addListeners = () => {
             let lf = document.getElementById("login-form");
             let l = document.getElementById("login");
@@ -38,10 +41,19 @@ export class LoginElement extends PageComponent {
             }
         };
     }
-    initElement() {
+    connectedCallback() {
+        console.error("Method not implemented.");
+    }
+    disconnectedCallback() {
+        console.error("Method not implemented.");
+    }
+    attributeChangedCallback(attrName, oldVal, newVal) {
+        console.error("Method not implemented.");
+    }
+    initialize() {
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
-        this.element.innerHTML = `
+        this.innerHTML = `
         <div id="form-alert-wrapper">
             <div id="form-alert" class="alert alert-danger" role="alert">
             Nesprávné přihlašovací údaje!
@@ -80,3 +92,4 @@ export class LoginElement extends PageComponent {
         }
     }
 }
+customElements.define("login-component", LoginComponent);

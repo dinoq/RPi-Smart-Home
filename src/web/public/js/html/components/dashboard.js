@@ -3,10 +3,20 @@ export class DashboardElement extends PageComponent {
     constructor() {
         super();
     }
-    initElement() {
-        //throw new Error("Method not implemented.");
+    initialize() {
+        console.error("Method not implemented.");
+    }
+    connectedCallback() {
+        console.error("Method not implemented.");
+    }
+    disconnectedCallback() {
+        console.error("Method not implemented.");
+    }
+    attributeChangedCallback(attrName, oldVal, newVal) {
+        console.error("Method not implemented.");
     }
     addListeners() {
-        //throw new Error("Method not implemented.");
+        console.error("Method not implemented.");
     }
 }
+customElements.define("dashboard-component", DashboardElement);

@@ -1,14 +1,24 @@
 import { PageComponent } from "./page-element.js";
 
-export class LoginElement extends PageComponent{
-    constructor(){
+export class LoginComponent extends PageComponent{
+    /*constructor(){
         super();
+    }*/
+
+    connectedCallback(): void {
+        console.error("Method not implemented.");
+    }
+    disconnectedCallback(): void {
+        console.error("Method not implemented.");
+    }
+    attributeChangedCallback(attrName: any, oldVal: any, newVal: any): void {
+        console.error("Method not implemented.");
     }
 
-    initElement(): void {
+    initialize(): void {
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
-        this.element.innerHTML = `
+        this.innerHTML = `
         <div id="form-alert-wrapper">
             <div id="form-alert" class="alert alert-danger" role="alert">
             Nesprávné přihlašovací údaje!
@@ -87,3 +97,5 @@ export class LoginElement extends PageComponent{
 
     }
 }
+
+customElements.define("login-component", LoginComponent);

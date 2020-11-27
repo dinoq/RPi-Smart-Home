@@ -1,11 +1,15 @@
-export class PageComponent {
+export class PageComponent extends HTMLElement {
     constructor() {
+        super();
         this.firebase = firebase;
-        this.element = document.createElement("div");
-        this.initElement();
+        this.initialize();
+    }
+    static get observedAttributes() {
+        throw new Error("observedAttributes not defined");
+        return ['disabled', 'open']; //example
     }
     unmountComponent() {
-        this.parent.removeChild(this.element);
+        this.parent.removeChild(this);
     }
     mountComponent(parentID, replaceContent = true) {
         this.parent = document.getElementById(parentID);
@@ -14,8 +18,9 @@ export class PageComponent {
         if (replaceContent) {
             this.parent.innerHTML = "";
         }
-        console.log(this.element);
-        this.parent.appendChild(this.element);
+        console.log(this);
+        this.parent.appendChild(this);
         this.addListeners();
     }
 }
+//customElements.define("page-component", PageComponent);
