@@ -12,9 +12,11 @@ export class URLManager {
         urlManager.onURLChange = callback;
         window.addEventListener('popstate', callback);
     }
-    static setURL(newURL, title = "") {
+    static setURL(newURL, title = "", skipCallback = false) {
         let urlManager = URLManager.getManager();
         window.history.pushState("", title, newURL);
-        urlManager.onURLChange();
+        if (!skipCallback) {
+            urlManager.onURLChange();
+        }
     }
 }

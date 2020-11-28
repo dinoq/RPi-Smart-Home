@@ -1,6 +1,6 @@
-import { PageComponent } from "./page-element.js";
+import { AbstractPageComponent } from "./page-element.js";
 
-export class LoginComponent extends PageComponent{
+export class LoginComponent extends AbstractPageComponent{
     /*constructor(){
         super();
     }*/
@@ -45,6 +45,7 @@ export class LoginComponent extends PageComponent{
             </form>
         </div>
         `;
+        console.log(this.children);
     }
     addListeners = () => {
         let lf = document.getElementById("login-form");
@@ -56,12 +57,9 @@ export class LoginComponent extends PageComponent{
     }
 
     login = (event: any)=>{
-        console.log("DDD",this.firebase);
         event.preventDefault();
-        console.log('event: ', event);
         let login : string = (<HTMLInputElement>document.getElementById("login")).value;
         let password : string = (<HTMLInputElement>document.getElementById("password")).value;
-        console.log('login: ', login, password);
         if(login){            
             this.firebase.auth().signInWithEmailAndPassword(login, password)
             .then((user: any) => {
@@ -84,6 +82,10 @@ export class LoginComponent extends PageComponent{
         }
     }
 
+    redirectAfterLogin(redirectAfterLogin: string) {
+        (<HTMLFormElement>document.getElementById("login-form")).action = redirectAfterLogin;
+    }
+
     inputChange(event: InputEvent){
         let input: HTMLInputElement = (<HTMLInputElement>event.target);
         let label: HTMLLabelElement = (<HTMLLabelElement>input.parentElement.children[0]);
@@ -98,4 +100,4 @@ export class LoginComponent extends PageComponent{
     }
 }
 
-customElements.define("login-component", LoginComponent);
+customElements.define("login-form", LoginComponent);

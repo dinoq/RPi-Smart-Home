@@ -1,30 +1,37 @@
-
-
 export declare var firebase: any;
 
-export abstract class PageComponent extends HTMLElement {
+export class PageComponent extends HTMLElement {
     protected firebase: any = firebase;
     protected parent: HTMLElement;
+    public observedAttributes;
     static get observedAttributes() {
-        throw new Error("observedAttributes not defined");
-        return ['disabled', 'open'];//example
+        console.warn("observedAttributes not defined for class: " + this.name + "!\n" +
+        "Will use empty array ([])\n" + 
+        "See class PageCompnent for inspiration.");
+        //return ['disabled', 'open'];//example
+        return [];
     }
     constructor() {
         super();
-        this.initialize();
+    }
+}
+export abstract class AbstractPageComponent extends PageComponent {
+    constructor(properties?: any) {
+        super();
+        this.initialize(properties);
     }
 
-    abstract initialize(): void;
+    abstract initialize(properties?: any): void;
     abstract addListeners(): void;
     abstract connectedCallback(): void;
     abstract disconnectedCallback(): void;
     abstract attributeChangedCallback(attrName, oldVal, newVal): void;
 
-    unmountComponent() {
+    disconnectComponent() {
         this.parent.removeChild(this);
     }
 
-    mountComponent(parentID: string, replaceContent: boolean = true) {
+    connectComponent(parentID: string, replaceContent: boolean = true) {
         this.parent = document.getElementById(parentID);
         if (!this.parent)
             return;
@@ -32,12 +39,10 @@ export abstract class PageComponent extends HTMLElement {
         if (replaceContent) {
             this.parent.innerHTML = "";
         }
-        console.log(this);
         this.parent.appendChild(this);
         this.addListeners();
     }
 
 }
-
 
 //customElements.define("page-component", PageComponent);

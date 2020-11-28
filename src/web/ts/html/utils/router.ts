@@ -1,6 +1,4 @@
-import { PageCreator } from "./page-creator.js";
-import { URLManager } from "./url-manager.js";
-
+import { UndefinedPageError } from "../../errors/undefined-page-error.js";
 
 export class AutoHomeRouter {
     public desiredPage: Pages;
@@ -9,42 +7,35 @@ export class AutoHomeRouter {
     }
 
     getRoute(): IRoute {
-        this.route = {page: Pages.UNKNOWN, path: ""};
         let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase() });
         let entirePath = window.location.pathname.toLocaleLowerCase();
         
+        this.route = {page: Pages.UNKNOWN, path: entirePath};
         let topLevel: string = pathArr[0];
         if (topLevel == "user") {
             switch (pathArr[1]) {
                 case "login":
                     this.route.page = Pages.LOGIN;
-                    this.route.path = entirePath;
+                break;
+                case "register":
+                    this.route.page = Pages.REGISTER;
                 break;
                 default:
-
+                    throw new UndefinedPageError(entirePath);
                 break;
             }
 
+        }else if(topLevel == "dashboard"){
+            this.route.page = Pages.DASHBOARD;
         }
         let logged = localStorage.getItem("logged");
         if(!logged){
             this.route.afterLoginPage = this.route.page;
             this.route.page = Pages.LOGIN;
             this.route.afterLoginPath = this.route.path;
+            this.route.path = Paths.LOGIN;
         }
         return this.route;
-        /*let logged = localStorage.getItem("logged");
-        let page: Pages;
-        if(logged){
-            if(this.isLoginPath()){
-                location.replace("/dashboard");
-            }else if(path.toLocaleLowerCase().includes("dashboard")){
-                return Pages.DASHBOARD;
-            }
-        }else{       
-            //this.desiredPage = 
-            return Pages.LOGIN;
-        }*/
 
     }
 
@@ -62,6 +53,10 @@ export interface IRoute{
     afterLoginPath?: string,
 }
 
+export enum Paths{
+    LOGIN="user/login",
+    REGISTER="user/register",
+}
 export enum Pages {
     UNKNOWN,
     LOGIN,

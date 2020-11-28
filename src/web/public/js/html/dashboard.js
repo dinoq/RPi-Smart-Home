@@ -4,9 +4,9 @@ export class DashboardElement extends PageComponent {
         super();
     }
     initElement() {
-        //throw new Error("Method not implemented.");
+        //console.error("Method not implemented.");
     }
     addListeners() {
-        //throw new Error("Method not implemented.");
+        //console.error("Method not implemented.");
     }
 }

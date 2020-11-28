@@ -1,5 +1,5 @@
-import { PageComponent } from "./page-element.js";
-export class LoginComponent extends PageComponent {
+import { AbstractPageComponent } from "./page-element.js";
+export class LoginComponent extends AbstractPageComponent {
     constructor() {
         /*constructor(){
             super();
@@ -14,12 +14,9 @@ export class LoginComponent extends PageComponent {
             p.addEventListener('input', this.inputChange);
         };
         this.login = (event) => {
-            console.log("DDD", this.firebase);
             event.preventDefault();
-            console.log('event: ', event);
             let login = document.getElementById("login").value;
             let password = document.getElementById("password").value;
-            console.log('login: ', login, password);
             if (login) {
                 this.firebase.auth().signInWithEmailAndPassword(login, password)
                     .then((user) => {
@@ -80,6 +77,10 @@ export class LoginComponent extends PageComponent {
             </form>
         </div>
         `;
+        console.log(this.children);
+    }
+    redirectAfterLogin(redirectAfterLogin) {
+        document.getElementById("login-form").action = redirectAfterLogin;
     }
     inputChange(event) {
         let input = event.target;
@@ -92,4 +93,4 @@ export class LoginComponent extends PageComponent {
         }
     }
 }
-customElements.define("login-component", LoginComponent);
+customElements.define("login-form", LoginComponent);

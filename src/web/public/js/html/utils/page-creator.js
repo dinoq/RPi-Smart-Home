@@ -1,17 +1,22 @@
-import { DashboardElement } from "../components/dashboard.js";
-import { HeaderComponent } from "../components/header.js";
+import { BaseLayout } from "../components/layouts/base-panel.js";
 import { LoginComponent } from "../components/login.js";
 export class PageCreator {
+    /*private dashboard: DashboardElement;
+    private header: HeaderComponent;*/
     constructor() {
         this.createDashboard = () => {
-            this.header.mountComponent("header");
+            //this.header.mountComponent("header");
         };
         this.login = new LoginComponent();
-        this.dashboard = new DashboardElement();
-        this.header = new HeaderComponent();
-    }
-    redirectAfterLogin(path) {
-        console.error("Method not implemented.");
+        /*this.dashboard = new DashboardElement();
+        this.header = new HeaderComponent();*/
+        let layout = new BaseLayout({
+            height: "200px",
+            width: "50px",
+            resizable: true
+        });
+        document.getElementById("main").appendChild(layout);
+        console.log('layout: ', layout);
     }
     createElement(containerId, elementType, elementConfig) {
         let container = document.getElementById(containerId);
@@ -20,7 +25,7 @@ export class PageCreator {
         container.innerHTML = "";
         switch (elementType) {
             case PageElements.LOGIN_FORM:
-                this.login.mountComponent("main");
+                this.login.connectComponent("main");
                 break;
             case PageElements.DIV:
                 break;
@@ -28,9 +33,12 @@ export class PageCreator {
                 break;
         }
     }
-    createLogin() {
-        this.header.unmountComponent();
-        this.login.mountComponent("main");
+    createLogin(redirectAfterLogin) {
+        // this.header.unmountComponent();
+        this.login.connectComponent("main");
+        if (redirectAfterLogin != undefined) {
+            this.login.redirectAfterLogin(redirectAfterLogin);
+        }
     }
 }
 export var PageElements;

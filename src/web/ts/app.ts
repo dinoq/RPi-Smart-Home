@@ -1,3 +1,5 @@
+import { UnknownPageError } from "./errors/uknown-page-error.js";
+import { UndefinedPageError } from "./errors/undefined-page-error.js";
 import { PageCreator, PageElements } from "./html/utils/page-creator.js";
 import { AutoHomeRouter, IRoute, Pages } from "./html/utils/router.js";
 import { URLManager } from "./html/utils/url-manager.js";
@@ -14,6 +16,7 @@ class AutoHomeApp {
         this.router = new AutoHomeRouter();
         this.renderPage();
 
+
         document.onclick = () => {
             URLManager.setURL("/user/login" + Math.random());
         }
@@ -22,11 +25,20 @@ class AutoHomeApp {
 
     renderPage = () => {
         let route: IRoute = this.router.getRoute();
+        console.log('route: ', route);
         let page: Pages = route.page;
-        if (page == Pages.LOGIN) {
-            if(route.afterLoginPage){
-                this.pageCreator.redirectAfterLogin(route.path);
-            }
+        URLManager.setURL(route.path, "login", true);
+
+        switch (page) {
+            case Pages.LOGIN:
+                this.pageCreator.createLogin((route.afterLoginPath != undefined)? route.afterLoginPath: undefined);
+            break;
+            case Pages.UNKNOWN:                
+                throw new UnknownPageError();
+            break;
+            default:
+                throw new UndefinedPageError(Pages[page]);
+            break;
         }
         return;
         switch (page) {

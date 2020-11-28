@@ -4,9 +4,9 @@ export class TemplateElement extends PageComponent {
         super();
     }
     addListeners() {
-        throw new Error("Method not implemented.");
+        console.error("Method not implemented.");
     }
     initElement() {
-        throw new Error("Method not implemented.");
+        console.error("Method not implemented.");
     }
 }
