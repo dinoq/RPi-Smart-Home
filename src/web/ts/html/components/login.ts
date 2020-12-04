@@ -1,4 +1,4 @@
-import { AbstractPageComponent } from "./page-element.js";
+import { AbstractPageComponent, firebase } from "./page-element.js";
 
 export class LoginComponent extends AbstractPageComponent{
     /*constructor(){
