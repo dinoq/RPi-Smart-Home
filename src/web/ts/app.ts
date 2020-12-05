@@ -1,8 +1,8 @@
-import { UnknownPageError } from "./errors/uknown-page-error.js";
-import { UndefinedPageError } from "./errors/undefined-page-error.js";
-import { PageCreator, PageElements } from "./html/utils/page-creator.js";
-import { AutoHomeRouter, IRoute, Pages } from "./html/utils/router.js";
-import { URLManager } from "./html/utils/url-manager.js";
+import { UnknownPageError } from "./errors/system-errors/uknown-page-error.js";
+import { UndefinedPageError } from "./errors/system-errors/undefined-page-error.js";
+import { PageCreator, PageElements } from "./utils/page-creator.js";
+import { AutoHomeRouter, IRoute, Pages } from "./utils/router.js";
+import { URLManager } from "./utils/url-manager.js";
 
 export declare var firebase: any;
 
