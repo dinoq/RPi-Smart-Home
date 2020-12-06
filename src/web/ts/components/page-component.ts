@@ -1,5 +1,6 @@
 import { ComponentNameNotDefinedError, CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
+import { Config } from "../utils/config.js";
 import { LoginComponent } from "./forms/login.js";
 
 export declare var firebase: any;
@@ -9,18 +10,20 @@ export class Component extends HTMLElement {
     protected parent: HTMLElement;
     public observedAttributes;
     static get observedAttributes() {
-        console.warn("observedAttributes not defined for class: " + this.name + "!\n" +
-        "Will use empty array ([])\n" + 
-        "See class PageCompnent for inspiration.");
+        if(Config.showObservedAttrNotDefined){
+            console.warn("observedAttributes not defined for class: " + this.name + "!\n" +
+            "Will use empty array ([])\n" + 
+            "See class PageCompnent for inspiration.");
+        }
         //return ['disabled', 'open'];//example
         return [];
     }
     
-    static _className = "";
+   /* static _className = "";
     get className(){
         new ComponentNameNotDefinedError();
         return "";
-    }
+    }*/
 
     constructor(componentProps: componentProperties) {
         try {
@@ -70,7 +73,9 @@ export abstract class AbstractComponent extends Component {
         new MethodNotImplementedError("addListeners", this, true);
     }
     connectedCallback(): void{
-        new MethodNotImplementedError("connectedCallback", this, true);
+        if(Config.showConnectedCallbackNotImplemented){
+            new MethodNotImplementedError("connectedCallback", this, true);
+        }
     }
     disconnectedCallback(): void{
         new MethodNotImplementedError("disconnectedCallback", this, true);
@@ -83,7 +88,7 @@ export abstract class AbstractComponent extends Component {
         this.parent.removeChild(this);
     }
 
-    connectComponent(parent: string | HTMLElement, replaceContent: boolean = true) {
+    connectComponent(parent: string | HTMLElement, replaceContent: boolean = false) {
         if(typeof parent ==  "string"){
             this.parent = document.getElementById(parent);
         }else{

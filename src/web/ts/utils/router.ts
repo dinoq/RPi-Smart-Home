@@ -7,6 +7,7 @@ export enum Pages {
     REGISTER,
     DASHBOARD,
     DEVICES,
+    HOME,
 }
 export class AutoHomeRouter {
     public desiredPage: Pages;
@@ -14,7 +15,7 @@ export class AutoHomeRouter {
     constructor() {
     }
 
-    static DEFAULT_LOGGED_PAGE = Pages.DASHBOARD;
+    static DEFAULT_LOGGED_PAGE = Pages.HOME;
     getRoute(): IRoute {
         let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase() });
         let entirePath = window.location.pathname.toLocaleLowerCase();
@@ -32,11 +33,13 @@ export class AutoHomeRouter {
                     this.route.page = Pages.REGISTER;
                 break;
                 default:
-                    this.route.path = Paths.DASHBOARD;
+                    this.route.path = Paths.HOME;
                     new BaseError("Page " + entirePath +" not defined!", this);
                 break;
             }
 
+        }else if(topLevel == "home"){
+            this.route.page = Pages.HOME;
         }else if(topLevel == "dashboard"){
             this.route.page = Pages.DASHBOARD;
         }
@@ -68,4 +71,5 @@ export enum Paths{
     LOGIN="user/login",
     REGISTER="user/register",
     DASHBOARD="dashboard",
+    HOME="home",
 }

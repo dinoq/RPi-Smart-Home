@@ -1,3 +1,7 @@
+html {
+  overflow: hidden;
+}
+
 html header #header-wrapper {
   width: 100%;
   height: 50px;
@@ -131,7 +135,7 @@ error-dialog {
   box-shadow: 0px 0px 22px -2px rgba(0, 0, 0, 0.75);
 }
 
-error-dialog #close-btn {
+error-dialog .close-btn {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -142,7 +146,7 @@ error-dialog #close-btn {
   margin-top: 1em;
 }
 
-error-dialog #close-btn div {
+error-dialog .close-btn div {
   width: 30%;
   font-size: 1.3em;
 }

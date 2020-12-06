@@ -17,6 +17,7 @@ export class CustomComponentNotDefinedError extends BaseError {
 export class ComponentNameNotDefinedError extends BaseError {
     constructor() {
         super("", null, false);
+        this.showInDialog = false;
         this.errMsg = "Component name or className not defined!";
         this.showImmediately = true;
         if (this.showImmediately) {

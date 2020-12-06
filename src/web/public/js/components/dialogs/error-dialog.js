@@ -4,15 +4,15 @@ export class ErrorDialog extends BaseDialog {
         super(componentProps);
         this.innerHTML = `
             ${error} 
-            <div id="close-btn">
+            <div class="close-btn">
                 <div class="btn btn-danger">
                     close
                 </div>
             </div>
         `;
         document.body.appendChild(this);
-        document.getElementById("close-btn").onclick = () => {
+        this.getElementsByClassName("close-btn")[0].addEventListener('click', () => {
             this.remove();
-        };
+        });
     }
 }

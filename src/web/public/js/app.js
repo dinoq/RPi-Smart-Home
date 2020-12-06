@@ -3,9 +3,9 @@ import { LoginComponent } from "./components/forms/login.js";
 import { HeaderComponent } from "./components/headers/header.js";
 import { BlankPage } from "./components/pages/blank-page.js";
 import { UnknownPageError } from "./errors/system-errors/uknown-page-error.js";
-import { UndefinedPageError } from "./errors/system-errors/undefined-page-error.js";
 import { BaseLayout } from "./layouts/base-layout.js";
 import { PageCreator } from "./utils/page-creator.js";
+import { Effects, PageManager, PageManagerComponent } from "./utils/page-manager.js";
 import { AutoHomeRouter, Pages } from "./utils/router.js";
 import { URLManager } from "./utils/url-manager.js";
 export var app = null;
@@ -35,7 +35,7 @@ class AutoHomeApp {
                     throw new UnknownPageError();
                     break;
                 default:
-                    throw new UndefinedPageError(Pages[page]);
+                    //throw new UndefinedPageError(Pages[page]);
                     break;
             }
             return;
@@ -45,6 +45,15 @@ class AutoHomeApp {
         this.pageCreator = new PageCreator();
         URLManager.registerURLChangeListener(this.renderPage);
         this.router = new AutoHomeRouter();
+        this.pageManager = PageManager.getInstance();
+        let l = new BlankPage({ backgroundColor: "yellow" });
+        let l2 = new BlankPage({ backgroundColor: "green" });
+        this.pageManager.addPage(l);
+        this.pageManager.addPage(l2);
+        this.pageManager.connect();
+        setTimeout(() => {
+            this.pageManager.setActive(1, Effects.SWIPE_TO_LEFT);
+        }, 1000);
         this.renderPage();
         document.onclick = () => {
             //URLManager.setURL("/user/login" + Math.random());
@@ -55,6 +64,7 @@ class AutoHomeApp {
             customElements.define("error-dialog", ErrorDialog);
             customElements.define("login-form", LoginComponent);
             customElements.define("base-layout", BaseLayout);
+            customElements.define("page-manager", PageManagerComponent);
             customElements.define("blank-page", BlankPage);
             customElements.define("header-component", HeaderComponent);
         }

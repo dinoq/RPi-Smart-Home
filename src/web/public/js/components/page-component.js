@@ -1,6 +1,12 @@
-import { ComponentNameNotDefinedError, CustomComponentNotDefinedError } from "../errors/component-errors.js";
+import { CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
+import { Config } from "../utils/config.js";
 export class Component extends HTMLElement {
+    /* static _className = "";
+     get className(){
+         new ComponentNameNotDefinedError();
+         return "";
+     }*/
     constructor(componentProps) {
         try {
             super();
@@ -25,18 +31,15 @@ export class Component extends HTMLElement {
         }
     }
     static get observedAttributes() {
-        console.warn("observedAttributes not defined for class: " + this.name + "!\n" +
-            "Will use empty array ([])\n" +
-            "See class PageCompnent for inspiration.");
+        if (Config.showObservedAttrNotDefined) {
+            console.warn("observedAttributes not defined for class: " + this.name + "!\n" +
+                "Will use empty array ([])\n" +
+                "See class PageCompnent for inspiration.");
+        }
         //return ['disabled', 'open'];//example
         return [];
     }
-    get className() {
-        new ComponentNameNotDefinedError();
-        return "";
-    }
 }
-Component._className = "";
 export class AbstractComponent extends Component {
     constructor(componentProps) {
         super(componentProps);
@@ -58,7 +61,9 @@ export class AbstractComponent extends Component {
         new MethodNotImplementedError("addListeners", this, true);
     }
     connectedCallback() {
-        new MethodNotImplementedError("connectedCallback", this, true);
+        if (Config.showConnectedCallbackNotImplemented) {
+            new MethodNotImplementedError("connectedCallback", this, true);
+        }
     }
     disconnectedCallback() {
         new MethodNotImplementedError("disconnectedCallback", this, true);
@@ -69,7 +74,7 @@ export class AbstractComponent extends Component {
     disconnectComponent() {
         this.parent.removeChild(this);
     }
-    connectComponent(parent, replaceContent = true) {
+    connectComponent(parent, replaceContent = false) {
         if (typeof parent == "string") {
             this.parent = document.getElementById(parent);
         }

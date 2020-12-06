@@ -6,6 +6,7 @@ export var Pages;
     Pages[Pages["REGISTER"] = 2] = "REGISTER";
     Pages[Pages["DASHBOARD"] = 3] = "DASHBOARD";
     Pages[Pages["DEVICES"] = 4] = "DEVICES";
+    Pages[Pages["HOME"] = 5] = "HOME";
 })(Pages || (Pages = {}));
 export class AutoHomeRouter {
     constructor() {
@@ -25,10 +26,13 @@ export class AutoHomeRouter {
                     this.route.page = Pages.REGISTER;
                     break;
                 default:
-                    this.route.path = Paths.DASHBOARD;
+                    this.route.path = Paths.HOME;
                     new BaseError("Page " + entirePath + " not defined!", this);
                     break;
             }
+        }
+        else if (topLevel == "home") {
+            this.route.page = Pages.HOME;
         }
         else if (topLevel == "dashboard") {
             this.route.page = Pages.DASHBOARD;
@@ -45,10 +49,11 @@ export class AutoHomeRouter {
         return window.location.pathname.toLocaleLowerCase() == "/user/login";
     }
 }
-AutoHomeRouter.DEFAULT_LOGGED_PAGE = Pages.DASHBOARD;
+AutoHomeRouter.DEFAULT_LOGGED_PAGE = Pages.HOME;
 export var Paths;
 (function (Paths) {
     Paths["LOGIN"] = "user/login";
     Paths["REGISTER"] = "user/register";
     Paths["DASHBOARD"] = "dashboard";
+    Paths["HOME"] = "home";
 })(Paths || (Paths = {}));
