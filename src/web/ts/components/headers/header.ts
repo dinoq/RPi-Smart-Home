@@ -1,9 +1,7 @@
-import { PageComponent } from "../page-component.js";
+import { Component, componentProperties } from "../page-component.js";
 
-export class HeaderComponent extends PageComponent{
-    constructor(){
-        super();
+export class HeaderComponent extends Component{
+    constructor(componentProps: componentProperties){
+        super(componentProps);
     }
 }
-
-customElements.define("header-component", HeaderComponent);

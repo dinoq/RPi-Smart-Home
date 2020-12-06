@@ -1,5 +1,5 @@
 import { BasePage } from "./base-page.js";
-export class Dashboard extends BasePage {
+export class BlankPage extends BasePage {
     constructor(componentProps) {
         super(componentProps);
     }

@@ -1,12 +1,13 @@
-import { AbstractPageComponent, firebase } from "../page-component.js";
+import { AbstractComponent, componentProperties, firebase } from "../page-component.js";
 
-export class LoginComponent extends AbstractPageComponent{
-    /*constructor(){
-        super();
-    }*/
+export class LoginComponent extends AbstractComponent{
+    constructor(componentProps: componentProperties){
+        super(componentProps);
+    }
 
 
-    initialize(): void {
+    initialize(componentProps: componentProperties): void {
+        super.initialize(componentProps);
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
         this.innerHTML = `
@@ -89,5 +90,3 @@ export class LoginComponent extends AbstractPageComponent{
 
     }
 }
-
-customElements.define("login-form", LoginComponent);

@@ -1,10 +1,7 @@
-import { AbstractPageComponent } from "../page-component.js";
-export class LoginComponent extends AbstractPageComponent {
-    constructor() {
-        /*constructor(){
-            super();
-        }*/
-        super(...arguments);
+import { AbstractComponent } from "../page-component.js";
+export class LoginComponent extends AbstractComponent {
+    constructor(componentProps) {
+        super(componentProps);
         this.addListeners = () => {
             let lf = document.getElementById("login-form");
             let l = document.getElementById("login");
@@ -38,7 +35,8 @@ export class LoginComponent extends AbstractPageComponent {
             }
         };
     }
-    initialize() {
+    initialize(componentProps) {
+        super.initialize(componentProps);
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
         this.innerHTML = `
@@ -83,4 +81,3 @@ export class LoginComponent extends AbstractPageComponent {
         }
     }
 }
-customElements.define("login-form", LoginComponent);

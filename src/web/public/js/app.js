@@ -1,6 +1,11 @@
+import { ErrorDialog } from "./components/dialogs/error-dialog.js";
+import { LoginComponent } from "./components/forms/login.js";
+import { HeaderComponent } from "./components/headers/header.js";
+import { BlankPage } from "./components/pages/blank-page.js";
 import { UnknownPageError } from "./errors/system-errors/uknown-page-error.js";
 import { UndefinedPageError } from "./errors/system-errors/undefined-page-error.js";
-import { PageCreator, PageElements } from "./utils/page-creator.js";
+import { BaseLayout } from "./layouts/base-layout.js";
+import { PageCreator } from "./utils/page-creator.js";
 import { AutoHomeRouter, Pages } from "./utils/router.js";
 import { URLManager } from "./utils/url-manager.js";
 export var app = null;
@@ -34,27 +39,9 @@ class AutoHomeApp {
                     break;
             }
             return;
-            switch (page) {
-                case Pages.LOGIN:
-                    if (!this.router.isLoginPath()) {
-                        window.history.pushState("login", "login", "/user/login");
-                    }
-                    this.pageCreator.createElement("main", PageElements.LOGIN_FORM);
-                    break;
-                case Pages.DASHBOARD:
-                    this.pageCreator.createDashboard();
-                    break;
-                default:
-                    if (!this.router.isLoginPath()) {
-                        location.replace("/user/login");
-                    }
-                    else {
-                        this.pageCreator.createDashboard();
-                    }
-                    break;
-            }
         };
         this.initFirebase();
+        this.registerAllComponents();
         this.pageCreator = new PageCreator();
         URLManager.registerURLChangeListener(this.renderPage);
         this.router = new AutoHomeRouter();
@@ -62,6 +49,15 @@ class AutoHomeApp {
         document.onclick = () => {
             //URLManager.setURL("/user/login" + Math.random());
         };
+    }
+    registerAllComponents() {
+        if (customElements.get("login-form") == undefined) {
+            customElements.define("error-dialog", ErrorDialog);
+            customElements.define("login-form", LoginComponent);
+            customElements.define("base-layout", BaseLayout);
+            customElements.define("blank-page", BlankPage);
+            customElements.define("header-component", HeaderComponent);
+        }
     }
     initFirebase() {
         var firebaseConfig = {

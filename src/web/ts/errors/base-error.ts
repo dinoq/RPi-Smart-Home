@@ -1,8 +1,15 @@
+import { ErrorDialog } from "../components/dialogs/error-dialog.js";
+
 export class BaseError{
     errMsg: string;    
-    showImmediately: boolean;
+    protected showImmediately: boolean;
+    protected showInDialog: boolean = false;
     constructor(msg: string = "", caller, showImmediately: boolean = true) {
-        this.errMsg = "Error: '" + msg + "'\nAt class: " + caller.constructor.name;
+        if(caller){
+            this.errMsg = "Error: '" + msg + "'\nAt class: " + caller.constructor.name;
+        }else{
+            this.errMsg = "Unknown Error";
+        }
         this.showImmediately = showImmediately;
         if(showImmediately){
             this.show();
@@ -11,5 +18,9 @@ export class BaseError{
 
     show(){
         console.error(this.errMsg);
+        if(this.showInDialog){
+            let stringWithBR = this.errMsg.replaceAll("\n", "<br>");
+            new ErrorDialog(stringWithBR, {});
+        }
     }
 }

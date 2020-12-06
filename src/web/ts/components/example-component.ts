@@ -1,8 +1,8 @@
-import { AbstractPageComponent } from "./page-component.js";
+import { AbstractComponent, componentProperties } from "./page-component.js";
 
-export class ExampleComponent extends AbstractPageComponent {
-    constructor() {
-        super();
+export class ExampleComponent extends AbstractComponent {
+    constructor(componentProps: componentProperties) {
+        super(componentProps);
     }
     /*    
     initialize(properties?: any): void{
@@ -22,4 +22,4 @@ export class ExampleComponent extends AbstractPageComponent {
     }*/
 }
 
-customElements.define("template-component", ExampleComponent);
+//customElements.define("template-component", ExampleComponent);

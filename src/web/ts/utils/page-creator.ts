@@ -1,4 +1,7 @@
 import { LoginComponent } from "../components/forms/login.js";
+import { AbstractComponent } from "../components/page-component.js";
+import { BlankPage } from "../components/pages/blank-page.js";
+import { BaseLayout } from "../layouts/base-layout.js";
 
 
 export class PageCreator {
@@ -6,16 +9,25 @@ export class PageCreator {
     /*private dashboard: DashboardElement;
     private header: HeaderComponent;*/
     constructor() {
-        this.login = new LoginComponent();
         /*this.dashboard = new DashboardElement();
         this.header = new HeaderComponent();*/
-       /* let layout = new BaseLayout(
+        let layout = new BaseLayout(
+            {
+                height:"20px", 
+                width: "100px", 
+                resizable:true,
+                backgroundColor: "blue"
+            });
+        document.getElementById("main").appendChild(layout);
+        let layout2 = new BaseLayout(
             {
                 height:"200px", 
                 width: "50px", 
-                resizable:true
+                resizable:true,
+                backgroundColor: "red"
             });
-        document.getElementById("main").appendChild(layout);*/
+        document.getElementById("main").appendChild(layout2);
+        //layout2.addPage(new BlankPage({backgroundColor: "green"}));
     }
 
     createElement(containerId: string, elementType: PageElements, elementConfig?: elementConfig) {
@@ -44,6 +56,7 @@ export class PageCreator {
 
     createLogin(redirectAfterLogin: string) {
        // this.header.unmountComponent();
+        this.login = new LoginComponent({});
         this.login.connectComponent("main");
         if(redirectAfterLogin != undefined){
             this.login.redirectAfterLogin(redirectAfterLogin);
