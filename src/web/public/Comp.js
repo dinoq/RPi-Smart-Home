@@ -7,21 +7,22 @@ let content = "";
 let lines;
 
 const directoryPath = path.join(__dirname, 'js');
-//passsing directoryPath and callback function
-fs.readdir(directoryPath, function (err, files) {
-    //handling error
-    if (err) {
-        return console.log('Unable to scan directory: ' + err);
-    } 
-    //listing all files using forEach
-    files.forEach(function (file) {
-        // Do whatever you want to do with the file
-        console.log(file); 
+
+let Files  = [];
+
+function ThroughDirectory(Directory) {
+    fs.readdirSync(Directory).forEach(File => {
+        const Absolute = Path.join(Directory, File);
+        if (fs.statSync(Absolute).isDirectory()) return ThroughDirectory(Absolute);
+        else return Files.push(Absolute);
     });
-});
+}
+
+ThroughDirectory(__dirname);
+console.log(Files);
 
 try {
-    content = fs.readFileSync(p, 'utf8');
+    content = fs.readFileSync(files[2], 'utf8');
     lines = content.split("\r\n");
     content="";
     for(let i = 0; i < lines.length;i++){
@@ -42,7 +43,7 @@ try {
     }
     content = lines.join('\n');
 
-} catch (content) {
+} catch (err) {
   console.error(err)
 }
 
