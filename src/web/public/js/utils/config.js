@@ -1,6 +1,6 @@
 export class Config {
     static evaluateCondition(condition) {
-        return (condition || Config.showAll) && Config.showAnything;
+        return (condition || Config.showAllErrorsAndWarnings) && Config.showAnyErrorOrWarning;
     }
     static getWindowWidth(withPixelUnit = false) {
         let width = window.innerWidth
@@ -25,9 +25,11 @@ export class Config {
         }
     }
 }
-Config.showAll = false; // Switch to true for debugging all errors
-Config.showAnything = true; //Switch to false for production
+// Common configuration
+Config.defaultTransitionTime = 1000;
 // Display errors
+Config.showAllErrorsAndWarnings = false; // Switch to true for debugging all errors
+Config.showAnyErrorOrWarning = true; //Switch to false for production
 Config.showObservedAttrNotDefined = Config.evaluateCondition(false);
 Config.showMethodNotImplemented = Config.evaluateCondition(true);
 Config.showConnectedCallbackNotImplemented = Config.evaluateCondition(Config.showMethodNotImplemented && false);

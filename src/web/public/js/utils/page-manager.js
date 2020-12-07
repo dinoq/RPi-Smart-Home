@@ -46,18 +46,20 @@ export class PageManager extends Singleton {
     setActive(page, effect = Effects.NONE) {
         if (typeof page == "number") {
             if (page < this.pages.length) {
-                let transitionTime = 1;
                 if (effect == Effects.SWIPE_TO_LEFT) {
                     let recentActiveStyle = this.activePage.style;
-                    recentActiveStyle.transition = "left " + transitionTime + "s";
-                    setTimeout(() => { recentActiveStyle.transition = ""; }, transitionTime * 1000);
+                    recentActiveStyle.transition = "left " + Config.defaultTransitionTime + "ms";
+                    setTimeout(() => { recentActiveStyle.transition = ""; }, Config.defaultTransitionTime);
                     recentActiveStyle.left = "-" + Config.getWindowWidth(true);
                     this.activePage = this.pages[page];
                     this.activePageIndex = page;
                     let actualActiveStyle = this.activePage.style;
-                    actualActiveStyle.transition = "left " + transitionTime + "s";
-                    setTimeout(() => { actualActiveStyle.transition = ""; }, transitionTime * 1000);
-                    actualActiveStyle.left = "0px";
+                    actualActiveStyle.left = Config.getWindowWidth(true);
+                    setTimeout(() => {
+                        actualActiveStyle.transition = "left " + Config.defaultTransitionTime + "ms";
+                        setTimeout(() => { actualActiveStyle.transition = ""; }, Config.defaultTransitionTime);
+                        actualActiveStyle.left = "0px";
+                    }, 0);
                 }
                 else {
                     this.activePage.style.left = Config.getWindowWidth(true);

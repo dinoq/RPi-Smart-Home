@@ -55,7 +55,9 @@ export class AbstractComponent extends Component {
                 //console.log(property+" is not CSS property!");
             }
         }
-        this.style.display = "block";
+        if (!this.style.display) { //If not set
+            this.style.display = "block";
+        }
     }
     addListeners() {
         new MethodNotImplementedError("addListeners", this, true);

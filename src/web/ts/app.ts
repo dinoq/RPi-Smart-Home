@@ -27,13 +27,16 @@ class AutoHomeApp {
         URLManager.registerURLChangeListener(this.renderPage);
         this.router = new AutoHomeRouter();
         this.pageManager = <PageManager>PageManager.getInstance();
-        let l = new BlankPage({backgroundColor: "yellow"});
-        let l2 = new BlankPage({backgroundColor: "green"});
+        let l = new BlankPage({title: "login", backgroundColor: "#f5f5f5"});
+        let l2 = new BlankPage({title: "dashboard", backgroundColor: "#cecece"});
         this.pageManager.addPage(l);
         this.pageManager.addPage(l2);   
         this.pageManager.connect();
         setTimeout(()=>{
             this.pageManager.setActive(1, Effects.SWIPE_TO_LEFT);
+            setTimeout(()=>{
+                this.pageManager.setActive(0, Effects.SWIPE_TO_LEFT);
+            },2000);
         },1000);
         this.renderPage();
 

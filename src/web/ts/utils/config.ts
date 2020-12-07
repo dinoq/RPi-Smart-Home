@@ -1,17 +1,20 @@
 import { Singleton } from "./singleton";
 
 export class Config {
-    public static showAll = false; // Switch to true for debugging all errors
-    public static showAnything = true;  //Switch to false for production
 
+    // Common configuration
+
+    public static defaultTransitionTime = 1000;
     // Display errors
+    public static showAllErrorsAndWarnings = false; // Switch to true for debugging all errors
+    public static showAnyErrorOrWarning = true;  //Switch to false for production
     public static showObservedAttrNotDefined = Config.evaluateCondition(false);
     public static showMethodNotImplemented = Config.evaluateCondition(true);
     public static showConnectedCallbackNotImplemented = Config.evaluateCondition(Config.showMethodNotImplemented && false);
 
 
     public static evaluateCondition(condition: boolean) {
-        return (condition || Config.showAll) && Config.showAnything;
+        return (condition || Config.showAllErrorsAndWarnings) && Config.showAnyErrorOrWarning;
     }
 
 

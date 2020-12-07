@@ -1,14 +1,4 @@
-import { ErrorDialog } from "./components/dialogs/error-dialog.js";
-import { LoginComponent } from "./components/forms/login.js";
-import { HeaderComponent } from "./components/headers/header.js";
-import { BlankPage } from "./components/pages/blank-page.js";
-import { UnknownPageError } from "./errors/system-errors/uknown-page-error.js";
-import { BaseLayout } from "./layouts/base-layout.js";
-import { PageCreator } from "./utils/page-creator.js";
-import { Effects, PageManager, PageManagerComponent } from "./utils/page-manager.js";
-import { AutoHomeRouter, Pages } from "./utils/router.js";
-import { URLManager } from "./utils/url-manager.js";
-export var app = null;
+var app = null;
 class AutoHomeApp {
     constructor() {
         this.ajax = () => {

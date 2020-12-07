@@ -67,7 +67,9 @@ export abstract class AbstractComponent extends Component {
                 //console.log(property+" is not CSS property!");
             }
         }
-        this.style.display="block";
+        if(!this.style.display){ //If not set
+            this.style.display="block";
+        }
     }
     addListeners(): void{
         new MethodNotImplementedError("addListeners", this, true);
@@ -109,10 +111,12 @@ export abstract class AbstractComponent extends Component {
 export interface componentProperties{
     componentName?: string,
     componentClassName?: string,
+    title?: string,
     x?: string,
     y?: string,
     width?: string,
     height?: string,
     backgroundColor?: string,
+    display?: string,
     resizable?
 }
