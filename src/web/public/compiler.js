@@ -2,27 +2,38 @@ const fs = require('fs')
 
 var path = require('path');
 var p = path.join(__dirname, 'js/app.js');
-var p2 = path.join(__dirname, 'js/app2.js');
+var buildPath = path.join(__dirname, 'js/build.js');
 let content = "";
 let lines;
 
 const directoryPath = path.join(__dirname, 'js');
 
-let Files  = [];
+let files  = [];
 
-function ThroughDirectory(Directory) {
+getFileNames(directoryPath);
+console.log(files);
+
+
+let concatenatedContent = "";
+for(let i = 0; i < files.length; i++){
+    if(files[i].indexOf("build.js") == -1){
+        concatenatedContent += appendCode(files[i]);
+    }
+}
+build(buildPath, concatenatedContent);
+
+
+function getFileNames(Directory) {
     fs.readdirSync(Directory).forEach(File => {
-        const Absolute = Path.join(Directory, File);
-        if (fs.statSync(Absolute).isDirectory()) return ThroughDirectory(Absolute);
-        else return Files.push(Absolute);
+        const Absolute = path.join(Directory, File);
+        if (fs.statSync(Absolute).isDirectory()) return getFileNames(Absolute);
+        else return files.push(Absolute);
     });
 }
 
-ThroughDirectory(__dirname);
-console.log(Files);
 
-try {
-    content = fs.readFileSync(files[2], 'utf8');
+function appendCode(url){
+    let content = fs.readFileSync(url, 'utf8');
     lines = content.split("\r\n");
     content="";
     for(let i = 0; i < lines.length;i++){
@@ -42,14 +53,8 @@ try {
         
     }
     content = lines.join('\n');
-
-} catch (err) {
-  console.error(err)
+    return content;
 }
-
-try {
-    const data = fs.writeFileSync(p2, content)
-    //file written successfully
-  } catch (err) {
-    console.error(err)
-  }
+function build(path, content){
+    const data = fs.writeFileSync(path, content);
+}

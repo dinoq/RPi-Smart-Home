@@ -1,6 +1,9 @@
 var express = require('express');
 var app = express();
 var path = require('path');
+var ip = require("ip");
+console.log("http://"+ip.address() );
+
 var p = path.join(__dirname/*, '../web/public'*/);
 console.log(' p: ',  p);
 app.use("/files", function (req, res) {
