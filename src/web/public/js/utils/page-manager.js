@@ -45,6 +45,9 @@ export class PageManager extends Singleton {
     }
     setActive(page, effect = Effects.NONE) {
         if (typeof page == "number") {
+            if (page == this.activePageIndex) {
+                return;
+            }
             if (page < this.pages.length) {
                 if (effect == Effects.SWIPE_TO_LEFT) {
                     let recentActiveStyle = this.activePage.style;
@@ -73,6 +76,9 @@ export class PageManager extends Singleton {
             }
         }
         else {
+            if (page == this.activePage) {
+                return;
+            }
             if (this.pages.indexOf(page) != -1) {
             }
             else {
