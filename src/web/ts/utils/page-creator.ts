@@ -1,33 +1,57 @@
 import { LoginComponent } from "../components/forms/login.js";
+import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
 import { AbstractComponent } from "../components/page-component.js";
 import { BlankPage } from "../components/pages/blank-page.js";
 import { BaseLayout } from "../layouts/base-layout.js";
+import { PageManager } from "./page-manager.js";
+import { AppRouter, IRoute, Pages } from "./app-router.js";
+import { URLManager } from "./url-manager.js";
 
 
 export class PageCreator {
     private login: LoginComponent;
-    /*private dashboard: DashboardElement;
-    private header: HeaderComponent;*/
+    private router: AppRouter;
+    private pageManager: PageManager;
+    
+    private hamburgerMenu: HamburgerMenu;
     constructor() {
-        /*this.dashboard = new DashboardElement();
-        this.header = new HeaderComponent();*/
-        let layout = new BaseLayout(
-            {
-                height:"20px", 
-                width: "100px", 
-                resizable:true,
-                backgroundColor: "blue"
-            });
-        document.getElementById("main").appendChild(layout);
-        let layout2 = new BaseLayout(
-            {
-                height:"200px", 
-                width: "50px", 
-                resizable:true,
-                backgroundColor: "red"
-            });
-        document.getElementById("main").appendChild(layout2);
-        //layout2.addPage(new BlankPage({backgroundColor: "green"}));
+        
+        this.pageManager = <PageManager>PageManager.getInstance();
+        this.hamburgerMenu = new HamburgerMenu();
+        //menu.hide(true);
+        
+        this.router = new AppRouter();
+        URLManager.registerURLChangeListener(this.renderPage);
+        this.renderPage();
+    }
+
+    renderPage = () => {
+        if(this.router.loggedIn()){   
+            if(!this.hamburgerMenu.componentConnected){
+                this.hamburgerMenu.connectComponent(document.body);
+            }         
+        }else{
+            if(this.hamburgerMenu.componentConnected){
+                this.hamburgerMenu.disconnectComponent();
+            }  
+        }
+        let route: IRoute = this.router.getRoute();
+        console.log('route: ', route);
+        let page: Pages = route.page;
+        URLManager.setURL(route.path, "login", true);
+        
+        //this.ajax();
+        
+        switch (page) {
+            case Pages.LOGIN:
+                this.createLogin((route.afterLoginPath != undefined)? route.afterLoginPath: undefined);
+            break;
+            case Pages.UNKNOWN:                
+            break;
+            default:
+            break;
+        }
+        return;
     }
 
     createElement(containerId: string, elementType: PageElements, elementConfig?: elementConfig) {

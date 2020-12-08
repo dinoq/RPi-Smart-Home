@@ -25,7 +25,7 @@ export class Component extends HTMLElement {
         return "";
     }*/
 
-    constructor(componentProps: componentProperties) {
+    constructor(componentProps?: componentProperties) {
         try {
             super();
             this.firebase = firebase;
@@ -51,15 +51,19 @@ export class Component extends HTMLElement {
     }
 }
 export abstract class AbstractComponent extends Component {
-    componentProps: any;
-    constructor(componentProps: componentProperties) {
+    componentProps: componentProperties;
+    componentConnected: boolean = false;
+    
+    constructor(componentProps?: componentProperties) {
         super(componentProps);
         this.componentProps = componentProps;
         this.initializeFromProps(componentProps);
     }
 
 
-    initializeFromProps(componentProps: componentProperties): void {
+    initializeFromProps(componentProps?: componentProperties): void {
+        if(!componentProps)
+            return;
         for(const property in componentProps){
             if(this.style[property] != undefined){//Is CSS pproperty, thus asign it!
                 this.style[property] = componentProps[property];
@@ -82,9 +86,7 @@ export abstract class AbstractComponent extends Component {
         new MethodNotImplementedError("addListeners", this, true);
     }
     connectedCallback(): void{
-        if(Config.showConnectedCallbackNotImplemented){
-            new MethodNotImplementedError("connectedCallback", this, true);
-        }
+        new MethodNotImplementedError("connectedCallback", this, true);
     }
     disconnectedCallback(): void{
         new MethodNotImplementedError("disconnectedCallback", this, true);
@@ -95,6 +97,7 @@ export abstract class AbstractComponent extends Component {
 
     disconnectComponent() {
         this.parent.removeChild(this);
+        this.componentConnected = false;
     }
 
     connectComponent(parent: string | HTMLElement, replaceContent: boolean = false) {
@@ -110,6 +113,7 @@ export abstract class AbstractComponent extends Component {
             this.parent.innerHTML = "";
         }
         this.parent.appendChild(this);
+        this.componentConnected = true;
         this.addListeners();
     }
 
@@ -129,6 +133,7 @@ export interface componentProperties{
     top?: string,
     bottom?: string,
     transition?: string,
+    "z-index"?: string,
 
     // Component props
     componentName?: string,

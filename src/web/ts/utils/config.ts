@@ -11,12 +11,18 @@ export class Config {
     public static showObservedAttrNotDefined = Config.evaluateCondition(false);
     public static showMethodNotImplemented = Config.evaluateCondition(true);
     public static showConnectedCallbackNotImplemented = Config.evaluateCondition(Config.showMethodNotImplemented && false);
+    public static showDisconnectedCallbackNotImplemented = Config.evaluateCondition(Config.showMethodNotImplemented && false);
+    public static showAddListenersNotImplemented = Config.evaluateCondition(Config.showMethodNotImplemented && false);
 
 
     public static evaluateCondition(condition: boolean) {
         return (condition || Config.showAllErrorsAndWarnings) && Config.showAnyErrorOrWarning;
     }
 
+
+    // Z-indexes
+    public static defaultMenuDepth = 100;
+    public static defaultPageDepth = 50;
 
     public static getWindowWidth(withPixelUnit: boolean = false): number | string {
         let width = window.innerWidth

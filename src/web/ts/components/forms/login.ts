@@ -1,12 +1,12 @@
 import { AbstractComponent, componentProperties, firebase } from "../page-component.js";
 
 export class LoginComponent extends AbstractComponent{
-    constructor(componentProps: componentProperties){
+    constructor(componentProps?: componentProperties){
         super(componentProps);
     }
 
 
-    initializeFromProps(componentProps: componentProperties): void {
+    initializeFromProps(componentProps?: componentProperties): void {
         super.initializeFromProps(componentProps);
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";

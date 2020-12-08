@@ -1,4 +1,4 @@
-import { AbstractComponent, componentProperties } from "../components/page-component.js";
+import { AbstractComponent, componentProperties as IComponentProperties } from "../components/page-component.js";
 import { BasePage } from "../components/pages/base-page.js";
 import { PageAlreadyAddedToPageManagerError, PageNotExistInPageManagerError } from "../errors/page-errors.js";
 import { Config } from "./config.js";
@@ -8,12 +8,14 @@ export class PageManager extends Singleton {
     private activePageIndex: number = 0;
     private activePage: BasePage = null;
     private pages: Array<BasePage>;
+    private pagesKeys: Array<string>;
     private pageManagerComponent: PageManagerComponent;
 
     constructor() {
         super();
         this.pages = new Array();
         this.pageManagerComponent = new PageManagerComponent({});
+        this.pageManagerComponent.connectComponent(document.body);
         this.resizePages();
         window.addEventListener('resize', this.resizePages);
     }
@@ -21,23 +23,24 @@ export class PageManager extends Singleton {
     connect() {
         this.pageManagerComponent.connectComponent(document.body);
     }
-    addPage(page: BasePage) {
+    addPage(page: BasePage, key: string) {
         if (this.pages.indexOf(page) != -1) {
             new PageAlreadyAddedToPageManagerError(page, true);
             return;
         }
         this.pages.push(page);
+        this.pagesKeys.push(key);
         this.pageManagerComponent.appendChild(page);
         if (this.pages.length == 1) {
             this.activePage = page;
             page.style.left = "0px";
         } else {
             page.style.left = <string>Config.getWindowWidth(true);
-            //page.style.display = "none";
+            page.style.display = "none";
         }
     }
 
-    setActive(page: number | BasePage, effect: Effects = Effects.NONE) {
+    setActive(page: number | string | BasePage, effect: Effects = Effects.NONE) {
         if (typeof page == "number") {
             if(page == this.activePageIndex){
                 return;
@@ -69,6 +72,8 @@ export class PageManager extends Singleton {
             } else {
                 new PageNotExistInPageManagerError(page, this.pages.length, true);
             }
+        } else if(typeof page == "string"){
+
         } else {
             if(page == this.activePage){
                 return;
@@ -98,7 +103,7 @@ export class PageManager extends Singleton {
 
 
 export class PageManagerComponent extends AbstractComponent {
-    constructor(componentProps: componentProperties) {
+    constructor(componentProps?: IComponentProperties) {
         super(componentProps);
         this.style.position = "absolute";
         this.style.top = "0";

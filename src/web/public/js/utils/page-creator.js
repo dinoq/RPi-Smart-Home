@@ -1,29 +1,46 @@
 import { LoginComponent } from "../components/forms/login.js";
-import { BaseLayout } from "../layouts/base-layout.js";
+import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
+import { PageManager } from "./page-manager.js";
+import { AppRouter, Pages } from "./app-router.js";
+import { URLManager } from "./url-manager.js";
 export class PageCreator {
-    /*private dashboard: DashboardElement;
-    private header: HeaderComponent;*/
     constructor() {
+        this.renderPage = () => {
+            if (this.router.loggedIn()) {
+                if (!this.hamburgerMenu.componentConnected) {
+                    this.hamburgerMenu.connectComponent(document.body);
+                }
+            }
+            else {
+                if (this.hamburgerMenu.componentConnected) {
+                    this.hamburgerMenu.disconnectComponent();
+                }
+            }
+            let route = this.router.getRoute();
+            console.log('route: ', route);
+            let page = route.page;
+            URLManager.setURL(route.path, "login", true);
+            //this.ajax();
+            switch (page) {
+                case Pages.LOGIN:
+                    this.createLogin((route.afterLoginPath != undefined) ? route.afterLoginPath : undefined);
+                    break;
+                case Pages.UNKNOWN:
+                    break;
+                default:
+                    break;
+            }
+            return;
+        };
         this.createDashboard = () => {
             //this.header.mountComponent("header");
         };
-        /*this.dashboard = new DashboardElement();
-        this.header = new HeaderComponent();*/
-        let layout = new BaseLayout({
-            height: "20px",
-            width: "100px",
-            resizable: true,
-            backgroundColor: "blue"
-        });
-        document.getElementById("main").appendChild(layout);
-        let layout2 = new BaseLayout({
-            height: "200px",
-            width: "50px",
-            resizable: true,
-            backgroundColor: "red"
-        });
-        document.getElementById("main").appendChild(layout2);
-        //layout2.addPage(new BlankPage({backgroundColor: "green"}));
+        this.pageManager = PageManager.getInstance();
+        this.hamburgerMenu = new HamburgerMenu();
+        //menu.hide(true);
+        this.router = new AppRouter();
+        URLManager.registerURLChangeListener(this.renderPage);
+        this.renderPage();
     }
     createElement(containerId, elementType, elementConfig) {
         let container = document.getElementById(containerId);

@@ -1,7 +1,7 @@
 import { AbstractComponent, componentProperties } from "./page-component.js";
 
 export class ExampleComponent extends AbstractComponent {
-    constructor(componentProps: componentProperties) {
+    constructor(componentProps?: componentProperties) {
         super(componentProps);
     }
     /*    

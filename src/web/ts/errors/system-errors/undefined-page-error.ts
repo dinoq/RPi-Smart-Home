@@ -1,4 +1,4 @@
-import { Pages } from "../../utils/router.js";
+import { Pages } from "../../utils/app-router.js";
 
 export class UndefinedPageError extends Error {
     __proto__ = Error

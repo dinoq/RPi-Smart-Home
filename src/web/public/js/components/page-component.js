@@ -43,10 +43,13 @@ export class Component extends HTMLElement {
 export class AbstractComponent extends Component {
     constructor(componentProps) {
         super(componentProps);
+        this.componentConnected = false;
         this.componentProps = componentProps;
         this.initializeFromProps(componentProps);
     }
     initializeFromProps(componentProps) {
+        if (!componentProps)
+            return;
         for (const property in componentProps) {
             if (this.style[property] != undefined) { //Is CSS pproperty, thus asign it!
                 this.style[property] = componentProps[property];
@@ -70,9 +73,7 @@ export class AbstractComponent extends Component {
         new MethodNotImplementedError("addListeners", this, true);
     }
     connectedCallback() {
-        if (Config.showConnectedCallbackNotImplemented) {
-            new MethodNotImplementedError("connectedCallback", this, true);
-        }
+        new MethodNotImplementedError("connectedCallback", this, true);
     }
     disconnectedCallback() {
         new MethodNotImplementedError("disconnectedCallback", this, true);
@@ -82,6 +83,7 @@ export class AbstractComponent extends Component {
     }
     disconnectComponent() {
         this.parent.removeChild(this);
+        this.componentConnected = false;
     }
     connectComponent(parent, replaceContent = false) {
         if (typeof parent == "string") {
@@ -96,6 +98,7 @@ export class AbstractComponent extends Component {
             this.parent.innerHTML = "";
         }
         this.parent.appendChild(this);
+        this.componentConnected = true;
         this.addListeners();
     }
 }

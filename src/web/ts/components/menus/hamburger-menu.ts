@@ -1,39 +1,88 @@
 import { Config } from "../../utils/config.js";
+import { Utils } from "../../utils/utils.js";
 import { AbstractComponent, componentProperties } from "../page-component.js";
 import { BaseMenu } from "./base-menu.js";
 
-export class HamburgerMenu extends BaseMenu{
+export class HamburgerMenu extends BaseMenu {
     private hamburgerIcon: HTMLImageElement;
-    constructor(componentProps: componentProperties){
-        super(componentProps);
-        
+
+    constructor(componentProps?: componentProperties) {
+        super();
+
         let props: componentProperties = {
-            height: "0px",       
-            position: "absolute",   
+            position: "absolute",
             transition: "all 1s",
-            left: "0px",
+            left: "10px",
+            top: "10px",
+            "z-index": Config.defaultMenuDepth.toString()
         }
-        this.initializeFromProps(props);
+
+        let mergedProperties = Utils.mergeObjects(componentProps, props);
+        this.componentProps = mergedProperties;
+        this.initializeFromProps(mergedProperties);
+
+        this.innerHTML = HamburgerMenu.MENU_CONTENT;
+        this.itemsContainer = <AbstractComponent>this.getElementsByTagName("menu-items-container")[0];
+        this.hamburgerIcon = <HTMLImageElement>this.getElementsByTagName("img")[0];
+        this.hamburgerIcon.addEventListener("click", () => { this.toggle(true) });
     }
 
-    
-    addMenuItem(item: AbstractComponent){
+    static MENU_CONTENT = `
+    <img src="img/menu.png"></img>
+    <menu-items-container style="display: block; position: relative; left: 0px">
+        <menu-item style="display: block;">Domů</menu-item>
+        <menu-item style="display: block;">Podmínky</menu-item>
+        <menu-item style="display: block;">Nastavení</menu-item>
+    </menu-items-container>
+    `;
+
+    //@overrride
+    connectedCallback(): void{
+        this.show(false, false);
+    }
+
+    addMenuItem(item: AbstractComponent) {
         super.addMenuItem(item);
         //this.style.display = "block";
     }
-    
-    hide(immediately: boolean){
-        if(immediately){
-            
+    toggle(animate: boolean) {
+        let containerStyle = this.itemsContainer.style;
+        if (containerStyle.left == "0px") {// showed
+            this.show(false, animate);
+        } else { //hidden
+            this.show(true, animate);
         }
-        this.style.left = -this.itemsContainer.clientWidth+"px";
-    }
-    addListeners(): void{
-        window.addEventListener("resize",this.resize);
     }
 
-    resize(){
+
+    show(show: boolean = true, animate: boolean) {
+        let containerStyle = this.itemsContainer.style;
+        if (animate) {
+            containerStyle.transition = "left 1s";
+        }
+        if (show) {
+            this.hamburgerIcon.src = "img/close.png";
+            containerStyle.left = "0px";
+        } else {
+            this.hamburgerIcon.src = "img/menu.png";
+            containerStyle.left = -this.itemsContainer.clientWidth -
+                Utils.pxToNumber(this.componentProps.left) + "px";
+        }
+        if (animate) {
+            this.itemsContainer.addEventListener("transitionend", () => {
+                containerStyle.transition = "";
+            })
+        }
+    }
+
+    
+    //@overrride
+    addListeners(): void {
+        window.addEventListener("resize", this.resize);
+    }
+
+    resize() {
         console.log(Config.getWindowHeight());
     }
-    
+
 }

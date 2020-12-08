@@ -9,7 +9,7 @@ export enum Pages {
     DEVICES,
     HOME,
 }
-export class AutoHomeRouter {
+export class AppRouter {
     public desiredPage: Pages;
     public route: IRoute;
     constructor() {
@@ -22,7 +22,7 @@ export class AutoHomeRouter {
         
         let logged = localStorage.getItem("logged");
 
-        this.route = {page: AutoHomeRouter.DEFAULT_LOGGED_PAGE, path: entirePath};
+        this.route = {page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath};
         let topLevel: string = pathArr[0];
         if (topLevel == "user") {
             switch (pathArr[1]) {
@@ -53,7 +53,9 @@ export class AutoHomeRouter {
 
     }
 
-
+    loggedIn(){
+        return localStorage.getItem("logged");
+    }
 
     isLoginPath(): boolean {
         return window.location.pathname.toLocaleLowerCase() == "/user/login";

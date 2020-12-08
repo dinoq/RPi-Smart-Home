@@ -21,18 +21,20 @@ export class PageManager extends Singleton {
         };
         this.pages = new Array();
         this.pageManagerComponent = new PageManagerComponent({});
+        this.pageManagerComponent.connectComponent(document.body);
         this.resizePages();
         window.addEventListener('resize', this.resizePages);
     }
     connect() {
         this.pageManagerComponent.connectComponent(document.body);
     }
-    addPage(page) {
+    addPage(page, key) {
         if (this.pages.indexOf(page) != -1) {
             new PageAlreadyAddedToPageManagerError(page, true);
             return;
         }
         this.pages.push(page);
+        this.pagesKeys.push(key);
         this.pageManagerComponent.appendChild(page);
         if (this.pages.length == 1) {
             this.activePage = page;
@@ -40,7 +42,7 @@ export class PageManager extends Singleton {
         }
         else {
             page.style.left = Config.getWindowWidth(true);
-            //page.style.display = "none";
+            page.style.display = "none";
         }
     }
     setActive(page, effect = Effects.NONE) {
@@ -74,6 +76,8 @@ export class PageManager extends Singleton {
             else {
                 new PageNotExistInPageManagerError(page, this.pages.length, true);
             }
+        }
+        else if (typeof page == "string") {
         }
         else {
             if (page == this.activePage) {

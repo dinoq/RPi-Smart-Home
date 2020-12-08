@@ -10,7 +10,7 @@ import { UndefinedPageError } from "./errors/system-errors/undefined-page-error.
 import { BaseLayout } from "./layouts/base-layout.js";
 import { PageCreator, PageElements } from "./utils/page-creator.js";
 import { Effects, PageManager, PageManagerComponent } from "./utils/page-manager.js";
-import { AutoHomeRouter, IRoute, Pages } from "./utils/router.js";
+import { AppRouter, IRoute, Pages } from "./utils/app-router.js";
 import { URLManager } from "./utils/url-manager.js";
 
 export declare var firebase: any;
@@ -18,40 +18,11 @@ export declare var firebase: any;
 export var app: null | AutoHomeApp = null;
 class AutoHomeApp {
     private pageCreator: PageCreator;
-    private router: AutoHomeRouter;
-    private pageManager: PageManager;
-
-
     constructor() {
         this.initFirebase();
         this.registerAllComponents();
 
         this.pageCreator = new PageCreator();
-        URLManager.registerURLChangeListener(this.renderPage);
-        this.router = new AutoHomeRouter();
-        this.pageManager = <PageManager>PageManager.getInstance();
-        let l = new BlankPage({title: "login", backgroundColor: "#f5f5f5"});
-        let l2 = new BlankPage({title: "dashboard", backgroundColor: "#cecece"});
-        this.pageManager.addPage(l);
-        this.pageManager.addPage(l2);   
-        this.pageManager.connect();
-        let menu = new HamburgerMenu({connectToParent: document.body, replaceParentContent: false});
-        let li1 = new MenuItem({text:"Odkaz1"});
-        let li2 = new MenuItem({text:"Odkaz 2 2 2"});
-        menu.addMenuItem(li1);
-        menu.addMenuItem(li2);
-        menu.hide(true);
-        setTimeout(()=>{
-            this.pageManager.setActive(1, Effects.SWIPE_TO_LEFT);
-            setTimeout(()=>{
-                this.pageManager.setActive(0, Effects.SWIPE_TO_LEFT);
-            },2000);
-        },1000);
-        this.renderPage();
-
-        document.onclick = () => {
-            //URLManager.setURL("/user/login" + Math.random());
-        }
 
     }
     registerAllComponents() {
@@ -80,27 +51,6 @@ class AutoHomeApp {
           xhttp.send();
     }
 
-    renderPage = () => {
-        let route: IRoute = this.router.getRoute();
-        console.log('route: ', route);
-        let page: Pages = route.page;
-        URLManager.setURL(route.path, "login", true);
-        
-        //this.ajax();
-        
-        switch (page) {
-            case Pages.LOGIN:
-                this.pageCreator.createLogin((route.afterLoginPath != undefined)? route.afterLoginPath: undefined);
-            break;
-            case Pages.UNKNOWN:                
-                throw new UnknownPageError();
-            break;
-            default:
-                //throw new UndefinedPageError(Pages[page]);
-            break;
-        }
-        return;
-    }
 
     initFirebase(){       
         var firebaseConfig = {
