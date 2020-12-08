@@ -6,8 +6,8 @@ export class LoginComponent extends AbstractComponent{
     }
 
 
-    initialize(componentProps: componentProperties): void {
-        super.initialize(componentProps);
+    initializeFromProps(componentProps: componentProperties): void {
+        super.initializeFromProps(componentProps);
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
         this.innerHTML = `

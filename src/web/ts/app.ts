@@ -1,6 +1,9 @@
 import { ErrorDialog } from "./components/dialogs/error-dialog.js";
 import { LoginComponent } from "./components/forms/login.js";
 import { HeaderComponent } from "./components/headers/header.js";
+import { MenuItemsContainer } from "./components/menus/base-menu.js";
+import { HamburgerMenu } from "./components/menus/hamburger-menu.js";
+import { MenuItem } from "./components/menus/menu-item.js";
 import { BlankPage } from "./components/pages/blank-page.js";
 import { UnknownPageError } from "./errors/system-errors/uknown-page-error.js";
 import { UndefinedPageError } from "./errors/system-errors/undefined-page-error.js";
@@ -32,6 +35,12 @@ class AutoHomeApp {
         this.pageManager.addPage(l);
         this.pageManager.addPage(l2);   
         this.pageManager.connect();
+        let menu = new HamburgerMenu({connectToParent: document.body, replaceParentContent: false});
+        let li1 = new MenuItem({text:"Odkaz1"});
+        let li2 = new MenuItem({text:"Odkaz 2 2 2"});
+        menu.addMenuItem(li1);
+        menu.addMenuItem(li2);
+        menu.hide(true);
         setTimeout(()=>{
             this.pageManager.setActive(1, Effects.SWIPE_TO_LEFT);
             setTimeout(()=>{
@@ -53,6 +62,9 @@ class AutoHomeApp {
             customElements.define("page-manager", PageManagerComponent);
             customElements.define("blank-page", BlankPage);
             customElements.define("header-component", HeaderComponent);
+            customElements.define("hamburger-menu", HamburgerMenu);
+            customElements.define("menu-item", MenuItem);
+            customElements.define("menu-items-container", MenuItemsContainer);
         }
 
     }

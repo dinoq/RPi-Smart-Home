@@ -44,9 +44,9 @@ export class AbstractComponent extends Component {
     constructor(componentProps) {
         super(componentProps);
         this.componentProps = componentProps;
-        this.initialize(componentProps);
+        this.initializeFromProps(componentProps);
     }
-    initialize(componentProps) {
+    initializeFromProps(componentProps) {
         for (const property in componentProps) {
             if (this.style[property] != undefined) { //Is CSS pproperty, thus asign it!
                 this.style[property] = componentProps[property];
@@ -57,6 +57,13 @@ export class AbstractComponent extends Component {
         }
         if (!this.style.display) { //If not set
             this.style.display = "block";
+        }
+        if (componentProps.connectToParent) {
+            let replace = false;
+            if (componentProps.replaceParentContent) {
+                replace = componentProps.replaceParentContent;
+            }
+            this.connectComponent(componentProps.connectToParent, componentProps.replaceParentContent);
         }
     }
     addListeners() {

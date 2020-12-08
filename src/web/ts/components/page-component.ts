@@ -55,11 +55,11 @@ export abstract class AbstractComponent extends Component {
     constructor(componentProps: componentProperties) {
         super(componentProps);
         this.componentProps = componentProps;
-        this.initialize(componentProps);
+        this.initializeFromProps(componentProps);
     }
 
 
-    initialize(componentProps: componentProperties): void {
+    initializeFromProps(componentProps: componentProperties): void {
         for(const property in componentProps){
             if(this.style[property] != undefined){//Is CSS pproperty, thus asign it!
                 this.style[property] = componentProps[property];
@@ -69,6 +69,13 @@ export abstract class AbstractComponent extends Component {
         }
         if(!this.style.display){ //If not set
             this.style.display="block";
+        }
+        if(componentProps.connectToParent){
+            let replace = false;
+            if(componentProps.replaceParentContent){
+                replace = componentProps.replaceParentContent;
+            }
+            this.connectComponent(componentProps.connectToParent, componentProps.replaceParentContent);
         }
     }
     addListeners(): void{
@@ -109,14 +116,26 @@ export abstract class AbstractComponent extends Component {
 }
 
 export interface componentProperties{
-    componentName?: string,
-    componentClassName?: string,
-    title?: string,
+    // CSS props
     x?: string,
     y?: string,
     width?: string,
     height?: string,
     backgroundColor?: string,
     display?: string,
-    resizable?
+    position?: string,
+    left?: string,
+    right?: string,
+    top?: string,
+    bottom?: string,
+    transition?: string,
+
+    // Component props
+    componentName?: string,
+    componentClassName?: string,
+    title?: string,    
+    text?: string,  
+    resizable?: boolean,
+    connectToParent?:  string | HTMLElement,
+    replaceParentContent?: boolean,
 }

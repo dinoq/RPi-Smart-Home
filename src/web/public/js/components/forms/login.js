@@ -35,8 +35,8 @@ export class LoginComponent extends AbstractComponent {
             }
         };
     }
-    initialize(componentProps) {
-        super.initialize(componentProps);
+    initializeFromProps(componentProps) {
+        super.initializeFromProps(componentProps);
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
         this.innerHTML = `
