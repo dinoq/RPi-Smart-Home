@@ -1,7 +1,9 @@
-import { componentProperties } from "../page-component.js";
+import { componentProperties } from "../component.js";
 import { BaseDialog } from "./base-dialog.js";
 
 export class ErrorDialog extends BaseDialog {
+    static tagName = "error-dialog";
+    
     constructor(error: string, componentProps?: componentProperties){
         super(componentProps);
         this.innerHTML=`

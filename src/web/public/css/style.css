@@ -8,7 +8,7 @@ html header #header-wrapper {
   background-color: #5CE1E6;
 }
 
-html main #form-alert-wrapper {
+html #form-alert-wrapper {
   display: none;
   -webkit-box-pack: center;
       -ms-flex-pack: center;
@@ -16,7 +16,7 @@ html main #form-alert-wrapper {
   margin-top: 25px;
 }
 
-html main #form-wrapper {
+html #form-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -26,7 +26,7 @@ html main #form-wrapper {
   margin-top: 25px;
 }
 
-html main #form-wrapper form {
+html #form-wrapper form {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -43,19 +43,19 @@ html main #form-wrapper form {
   padding: 20px;
 }
 
-html main #form-wrapper form .form-label {
+html #form-wrapper form .form-label {
   position: relative;
   width: 100%;
 }
 
-html main #form-wrapper form .form-label .form-name-label {
+html #form-wrapper form .form-label .form-name-label {
   top: calc(-20px - 0.75em);
   margin-top: 0;
   background-color: white;
   left: -10px;
 }
 
-html main #form-wrapper form .form-label label {
+html #form-wrapper form .form-label label {
   position: absolute;
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
@@ -66,7 +66,7 @@ html main #form-wrapper form .form-label label {
   font-size: 1em;
 }
 
-html main #form-wrapper form .form-label .active-label, html main #form-wrapper form .form-label .permanent-active-label {
+html #form-wrapper form .form-label .active-label, html #form-wrapper form .form-label .permanent-active-label {
   top: -0.75em;
   left: 10px;
   background-color: white;
@@ -74,7 +74,7 @@ html main #form-wrapper form .form-label .active-label, html main #form-wrapper 
   font-size: 0.8em;
 }
 
-html main #form-wrapper form input:not([type=checkbox]) {
+html #form-wrapper form input:not([type=checkbox]) {
   margin-top: 20px;
   border: 1px solid gray;
   height: 2.5rem;
@@ -82,12 +82,12 @@ html main #form-wrapper form input:not([type=checkbox]) {
   padding-left: 5px;
 }
 
-html main #form-wrapper form input:focus {
+html #form-wrapper form input:focus {
   outline: none;
   border: 2px solid #00aaff;
 }
 
-html main #form-wrapper form .chekbox-wrapper {
+html #form-wrapper form .chekbox-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -101,17 +101,17 @@ html main #form-wrapper form .chekbox-wrapper {
   margin-top: 0.5em;
 }
 
-html main #form-wrapper form .chekbox-wrapper input {
+html #form-wrapper form .chekbox-wrapper input {
   margin-right: 0.5em;
   height: 1.3em;
   width: 1.3em;
 }
 
-html main #form-wrapper form .chekbox-wrapper label {
+html #form-wrapper form .chekbox-wrapper label {
   margin: 0;
 }
 
-html main #form-wrapper form input[type=button] {
+html #form-wrapper form input[type=button] {
   width: -webkit-fit-content;
   width: -moz-fit-content;
   width: fit-content;
@@ -149,5 +149,23 @@ error-dialog .close-btn {
 error-dialog .close-btn div {
   width: 30%;
   font-size: 1.3em;
+}
+
+hamburger-menu {
+  position: absolute;
+  -webkit-transition: all 1s;
+  transition: all 1s;
+  left: 10px;
+  top: 10px;
+}
+
+hamburger-menu menu-items-container {
+  display: block;
+  position: relative;
+  left: 0px;
+}
+
+hamburger-menu menu-items-container menu-item {
+  display: block;
 }
 /*# sourceMappingURL=style.css.map */

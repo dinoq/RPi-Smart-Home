@@ -1,19 +1,17 @@
 import { Config } from "../../utils/config.js";
 import { Utils } from "../../utils/utils.js";
-import { AbstractComponent, componentProperties } from "../page-component.js";
+import { AbstractComponent, componentProperties } from "../component.js";
 import { BaseMenu } from "./base-menu.js";
 
 export class HamburgerMenu extends BaseMenu {
+    static tagName = "hamburger-menu";
+    
     private hamburgerIcon: HTMLImageElement;
 
     constructor(componentProps?: componentProperties) {
         super();
 
         let props: componentProperties = {
-            position: "absolute",
-            transition: "all 1s",
-            left: "10px",
-            top: "10px",
             "z-index": Config.defaultMenuDepth.toString()
         }
 
@@ -27,12 +25,13 @@ export class HamburgerMenu extends BaseMenu {
         this.hamburgerIcon.addEventListener("click", () => { this.toggle(true) });
     }
 
+
     static MENU_CONTENT = `
     <img src="img/menu.png"></img>
-    <menu-items-container style="display: block; position: relative; left: 0px">
-        <menu-item style="display: block;">Domů</menu-item>
-        <menu-item style="display: block;">Podmínky</menu-item>
-        <menu-item style="display: block;">Nastavení</menu-item>
+    <menu-items-container>
+        <menu-item>Domů</menu-item>
+        <menu-item>Podmínky</menu-item>
+        <menu-item>Nastavení</menu-item>
     </menu-items-container>
     `;
 
@@ -66,7 +65,7 @@ export class HamburgerMenu extends BaseMenu {
         } else {
             this.hamburgerIcon.src = "img/menu.png";
             containerStyle.left = -this.itemsContainer.clientWidth -
-                Utils.pxToNumber(this.componentProps.left) + "px";
+                Utils.pxToNumber(getComputedStyle(this).left) + "px";
         }
         if (animate) {
             this.itemsContainer.addEventListener("transitionend", () => {

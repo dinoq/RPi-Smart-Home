@@ -1,5 +1,6 @@
-import { AbstractComponent, componentProperties as IComponentProperties } from "../components/page-component.js";
+import { AbstractComponent, componentProperties as IComponentProperties } from "../components/component.js";
 import { BasePage } from "../components/pages/base-page.js";
+import { BaseError } from "../errors/base-error.js";
 import { PageAlreadyAddedToPageManagerError, PageNotExistInPageManagerError } from "../errors/page-errors.js";
 import { Config } from "./config.js";
 import { Singleton } from "./singleton.js";
@@ -14,6 +15,7 @@ export class PageManager extends Singleton {
     constructor() {
         super();
         this.pages = new Array();
+        this.pagesKeys = new Array();
         this.pageManagerComponent = new PageManagerComponent({});
         this.pageManagerComponent.connectComponent(document.body);
         this.resizePages();
@@ -25,9 +27,20 @@ export class PageManager extends Singleton {
     }
     addPage(page: BasePage, key: string) {
         if (this.pages.indexOf(page) != -1) {
-            new PageAlreadyAddedToPageManagerError(page, true);
+            //new PageAlreadyAddedToPageManagerError(page, true);            
+            console.log("Page already added to pagemanager: " + page.constructor.name );
             return;
         }
+        if(this.pagesKeys.includes(key)){//Duplicate key in manager
+            let i = this.pagesKeys.indexOf(key);
+            if(page.constructor.name != this.pages[i].constructor.name){
+                new BaseError("Already added page with same key!", this, true);
+            }else{
+                console.log("Page already added to pagemanager: " + page.constructor.name );
+            }
+            return;
+        }
+        
         this.pages.push(page);
         this.pagesKeys.push(key);
         this.pageManagerComponent.appendChild(page);
@@ -103,6 +116,8 @@ export class PageManager extends Singleton {
 
 
 export class PageManagerComponent extends AbstractComponent {
+    static tagName = "page-manager";
+    
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
         this.style.position = "absolute";

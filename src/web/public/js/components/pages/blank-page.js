@@ -5,3 +5,4 @@ export class BlankPage extends BasePage {
         this.innerHTML = "<div style='display:flex;justify-content: center;'><h1>" + componentProps.title + "</h1></div>";
     }
 }
+BlankPage.tagName = "blank-page";

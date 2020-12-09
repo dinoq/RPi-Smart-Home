@@ -9,10 +9,10 @@ export class URLManager extends Singleton{
         (<URLManager>urlManager).onURLChange = callback;
         window.addEventListener('popstate', callback);
     }
-    public static setURL(newURL: string, title: string="", skipCallback: boolean=false): void{
+    public static setURL(newURL: string, title: string="", skipRendering: boolean=false): void{
         let urlManager = URLManager.getInstance();
         window.history.pushState("", title, newURL);
-        if(!skipCallback){
+        if(!skipRendering){
             (<URLManager>urlManager).onURLChange();
         }
     }

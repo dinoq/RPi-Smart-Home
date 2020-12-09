@@ -12,6 +12,8 @@ import { PageCreator, PageElements } from "./utils/page-creator.js";
 import { Effects, PageManager, PageManagerComponent } from "./utils/page-manager.js";
 import { AppRouter, IRoute, Pages } from "./utils/app-router.js";
 import { URLManager } from "./utils/url-manager.js";
+import { LoginPage } from "./components/pages/login-page.js";
+import { Dashboard } from "./components/pages/dashboard.js";
 
 export declare var firebase: any;
 
@@ -27,15 +29,17 @@ class AutoHomeApp {
     }
     registerAllComponents() {
         if(customElements.get("login-form") == undefined){
-            customElements.define("error-dialog", ErrorDialog);
-            customElements.define("login-form", LoginComponent);
-            customElements.define("base-layout", BaseLayout);
-            customElements.define("page-manager", PageManagerComponent);
-            customElements.define("blank-page", BlankPage);
-            customElements.define("header-component", HeaderComponent);
-            customElements.define("hamburger-menu", HamburgerMenu);
-            customElements.define("menu-item", MenuItem);
-            customElements.define("menu-items-container", MenuItemsContainer);
+            ErrorDialog.defineComponent();
+            LoginComponent.defineComponent();
+            LoginPage.defineComponent();
+            Dashboard.defineComponent();
+            BaseLayout.defineComponent();
+            PageManagerComponent.defineComponent();
+            BlankPage.defineComponent();
+            HeaderComponent.defineComponent();
+            HamburgerMenu.defineComponent();
+            MenuItem.defineComponent();
+            MenuItemsContainer.defineComponent();
         }
 
     }

@@ -1,5 +1,6 @@
-import { AbstractComponent } from "../components/page-component.js";
-import { PageAlreadyAddedToPageManagerError, PageNotExistInPageManagerError } from "../errors/page-errors.js";
+import { AbstractComponent } from "../components/component.js";
+import { BaseError } from "../errors/base-error.js";
+import { PageNotExistInPageManagerError } from "../errors/page-errors.js";
 import { Config } from "./config.js";
 import { Singleton } from "./singleton.js";
 export class PageManager extends Singleton {
@@ -20,6 +21,7 @@ export class PageManager extends Singleton {
             });
         };
         this.pages = new Array();
+        this.pagesKeys = new Array();
         this.pageManagerComponent = new PageManagerComponent({});
         this.pageManagerComponent.connectComponent(document.body);
         this.resizePages();
@@ -30,7 +32,18 @@ export class PageManager extends Singleton {
     }
     addPage(page, key) {
         if (this.pages.indexOf(page) != -1) {
-            new PageAlreadyAddedToPageManagerError(page, true);
+            //new PageAlreadyAddedToPageManagerError(page, true);            
+            console.log("Page already added to pagemanager: " + page.constructor.name);
+            return;
+        }
+        if (this.pagesKeys.includes(key)) { //Duplicate key in manager
+            let i = this.pagesKeys.indexOf(key);
+            if (page.constructor.name != this.pages[i].constructor.name) {
+                new BaseError("Already added page with same key!", this, true);
+            }
+            else {
+                console.log("Page already added to pagemanager: " + page.constructor.name);
+            }
             return;
         }
         this.pages.push(page);
@@ -99,6 +112,7 @@ export class PageManagerComponent extends AbstractComponent {
         this.style.left = "0";
     }
 }
+PageManagerComponent.tagName = "page-manager";
 export var Effects;
 (function (Effects) {
     Effects[Effects["NONE"] = 0] = "NONE";

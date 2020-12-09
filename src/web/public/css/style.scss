@@ -38,98 +38,97 @@ html{
             background-color: #5CE1E6;
         }
     }
-    main{
-        #form-alert-wrapper{
-            display: none; 
-            justify-content: center;
-            margin-top: 25px;
-        }
+    #form-alert-wrapper{
+        display: none; 
+        justify-content: center;
+        margin-top: 25px;
+    }
 
-        #form-wrapper{
-            display: flex; 
-            justify-content: center;
-            margin-top: 25px;
+    #form-wrapper{
+        display: flex; 
+        justify-content: center;
+        margin-top: 25px;
 
 
-            form{
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                max-width: 300px;
-                width: 90%;
-                border: 1px solid #00aaff;
-                padding: 20px;
-                
-                @include sm-devices(){
+        form{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 300px;
+            width: 90%;
+            border: 1px solid #00aaff;
+            padding: 20px;
+            
+            @include sm-devices(){
+            }
+            @include lg-devices(){
+                //max-width: 90%;
+            }
+
+            .form-label{
+                position: relative;
+                width: 100%;
+
+                .form-name-label{                        
+                    top: calc(-20px - 0.75em);
+                    margin-top: 0;
+                    background-color: white;
+                    left: -10px;
                 }
-                @include lg-devices(){
-                    //max-width: 90%;
-                }
-    
-                .form-label{
-                    position: relative;
-                    width: 100%;
-    
-                    .form-name-label{                        
-                        top: calc(-20px - 0.75em);
-                        margin-top: 0;
-                        background-color: white;
-                        left: -10px;
-                    }
-                    label{
-                        position: absolute;
-                        transition: all 0.5s;
-                        margin-top: 20px;
-                        padding: 0 10px;  
-                        top: 0.5em;
-                        left: 0px;
-                        font-size: 1em;
-                    }
-                    .active-label, .permanent-active-label{               
-                        top: -0.75em;
-                        left: 10px;
-                        background-color: white; 
-                        border-radius: 25px;  
-                        font-size: 0.8em; 
-                    }
-                }
-
-                input:not([type=checkbox]){
+                label{
+                    position: absolute;
+                    transition: all 0.5s;
                     margin-top: 20px;
-                    border: 1px solid gray;
-                    height: 2.5rem;
-                    width: 100%;
-                    padding-left: 5px;
+                    padding: 0 10px;  
+                    top: 0.5em;
+                    left: 0px;
+                    font-size: 1em;
+                }
+                .active-label, .permanent-active-label{               
+                    top: -0.75em;
+                    left: 10px;
+                    background-color: white; 
+                    border-radius: 25px;  
+                    font-size: 0.8em; 
+                }
+            }
 
-                }
-                input:focus{                
-                    outline: none;    
-                    border: 2px solid #00aaff;
-                }
-                .chekbox-wrapper{
-                    display: flex;
-                    align-items: center;
-                    justify-content: flex-start;
-                    width: 90%;
-                    margin-top: 0.5em;
+            input:not([type=checkbox]){
+                margin-top: 20px;
+                border: 1px solid gray;
+                height: 2.5rem;
+                width: 100%;
+                padding-left: 5px;
 
-                    input{
-                        margin-right: 0.5em;
-                        height: 1.3em;
-                        width: 1.3em;
-                    }
+            }
+            input:focus{                
+                outline: none;    
+                border: 2px solid #00aaff;
+            }
+            .chekbox-wrapper{
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                width: 90%;
+                margin-top: 0.5em;
 
-                    label{
-                        margin: 0;
-                    }
+                input{
+                    margin-right: 0.5em;
+                    height: 1.3em;
+                    width: 1.3em;
                 }
-                input[type=button]{                    
-                    width: fit-content;
-                    padding: 0 20px;
+
+                label{
+                    margin: 0;
                 }
+            }
+            input[type=button]{                    
+                width: fit-content;
+                padding: 0 20px;
             }
         }
     }
+    
 }
 
 error-dialog{
@@ -159,6 +158,23 @@ error-dialog{
         div{
             width: 30%;
             font-size: 1.3em;
+        }
+    }
+}
+
+hamburger-menu{
+    position: absolute;
+    transition: all 1s;
+    left: 10px;
+    top: 10px;
+    
+    menu-items-container{
+        display: block; 
+        position: relative; 
+        left: 0px;
+        
+        menu-item{
+            display: block;
         }
     }
 }

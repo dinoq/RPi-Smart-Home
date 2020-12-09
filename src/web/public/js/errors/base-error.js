@@ -3,10 +3,15 @@ export class BaseError {
     constructor(msg = "", caller, showImmediately = true) {
         this.showInDialog = false;
         if (caller) {
-            this.errMsg = "Error: '" + msg + "'\nAt class: " + caller.constructor.name;
+            if (typeof caller == "string") {
+                this.errMsg = "Error: " + msg + "'\nAt class: '" + caller + "'";
+            }
+            else {
+                this.errMsg = "Error: " + msg + "'\nAt class: '" + caller.constructor.name + "'";
+            }
         }
         else {
-            this.errMsg = "Unknown Error";
+            this.errMsg = "Error: " + msg + "\nAt unknown class";
         }
         this.showImmediately = showImmediately;
         if (showImmediately) {

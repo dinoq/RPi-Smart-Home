@@ -4,3 +4,4 @@ export class Dashboard extends BasePage {
         super(componentProps);
     }
 }
+Dashboard.tagName = "dashboard-page";

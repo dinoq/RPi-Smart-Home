@@ -1,6 +1,7 @@
-import { AbstractComponent } from "../components/page-component.js";
+import { AbstractComponent } from "../components/component.js";
 export class BaseLayout extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
     }
 }
+BaseLayout.tagName = "base-layout";

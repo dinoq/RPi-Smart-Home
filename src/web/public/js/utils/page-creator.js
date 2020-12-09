@@ -1,36 +1,26 @@
-import { LoginComponent } from "../components/forms/login.js";
 import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
 import { PageManager } from "./page-manager.js";
 import { AppRouter, Pages } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
+import { LoginPage } from "../components/pages/login-page.js";
 export class PageCreator {
     constructor() {
         this.renderPage = () => {
+            let route = this.router.getRoute();
+            let page = route.page;
+            //URLManager.setURL(route.path, "", true);
             if (this.router.loggedIn()) {
                 if (!this.hamburgerMenu.componentConnected) {
                     this.hamburgerMenu.connectComponent(document.body);
                 }
+                this.renderLoggedIn(route);
             }
             else {
                 if (this.hamburgerMenu.componentConnected) {
                     this.hamburgerMenu.disconnectComponent();
                 }
+                this.renderNotLoggedIn(route);
             }
-            let route = this.router.getRoute();
-            console.log('route: ', route);
-            let page = route.page;
-            URLManager.setURL(route.path, "login", true);
-            //this.ajax();
-            switch (page) {
-                case Pages.LOGIN:
-                    this.createLogin((route.afterLoginPath != undefined) ? route.afterLoginPath : undefined);
-                    break;
-                case Pages.UNKNOWN:
-                    break;
-                default:
-                    break;
-            }
-            return;
         };
         this.createDashboard = () => {
             //this.header.mountComponent("header");
@@ -41,6 +31,18 @@ export class PageCreator {
         this.router = new AppRouter();
         URLManager.registerURLChangeListener(this.renderPage);
         this.renderPage();
+    }
+    renderLoggedIn(route) {
+    }
+    renderNotLoggedIn(route) {
+        switch (route.page) {
+            case Pages.LOGIN:
+                let login = this.createLogin(route.afterLoginPath);
+                this.pageManager.addPage(login, "login");
+                break;
+            default:
+                break;
+        }
     }
     createElement(containerId, elementType, elementConfig) {
         let container = document.getElementById(containerId);
@@ -59,11 +61,15 @@ export class PageCreator {
     }
     createLogin(redirectAfterLogin) {
         // this.header.unmountComponent();
-        this.login = new LoginComponent({});
-        this.login.connectComponent("main");
-        if (redirectAfterLogin != undefined) {
-            this.login.redirectAfterLogin(redirectAfterLogin);
-        }
+        /*
+         this.login = new LoginComponent({});
+         this.login.connectComponent(document.body);
+         if(redirectAfterLogin != undefined){
+             this.login.redirectAfterLogin(redirectAfterLogin);
+         }*/
+        let login = new LoginPage({ backgroundColor: "gray" });
+        login.loginForm.redirectAfterLogin(redirectAfterLogin);
+        return login;
     }
 }
 export var PageElements;

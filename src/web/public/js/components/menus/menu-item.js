@@ -1,4 +1,4 @@
-import { AbstractComponent } from "../page-component.js";
+import { AbstractComponent } from "../component.js";
 export class MenuItem extends AbstractComponent {
     constructor(componentProps) {
         super(componentProps);
@@ -6,3 +6,4 @@ export class MenuItem extends AbstractComponent {
             this.innerText = componentProps.text;
     }
 }
+MenuItem.tagName = "menu-item";

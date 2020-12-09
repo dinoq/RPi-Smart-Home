@@ -1,6 +1,8 @@
-import { AbstractComponent, componentProperties } from "../page-component.js";
+import { AbstractComponent, componentProperties } from "../component.js";
 
-export class MenuItem extends AbstractComponent{   
+export class MenuItem extends AbstractComponent{  
+    static tagName = "menu-item"; 
+    
     constructor(componentProps?: componentProperties){
         super(componentProps);
         if(componentProps && componentProps.text)

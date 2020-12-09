@@ -1,0 +1,2 @@
+
+- Otestovat ( a případně přepsat) jestli je možné nahradit X.constructor.name za X.name (to první nekdy vrátí Function())

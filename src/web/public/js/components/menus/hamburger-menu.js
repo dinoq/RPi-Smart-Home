@@ -5,10 +5,6 @@ export class HamburgerMenu extends BaseMenu {
     constructor(componentProps) {
         super();
         let props = {
-            position: "absolute",
-            transition: "all 1s",
-            left: "10px",
-            top: "10px",
             "z-index": Config.defaultMenuDepth.toString()
         };
         let mergedProperties = Utils.mergeObjects(componentProps, props);
@@ -48,7 +44,7 @@ export class HamburgerMenu extends BaseMenu {
         else {
             this.hamburgerIcon.src = "img/menu.png";
             containerStyle.left = -this.itemsContainer.clientWidth -
-                Utils.pxToNumber(this.componentProps.left) + "px";
+                Utils.pxToNumber(getComputedStyle(this).left) + "px";
         }
         if (animate) {
             this.itemsContainer.addEventListener("transitionend", () => {
@@ -64,11 +60,12 @@ export class HamburgerMenu extends BaseMenu {
         console.log(Config.getWindowHeight());
     }
 }
+HamburgerMenu.tagName = "hamburger-menu";
 HamburgerMenu.MENU_CONTENT = `
     <img src="img/menu.png"></img>
-    <menu-items-container style="display: block; position: relative; left: 0px">
-        <menu-item style="display: block;">Domů</menu-item>
-        <menu-item style="display: block;">Podmínky</menu-item>
-        <menu-item style="display: block;">Nastavení</menu-item>
+    <menu-items-container>
+        <menu-item>Domů</menu-item>
+        <menu-item>Podmínky</menu-item>
+        <menu-item>Nastavení</menu-item>
     </menu-items-container>
     `;

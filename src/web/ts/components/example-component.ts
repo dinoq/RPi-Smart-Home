@@ -1,4 +1,4 @@
-import { AbstractComponent, componentProperties } from "./page-component.js";
+import { AbstractComponent, componentProperties } from "./component.js";
 
 export class ExampleComponent extends AbstractComponent {
     constructor(componentProps?: componentProperties) {

@@ -1,6 +1,8 @@
-import { AbstractComponent, componentProperties, firebase } from "../page-component.js";
+import { AbstractComponent, componentProperties, firebase } from "../component.js";
 
 export class LoginComponent extends AbstractComponent{
+    static tagName = "login-form";
+    
     constructor(componentProps?: componentProperties){
         super(componentProps);
     }
@@ -74,7 +76,7 @@ export class LoginComponent extends AbstractComponent{
     }
 
     redirectAfterLogin(redirectAfterLogin: string) {
-        (<HTMLFormElement>document.getElementById("login-form")).action = redirectAfterLogin;
+        (<HTMLFormElement>this.querySelector("#login-form")).action = redirectAfterLogin;
     }
 
     inputChange(event: InputEvent){

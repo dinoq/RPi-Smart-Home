@@ -1,8 +1,10 @@
 import { Config } from "../../utils/config.js";
-import { componentProperties } from "../page-component.js";
+import { componentProperties } from "../component.js";
 import { BasePage } from "./base-page.js";
 
 export class BlankPage extends BasePage{    
+    static tagName = "blank-page";
+    
     constructor(componentProps?: componentProperties){
         super(componentProps);
 

@@ -1,5 +1,5 @@
 import { Config } from "../../utils/config.js";
-import { AbstractComponent } from "../page-component.js";
+import { AbstractComponent } from "../component.js";
 export class BasePage extends AbstractComponent {
     constructor(componentProps) {
         super(componentProps);

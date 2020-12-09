@@ -1,3 +1,4 @@
+import { BaseError } from "../errors/base-error.js";
 import { ComponentNameNotDefinedError, CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
 import { Config } from "../utils/config.js";
@@ -38,16 +39,19 @@ export class Component extends HTMLElement {
                 classes[index] = str.substring(0, str.indexOf(" "));
             })
             console.log(classes);
-            /*
-            console.log('ess: ', e.toString().substring(10,20));
-            console.log('e: ', e.);
-            let str = <string>e.toString().substring(10,200);
-            let classes = str.split("at new");
-            console.log('classes: ', classes);*/
             new CustomComponentNotDefinedError(classes);   
             super();
         }
 
+    }
+
+    static tagName = "default-tag";
+    static defineComponent(){
+        if(this.tagName && this.tagName.includes("-") && this.tagName != "default-tag"){
+            customElements.define(this.tagName, <CustomElementConstructor>this);
+        }else{
+            new BaseError("static property tagName not specified in class", this.name, true);
+        }
     }
 }
 export abstract class AbstractComponent extends Component {
@@ -61,6 +65,7 @@ export abstract class AbstractComponent extends Component {
     }
 
 
+    
     initializeFromProps(componentProps?: componentProperties): void {
         if(!componentProps)
             return;

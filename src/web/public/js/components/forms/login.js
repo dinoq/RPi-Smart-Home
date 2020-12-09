@@ -1,4 +1,4 @@
-import { AbstractComponent } from "../page-component.js";
+import { AbstractComponent } from "../component.js";
 export class LoginComponent extends AbstractComponent {
     constructor(componentProps) {
         super(componentProps);
@@ -68,7 +68,7 @@ export class LoginComponent extends AbstractComponent {
         `;
     }
     redirectAfterLogin(redirectAfterLogin) {
-        document.getElementById("login-form").action = redirectAfterLogin;
+        this.querySelector("#login-form").action = redirectAfterLogin;
     }
     inputChange(event) {
         let input = event.target;
@@ -81,3 +81,4 @@ export class LoginComponent extends AbstractComponent {
         }
     }
 }
+LoginComponent.tagName = "login-form";

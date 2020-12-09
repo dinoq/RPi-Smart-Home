@@ -16,3 +16,4 @@ export class ErrorDialog extends BaseDialog {
         });
     }
 }
+ErrorDialog.tagName = "error-dialog";
