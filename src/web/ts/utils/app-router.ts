@@ -6,8 +6,9 @@ export enum Pages {
     LOGIN,
     REGISTER,
     DASHBOARD,
-    DEVICES,
     HOME,
+    CONDITIONS,
+    SETTINGS
 }
 export class AppRouter {
     public desiredPage: Pages;
@@ -19,31 +20,36 @@ export class AppRouter {
     getRoute(): IRoute {
         let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase() });
         let entirePath = window.location.pathname.toLocaleLowerCase();
-        
+
         let logged = localStorage.getItem("logged");
 
-        this.route = {page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath};
+        this.route = { page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath };
         let topLevel: string = pathArr[0];
-        if (topLevel == "user") {
+        if (this.pathsEquals(topLevel, Paths.USER)) {
             switch (pathArr[1]) {
                 case "login":
                     this.route.page = Pages.LOGIN;
-                break;
+                    break;
                 case "register":
                     this.route.page = Pages.REGISTER;
-                break;
+                    break;
                 default:
                     this.route.path = Paths.HOME;
-                    new BaseError("Page " + entirePath +" not defined!", this);
-                break;
+                    new BaseError("Page " + entirePath + " not defined!", this);
+                    break;
             }
 
-        }else if(topLevel == "home"){
-            this.route.page = Pages.HOME;
-        }else if(topLevel == "dashboard"){
+        } else if (this.pathsEquals(topLevel, Paths.DASHBOARD)) {
             this.route.page = Pages.DASHBOARD;
-        }
-        if(!logged){
+        } else if (this.pathsEquals(topLevel, Paths.HOME)) {
+            this.route.page = Pages.HOME;
+        }else if (this.pathsEquals(topLevel, Paths.CONDITIONS)) {
+            this.route.page = Pages.CONDITIONS;
+        } else if (this.pathsEquals(topLevel, Paths.SETTINGS)) {
+            this.route.page = Pages.SETTINGS;
+        } 
+        
+        if (!logged) {
             this.route.afterLoginPage = this.route.page;
             this.route.page = Pages.LOGIN;
             this.route.afterLoginPath = this.route.path;
@@ -53,25 +59,50 @@ export class AppRouter {
 
     }
 
-    loggedIn(){
+    loggedIn() {
         return localStorage.getItem("logged");
     }
 
     isLoginPath(): boolean {
-        return window.location.pathname.toLocaleLowerCase() == "/user/login";
+        return this.pathsEquals(window.location.pathname.toLocaleLowerCase(), Paths.LOGIN);
+    }
+
+    pathsEquals(path1: string, path2: string) {
+        let pathsWithoutSlash = [path1, path2];
+
+        for (let i = 0; i < 2; i++) {//Remove slash form begining and end, if it is there...
+            let p = pathsWithoutSlash[i];
+            if (p.indexOf("/") == 0) {
+                p = p.substring(1);
+            }
+            if (p.lastIndexOf("/") == (p.length - 1)) {
+                p = p.substring(0, p.length - 1);
+            }
+
+            pathsWithoutSlash[i] = p;
+        }
+
+        if (pathsWithoutSlash[0] == pathsWithoutSlash[1]) {
+            return true;
+        }
+
+        return false;
     }
 }
 
-export interface IRoute{
+export interface IRoute {
     page: Pages,
     afterLoginPage?: Pages,
     path: string,
     afterLoginPath?: string,
 }
 
-export enum Paths{
-    LOGIN="user/login",
-    REGISTER="user/register",
-    DASHBOARD="dashboard",
-    HOME="home",
+export enum Paths {
+    USER = "uzivatel",
+    LOGIN = "uzivatel/login",
+    REGISTER = "uzivatel/registrovat",
+    DASHBOARD = "dashboard",
+    HOME = "domu",
+    CONDITIONS = "podminky",
+    SETTINGS = "nastaveni",
 }

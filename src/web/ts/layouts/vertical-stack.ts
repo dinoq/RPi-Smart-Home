@@ -1,7 +1,7 @@
 import { AbstractComponent, componentProperties } from "../components/component.js";
 
-export class BaseLayout extends AbstractComponent {
-    static tagName = "base-layout";
+export class VerticalStack extends AbstractComponent {
+    static tagName = "vertical-stack";
     
     constructor(layoutProps?: componentProperties) {
         super(layoutProps);

@@ -28,7 +28,7 @@ export class PageManager extends Singleton {
     addPage(page: BasePage, key: string) {
         if (this.pages.indexOf(page) != -1) {
             //new PageAlreadyAddedToPageManagerError(page, true);            
-            console.log("Page already added to pagemanager: " + page.constructor.name );
+            console.log("Page (by class) already added to pagemanager: " + page.constructor.name );
             return;
         }
         if(this.pagesKeys.includes(key)){//Duplicate key in manager
@@ -120,9 +120,6 @@ export class PageManagerComponent extends AbstractComponent {
     
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
-        this.style.position = "absolute";
-        this.style.top = "0";
-        this.style.left = "0";
 
     }
 

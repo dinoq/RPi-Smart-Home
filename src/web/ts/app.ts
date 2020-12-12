@@ -1,6 +1,6 @@
 import { ErrorDialog } from "./components/dialogs/error-dialog.js";
-import { LoginComponent } from "./components/forms/login.js";
-import { HeaderComponent } from "./components/headers/header.js";
+import { LoginComponent } from "./components/forms/login-form.js";
+import { HeaderComponent } from "./components/headers/header-component.js";
 import { MenuItemsContainer } from "./components/menus/base-menu.js";
 import { HamburgerMenu } from "./components/menus/hamburger-menu.js";
 import { MenuItem } from "./components/menus/menu-item.js";
@@ -13,7 +13,11 @@ import { Effects, PageManager, PageManagerComponent } from "./utils/page-manager
 import { AppRouter, IRoute, Pages } from "./utils/app-router.js";
 import { URLManager } from "./utils/url-manager.js";
 import { LoginPage } from "./components/pages/login-page.js";
-import { Dashboard } from "./components/pages/dashboard.js";
+import { Dashboard } from "./components/pages/dashboard-page.js";
+import { HomePage } from "./components/pages/home-page.js";
+import { RoomCard } from "./layouts/room-card.js";
+import { VerticalStack } from "./layouts/vertical-stack.js";
+import { HorizontalStack } from "./layouts/horizontal-stack.js";
 
 export declare var firebase: any;
 
@@ -40,6 +44,10 @@ class AutoHomeApp {
             HamburgerMenu.defineComponent();
             MenuItem.defineComponent();
             MenuItemsContainer.defineComponent();
+            HomePage.defineComponent();
+            RoomCard.defineComponent();
+            VerticalStack.defineComponent();
+            HorizontalStack.defineComponent();
         }
 
     }

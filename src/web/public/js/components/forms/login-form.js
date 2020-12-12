@@ -22,7 +22,7 @@ export class LoginComponent extends AbstractComponent {
                     localStorage.setItem("remember", "true");
                     localStorage.setItem("login", login);
                     localStorage.setItem("password", password);
-                    //(<HTMLFormElement>document.getElementById("login-form")).submit();
+                    document.getElementById("login-form").submit();
                 })
                     .catch((error) => {
                     var errorCode = error.code;

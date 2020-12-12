@@ -1,4 +1,4 @@
-import { LoginComponent } from "../components/forms/login.js";
+import { LoginComponent } from "../components/forms/login-form.js";
 import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
 import { AbstractComponent } from "../components/component.js";
 import { BlankPage } from "../components/pages/blank-page.js";
@@ -7,7 +7,8 @@ import { PageManager } from "./page-manager.js";
 import { AppRouter, IRoute, Pages } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
 import { LoginPage } from "../components/pages/login-page.js";
-import { Dashboard } from "../components/pages/dashboard.js";
+import { Dashboard } from "../components/pages/dashboard-page.js";
+import { HomePage } from "../components/pages/home-page.js";
 
 
 export class PageCreator {
@@ -46,7 +47,14 @@ export class PageCreator {
     }
 
     renderLoggedIn(route: IRoute){
-
+        switch (route.page) {
+            case Pages.HOME:
+                let page = new HomePage();
+                this.pageManager.addPage(page, "homepage");
+            break;
+            default:
+            break;
+        }
     }
 
     renderNotLoggedIn(route: IRoute){
@@ -57,26 +65,6 @@ export class PageCreator {
             break;
             default:
             break;
-        }
-    }
-
-    createElement(containerId: string, elementType: PageElements, elementConfig?: elementConfig) {
-        let container = document.getElementById(containerId);
-        if (!container)
-            return;
-
-        container.innerHTML = "";
-
-        switch (elementType) {
-            case PageElements.LOGIN_FORM:
-                this.login.connectComponent("main");
-                break;
-            case PageElements.DIV:
-
-                break;
-            case PageElements.DEVICES_LIST:
-
-                break;
         }
     }
 
@@ -93,7 +81,7 @@ export class PageCreator {
             this.login.redirectAfterLogin(redirectAfterLogin);
         }*/
 
-        let login = new LoginPage({backgroundColor: "gray"});
+        let login = new LoginPage();
         login.loginForm.redirectAfterLogin(redirectAfterLogin);
         return login;
         

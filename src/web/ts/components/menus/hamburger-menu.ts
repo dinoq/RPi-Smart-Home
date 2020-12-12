@@ -1,23 +1,22 @@
+import { BaseError } from "../../errors/base-error.js";
+import { MethodNotImplementedError } from "../../errors/method-errors.js";
+import { Paths } from "../../utils/app-router.js";
 import { Config } from "../../utils/config.js";
+import { URLManager } from "../../utils/url-manager.js";
 import { Utils } from "../../utils/utils.js";
 import { AbstractComponent, componentProperties } from "../component.js";
 import { BaseMenu } from "./base-menu.js";
+import { MenuItem } from "./menu-item.js";
 
 export class HamburgerMenu extends BaseMenu {
     static tagName = "hamburger-menu";
-    
+
     private hamburgerIcon: HTMLImageElement;
 
     constructor(componentProps?: componentProperties) {
-        super();
-
-        let props: componentProperties = {
+        super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString()
-        }
-
-        let mergedProperties = Utils.mergeObjects(componentProps, props);
-        this.componentProps = mergedProperties;
-        this.initializeFromProps(mergedProperties);
+        }));
 
         this.innerHTML = HamburgerMenu.MENU_CONTENT;
         this.itemsContainer = <AbstractComponent>this.getElementsByTagName("menu-items-container")[0];
@@ -35,16 +34,24 @@ export class HamburgerMenu extends BaseMenu {
     </menu-items-container>
     `;
 
+    static MENU_HREFS = [
+        Paths.HOME,
+        Paths.CONDITIONS,
+        Paths.SETTINGS
+    ];
+
     //@overrride
-    connectedCallback(): void{
+    connectedCallback(): void {
         this.show(false, false);
     }
 
+    //@overrride
     addMenuItem(item: AbstractComponent) {
         super.addMenuItem(item);
         //this.style.display = "block";
     }
-    toggle(animate: boolean) {
+
+    toggle(animate: boolean = true) {
         let containerStyle = this.itemsContainer.style;
         if (containerStyle.left == "0px") {// showed
             this.show(false, animate);
@@ -54,7 +61,7 @@ export class HamburgerMenu extends BaseMenu {
     }
 
 
-    show(show: boolean = true, animate: boolean) {
+    show(show: boolean = true, animate: boolean = true) {
         let containerStyle = this.itemsContainer.style;
         if (animate) {
             containerStyle.transition = "left 1s";
@@ -74,14 +81,26 @@ export class HamburgerMenu extends BaseMenu {
         }
     }
 
-    
+
     //@overrride
     addListeners(): void {
         window.addEventListener("resize", this.resize);
+
+        //Add links
+        let links: MenuItem[] = <MenuItem[]> <unknown>this.querySelectorAll("menu-item");
+        for (let i = 0; i < links.length; i++) {
+            const link = links[i];
+            link.addEventListener("click", ()=>{
+                URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
+                this.toggle();
+            });
+            
+        }
+
     }
 
     resize() {
-        console.log(Config.getWindowHeight());
+        new MethodNotImplementedError("resize", this, true);
     }
 
 }

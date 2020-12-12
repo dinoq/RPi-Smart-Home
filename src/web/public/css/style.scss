@@ -9,6 +9,9 @@ $md: 768px;
 $lg: 992px;
 $xl: 1200px;
 
+:root {
+    --default-page-bg-color: white;
+  }
 //For responsive design
 @mixin sm-devices { @media (min-width: $sm) {
     @content;
@@ -27,6 +30,7 @@ $xl: 1200px;
 }}
 
 html{
+    background-color: var(--default-page-bg-color);
     
     overflow:hidden;
   
@@ -165,16 +169,84 @@ error-dialog{
 hamburger-menu{
     position: absolute;
     transition: all 1s;
-    left: 10px;
+    left: 0px;
     top: 10px;
+    height: 100%;
     
+    img{        
+        margin-left: 10px;
+    }
     menu-items-container{
-        display: block; 
-        position: relative; 
+        display: block;
+        position: relative;
+        height: 100%;
         left: 0px;
-        
+        padding: 10px;
+        padding-right: 25px;
+        border-right: 1px solid #939393;
+        background-color: white;
+
         menu-item{
             display: block;
+            cursor: pointer;
+            font-size: 1.25rem;
+            border-radius: 5px;
+        
+            &:not(:last-child){
+                border-bottom: 1px solid rgb(214, 214, 214);
+            }
+
+            &:hover{
+                background: linear-gradient(to right, #b7b7b7, #f0f0f0);
+            }
+        }
+    }
+}
+
+page-manager{    
+    display: block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: var(--default-page-bg-color);
+}
+
+vertical-stack{
+    display: flex;
+    flex-direction: column;
+}
+horizontal-stack{
+    display: flex;
+    flex-direction: row;
+}
+
+room-card{
+    display: block;
+    width: 100%;
+    height: 50px;
+    padding: 10px;
+
+    &:nth-child(odd){
+        background-color: rgb(165, 165, 165);
+    }
+    &:nth-child(even){
+        background-color: rgb(235, 235, 235);
+    }
+
+    horizontal-stack:nth-child(1){
+        background-color: rgba(255, 255, 0, 0.171);
+        width: 100%;
+        height: 100%;
+        
+        > *{
+            width: 50%;
+            height: 100%;
+        }
+        > vertical-stack{
+            background-color: rgba(0, 26, 255, 0.171);
+        }
+        > horizontal-stack{
+            background-color: rgba(255, 0, 242, 0.171);
         }
     }
 }

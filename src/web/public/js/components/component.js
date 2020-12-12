@@ -2,6 +2,7 @@ import { BaseError } from "../errors/base-error.js";
 import { CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
 import { Config } from "../utils/config.js";
+import { Utils } from "../utils/utils.js";
 export class Component extends HTMLElement {
     /* static _className = "";
      get className(){
@@ -73,6 +74,11 @@ export class AbstractComponent extends Component {
             this.connectComponent(componentProps.connectToParent, componentProps.replaceParentContent);
         }
     }
+    reinitializeFromProps(props) {
+        let mergedProperties = Utils.mergeObjects(this.componentProps, props);
+        this.componentProps = mergedProperties;
+        this.initializeFromProps(mergedProperties);
+    }
     addListeners() {
         new MethodNotImplementedError("addListeners", this, true);
     }
@@ -88,6 +94,16 @@ export class AbstractComponent extends Component {
     disconnectComponent() {
         this.parent.removeChild(this);
         this.componentConnected = false;
+    }
+    appendComponents(components, replaceContent = false) {
+        if (Array.isArray(components)) {
+            components.forEach(component => {
+                component.connectComponent(this, replaceContent);
+            });
+        }
+        else {
+            components.connectComponent(this, replaceContent);
+        }
     }
     connectComponent(parent, replaceContent = false) {
         if (typeof parent == "string") {

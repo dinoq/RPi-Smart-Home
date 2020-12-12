@@ -5,11 +5,6 @@ export class LoginComponent extends AbstractComponent{
     
     constructor(componentProps?: componentProperties){
         super(componentProps);
-    }
-
-
-    initializeFromProps(componentProps?: componentProperties): void {
-        super.initializeFromProps(componentProps);
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
         this.innerHTML = `
@@ -40,10 +35,12 @@ export class LoginComponent extends AbstractComponent{
         </div>
         `;
     }
+
+
     addListeners = () => {
-        let lf = document.getElementById("login-form");
-        let l = document.getElementById("login");
-        let p = document.getElementById("password");
+        let lf = this.querySelector("#login-form");
+        let l = this.querySelector("#login");
+        let p = this.querySelector("#password");
         lf.addEventListener('submit', this.login);
         l.addEventListener('input', this.inputChange);
         p.addEventListener('input', this.inputChange);

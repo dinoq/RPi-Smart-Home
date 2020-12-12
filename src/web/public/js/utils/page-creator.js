@@ -3,6 +3,7 @@ import { PageManager } from "./page-manager.js";
 import { AppRouter, Pages } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
 import { LoginPage } from "../components/pages/login-page.js";
+import { HomePage } from "../components/pages/home-page.js";
 export class PageCreator {
     constructor() {
         this.renderPage = () => {
@@ -33,6 +34,14 @@ export class PageCreator {
         this.renderPage();
     }
     renderLoggedIn(route) {
+        switch (route.page) {
+            case Pages.HOME:
+                let page = new HomePage();
+                this.pageManager.addPage(page, "homepage");
+                break;
+            default:
+                break;
+        }
     }
     renderNotLoggedIn(route) {
         switch (route.page) {
@@ -44,21 +53,6 @@ export class PageCreator {
                 break;
         }
     }
-    createElement(containerId, elementType, elementConfig) {
-        let container = document.getElementById(containerId);
-        if (!container)
-            return;
-        container.innerHTML = "";
-        switch (elementType) {
-            case PageElements.LOGIN_FORM:
-                this.login.connectComponent("main");
-                break;
-            case PageElements.DIV:
-                break;
-            case PageElements.DEVICES_LIST:
-                break;
-        }
-    }
     createLogin(redirectAfterLogin) {
         // this.header.unmountComponent();
         /*
@@ -67,7 +61,7 @@ export class PageCreator {
          if(redirectAfterLogin != undefined){
              this.login.redirectAfterLogin(redirectAfterLogin);
          }*/
-        let login = new LoginPage({ backgroundColor: "gray" });
+        let login = new LoginPage();
         login.loginForm.redirectAfterLogin(redirectAfterLogin);
         return login;
     }

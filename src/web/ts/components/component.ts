@@ -2,7 +2,8 @@ import { BaseError } from "../errors/base-error.js";
 import { ComponentNameNotDefinedError, CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
 import { Config } from "../utils/config.js";
-import { LoginComponent } from "./forms/login.js";
+import { Utils } from "../utils/utils.js";
+import { LoginComponent } from "./forms/login-form.js";
 
 export declare var firebase: any;
 
@@ -87,6 +88,14 @@ export abstract class AbstractComponent extends Component {
             this.connectComponent(componentProps.connectToParent, componentProps.replaceParentContent);
         }
     }
+
+    
+    reinitializeFromProps(props: componentProperties) {
+        let mergedProperties = Utils.mergeObjects(this.componentProps, props);
+        this.componentProps = mergedProperties;
+        this.initializeFromProps(mergedProperties);
+    }
+    
     addListeners(): void{
         new MethodNotImplementedError("addListeners", this, true);
     }
@@ -103,6 +112,16 @@ export abstract class AbstractComponent extends Component {
     disconnectComponent() {
         this.parent.removeChild(this);
         this.componentConnected = false;
+    }
+
+    appendComponents(components: AbstractComponent | AbstractComponent[], replaceContent: boolean = false){
+        if(Array.isArray(components)){
+            components.forEach(component => {
+                component.connectComponent(this, replaceContent);
+            });
+        }else{
+            components.connectComponent(this, replaceContent);
+        }
     }
 
     connectComponent(parent: string | HTMLElement, replaceContent: boolean = false) {
