@@ -1,16 +1,17 @@
 import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
 import { PageManager } from "./page-manager.js";
-import { AppRouter, Pages } from "./app-router.js";
+import { AppRouter, Pages, PagesKeys, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
 import { LoginPage } from "../components/pages/login-page.js";
 import { HomePage } from "../components/pages/home-page.js";
+import { Firebase } from "./firebase.js";
 export class PageCreator {
     constructor() {
         this.renderPage = () => {
             let route = this.router.getRoute();
             let page = route.page;
             //URLManager.setURL(route.path, "", true);
-            if (this.router.loggedIn()) {
+            if (Firebase.loggedIn()) {
                 if (!this.hamburgerMenu.componentConnected) {
                     this.hamburgerMenu.connectComponent(document.body);
                 }
@@ -34,12 +35,22 @@ export class PageCreator {
         this.renderPage();
     }
     renderLoggedIn(route) {
+        let page;
         switch (route.page) {
             case Pages.HOME:
-                let page = new HomePage();
-                this.pageManager.addPage(page, "homepage");
+                page = new HomePage();
+                this.pageManager.addPage(page, PagesKeys.HOME);
+                break;
+            case Pages.CONDITIONS:
+                page = new HomePage();
+                this.pageManager.addPage(page, PagesKeys.CONDITIONS);
+                break;
+            case Pages.SETTINGS:
+                page = new HomePage();
+                this.pageManager.addPage(page, PagesKeys.SETTINGS);
                 break;
             default:
+                URLManager.replaceURL(Paths.HOME, PagesKeys.HOME);
                 break;
         }
     }
@@ -52,15 +63,15 @@ export class PageCreator {
             default:
                 break;
         }
+        switch (route.afterLoginPage) {
+            case Pages.LOGIN:
+                break;
+            default:
+                URLManager.replaceURL(Paths.LOGIN, "login", true);
+                break;
+        }
     }
     createLogin(redirectAfterLogin) {
-        // this.header.unmountComponent();
-        /*
-         this.login = new LoginComponent({});
-         this.login.connectComponent(document.body);
-         if(redirectAfterLogin != undefined){
-             this.login.redirectAfterLogin(redirectAfterLogin);
-         }*/
         let login = new LoginPage();
         login.loginForm.redirectAfterLogin(redirectAfterLogin);
         return login;

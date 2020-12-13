@@ -1,3 +1,4 @@
+import { Firebase } from "../../utils/firebase.js";
 import { AbstractComponent } from "../component.js";
 export class LoginComponent extends AbstractComponent {
     constructor(componentProps) {
@@ -10,27 +11,22 @@ export class LoginComponent extends AbstractComponent {
             l.addEventListener('input', this.inputChange);
             p.addEventListener('input', this.inputChange);
         };
-        this.login = (event) => {
+        this.login = async (event) => {
             event.preventDefault();
             let login = document.getElementById("login").value;
             let password = document.getElementById("password").value;
             if (login) {
-                this.firebase.auth().signInWithEmailAndPassword(login, password)
-                    .then((user) => {
-                    console.log('user: ', user);
-                    localStorage.setItem("logged", "true");
-                    localStorage.setItem("remember", "true");
-                    localStorage.setItem("login", login);
-                    localStorage.setItem("password", password);
+                await Firebase.login(login, password).then((user) => {
                     document.getElementById("login-form").submit();
                 })
                     .catch((error) => {
-                    var errorCode = error.code;
-                    var errorMessage = error.message;
+                    let errorCode = error.code;
                     let alertWrapper = document.getElementById("form-alert-wrapper");
                     let alert = document.getElementById("form-alert");
                     alertWrapper.style.display = "flex";
-                    alert.innerText = "Nesprávné přihlašovací údaje (chyba " + errorCode + ")";
+                    let prefix = (errorCode.includes("user-not-found")
+                        || errorCode.includes("wrong-password")) ? "Nesprávné přihlašovací údaje" : "Chyba autentizace";
+                    alert.innerText = prefix + " (chyba: " + errorCode + ")";
                 });
             }
         };

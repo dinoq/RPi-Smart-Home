@@ -8,12 +8,13 @@ export class RoomCard extends AbstractComponent {
     leftStack: VerticalStack;
     rightStack: HorizontalStack;
     
-    constructor(layoutProps?: componentProperties) {
+    constructor(layoutProps?: componentProperties|any) {
         super(layoutProps);
 
         this.mainHStack = new HorizontalStack();
         this.leftStack = new VerticalStack();
         this.rightStack = new HorizontalStack();
+
 
         this.mainHStack.appendComponents([this.leftStack, this.rightStack]);
         this.appendComponents(this.mainHStack);

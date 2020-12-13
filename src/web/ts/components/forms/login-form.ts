@@ -1,9 +1,10 @@
-import { AbstractComponent, componentProperties, firebase } from "../component.js";
+import { Firebase } from "../../utils/firebase.js";
+import { AbstractComponent, componentProperties } from "../component.js";
 
-export class LoginComponent extends AbstractComponent{
+export class LoginComponent extends AbstractComponent {
     static tagName = "login-form";
-    
-    constructor(componentProps?: componentProperties){
+
+    constructor(componentProps?: componentProperties) {
         super(componentProps);
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
@@ -46,29 +47,23 @@ export class LoginComponent extends AbstractComponent{
         p.addEventListener('input', this.inputChange);
     }
 
-    login = (event: any)=>{
+    login = async (event: any) => {
         event.preventDefault();
-        let login : string = (<HTMLInputElement>document.getElementById("login")).value;
-        let password : string = (<HTMLInputElement>document.getElementById("password")).value;
-        if(login){            
-            this.firebase.auth().signInWithEmailAndPassword(login, password)
-            .then((user: any) => {
-                console.log('user: ', user);
-                localStorage.setItem("logged", "true");
-                localStorage.setItem("remember", "true");
-                localStorage.setItem("login", login);
-                localStorage.setItem("password", password);
+        let login: string = (<HTMLInputElement>document.getElementById("login")).value;
+        let password: string = (<HTMLInputElement>document.getElementById("password")).value;
+        if (login) {
+            await Firebase.login(login, password).then((user) => {
                 (<HTMLFormElement>document.getElementById("login-form")).submit();
-                
             })
-            .catch((error: any) => {
-                var errorCode = error.code;
-                var errorMessage = error.message;
-                let alertWrapper: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert-wrapper"));
-                let alert: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert"));
-                alertWrapper.style.display = "flex";
-                alert.innerText = "Nesprávné přihlašovací údaje (chyba " + errorCode + ")";
-            });
+                .catch((error) => {
+                    let errorCode = error.code;
+                    let alertWrapper: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert-wrapper"));
+                    let alert: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert"));
+                    alertWrapper.style.display = "flex";
+                    let prefix = (errorCode.includes("user-not-found")
+                        || errorCode.includes("wrong-password")) ? "Nesprávné přihlašovací údaje" : "Chyba autentizace";
+                    alert.innerText = prefix + " (chyba: " + errorCode + ")";
+                });
         }
     }
 
@@ -76,16 +71,16 @@ export class LoginComponent extends AbstractComponent{
         (<HTMLFormElement>this.querySelector("#login-form")).action = redirectAfterLogin;
     }
 
-    inputChange(event: InputEvent){
+    inputChange(event: InputEvent) {
         let input: HTMLInputElement = (<HTMLInputElement>event.target);
         let label: HTMLLabelElement = (<HTMLLabelElement>input.parentElement.children[0]);
-        
-        if(input.value.length){
+
+        if (input.value.length) {
             label.classList.add("permanent-active-label");
-        }else{
+        } else {
             label.classList.remove("permanent-active-label");
         }
-        
+
 
     }
 }

@@ -12,7 +12,6 @@ export class Component extends HTMLElement {
     constructor(componentProps) {
         try {
             super();
-            this.firebase = firebase;
         }
         catch (e) {
             console.log(e.message);

@@ -1,4 +1,5 @@
 import { BaseError } from "../errors/base-error.js";
+import { Firebase } from "./firebase.js";
 export var Pages;
 (function (Pages) {
     Pages[Pages["UNKNOWN"] = 0] = "UNKNOWN";
@@ -15,7 +16,6 @@ export class AppRouter {
     getRoute() {
         let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase(); });
         let entirePath = window.location.pathname.toLocaleLowerCase();
-        let logged = localStorage.getItem("logged");
         this.route = { page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath };
         let topLevel = pathArr[0];
         if (this.pathsEquals(topLevel, Paths.USER)) {
@@ -44,16 +44,16 @@ export class AppRouter {
         else if (this.pathsEquals(topLevel, Paths.SETTINGS)) {
             this.route.page = Pages.SETTINGS;
         }
-        if (!logged) {
+        else {
+            this.route.page = Pages.UNKNOWN;
+        }
+        if (!Firebase.loggedIn()) {
             this.route.afterLoginPage = this.route.page;
             this.route.page = Pages.LOGIN;
             this.route.afterLoginPath = this.route.path;
             this.route.path = Paths.LOGIN;
         }
         return this.route;
-    }
-    loggedIn() {
-        return localStorage.getItem("logged");
     }
     isLoginPath() {
         return this.pathsEquals(window.location.pathname.toLocaleLowerCase(), Paths.LOGIN);
@@ -87,3 +87,13 @@ export var Paths;
     Paths["CONDITIONS"] = "podminky";
     Paths["SETTINGS"] = "nastaveni";
 })(Paths || (Paths = {}));
+export var PagesKeys;
+(function (PagesKeys) {
+    PagesKeys["USER"] = "uzivatel";
+    PagesKeys["LOGIN"] = "login";
+    PagesKeys["REGISTER"] = "registrovat";
+    PagesKeys["DASHBOARD"] = "dashboard";
+    PagesKeys["HOME"] = "domu";
+    PagesKeys["CONDITIONS"] = "podminky";
+    PagesKeys["SETTINGS"] = "nastaveni";
+})(PagesKeys || (PagesKeys = {}));

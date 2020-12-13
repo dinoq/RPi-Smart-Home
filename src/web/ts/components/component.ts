@@ -5,7 +5,6 @@ import { Config } from "../utils/config.js";
 import { Utils } from "../utils/utils.js";
 import { LoginComponent } from "./forms/login-form.js";
 
-export declare var firebase: any;
 
 export class Component extends HTMLElement {
     protected firebase: any;
@@ -30,7 +29,6 @@ export class Component extends HTMLElement {
     constructor(componentProps?: componentProperties) {
         try {
             super();
-            this.firebase = firebase;
         }
         catch(e: any) {   
             console.log(e.message);

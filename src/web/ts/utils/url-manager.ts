@@ -16,4 +16,11 @@ export class URLManager extends Singleton{
             (<URLManager>urlManager).onURLChange();
         }
     }
+    public static replaceURL(newURL: string, title: string="", skipRendering: boolean=false): void{
+        let urlManager = URLManager.getInstance();
+        window.history.replaceState("", title, newURL);
+        if(!skipRendering){
+            (<URLManager>urlManager).onURLChange();
+        }
+    }
 }

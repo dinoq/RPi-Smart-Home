@@ -12,7 +12,7 @@ export class HomePage extends BasePage{
         super(componentProps);
         
         for (let i = 0; i < 5; i++) {
-            const roomCard = new RoomCard();
+            const roomCard = new RoomCard({tit:"AS"});
             this.appendComponents(roomCard);
         }
     }

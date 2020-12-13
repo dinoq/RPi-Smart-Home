@@ -1,5 +1,6 @@
 import { BaseError } from "../errors/base-error.js";
 import { UndefinedPageError } from "../errors/system-errors/undefined-page-error.js";
+import { Firebase } from "./firebase.js";
 
 export enum Pages {
     UNKNOWN,
@@ -20,8 +21,6 @@ export class AppRouter {
     getRoute(): IRoute {
         let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase() });
         let entirePath = window.location.pathname.toLocaleLowerCase();
-
-        let logged = localStorage.getItem("logged");
 
         this.route = { page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath };
         let topLevel: string = pathArr[0];
@@ -47,9 +46,11 @@ export class AppRouter {
             this.route.page = Pages.CONDITIONS;
         } else if (this.pathsEquals(topLevel, Paths.SETTINGS)) {
             this.route.page = Pages.SETTINGS;
-        } 
+        }else{
+            this.route.page = Pages.UNKNOWN;
+        }
         
-        if (!logged) {
+        if (!Firebase.loggedIn()) {
             this.route.afterLoginPage = this.route.page;
             this.route.page = Pages.LOGIN;
             this.route.afterLoginPath = this.route.path;
@@ -57,10 +58,6 @@ export class AppRouter {
         }
         return this.route;
 
-    }
-
-    loggedIn() {
-        return localStorage.getItem("logged");
     }
 
     isLoginPath(): boolean {
@@ -101,6 +98,16 @@ export enum Paths {
     USER = "uzivatel",
     LOGIN = "uzivatel/login",
     REGISTER = "uzivatel/registrovat",
+    DASHBOARD = "dashboard",
+    HOME = "domu",
+    CONDITIONS = "podminky",
+    SETTINGS = "nastaveni",
+}
+
+export enum PagesKeys{
+    USER = "uzivatel",
+    LOGIN = "login",
+    REGISTER = "registrovat",
     DASHBOARD = "dashboard",
     HOME = "domu",
     CONDITIONS = "podminky",
