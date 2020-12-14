@@ -10,9 +10,8 @@ export class Firebase extends Singleton {
         return super.getInstance();
     }
     static async login(username, pwd) {
-        let auth = Firebase.getInstance().auth;
         let result = null;
-        await auth.signInWithEmailAndPassword(username, pwd)
+        await firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
             localStorage.setItem("logged", "true");
             localStorage.setItem("remember", "true");
@@ -26,5 +25,18 @@ export class Firebase extends Singleton {
     }
     static loggedIn() {
         return Firebase.getInstance().loggedIn;
+    }
+    static addDBListener(dbPath, callback) {
+        console.log('register dbPath: ', dbPath);
+        let dbReference = firebase.database().ref(dbPath);
+        dbReference.on('value', (snapshot) => {
+            console.log("Path changed: ", dbPath);
+            const data = snapshot.val();
+            callback(data);
+        });
+    }
+    static getDBData(dbPath) {
+        return firebase.database().ref(dbPath).once('value').then((snapshot) => {
+        });
     }
 }

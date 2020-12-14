@@ -158,8 +158,6 @@ export interface componentProperties{
     "z-index"?: string,
 
     // Component props
-    componentName?: string,
-    componentClassName?: string,
     title?: string,    
     text?: string,  
     resizable?: boolean,

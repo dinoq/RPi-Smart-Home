@@ -1,4 +1,5 @@
 import { AbstractComponent, componentProperties } from "../components/component.js";
+import { Firebase } from "../utils/firebase.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
 
@@ -8,7 +9,7 @@ export class RoomCard extends AbstractComponent {
     leftStack: VerticalStack;
     rightStack: HorizontalStack;
     
-    constructor(layoutProps?: componentProperties|any) {
+    constructor(layoutProps?: RoomCardProps) {
         super(layoutProps);
 
         this.mainHStack = new HorizontalStack();
@@ -19,6 +20,9 @@ export class RoomCard extends AbstractComponent {
         this.mainHStack.appendComponents([this.leftStack, this.rightStack]);
         this.appendComponents(this.mainHStack);
     }
-    
+}
 
+
+export interface RoomCardProps extends componentProperties{
+    roomName: string
 }
