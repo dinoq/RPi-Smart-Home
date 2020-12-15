@@ -1,3 +1,4 @@
 
 - Otestovat ( a případně přepsat) jestli je možné nahradit X.constructor.name za X.name (to první nekdy vrátí Function())
 - LoginForm v konstruktoru vytvořit menu itemy (a ne pomocí innerhtml)
+- Není potřeba upravit čtecí/zapisovací práva ve firebase database?

@@ -5,6 +5,7 @@ export class Firebase extends Singleton {
         this.database = firebase.database();
         this.auth = firebase.auth();
         this.loggedIn = (localStorage.getItem("logged") === "true");
+        this.uid = localStorage.getItem("uid");
     }
     static getInstance() {
         return super.getInstance();
@@ -17,6 +18,7 @@ export class Firebase extends Singleton {
             localStorage.setItem("remember", "true");
             localStorage.setItem("login", username);
             localStorage.setItem("password", pwd);
+            localStorage.setItem("uid", firebase.auth().currentUser.uid);
             return Promise.resolve(user);
         }).catch((error) => {
             return Promise.reject(error);
@@ -27,12 +29,12 @@ export class Firebase extends Singleton {
         return Firebase.getInstance().loggedIn;
     }
     static addDBListener(dbPath, callback) {
-        console.log('register dbPath: ', dbPath);
-        let dbReference = firebase.database().ref(dbPath);
+        let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;
+        let dbReference = firebase.database().ref(Firebase.getInstance().uid + path);
         dbReference.on('value', (snapshot) => {
-            console.log("Path changed: ", dbPath);
             const data = snapshot.val();
-            callback(data);
+            if (data)
+                callback(data);
         });
     }
     static getDBData(dbPath) {

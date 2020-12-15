@@ -11,7 +11,7 @@ import { PageManagerComponent } from "./utils/page-manager.js";
 import { LoginPage } from "./components/pages/login-page.js";
 import { Dashboard } from "./components/pages/dashboard-page.js";
 import { HomePage } from "./components/pages/home-page.js";
-import { RoomCard } from "./layouts/room-card.js";
+import { RoomCard, RoomDevice } from "./layouts/room-card.js";
 import { VerticalStack } from "./layouts/vertical-stack.js";
 import { HorizontalStack } from "./layouts/horizontal-stack.js";
 export var app = null;
@@ -48,6 +48,7 @@ class AutoHomeApp {
             RoomCard.defineComponent();
             VerticalStack.defineComponent();
             HorizontalStack.defineComponent();
+            RoomDevice.defineComponent();
         }
     }
     initFirebase() {

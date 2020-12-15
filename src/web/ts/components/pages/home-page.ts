@@ -12,17 +12,13 @@ export class HomePage extends BasePage {
     constructor(componentProps?: componentProperties) {
         super(componentProps);
 
-        for (let i = 0; i < HomePage.roomNames.length; i++) {
-            const roomCard = new RoomCard({ roomName: HomePage.roomNames[i] });
+        for (let i = 0; i < HomePage.DBRoomNames.length; i++) {
+            const roomCard = new RoomCard({ roomName: HomePage.DBRoomNames[i] });
             this.appendComponents(roomCard);
         }
-        Firebase.addDBListener("buildings/aaaa/rooms/kuchyn", (data) =>{
-            console.log('data: ', data);
-
-        })
     }
 
-    static roomNames = [
+    static DBRoomNames = [
         "Obyvaci pokoooj",
         "kuchyn",
         "pokojík"

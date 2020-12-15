@@ -239,6 +239,10 @@ room-card:nth-child(even) {
   background-color: #ebebeb;
 }
 
+room-card:first-child {
+  margin-top: 42px;
+}
+
 room-card horizontal-stack:nth-child(1) {
   background-color: rgba(255, 255, 0, 0.171);
   width: 100%;
