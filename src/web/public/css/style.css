@@ -242,27 +242,15 @@ room-card:first-child {
   margin-top: 42px;
 }
 
-room-card horizontal-stack:nth-child(1) {
-  background-color: rgba(255, 255, 0, 0.171);
-  width: 100%;
+room-card > horizontal-stack > *:nth-child(1) {
+  width: 30%;
 }
 
-room-card horizontal-stack:nth-child(1) > * {
-  width: 50%;
+room-card > horizontal-stack > *:nth-child(2) {
+  width: 70%;
 }
 
-room-card horizontal-stack:nth-child(1) > vertical-stack {
-  background-color: rgba(0, 26, 255, 0.171);
-}
-
-room-card horizontal-stack:nth-child(1) > horizontal-stack {
-  background-color: rgba(255, 0, 242, 0.171);
-}
-
-room-card .devices-stack {
-  -webkit-box-align: end;
-      -ms-flex-align: end;
-          align-items: flex-end;
+room-card .right-stack {
   height: 100px;
 }
 /*# sourceMappingURL=style.css.map */

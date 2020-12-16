@@ -40,9 +40,13 @@ export class Firebase extends Singleton {
         return Firebase.getInstance().loggedIn;
     }
 
+    static getFullPath(dbPath: string){//Adds uid/ at start of dbPath parameter
+        let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;;
+        return Firebase.getInstance().uid + path;
+    }
+
     static addDBListener(dbPath: string, callback) {
-        let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;
-        let dbReference = firebase.database().ref(Firebase.getInstance().uid + path);
+        let dbReference = firebase.database().ref(Firebase.getFullPath(dbPath));
         dbReference.on('value', (snapshot) => {
             const data = snapshot.val();
             if(data)
@@ -54,6 +58,11 @@ export class Firebase extends Singleton {
     static getDBData(dbPath: string) {
         return firebase.database().ref(dbPath).once('value').then((snapshot) => {
         });
+    }
+
+    static updateDBData(dbPath: string, updates: object) {
+        firebase.database().ref(Firebase.getFullPath(dbPath)+"/").update(updates);
+        console.log('Firebase.getFullPath(dbPath): ', Firebase.getFullPath(dbPath)+"");
     }
 }
 

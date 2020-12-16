@@ -156,6 +156,8 @@ export interface componentProperties{
     bottom?: string,
     transition?: string,
     "z-index"?: string,
+    "flex-direction"?: string,
+    "justify-content"?: string,
 
     // Component props
     title?: string,    

@@ -236,23 +236,17 @@ room-card{
         margin-top: 42px;
     }
 
-    horizontal-stack:nth-child(1){
-        background-color: rgba(255, 255, 0, 0.171);
-        width: 100%;
+    > horizontal-stack{
         
-        > *{
-            width: 50%;
+        > *:nth-child(1){
+            width: 30%;
         }
-        > vertical-stack{
-            background-color: rgba(0, 26, 255, 0.171);
-        }
-        > horizontal-stack{
-            background-color: rgba(255, 0, 242, 0.171);
+        > *:nth-child(2){
+            width: 70%;
         }
     }
 
-    .devices-stack{
-        align-items: flex-end;
+    .right-stack{
         height:100px;
     }
 }

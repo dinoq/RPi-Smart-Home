@@ -5,6 +5,7 @@ export class VerticalStack extends AbstractComponent {
     
     constructor(layoutProps?: componentProperties) {
         super(layoutProps);
+        this.style.display="flex";
     }
     
 

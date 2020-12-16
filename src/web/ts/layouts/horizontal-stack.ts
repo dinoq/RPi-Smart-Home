@@ -6,6 +6,7 @@ export class HorizontalStack extends AbstractComponent {
     
     constructor(layoutProps?: componentProperties) {
         super(layoutProps);
+        this.style.display="flex";
     }
     
     pushComponent(component: AbstractComponent) {
