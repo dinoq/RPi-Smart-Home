@@ -49,8 +49,20 @@ export class PageManager extends Singleton {
             page.style.left = "0px";
         } else {
             page.style.left = <string>Config.getWindowWidth(true);
-            page.style.display = "none";
+            //page.style.display = "none";
         }
+    }
+
+    getPageByKey(key: string){
+        return this.pages[this.pagesKeys.indexOf(key)];
+    }
+
+    getIndexByKey(key: string){
+        return this.pagesKeys.indexOf(key);
+    }
+
+    containsPageKey(key:string){
+        return (this.pagesKeys.indexOf(key) != -1);
     }
 
     setActive(page: number | string | BasePage, effect: Effects = Effects.NONE) {
@@ -86,7 +98,13 @@ export class PageManager extends Singleton {
                 new PageNotExistInPageManagerError(page, this.pages.length, true);
             }
         } else if(typeof page == "string"){
+            if(this.containsPageKey(page)){
+                this.activePage.style.left = <string>Config.getWindowWidth(true);
 
+                this.activePage = this.getPageByKey(page);
+                this.activePageIndex = this.getIndexByKey(page);
+                this.activePage.style.left = "0px";
+            }
         } else {
             if(page == this.activePage){
                 return;

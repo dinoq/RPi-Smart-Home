@@ -55,8 +55,17 @@ export class PageManager extends Singleton {
         }
         else {
             page.style.left = Config.getWindowWidth(true);
-            page.style.display = "none";
+            //page.style.display = "none";
         }
+    }
+    getPageByKey(key) {
+        return this.pages[this.pagesKeys.indexOf(key)];
+    }
+    getIndexByKey(key) {
+        return this.pagesKeys.indexOf(key);
+    }
+    containsPageKey(key) {
+        return (this.pagesKeys.indexOf(key) != -1);
     }
     setActive(page, effect = Effects.NONE) {
         if (typeof page == "number") {
@@ -91,6 +100,12 @@ export class PageManager extends Singleton {
             }
         }
         else if (typeof page == "string") {
+            if (this.containsPageKey(page)) {
+                this.activePage.style.left = Config.getWindowWidth(true);
+                this.activePage = this.getPageByKey(page);
+                this.activePageIndex = this.getIndexByKey(page);
+                this.activePage.style.left = "0px";
+            }
         }
         else {
             if (page == this.activePage) {

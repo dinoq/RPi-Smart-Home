@@ -35,6 +35,15 @@ export class Firebase extends Singleton {
                 //throw new Error(error.code);
             });
     }
+    static async logout() {
+        localStorage.removeItem("logged");
+        localStorage.removeItem("remember");
+        localStorage.removeItem("login");
+        localStorage.removeItem("password");
+        localStorage.removeItem("uid");
+        Firebase.getInstance().loggedIn = false;
+        Firebase.getInstance().uid = null;
+    }
 
     static loggedIn() {
         return Firebase.getInstance().loggedIn;
@@ -46,6 +55,7 @@ export class Firebase extends Singleton {
     }
 
     static addDBListener(dbPath: string, callback) {
+        console.log("listen", Firebase.getFullPath(dbPath));
         let dbReference = firebase.database().ref(Firebase.getFullPath(dbPath));
         dbReference.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -62,7 +72,8 @@ export class Firebase extends Singleton {
 
     static updateDBData(dbPath: string, updates: object) {
         firebase.database().ref(Firebase.getFullPath(dbPath)+"/").update(updates);
-        console.log('Firebase.getFullPath(dbPath): ', Firebase.getFullPath(dbPath)+"");
+        console.log('Full path ',Firebase.getFullPath(dbPath)+"/");
+        console.log("UPDATE:", updates);
     }
 }
 

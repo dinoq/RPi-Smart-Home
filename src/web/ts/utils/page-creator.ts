@@ -3,7 +3,7 @@ import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
 import { AbstractComponent } from "../components/component.js";
 import { BlankPage } from "../components/pages/blank-page.js";
 import { BaseLayout } from "../layouts/base-layout.js";
-import { PageManager } from "./page-manager.js";
+import { Effects, PageManager } from "./page-manager.js";
 import { AppRouter, IRoute, Pages, PagesKeys, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
 import { LoginPage } from "../components/pages/login-page.js";
@@ -71,8 +71,11 @@ export class PageCreator {
     renderNotLoggedIn(route: IRoute) {
         switch (route.page) {
             case Pages.LOGIN:
-                let login = this.createLogin(route.afterLoginPath);
-                this.pageManager.addPage(login, "login");
+                if(!this.pageManager.containsPageKey("login")){
+                    let login = this.createLogin(route.afterLoginPath);
+                    this.pageManager.addPage(login, "login");
+                }
+                this.pageManager.setActive("login", Effects.SWIPE_TO_RIGHT);
                 break;
             default:
                 break;

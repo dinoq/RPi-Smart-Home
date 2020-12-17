@@ -1,6 +1,7 @@
 import { MethodNotImplementedError } from "../../errors/method-errors.js";
 import { Paths } from "../../utils/app-router.js";
 import { Config } from "../../utils/config.js";
+import { Firebase } from "../../utils/firebase.js";
 import { URLManager } from "../../utils/url-manager.js";
 import { Utils } from "../../utils/utils.js";
 import { BaseMenu } from "./base-menu.js";
@@ -60,6 +61,9 @@ export class HamburgerMenu extends BaseMenu {
         for (let i = 0; i < links.length; i++) {
             const link = links[i];
             link.addEventListener("click", () => {
+                if (i == (links.length - 1)) {
+                    Firebase.logout();
+                }
                 URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
                 this.toggle();
             });
@@ -76,10 +80,12 @@ HamburgerMenu.MENU_CONTENT = `
         <menu-item>Domů</menu-item>
         <menu-item>Podmínky</menu-item>
         <menu-item>Nastavení</menu-item>
+        <menu-item>Odhlásit se</menu-item>
     </menu-items-container>
     `;
 HamburgerMenu.MENU_HREFS = [
     Paths.HOME,
     Paths.CONDITIONS,
-    Paths.SETTINGS
+    Paths.SETTINGS,
+    Paths.LOGIN
 ];

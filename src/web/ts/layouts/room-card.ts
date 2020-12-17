@@ -21,13 +21,14 @@ export class RoomCard extends AbstractComponent {
         this.mainHStack = new HorizontalStack();
         this.sensorStack = new VerticalStack();
         this.rightStack = new VerticalStack({
-            "flex-direction": "column-reverse"
+            "flex-direction": "column-reverse",
+            "padding": "40px 0"
         });
         this.rightStack.classList.add("right-stack");
 
         this.slider = new Slider();
         this.slider.initialize(this.sliderChanged);
-        this.devicesStack = new HorizontalStack({            
+        this.devicesStack = new HorizontalStack({
             "justify-content": "space-evenly"
         });
 
@@ -47,35 +48,12 @@ export class RoomCard extends AbstractComponent {
         let outputs = this.getDevices(data.devices);
     }
 
-    changeSliderVisibility = (val, caller) =>{
-        let inputElem = this.slider.querySelector("input");
-        if(this.sliderActiveFor == caller){
-            inputElem.style.display = "none";
-            this.sliderActiveFor = null;
-        }else{            
-            inputElem.style.display = "inline-block";
-            inputElem.value = val;
-            this.sliderActiveFor = caller;
-        }
-    }
-
-    sliderChanged=(value, mouseUp=false)=>{
-        if(this.sliderActiveFor != null){
-            this.sliderActiveFor.updateVal(value);
-        }
-        if(mouseUp && this.sliderActiveFor.type=="bool"){
-            let inputElem = this.slider.querySelector("input");
-            inputElem.value = (value < 512)? "0" : "1024";
-        }
-    }
-
-
     getDevices(devices: any) {
         let ordered = new Array();
         for (const espName in devices) {
             const out = devices[espName].OUT;
             for (const pin in out) {
-                out[pin].path= this.roomName+"/devices/"+espName+"/OUT/"+pin;
+                out[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/OUT/" + pin;
                 ordered.push(out[pin]);
             }
 
@@ -93,19 +71,48 @@ export class RoomCard extends AbstractComponent {
         }
 
         for (let i = 0; i < this.devices.length; i++) {
-            if(!this.devices[i].initialized){
+            if (!this.devices[i].initialized) {
                 this.devices[i].initialize(i, ordered, this.changeSliderVisibility);
             }
             this.devices[i].updateVal(ordered[i].value);
-            if(this.devices[i]==this.sliderActiveFor){
+            if (this.devices[i] == this.sliderActiveFor) {
                 let val = ordered[i].value;
-                if(ordered[i].type == "bool"){
-                    val = (ordered[i].value=="on")? 1024:0;
+                if (ordered[i].type == "bool") {
+                    val = (ordered[i].value == "on") ? 1024 : 0;
                 }
                 this.slider.querySelector("input").value = val;
             }
         }
     }
+
+    changeSliderVisibility = (val, caller: RoomDevice) => {//Called when user click on any device (lamp)
+        let inputElem = this.slider.querySelector("input");
+        if (this.sliderActiveFor == caller) {
+            inputElem.style.display = "none";
+            this.sliderActiveFor = null;
+            caller.toggleNameColor();
+        } else {
+            if (this.sliderActiveFor)
+                this.sliderActiveFor.toggleNameColor();
+            caller.toggleNameColor();
+            inputElem.style.display = "inline-block";
+            inputElem.value = val;
+            this.sliderActiveFor = caller;
+        }
+    }
+
+    sliderChanged = (value, mouseUp = false) => {//Called when slider value changed by mouse/touch
+        if (this.sliderActiveFor != null) {
+            //this.sliderActiveFor.updateVal(value); NOT SET VALUE DIRECTLY, BUT CALL FIREBASE TO UPDATE VALUE, AND FIREBASE (BECAUSE OF VALUE LISTENER) WILL NOTICE DEVICE WHICH CHANGED
+            let dev = this.sliderActiveFor;
+            Firebase.updateDBData(dev.devicePath, { value: dev.convertNumToDBVal(value) });
+        }
+        if (mouseUp && this.sliderActiveFor.type == "bool") {
+            let inputElem = this.slider.querySelector("input");
+            inputElem.value = (value < 512) ? "0" : "1024";
+        }
+    }
+
 }
 
 
@@ -113,22 +120,22 @@ export interface RoomCardProps extends componentProperties {
     roomName: string
 }
 
-export class Slider extends AbstractComponent{
+export class Slider extends AbstractComponent {
     static tagName = "slider-component";
 
     constructor(layoutProps?: componentProperties) {
         super(layoutProps);
-        this.innerHTML=`               
+        this.innerHTML = `               
             <input type="range" min="1" max="1024" value="512" class="slider" style="width: 100%; display:none">
         `;
     }
 
     initialize(sliderChanged) {
         let element = this.querySelector("input");
-        element.oninput = ()=>{
+        element.oninput = () => {
             sliderChanged(element.value);
         }
-        element.onmouseup = ()=>{
+        element.onmouseup = () => {
             sliderChanged(element.value, true);
         }
     }
@@ -155,12 +162,16 @@ export class RoomDevice extends AbstractComponent {
                 <div class="bg-image" style="position:absolute;height: 16px;bottom: 0px;overflow: hidden;">
                     <img src="img/bulb2.png">
                 </div> 
-                <div style="position: relative;">
+                <div style="position:relative;display: flex;justify-content: center;">
                     <img src="img/bulb.png">
                 </div>
                 
             </div>
         `;
+        this.style.display = "flex";
+        this.style.width = "150px";
+        this.style.justifyContent = "center";
+
         this.bgImage = this.querySelector(".bg-image");
         /*
                 <div style="position:absolute;top: 0px;left: 0px;width:0px">    
@@ -187,33 +198,53 @@ export class RoomDevice extends AbstractComponent {
 
     }
 
-    initialize(index, object, onClickCallback){
+    initialize(index, object, onClickCallback) {
         this.type = object[index].type;
         this.devicePath = object[index].path;
         this.initialized = true;
-        this.addEventListener('click', ()=>{
+        this.addEventListener('click', () => {
             onClickCallback(this.value, this);
         })
 
         let deviceName = <HTMLElement>this.querySelector(".device-name");
-        deviceName.style.bottom = (index%2)? "-40px": "-24px";
+        deviceName.style.bottom = (index % 2) ? "-40px" : "-24px";
+        deviceName.style.color = "black";
         deviceName.innerText = object[index].name;
-        deviceName.style.left = -(deviceName.clientWidth)/2+16 + "px";
+        deviceName.style.left = -(deviceName.clientWidth) / 2 + 16 + "px";
+        deviceName.style.backgroundColor = "#00000061";
     }
 
     static IMG_HEIGHT = 32;
 
-    updateVal(value) {        
+    updateVal(value) {
         let val = value;
-        if (this.type == "bool") 
-            val = (value > 512)? 1024:0;
+        if (this.type == "bool")
+            val = (value > 512) ? 1024 : 0;
         this.updateSlider(val);
         //console.log('value: ', val);
-        this.bgImage.style.height = Math.round((val/1024) * RoomDevice.IMG_HEIGHT) + "px";    
-        this.value = val;    
+        this.bgImage.style.height = Math.round((val / 1024) * RoomDevice.IMG_HEIGHT) + "px";
+        this.value = val;
     }
 
-    updateSlider(value){
+    toggleNameColor() {
+        let deviceName = <HTMLElement>this.querySelector(".device-name");
+        if (deviceName.style.color == "rgb(0, 226, 0)")
+            deviceName.style.color = "black";
+        else
+            deviceName.style.color = "rgb(0, 226, 0)";
+    }
+
+    updateSlider(value) {
         //this.slider.value=value;
+    }
+
+    convertNumToDBVal(val: number) {
+        if (this.type == "bool")
+            return (val < 512) ? "off" : "on";
+        return val;
+    }
+
+    static convertToNumVal(val: string, type: string) {
+
     }
 }

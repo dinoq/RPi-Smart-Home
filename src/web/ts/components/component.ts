@@ -158,6 +158,7 @@ export interface componentProperties{
     "z-index"?: string,
     "flex-direction"?: string,
     "justify-content"?: string,
+    "padding"?: string,
 
     // Component props
     title?: string,    
