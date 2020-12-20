@@ -227,7 +227,16 @@ horizontal-stack {
 room-card {
   display: block;
   width: 100%;
-  padding: 10px;
+  /*
+    > horizontal-stack{
+        
+        > *:nth-child(1){
+            width: 30%;
+        }
+        > *:nth-child(2){
+            width: 70%;
+        }
+    }*/
 }
 
 room-card:nth-child(odd) {
@@ -242,15 +251,7 @@ room-card:first-child {
   margin-top: 42px;
 }
 
-room-card > horizontal-stack > *:nth-child(1) {
-  width: 30%;
-}
-
-room-card > horizontal-stack > *:nth-child(2) {
-  width: 70%;
-}
-
-room-card .right-stack {
-  height: 100px;
+room-card > horizontal-stack {
+  background: rgba(0, 0, 0, 0.6);
 }
 /*# sourceMappingURL=style.css.map */

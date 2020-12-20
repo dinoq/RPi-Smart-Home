@@ -90,22 +90,22 @@ export class HamburgerMenu extends BaseMenu {
         window.addEventListener("resize", this.resize);
 
         //Add links
-        let links: MenuItem[] = <MenuItem[]> <unknown>this.querySelectorAll("menu-item");
+        let links: MenuItem[] = <MenuItem[]><unknown>this.querySelectorAll("menu-item");
         for (let i = 0; i < links.length; i++) {
             const link = links[i];
-            link.addEventListener("click", ()=>{
-                if(i==(links.length-1)){
+            link.addEventListener("click", () => {
+                if (i == (links.length - 1)) {
                     Firebase.logout();
                 }
                 URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
                 this.toggle();
             });
-            
+
         }
 
     }
 
-    resize() {
+    resize = () => {
         new MethodNotImplementedError("resize", this, true);
     }
 

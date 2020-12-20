@@ -4,5 +4,8 @@ export class VerticalStack extends AbstractComponent {
         super(layoutProps);
         this.style.display = "flex";
     }
+    pushComponent(component) {
+        this.appendComponents(component);
+    }
 }
 VerticalStack.tagName = "vertical-stack";

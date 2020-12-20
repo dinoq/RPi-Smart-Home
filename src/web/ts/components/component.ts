@@ -141,9 +141,9 @@ export abstract class AbstractComponent extends Component {
 
 }
 
-export interface componentProperties{
+export interface componentProperties extends Partial<CSSStyleDeclaration> {
     // CSS props
-    x?: string,
+    /*x?: string,
     y?: string,
     width?: string,
     height?: string,
@@ -158,7 +158,7 @@ export interface componentProperties{
     "z-index"?: string,
     "flex-direction"?: string,
     "justify-content"?: string,
-    "padding"?: string,
+    "padding"?: string,*/
 
     // Component props
     title?: string,    

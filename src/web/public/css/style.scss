@@ -223,7 +223,6 @@ horizontal-stack{
 room-card{
     display: block;
     width: 100%;
-    padding: 10px;
 
     &:nth-child(odd){
         background-color: rgb(165, 165, 165);
@@ -237,6 +236,10 @@ room-card{
     }
 
     > horizontal-stack{
+        background: rgba(0, 0, 0, 0.6);
+    }
+/*
+    > horizontal-stack{
         
         > *:nth-child(1){
             width: 30%;
@@ -244,9 +247,6 @@ room-card{
         > *:nth-child(2){
             width: 70%;
         }
-    }
+    }*/
 
-    .right-stack{
-        height:100px;
-    }
 }

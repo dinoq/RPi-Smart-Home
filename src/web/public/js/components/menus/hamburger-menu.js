@@ -10,6 +10,9 @@ export class HamburgerMenu extends BaseMenu {
         super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString()
         }));
+        this.resize = () => {
+            new MethodNotImplementedError("resize", this, true);
+        };
         this.innerHTML = HamburgerMenu.MENU_CONTENT;
         this.itemsContainer = this.getElementsByTagName("menu-items-container")[0];
         this.hamburgerIcon = this.getElementsByTagName("img")[0];
@@ -68,9 +71,6 @@ export class HamburgerMenu extends BaseMenu {
                 this.toggle();
             });
         }
-    }
-    resize() {
-        new MethodNotImplementedError("resize", this, true);
     }
 }
 HamburgerMenu.tagName = "hamburger-menu";

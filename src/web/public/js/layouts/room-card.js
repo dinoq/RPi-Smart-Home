@@ -1,4 +1,5 @@
 import { AbstractComponent } from "../components/component.js";
+import { Config } from "../utils/config.js";
 import { Firebase } from "../utils/firebase.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
@@ -7,13 +8,80 @@ export class RoomCard extends AbstractComponent {
         super(layoutProps);
         this.sliderActiveFor = null;
         this.updateCard = (data) => {
-            console.log(this.roomName + ":");
-            let outputs = this.getDevices(data.devices);
+            let devices = data.devices;
+            let ordered = new Array();
+            for (const espName in devices) {
+                const out = devices[espName].OUT;
+                for (const pin in out) {
+                    out[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/OUT/" + pin;
+                    ordered.push(out[pin]);
+                }
+            }
+            ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);
+            console.log('ordered: ', ordered);
+            let deviceRow = new HorizontalStack({
+                justifyContent: "space-between"
+            });
+            if (this.devices.length == 0) {
+                for (const device of ordered) {
+                    let lamp = new RoomDevice({});
+                    this.devices.push(lamp);
+                    if ((deviceRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) < Config.getWindowWidth() * 0.7) {
+                        deviceRow.pushComponent(lamp);
+                    }
+                    else {
+                        this.devicesStack.pushComponent(deviceRow);
+                        deviceRow = new HorizontalStack({
+                            justifyContent: "space-between",
+                            marginTop: "3.5rem"
+                        });
+                    }
+                    console.log("COUNT", this.devicesStack.childElementCount);
+                }
+            }
+            if (deviceRow.childElementCount) {
+                this.devicesStack.pushComponent(deviceRow);
+            }
+            for (let i = 0; i < this.devices.length; i++) {
+                if (!this.devices[i].initialized) {
+                    this.devices[i].initialize(i, ordered, this.changeSliderVisibility);
+                }
+                this.devices[i].updateVal(ordered[i].value);
+                if (this.devices[i] == this.sliderActiveFor) {
+                    let val = ordered[i].value;
+                    if (ordered[i].type == "bool") {
+                        val = (ordered[i].value == "on") ? 1024 : 0;
+                    }
+                    this.slider.querySelector("input").value = val;
+                }
+            }
+        };
+        this.resize = () => {
+            let deviceRow = new HorizontalStack({
+                justifyContent: "space-between"
+            });
+            let devicesInRow = Math.floor((Config.getWindowWidth() * 0.7) / RoomDevice.DEFAULT_DEVICE_WIDTH);
+            for (let i = 0; i < this.devices.length; i++) {
+                if ((i * RoomDevice.DEFAULT_DEVICE_WIDTH) < Config.getWindowWidth() * 0.7) {
+                    deviceRow.pushComponent(this.devices[i]);
+                }
+                else {
+                    this.devicesStack.pushComponent(deviceRow);
+                    deviceRow = new HorizontalStack({
+                        justifyContent: "space-between",
+                        marginTop: "3.5rem"
+                    });
+                }
+                console.log("COUNT", this.devicesStack.childElementCount);
+            }
+            if (deviceRow.childElementCount) {
+                this.devicesStack.pushComponent(deviceRow);
+            }
         };
         this.changeSliderVisibility = (val, caller) => {
             let inputElem = this.slider.querySelector("input");
             if (this.sliderActiveFor == caller) {
-                inputElem.style.display = "none";
+                inputElem.style.visibility = "hidden";
                 this.sliderActiveFor = null;
                 caller.toggleNameColor();
             }
@@ -21,7 +89,7 @@ export class RoomCard extends AbstractComponent {
                 if (this.sliderActiveFor)
                     this.sliderActiveFor.toggleNameColor();
                 caller.toggleNameColor();
-                inputElem.style.display = "inline-block";
+                inputElem.style.visibility = "visible";
                 inputElem.value = val;
                 this.sliderActiveFor = caller;
             }
@@ -38,55 +106,27 @@ export class RoomCard extends AbstractComponent {
             }
         };
         this.mainHStack = new HorizontalStack();
-        this.sensorStack = new VerticalStack();
+        this.leftStack = new VerticalStack();
+        this.leftStack.style.width = "30%";
+        let name = new HorizontalStack();
+        name.innerText = "Místnost";
+        this.leftStack.pushComponent(name);
         this.rightStack = new VerticalStack({
-            "flex-direction": "column-reverse",
-            "padding": "40px 0"
+            flexDirection: "column-reverse",
+            padding: "40px 0"
         });
-        this.rightStack.classList.add("right-stack");
+        this.rightStack.style.width = "70%";
         this.slider = new Slider();
         this.slider.initialize(this.sliderChanged);
-        this.devicesStack = new HorizontalStack({
-            "justify-content": "space-evenly"
-        });
+        this.devicesStack = new VerticalStack();
         this.devices = new Array();
-        this.roomName = layoutProps.roomName;
+        this.roomName = layoutProps.roomDBName;
         Firebase.addDBListener("/rooms/" + this.roomName, this.updateCard);
         this.rightStack.appendComponents([this.devicesStack, this.slider]);
-        this.mainHStack.appendComponents([this.sensorStack, this.rightStack]);
+        this.mainHStack.appendComponents([this.leftStack, this.rightStack]);
         this.appendComponents(this.mainHStack);
-    }
-    getDevices(devices) {
-        let ordered = new Array();
-        for (const espName in devices) {
-            const out = devices[espName].OUT;
-            for (const pin in out) {
-                out[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/OUT/" + pin;
-                ordered.push(out[pin]);
-            }
-        }
-        ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);
-        console.log('ordered: ', ordered);
-        if (this.devices.length == 0) {
-            for (const device of ordered) {
-                let lamp = new RoomDevice({});
-                this.devices.push(lamp);
-                this.devicesStack.pushComponent(lamp);
-            }
-        }
-        for (let i = 0; i < this.devices.length; i++) {
-            if (!this.devices[i].initialized) {
-                this.devices[i].initialize(i, ordered, this.changeSliderVisibility);
-            }
-            this.devices[i].updateVal(ordered[i].value);
-            if (this.devices[i] == this.sliderActiveFor) {
-                let val = ordered[i].value;
-                if (ordered[i].type == "bool") {
-                    val = (ordered[i].value == "on") ? 1024 : 0;
-                }
-                this.slider.querySelector("input").value = val;
-            }
-        }
+        this.style.background = "url(img/kitchen.jpg)";
+        this.style.backgroundPositionY = "-445px";
     }
 }
 RoomCard.tagName = "room-card";
@@ -94,8 +134,9 @@ export class Slider extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
         this.innerHTML = `               
-            <input type="range" min="1" max="1024" value="512" class="slider" style="width: 100%; display:none">
+            <input type="range" min="1" max="1024" value="512" class="slider" style="width: 100%; visibility:hidden;margin-bottom: 2rem;">
         `;
+        this.style.marginRight = "5px";
     }
     initialize(sliderChanged) {
         let element = this.querySelector("input");
@@ -161,11 +202,12 @@ export class RoomDevice extends AbstractComponent {
             onClickCallback(this.value, this);
         });
         let deviceName = this.querySelector(".device-name");
-        deviceName.style.bottom = (index % 2) ? "-40px" : "-24px";
-        deviceName.style.color = "black";
+        //deviceName.style.bottom = (index % 2) ? "-3rem" : "-1.5rem";
+        deviceName.style.bottom = "-1.5rem";
+        deviceName.style.color = "white";
         deviceName.innerText = object[index].name;
         deviceName.style.left = -(deviceName.clientWidth) / 2 + 16 + "px";
-        deviceName.style.backgroundColor = "#00000061";
+        //deviceName.style.backgroundColor = "#00000061";
     }
     updateVal(value) {
         let val = value;
@@ -178,10 +220,10 @@ export class RoomDevice extends AbstractComponent {
     }
     toggleNameColor() {
         let deviceName = this.querySelector(".device-name");
-        if (deviceName.style.color == "rgb(0, 226, 0)")
-            deviceName.style.color = "black";
+        if (deviceName.style.color == "rgb(102, 255, 102)")
+            deviceName.style.color = "white";
         else
-            deviceName.style.color = "rgb(0, 226, 0)";
+            deviceName.style.color = "rgb(102, 255, 102)";
     }
     updateSlider(value) {
         //this.slider.value=value;
@@ -195,4 +237,5 @@ export class RoomDevice extends AbstractComponent {
     }
 }
 RoomDevice.tagName = "room-device";
+RoomDevice.DEFAULT_DEVICE_WIDTH = 150;
 RoomDevice.IMG_HEIGHT = 32;
