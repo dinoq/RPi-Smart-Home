@@ -43,7 +43,6 @@ export class Firebase extends Singleton {
         return Firebase.getInstance().uid + path;
     }
     static addDBListener(dbPath, callback) {
-        console.log("listen", Firebase.getFullPath(dbPath));
         let dbReference = firebase.database().ref(Firebase.getFullPath(dbPath));
         dbReference.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -57,7 +56,5 @@ export class Firebase extends Singleton {
     }
     static updateDBData(dbPath, updates) {
         firebase.database().ref(Firebase.getFullPath(dbPath) + "/").update(updates);
-        console.log('Full path ', Firebase.getFullPath(dbPath) + "/");
-        console.log("UPDATE:", updates);
     }
 }

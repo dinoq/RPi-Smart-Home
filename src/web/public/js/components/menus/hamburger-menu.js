@@ -4,28 +4,35 @@ import { Config } from "../../utils/config.js";
 import { Firebase } from "../../utils/firebase.js";
 import { URLManager } from "../../utils/url-manager.js";
 import { Utils } from "../../utils/utils.js";
-import { BaseMenu } from "./base-menu.js";
-export class HamburgerMenu extends BaseMenu {
+import { AbstractComponent } from "../component.js";
+import { MenuItem } from "./menu-item.js";
+export class HamburgerMenu {
     constructor(componentProps) {
-        super(Utils.mergeObjects(componentProps, {
+        /*super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString()
-        }));
+        }));*/
+        this.componentConnected = false;
         this.resize = () => {
             new MethodNotImplementedError("resize", this, true);
         };
-        this.innerHTML = HamburgerMenu.MENU_CONTENT;
-        this.itemsContainer = this.getElementsByTagName("menu-items-container")[0];
-        this.hamburgerIcon = this.getElementsByTagName("img")[0];
+        this.itemsContainer = new MenuItemsContainer();
+        for (const title of HamburgerMenu.MENU_TITLES) {
+            let item = new MenuItem({ innerText: title });
+            this.itemsContainer.addMenuItem(item);
+        }
+        this.hamburgerIcon = new MenuIcon();
         this.hamburgerIcon.addEventListener("click", () => { this.toggle(true); });
     }
-    //@overrride
-    connectedCallback() {
-        this.show(false, false);
+    disconnectComponent() {
+        this.componentConnected = false;
+        this.itemsContainer.disconnectComponent();
+        this.hamburgerIcon.disconnectComponent();
     }
-    //@overrride
-    addMenuItem(item) {
-        super.addMenuItem(item);
-        //this.style.display = "block";
+    connectComponent(parent, replaceContent) {
+        this.componentConnected = true;
+        this.itemsContainer.connectComponent(parent, replaceContent);
+        this.hamburgerIcon.connectComponent(parent, replaceContent);
+        this.show(false, false);
     }
     toggle(animate = true) {
         let containerStyle = this.itemsContainer.style;
@@ -48,7 +55,7 @@ export class HamburgerMenu extends BaseMenu {
         else {
             this.hamburgerIcon.src = "img/menu.png";
             containerStyle.left = -this.itemsContainer.clientWidth -
-                Utils.pxToNumber(getComputedStyle(this).left) + "px";
+                Utils.pxToNumber(getComputedStyle(this.itemsContainer).left) + "px";
         }
         if (animate) {
             this.itemsContainer.addEventListener("transitionend", () => {
@@ -60,7 +67,7 @@ export class HamburgerMenu extends BaseMenu {
     addListeners() {
         window.addEventListener("resize", this.resize);
         //Add links
-        let links = this.querySelectorAll("menu-item");
+        let links = Array.from(this.itemsContainer.childNodes);
         for (let i = 0; i < links.length; i++) {
             const link = links[i];
             link.addEventListener("click", () => {
@@ -73,7 +80,6 @@ export class HamburgerMenu extends BaseMenu {
         }
     }
 }
-HamburgerMenu.tagName = "hamburger-menu";
 HamburgerMenu.MENU_CONTENT = `
     <img src="img/menu.png"></img>
     <menu-items-container>
@@ -89,3 +95,33 @@ HamburgerMenu.MENU_HREFS = [
     Paths.SETTINGS,
     Paths.LOGIN
 ];
+HamburgerMenu.MENU_TITLES = [
+    "Domů",
+    "Podmínky",
+    "Nastavení",
+    "Odhlásit se"
+];
+export class MenuItemsContainer extends AbstractComponent {
+    constructor(componentProps) {
+        super(componentProps);
+        //this.style.width="min-content";
+    }
+    addMenuItem(item) {
+        this.appendChild(item);
+    }
+}
+MenuItemsContainer.tagName = "menu-items-container";
+export class MenuIcon extends AbstractComponent {
+    constructor(componentProps) {
+        super(Utils.mergeObjects(componentProps, {
+            "z-index": Config.defaultMenuDepth.toString(),
+            position: "absolute",
+            top: 0,
+            innerHTML: `<img src="img/menu.png">`
+        }));
+    }
+    set src(val) {
+        this.querySelector("img").src = val;
+    }
+}
+MenuIcon.tagName = "menu-icon";

@@ -9,22 +9,37 @@ import { AbstractComponent, componentProperties } from "../component.js";
 import { BaseMenu } from "./base-menu.js";
 import { MenuItem } from "./menu-item.js";
 
-export class HamburgerMenu extends BaseMenu {
-    static tagName = "hamburger-menu";
-
-    private hamburgerIcon: HTMLImageElement;
+export class HamburgerMenu {
+    private hamburgerIcon: MenuIcon;
+    itemsContainer: MenuItemsContainer;    
+    componentConnected: boolean = false;
 
     constructor(componentProps?: componentProperties) {
-        super(Utils.mergeObjects(componentProps, {
+        /*super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString()
-        }));
+        }));*/
 
-        this.innerHTML = HamburgerMenu.MENU_CONTENT;
-        this.itemsContainer = <AbstractComponent>this.getElementsByTagName("menu-items-container")[0];
-        this.hamburgerIcon = <HTMLImageElement>this.getElementsByTagName("img")[0];
+        this.itemsContainer = new MenuItemsContainer();
+        for(const title of HamburgerMenu.MENU_TITLES){
+            let item = new MenuItem({innerText: title});
+            this.itemsContainer.addMenuItem(item);
+        }
+        this.hamburgerIcon = new MenuIcon();
         this.hamburgerIcon.addEventListener("click", () => { this.toggle(true) });
+        
     }
 
+    disconnectComponent() {
+        this.componentConnected = false;
+        this.itemsContainer.disconnectComponent();
+        this.hamburgerIcon.disconnectComponent();
+    }
+    connectComponent(parent: string | HTMLElement, replaceContent?: boolean) {
+        this.componentConnected = true;
+        this.itemsContainer.connectComponent(parent, replaceContent);
+        this.hamburgerIcon.connectComponent(parent, replaceContent);        
+        this.show(false, false);
+    }
 
     static MENU_CONTENT = `
     <img src="img/menu.png"></img>
@@ -43,16 +58,12 @@ export class HamburgerMenu extends BaseMenu {
         Paths.LOGIN
     ];
 
-    //@overrride
-    connectedCallback(): void {
-        this.show(false, false);
-    }
-
-    //@overrride
-    addMenuItem(item: AbstractComponent) {
-        super.addMenuItem(item);
-        //this.style.display = "block";
-    }
+    static MENU_TITLES = [
+        "Domů",
+        "Podmínky",
+        "Nastavení",
+        "Odhlásit se"
+    ];
 
     toggle(animate: boolean = true) {
         let containerStyle = this.itemsContainer.style;
@@ -75,7 +86,7 @@ export class HamburgerMenu extends BaseMenu {
         } else {
             this.hamburgerIcon.src = "img/menu.png";
             containerStyle.left = -this.itemsContainer.clientWidth -
-                Utils.pxToNumber(getComputedStyle(this).left) + "px";
+                Utils.pxToNumber(getComputedStyle(this.itemsContainer).left) + "px";
         }
         if (animate) {
             this.itemsContainer.addEventListener("transitionend", () => {
@@ -90,7 +101,7 @@ export class HamburgerMenu extends BaseMenu {
         window.addEventListener("resize", this.resize);
 
         //Add links
-        let links: MenuItem[] = <MenuItem[]><unknown>this.querySelectorAll("menu-item");
+        let links: MenuItem[] = <Array<MenuItem>>Array.from(this.itemsContainer.childNodes);
         for (let i = 0; i < links.length; i++) {
             const link = links[i];
             link.addEventListener("click", () => {
@@ -109,4 +120,40 @@ export class HamburgerMenu extends BaseMenu {
         new MethodNotImplementedError("resize", this, true);
     }
 
+}
+
+
+export class MenuItemsContainer extends AbstractComponent{    
+    static tagName = "menu-items-container";
+    
+    private menuItems: Array<MenuItem>;
+    constructor(componentProps?: componentProperties){
+        super(componentProps);
+        //this.style.width="min-content";
+    }
+
+    addMenuItem(item: AbstractComponent){
+        this.appendChild(item);    
+    }
+    
+}
+
+
+export class MenuIcon extends AbstractComponent{
+    static tagName = "menu-icon";
+
+    set src(val){
+        this.querySelector("img").src = val;
+    }
+    constructor(componentProps?: componentProperties) {
+        super(Utils.mergeObjects(componentProps, {
+            "z-index": Config.defaultMenuDepth.toString(),
+            position: "absolute",
+            top: 0,
+            innerHTML: `<img src="img/menu.png">`
+        }));
+
+        
+    
+    }
 }

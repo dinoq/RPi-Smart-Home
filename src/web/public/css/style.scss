@@ -166,6 +166,7 @@ error-dialog{
     }
 }
 
+/*
 hamburger-menu{
     position: absolute;
     transition: all 1s;
@@ -199,6 +200,37 @@ hamburger-menu{
             &:hover{
                 background: linear-gradient(to right, #b7b7b7, #f0f0f0);
             }
+        }
+    }
+}*/
+
+menu-icon{
+    margin: 5px;
+}
+
+menu-items-container{
+    display: block;
+    position: absolute;
+    height: 100%;
+    left: 0px;
+    top: 42px;
+    padding: 10px;
+    padding-right: 25px;
+    border-right: 1px solid #939393;
+    background-color: white;
+
+    menu-item{
+        display: block;
+        cursor: pointer;
+        font-size: 1.25rem;
+        border-radius: 5px;
+    
+        &:not(:last-child){
+            border-bottom: 1px solid rgb(214, 214, 214);
+        }
+
+        &:hover{
+            background: linear-gradient(to right, #b7b7b7, #f0f0f0);
         }
     }
 }
@@ -238,15 +270,12 @@ room-card{
     > horizontal-stack{
         background: rgba(0, 0, 0, 0.6);
     }
-/*
-    > horizontal-stack{
-        
-        > *:nth-child(1){
-            width: 30%;
-        }
-        > *:nth-child(2){
-            width: 70%;
-        }
-    }*/
+    
+    .room-name{        
+        color: white;
+        font-size: 2.5rem;
+        text-decoration: underline;
+        padding-left: 10%;
+    }
 
 }

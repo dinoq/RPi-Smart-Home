@@ -156,42 +156,71 @@ error-dialog .close-btn div {
   font-size: 1.3em;
 }
 
-hamburger-menu {
-  position: absolute;
-  -webkit-transition: all 1s;
-  transition: all 1s;
-  left: 0px;
-  top: 10px;
-  height: 100%;
+/*
+hamburger-menu{
+    position: absolute;
+    transition: all 1s;
+    left: 0px;
+    top: 10px;
+    height: 100%;
+    
+    img{        
+        margin-left: 10px;
+    }
+    menu-items-container{
+        display: block;
+        position: relative;
+        height: 100%;
+        left: 0px;
+        padding: 10px;
+        padding-right: 25px;
+        border-right: 1px solid #939393;
+        background-color: white;
+
+        menu-item{
+            display: block;
+            cursor: pointer;
+            font-size: 1.25rem;
+            border-radius: 5px;
+        
+            &:not(:last-child){
+                border-bottom: 1px solid rgb(214, 214, 214);
+            }
+
+            &:hover{
+                background: linear-gradient(to right, #b7b7b7, #f0f0f0);
+            }
+        }
+    }
+}*/
+menu-icon {
+  margin: 5px;
 }
 
-hamburger-menu img {
-  margin-left: 10px;
-}
-
-hamburger-menu menu-items-container {
+menu-items-container {
   display: block;
-  position: relative;
+  position: absolute;
   height: 100%;
   left: 0px;
+  top: 42px;
   padding: 10px;
   padding-right: 25px;
   border-right: 1px solid #939393;
   background-color: white;
 }
 
-hamburger-menu menu-items-container menu-item {
+menu-items-container menu-item {
   display: block;
   cursor: pointer;
   font-size: 1.25rem;
   border-radius: 5px;
 }
 
-hamburger-menu menu-items-container menu-item:not(:last-child) {
+menu-items-container menu-item:not(:last-child) {
   border-bottom: 1px solid #d6d6d6;
 }
 
-hamburger-menu menu-items-container menu-item:hover {
+menu-items-container menu-item:hover {
   background: -webkit-gradient(linear, left top, right top, from(#b7b7b7), to(#f0f0f0));
   background: linear-gradient(to right, #b7b7b7, #f0f0f0);
 }
@@ -227,16 +256,6 @@ horizontal-stack {
 room-card {
   display: block;
   width: 100%;
-  /*
-    > horizontal-stack{
-        
-        > *:nth-child(1){
-            width: 30%;
-        }
-        > *:nth-child(2){
-            width: 70%;
-        }
-    }*/
 }
 
 room-card:nth-child(odd) {
@@ -253,5 +272,12 @@ room-card:first-child {
 
 room-card > horizontal-stack {
   background: rgba(0, 0, 0, 0.6);
+}
+
+room-card .room-name {
+  color: white;
+  font-size: 2.5rem;
+  text-decoration: underline;
+  padding-left: 10%;
 }
 /*# sourceMappingURL=style.css.map */

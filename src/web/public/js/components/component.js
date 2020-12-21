@@ -72,6 +72,10 @@ export class AbstractComponent extends Component {
             }
             this.connectComponent(componentProps.connectToParent, componentProps.replaceParentContent);
         }
+        if (componentProps.innerText)
+            this.innerText = componentProps.innerText;
+        if (componentProps.innerHTML)
+            this.innerHTML = componentProps.innerHTML;
     }
     reinitializeFromProps(props) {
         let mergedProperties = Utils.mergeObjects(this.componentProps, props);
@@ -121,3 +125,9 @@ export class AbstractComponent extends Component {
         this.addListeners();
     }
 }
+export class BaseComponent extends AbstractComponent {
+    constructor(layoutProps) {
+        super(layoutProps);
+    }
+}
+BaseComponent.tagName = "base-component";

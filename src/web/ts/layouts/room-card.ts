@@ -1,4 +1,4 @@
-import { AbstractComponent, componentProperties } from "../components/component.js";
+import { AbstractComponent, BaseComponent, componentProperties } from "../components/component.js";
 import { Config } from "../utils/config.js";
 import { Firebase } from "../utils/firebase.js";
 import { HorizontalStack } from "./horizontal-stack.js";
@@ -7,71 +7,99 @@ import { VerticalStack } from "./vertical-stack.js";
 export class RoomCard extends AbstractComponent {
     static tagName = "room-card";
 
-    mainHStack: HorizontalStack;
+    layout: HorizontalStack;
     leftStack: VerticalStack;
     devicesStack: HorizontalStack;
     roomName: string;
     devices: Array<RoomDevice>;
+    sensors: Array<any>;
     rightStack: VerticalStack;
     slider: Slider;
     sliderActiveFor: RoomDevice = null;
+    sensorsStack: VerticalStack;
 
     constructor(layoutProps?: RoomCardProps) {
         super(layoutProps);
 
-        this.mainHStack = new HorizontalStack();
+        this.layout = new HorizontalStack();
+
+        // Everything to Left stack
         this.leftStack = new VerticalStack();
         this.leftStack.style.width = "30%";
-        let name = new HorizontalStack();
-        name.innerText="Místnost";
+        let name = new HorizontalStack({ innerText: "Místnost" });
+        name.classList.add("room-name");
         this.leftStack.pushComponent(name);
+        this.sensorsStack = new VerticalStack({ paddingLeft: "15%"/*alignItems: "center"*/ });
+        this.leftStack.pushComponent(this.sensorsStack);
+
+        // Everything to right stack
         this.rightStack = new VerticalStack({
             flexDirection: "column-reverse",
             padding: "40px 0"
         });
         this.rightStack.style.width = "70%";
-
         this.slider = new Slider();
         this.slider.initialize(this.sliderChanged);
         this.devicesStack = new VerticalStack();
-
-
-
         this.devices = new Array();
+        this.rightStack.appendComponents([this.devicesStack, this.slider]);
+
+        //Append both stacks
+        this.layout.appendComponents([this.leftStack, this.rightStack]);
+        this.appendComponents(this.layout);
+
 
         this.roomName = layoutProps.roomDBName;
         Firebase.addDBListener("/rooms/" + this.roomName, this.updateCard)
 
-        this.rightStack.appendComponents([this.devicesStack, this.slider]);
-        this.mainHStack.appendComponents([this.leftStack, this.rightStack]);
-        this.appendComponents(this.mainHStack);
-
-        this.style.background = "url(img/kitchen.jpg)";
-        this.style.backgroundPositionY = "-445px";
-
     }
 
     updateCard = (data) => {
+        (<HTMLElement>this.querySelector(".room-name")).innerText = data.name;
+        this.style.background = (data.img.src.startsWith("https://")) ? "url(" + data.img.src + ")" : "url(img/" + data.img.src + ")";
+        this.style.backgroundSize = "cover";
+        this.style.backgroundPositionY = data.img.offset + "px";
+
+
         let devices = data.devices;
-        let ordered = new Array();
+        let orderedIN = new Array();
+        let orderedOUT = new Array();
 
         for (const espName in devices) {
-            const out = devices[espName].OUT;
-            for (const pin in out) {
-                out[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/OUT/" + pin;
-                ordered.push(out[pin]);
+            const devIN = devices[espName].IN;
+            for (const pin in devIN) {
+                devIN[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/IN/" + pin;
+                orderedIN.push(devIN[pin]);
             }
 
+            const devOUT = devices[espName].OUT;
+            for (const pin in devOUT) {
+                devOUT[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/OUT/" + pin;
+                orderedOUT.push(devOUT[pin]);
+            }
         }
-        ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);
-        console.log('ordered: ', ordered);
+        orderedIN.sort((a, b) => (a.index > b.index) ? 1 : -1);
+        orderedOUT.sort((a, b) => (a.index > b.index) ? 1 : -1);
+        //console.log('orderedIN: ', orderedIN);
+        //console.log('orderedOUT: ', orderedOUT);
 
 
         let deviceRow = new HorizontalStack({
             justifyContent: "space-between"
         });
-        if (this.devices.length == 0) {
-            for (const device of ordered) {
+
+        this.sensorsStack.innerHTML = "";
+        for (const sensor of orderedIN) {
+            let s = new RoomSensor({ color: "white" });
+            s.initialize(sensor);
+            if (!this.sensorsStack.childElementCount)
+                s.style.fontSize = "2rem";
+            this.sensorsStack.pushComponent(s);
+        }
+        this.devicesStack.innerHTML = "";
+        this.devices = new Array();
+        if (true/*this.devices.length == 0*/) {
+            for (const device of orderedOUT) {
                 let lamp = new RoomDevice({});
                 this.devices.push(lamp)
                 if ((deviceRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) < (<number>Config.getWindowWidth()) * 0.7) {
@@ -83,7 +111,6 @@ export class RoomCard extends AbstractComponent {
                         marginTop: "3.5rem"
                     });
                 }
-                console.log("COUNT", this.devicesStack.childElementCount);
             }
         }
         if (deviceRow.childElementCount) {
@@ -91,13 +118,13 @@ export class RoomCard extends AbstractComponent {
         }
         for (let i = 0; i < this.devices.length; i++) {
             if (!this.devices[i].initialized) {
-                this.devices[i].initialize(i, ordered, this.changeSliderVisibility);
+                this.devices[i].initialize(i, orderedOUT, this.changeSliderVisibility);
             }
-            this.devices[i].updateVal(ordered[i].value);
+            this.devices[i].updateVal(orderedOUT[i].value);
             if (this.devices[i] == this.sliderActiveFor) {
-                let val = ordered[i].value;
-                if (ordered[i].type == "bool") {
-                    val = (ordered[i].value == "on") ? 1024 : 0;
+                let val = orderedOUT[i].value;
+                if (orderedOUT[i].type == "bool") {
+                    val = (orderedOUT[i].value == "on") ? 1024 : 0;
                 }
                 this.slider.querySelector("input").value = val;
             }
@@ -122,7 +149,6 @@ export class RoomCard extends AbstractComponent {
                     marginTop: "3.5rem"
                 });
             }
-            console.log("COUNT", this.devicesStack.childElementCount);
         }
         if (deviceRow.childElementCount) {
             this.devicesStack.pushComponent(deviceRow);
@@ -185,7 +211,46 @@ export class Slider extends AbstractComponent {
         }
     }
 }
+export class RoomSensor extends AbstractComponent {
+    static tagName = "room-sensor";
+    layout: HorizontalStack;
 
+    constructor(layoutProps?: componentProperties) {
+        super(layoutProps);
+    }
+
+
+    initialize(sensor: any) {
+        this.layout = new HorizontalStack();
+        let icon = new Icon(sensor.icon);
+        this.layout.pushComponent(icon);
+        this.layout.pushComponent(new BaseComponent({ innerText: sensor.value + " " + sensor.unit }));
+
+        this.appendComponents(this.layout);
+    }
+}
+
+export class Icon extends AbstractComponent {
+    static tagName = "app-icon";
+    img: HTMLImageElement;
+
+    constructor(icon: string, layoutProps?: componentProperties) {
+        super(layoutProps);
+        this.innerHTML = "<img>";
+        this.img = this.querySelector("img");
+        this.img.src = Icon.srcFromName(icon);
+
+    }
+
+    static srcFromName(name: string) {
+        switch (name) {
+            case "temp": return "img/icons/temp.png";
+            case "humidity": return "img/icons/humidity.png";
+            case "switch": return "img/icons/temp.png";
+            default: return "img/icons/temp.png";
+        }
+    }
+}
 export class RoomDevice extends AbstractComponent {
     static tagName = "room-device";
 

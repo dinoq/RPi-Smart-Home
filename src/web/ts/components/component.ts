@@ -85,6 +85,10 @@ export abstract class AbstractComponent extends Component {
             }
             this.connectComponent(componentProps.connectToParent, componentProps.replaceParentContent);
         }
+        if(componentProps.innerText)
+            this.innerText = componentProps.innerText;
+        if(componentProps.innerHTML)
+            this.innerHTML = componentProps.innerHTML;
     }
 
     
@@ -141,6 +145,15 @@ export abstract class AbstractComponent extends Component {
 
 }
 
+export class BaseComponent extends AbstractComponent {
+    static tagName = "base-component";
+
+    constructor(layoutProps?: componentProperties) {
+        super(layoutProps);
+    }
+
+}
+
 export interface componentProperties extends Partial<CSSStyleDeclaration> {
     // CSS props
     /*x?: string,
@@ -162,7 +175,8 @@ export interface componentProperties extends Partial<CSSStyleDeclaration> {
 
     // Component props
     title?: string,    
-    text?: string,  
+    innerHTML?: string,  
+    innerText?: string,  
     resizable?: boolean,
     connectToParent?:  string | HTMLElement,
     replaceParentContent?: boolean,

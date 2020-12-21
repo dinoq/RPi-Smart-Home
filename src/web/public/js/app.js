@@ -1,8 +1,7 @@
 import { ErrorDialog } from "./components/dialogs/error-dialog.js";
 import { LoginComponent } from "./components/forms/login-form.js";
 import { HeaderComponent } from "./components/headers/header-component.js";
-import { MenuItemsContainer } from "./components/menus/base-menu.js";
-import { HamburgerMenu } from "./components/menus/hamburger-menu.js";
+import { MenuIcon, MenuItemsContainer } from "./components/menus/hamburger-menu.js";
 import { MenuItem } from "./components/menus/menu-item.js";
 import { BlankPage } from "./components/pages/blank-page.js";
 import { BaseLayout } from "./layouts/base-layout.js";
@@ -11,9 +10,10 @@ import { PageManagerComponent } from "./utils/page-manager.js";
 import { LoginPage } from "./components/pages/login-page.js";
 import { Dashboard } from "./components/pages/dashboard-page.js";
 import { HomePage } from "./components/pages/home-page.js";
-import { RoomCard, RoomDevice, Slider } from "./layouts/room-card.js";
+import { Icon, RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-card.js";
 import { VerticalStack } from "./layouts/vertical-stack.js";
 import { HorizontalStack } from "./layouts/horizontal-stack.js";
+import { BaseComponent } from "./components/component.js";
 export var app = null;
 class AutoHomeApp {
     constructor() {
@@ -33,6 +33,7 @@ class AutoHomeApp {
     }
     registerAllComponents() {
         if (customElements.get("login-form") == undefined) {
+            BaseComponent.defineComponent();
             ErrorDialog.defineComponent();
             LoginComponent.defineComponent();
             LoginPage.defineComponent();
@@ -41,7 +42,6 @@ class AutoHomeApp {
             PageManagerComponent.defineComponent();
             BlankPage.defineComponent();
             HeaderComponent.defineComponent();
-            HamburgerMenu.defineComponent();
             MenuItem.defineComponent();
             MenuItemsContainer.defineComponent();
             HomePage.defineComponent();
@@ -50,6 +50,9 @@ class AutoHomeApp {
             HorizontalStack.defineComponent();
             RoomDevice.defineComponent();
             Slider.defineComponent();
+            MenuIcon.defineComponent();
+            RoomSensor.defineComponent();
+            Icon.defineComponent();
         }
     }
     initFirebase() {
