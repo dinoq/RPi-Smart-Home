@@ -52,9 +52,9 @@ export class PageCreator {
                 break;
             default:
                 URLManager.replaceURL(Paths.HOME, PagesKeys.HOME);
-                break; //We don't want to set active udefined page, but rerender page
+                break;
         }
-        this.pageManager.setActive(page);
+        this.pageManager.setActive(page, Effects.SWIPE_TO_RIGHT);
     }
     renderNotLoggedIn(route) {
         switch (route.page) {
@@ -63,7 +63,7 @@ export class PageCreator {
                     let login = this.createLogin(route.afterLoginPath);
                     this.pageManager.addPage(login, "login");
                 }
-                this.pageManager.setActive("login", Effects.SWIPE_TO_RIGHT);
+                this.pageManager.setActive("login");
                 break;
             default:
                 break;

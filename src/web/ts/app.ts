@@ -7,17 +7,19 @@ import { BlankPage } from "./components/pages/blank-page.js";
 import { UnknownPageError } from "./errors/system-errors/uknown-page-error.js";
 import { UndefinedPageError } from "./errors/system-errors/undefined-page-error.js";
 import { BaseLayout } from "./layouts/base-layout.js";
-import { PageCreator, PageElements } from "./utils/page-creator.js";
-import { Effects, PageManager, PageManagerComponent } from "./utils/page-manager.js";
-import { AppRouter, IRoute, Pages } from "./utils/app-router.js";
-import { URLManager } from "./utils/url-manager.js";
+import { PageCreator, PageElements } from "./app/page-creator.js";
+import { Effects, PageManager, PageManagerComponent } from "./app/page-manager.js";
+import { AppRouter, IRoute, Pages } from "./app/app-router.js";
+import { URLManager } from "./app/url-manager.js";
 import { LoginPage } from "./components/pages/login-page.js";
 import { Dashboard } from "./components/pages/dashboard-page.js";
 import { HomePage } from "./components/pages/home-page.js";
 import { Icon, RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-card.js";
 import { VerticalStack } from "./layouts/vertical-stack.js";
 import { HorizontalStack } from "./layouts/horizontal-stack.js";
-import { BaseComponent } from "./components/component.js";
+import { AbstractComponent, BaseComponent } from "./components/component.js";
+import { SettingsPage } from "./components/pages/settings-page.js";
+import { FrameList, FrameListItem } from "./layouts/frame-list.js";
 
 export declare var firebase: any;
 
@@ -32,27 +34,37 @@ class AutoHomeApp {
 
     }
     registerAllComponents() {
+        let components: Array<any> = [
+            BaseComponent,
+            ErrorDialog,            
+            LoginComponent,
+            LoginPage,
+            Dashboard,
+            BaseLayout,
+            PageManagerComponent,
+            BlankPage,
+            HeaderComponent,
+            MenuItem,
+            MenuItemsContainer,
+
+            HomePage,
+            RoomCard,
+            VerticalStack,
+            HorizontalStack,
+            RoomDevice,
+            Slider,
+            MenuIcon,
+            RoomSensor,
+            Icon,
+
+            SettingsPage,
+            FrameList,
+            FrameListItem,
+        ];
         if(customElements.get("login-form") == undefined){
-            BaseComponent.defineComponent();
-            ErrorDialog.defineComponent();
-            LoginComponent.defineComponent();
-            LoginPage.defineComponent();
-            Dashboard.defineComponent();
-            BaseLayout.defineComponent();
-            PageManagerComponent.defineComponent();
-            BlankPage.defineComponent();
-            HeaderComponent.defineComponent();
-            MenuItem.defineComponent();
-            MenuItemsContainer.defineComponent();
-            HomePage.defineComponent();
-            RoomCard.defineComponent();
-            VerticalStack.defineComponent();
-            HorizontalStack.defineComponent();
-            RoomDevice.defineComponent();
-            Slider.defineComponent();
-            MenuIcon.defineComponent();
-            RoomSensor.defineComponent();
-            Icon.defineComponent();
+            for(const component of components){
+                component.defineComponent();
+            }
         }
 
     }

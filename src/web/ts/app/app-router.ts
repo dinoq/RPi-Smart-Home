@@ -51,10 +51,15 @@ export class AppRouter {
         }
         
         if (!Firebase.loggedIn()) {
-            this.route.afterLoginPage = this.route.page;
             this.route.page = Pages.LOGIN;
-            this.route.afterLoginPath = this.route.path;
             this.route.path = Paths.LOGIN;
+            if(this.route.page == Pages.LOGIN){
+                this.route.afterLoginPage = Pages.HOME;
+                this.route.afterLoginPath = Paths.HOME;
+            }else{
+                this.route.afterLoginPage = this.route.page;
+                this.route.afterLoginPath = this.route.path;
+            }
         }
         return this.route;
 

@@ -1,10 +1,10 @@
 import { BaseError } from "../../errors/base-error.js";
 import { MethodNotImplementedError } from "../../errors/method-errors.js";
-import { Paths } from "../../utils/app-router.js";
-import { Config } from "../../utils/config.js";
-import { Firebase } from "../../utils/firebase.js";
-import { URLManager } from "../../utils/url-manager.js";
-import { Utils } from "../../utils/utils.js";
+import { Paths } from "../../app/app-router.js";
+import { Config } from "../../app/config.js";
+import { Firebase } from "../../app/firebase.js";
+import { URLManager } from "../../app/url-manager.js";
+import { Utils } from "../../app/utils.js";
 import { AbstractComponent, componentProperties } from "../component.js";
 import { BaseMenu } from "./base-menu.js";
 import { MenuItem } from "./menu-item.js";
@@ -25,7 +25,7 @@ export class HamburgerMenu {
             this.itemsContainer.addMenuItem(item);
         }
         this.hamburgerIcon = new MenuIcon();
-        this.hamburgerIcon.addEventListener("click", () => { this.toggle(true) });
+        this.addListeners();
         
     }
 
@@ -34,10 +34,9 @@ export class HamburgerMenu {
         this.itemsContainer.disconnectComponent();
         this.hamburgerIcon.disconnectComponent();
     }
-    connectComponent(parent: string | HTMLElement, replaceContent?: boolean) {
+    connectToBody() {
         this.componentConnected = true;
-        this.itemsContainer.connectComponent(parent, replaceContent);
-        this.hamburgerIcon.connectComponent(parent, replaceContent);        
+        AbstractComponent.appendComponentsToDOMElements(document.body, [this.itemsContainer, this.hamburgerIcon]);
         this.show(false, false);
     }
 
@@ -97,7 +96,8 @@ export class HamburgerMenu {
 
 
     //@overrride
-    addListeners(): void {
+    addListeners(): void {        
+        this.hamburgerIcon.addEventListener("click", () => { this.toggle(true) });
         window.addEventListener("resize", this.resize);
 
         //Add links

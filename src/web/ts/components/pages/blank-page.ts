@@ -1,4 +1,4 @@
-import { Config } from "../../utils/config.js";
+import { Config } from "../../app/config.js";
 import { componentProperties } from "../component.js";
 import { BasePage } from "./base-page.js";
 

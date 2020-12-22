@@ -1,9 +1,9 @@
 import { MethodNotImplementedError } from "../../errors/method-errors.js";
-import { Paths } from "../../utils/app-router.js";
-import { Config } from "../../utils/config.js";
-import { Firebase } from "../../utils/firebase.js";
-import { URLManager } from "../../utils/url-manager.js";
-import { Utils } from "../../utils/utils.js";
+import { Paths } from "../../app/app-router.js";
+import { Config } from "../../app/config.js";
+import { Firebase } from "../../app/firebase.js";
+import { URLManager } from "../../app/url-manager.js";
+import { Utils } from "../../app/utils.js";
 import { AbstractComponent } from "../component.js";
 import { MenuItem } from "./menu-item.js";
 export class HamburgerMenu {
@@ -21,17 +21,16 @@ export class HamburgerMenu {
             this.itemsContainer.addMenuItem(item);
         }
         this.hamburgerIcon = new MenuIcon();
-        this.hamburgerIcon.addEventListener("click", () => { this.toggle(true); });
+        this.addListeners();
     }
     disconnectComponent() {
         this.componentConnected = false;
         this.itemsContainer.disconnectComponent();
         this.hamburgerIcon.disconnectComponent();
     }
-    connectComponent(parent, replaceContent) {
+    connectToBody() {
         this.componentConnected = true;
-        this.itemsContainer.connectComponent(parent, replaceContent);
-        this.hamburgerIcon.connectComponent(parent, replaceContent);
+        AbstractComponent.appendComponentsToDOMElements(document.body, [this.itemsContainer, this.hamburgerIcon]);
         this.show(false, false);
     }
     toggle(animate = true) {
@@ -65,6 +64,7 @@ export class HamburgerMenu {
     }
     //@overrride
     addListeners() {
+        this.hamburgerIcon.addEventListener("click", () => { this.toggle(true); });
         window.addEventListener("resize", this.resize);
         //Add links
         let links = Array.from(this.itemsContainer.childNodes);

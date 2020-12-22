@@ -8,8 +8,6 @@ export class VerticalStack extends AbstractComponent {
         this.style.display="flex";
     }
     
-    pushComponent(component: AbstractComponent) {
-        this.appendComponents(component);
-    }
+    pushComponents = this.appendComponents;
 
 }

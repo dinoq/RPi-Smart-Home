@@ -1,6 +1,6 @@
 import { RoomCard } from "../../layouts/room-card.js";
-import { Config } from "../../utils/config.js";
-import { Firebase } from "../../utils/firebase.js";
+import { Config } from "../../app/config.js";
+import { Firebase } from "../../app/firebase.js";
 import { componentProperties } from "../component.js";
 import { LoginComponent } from "../forms/login-form.js";
 import { BasePage } from "./base-page.js";
@@ -11,16 +11,15 @@ export class HomePage extends BasePage {
     loginForm: LoginComponent;
     constructor(componentProps?: componentProperties) {
         super(componentProps);
+        
+        Firebase.addDBListener("/room-names/", (data)=>{
+            this.innerHTML = "";
+            for (let i = 0; i < data.length; i++) {
+                const roomCard = new RoomCard({ roomDBName: data[i] });
+                this.appendComponents(roomCard);
+            }
+        })
 
-        for (let i = 0; i < HomePage.DBRoomNames.length; i++) {
-            const roomCard = new RoomCard({ roomDBName: HomePage.DBRoomNames[i] });
-            this.appendComponents(roomCard);
-        }
     }
 
-    static DBRoomNames = [
-        "Obyvaci pokoooj",
-        "kuchyn",
-        "pokojík"
-    ]
 }

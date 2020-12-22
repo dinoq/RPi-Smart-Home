@@ -1,8 +1,8 @@
 import { BaseError } from "../errors/base-error.js";
 import { ComponentNameNotDefinedError, CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
-import { Config } from "../utils/config.js";
-import { Utils } from "../utils/utils.js";
+import { Config } from "../app/config.js";
+import { Utils } from "../app/utils.js";
 import { LoginComponent } from "./forms/login-form.js";
 
 
@@ -11,44 +11,44 @@ export class Component extends HTMLElement {
     protected parent: HTMLElement;
     public observedAttributes;
     static get observedAttributes() {
-        if(Config.showObservedAttrNotDefined){
+        if (Config.showObservedAttrNotDefined) {
             console.warn("observedAttributes not defined for class: " + this.name + "!\n" +
-            "Will use empty array ([])\n" + 
-            "See class PageCompnent for inspiration.");
+                "Will use empty array ([])\n" +
+                "See class PageCompnent for inspiration.");
         }
         //return ['disabled', 'open'];//example
         return [];
     }
-    
-   /* static _className = "";
-    get className(){
-        new ComponentNameNotDefinedError();
-        return "";
-    }*/
+
+    /* static _className = "";
+     get className(){
+         new ComponentNameNotDefinedError();
+         return "";
+     }*/
 
     constructor(componentProps?: componentProperties) {
         try {
             super();
         }
-        catch(e: any) {   
+        catch (e: any) {
             console.log(e.message);
-            let error = e.stack.toString().substring(0,e.stack.toString().length);
+            let error = e.stack.toString().substring(0, e.stack.toString().length);
             let classes = error.split("at new ").slice(1);
             classes.forEach((str, index, array) => {
                 classes[index] = str.substring(0, str.indexOf(" "));
             })
             console.log(classes);
-            new CustomComponentNotDefinedError(classes);   
+            new CustomComponentNotDefinedError(classes);
             super();
         }
 
     }
 
     static tagName = "default-tag";
-    static defineComponent(){
-        if(this.tagName && this.tagName.includes("-") && this.tagName != "default-tag"){
+    static defineComponent() {
+        if (this.tagName && this.tagName.includes("-") && this.tagName != "default-tag") {
             customElements.define(this.tagName, <CustomElementConstructor>this);
-        }else{
+        } else {
             new BaseError("static property tagName not specified in class", this.name, true);
         }
     }
@@ -56,7 +56,7 @@ export class Component extends HTMLElement {
 export abstract class AbstractComponent extends Component {
     componentProps: componentProperties;
     componentConnected: boolean = false;
-    
+
     constructor(componentProps?: componentProperties) {
         super(componentProps);
         this.componentProps = componentProps;
@@ -64,50 +64,50 @@ export abstract class AbstractComponent extends Component {
     }
 
 
-    
+
     initializeFromProps(componentProps?: componentProperties): void {
-        if(!componentProps)
+        if (!componentProps)
             return;
-        for(const property in componentProps){
-            if(this.style[property] != undefined){//Is CSS pproperty, thus asign it!
+        for (const property in componentProps) {
+            if (this.style[property] != undefined) {//Is CSS pproperty, thus asign it!
                 this.style[property] = componentProps[property];
-            }else{//Is not CSS property, thus is meant to be layout property
+            } else {//Is not CSS property, thus is meant to be layout property
                 //console.log(property+" is not CSS property!");
             }
         }
-        if(!this.style.display){ //If not set
-            this.style.display="block";
+        if (!this.style.display) { //If not set
+            this.style.display = "block";
         }
-        if(componentProps.connectToParent){
+        if (componentProps.connectToParent) {
             let replace = false;
-            if(componentProps.replaceParentContent){
+            if (componentProps.replaceParentContent) {
                 replace = componentProps.replaceParentContent;
             }
-            this.connectComponent(componentProps.connectToParent, componentProps.replaceParentContent);
+            AbstractComponent.connectComponent(componentProps.connectToParent, this, componentProps.replaceParentContent);
         }
-        if(componentProps.innerText)
+        if (componentProps.innerText)
             this.innerText = componentProps.innerText;
-        if(componentProps.innerHTML)
+        if (componentProps.innerHTML)
             this.innerHTML = componentProps.innerHTML;
     }
 
-    
+
     reinitializeFromProps(props: componentProperties) {
         let mergedProperties = Utils.mergeObjects(this.componentProps, props);
         this.componentProps = mergedProperties;
         this.initializeFromProps(mergedProperties);
     }
-    
-    addListeners(): void{
+
+    addListeners(): void {
         new MethodNotImplementedError("addListeners", this, true);
     }
-    connectedCallback(): void{
+    connectedCallback(): void {
         new MethodNotImplementedError("connectedCallback", this, true);
     }
-    disconnectedCallback(): void{
+    disconnectedCallback(): void {
         new MethodNotImplementedError("disconnectedCallback", this, true);
     }
-    attributeChangedCallback(attrName, oldVal, newVal): void{
+    attributeChangedCallback(attrName, oldVal, newVal): void {
         new MethodNotImplementedError("attributeChangedCallback", this, true);
     }
 
@@ -116,32 +116,61 @@ export abstract class AbstractComponent extends Component {
         this.componentConnected = false;
     }
 
-    appendComponents(components: AbstractComponent | AbstractComponent[], replaceContent: boolean = false){
-        if(Array.isArray(components)){
+    // Appends one or more custom element (successor of AbstractComponent) to this. For appending pre-defined DOM elements (like div, table etc.) use method appendDOMComponents()
+    appendComponents(components: AbstractComponent | AbstractComponent[], replaceContent: boolean = false) {
+        if (Array.isArray(components)) {
             components.forEach(component => {
-                component.connectComponent(this, replaceContent);
+                AbstractComponent.connectComponent(this, component, replaceContent);
             });
-        }else{
-            components.connectComponent(this, replaceContent);
+        } else {
+            AbstractComponent.connectComponent(this, components, replaceContent);
         }
     }
 
-    connectComponent(parent: string | HTMLElement, replaceContent: boolean = false) {
-        if(typeof parent ==  "string"){
-            this.parent = document.getElementById(parent);
-        }else{
-            this.parent = parent;
+    // Appends one or more HTMLElement to this. For appending custom elements use method appendComponents()
+    appendDOMComponents(components: HTMLElement | HTMLElement[], replaceContent: boolean = false) {
+        if (Array.isArray(components)) {
+            components.forEach(component => {
+                AbstractComponent.connectComponent(this, component, replaceContent);
+            });
+        } else {
+            AbstractComponent.connectComponent(this, components, replaceContent);
         }
-        if (!this.parent)
+    }
+
+    static appendComponentsToDOMElements(parent: HTMLElement, components: AbstractComponent | AbstractComponent[] | HTMLElement | HTMLElement[], replaceContent: boolean = false) {
+        if (Array.isArray(components)) {
+            components.forEach(component => {
+                AbstractComponent.connectComponent(parent, component, replaceContent);
+            });
+        } else {
+            AbstractComponent.connectComponent(parent, components, replaceContent);
+        }
+    }
+
+
+    private static connectComponent(parent: string | HTMLElement, componentToConnect: AbstractComponent | HTMLElement, replaceContent: boolean = false) {
+        let parentComponent: HTMLElement;
+        if (typeof parent == "string") {
+            parentComponent = document.getElementById(parent);
+        } else {
+            parentComponent = parent;
+        }
+        if (!parentComponent)
             return;
 
         if (replaceContent) {
-            this.parent.innerHTML = "";
+            parentComponent.innerHTML = "";
         }
-        this.parent.appendChild(this);
-        this.componentConnected = true;
-        this.addListeners();
+        parentComponent.appendChild(componentToConnect);
+        if (componentToConnect instanceof AbstractComponent) {
+            componentToConnect.parent = parentComponent;
+            componentToConnect.componentConnected = true;
+            componentToConnect.addListeners();
+        }
     }
+
+
 
 }
 
@@ -174,10 +203,10 @@ export interface componentProperties extends Partial<CSSStyleDeclaration> {
     "padding"?: string,*/
 
     // Component props
-    title?: string,    
-    innerHTML?: string,  
-    innerText?: string,  
+    title?: string,
+    innerHTML?: string,
+    innerText?: string,
     resizable?: boolean,
-    connectToParent?:  string | HTMLElement,
+    connectToParent?: string | HTMLElement,
     replaceParentContent?: boolean,
 }

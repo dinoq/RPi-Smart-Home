@@ -1,4 +1,4 @@
-import { Firebase } from "../../utils/firebase.js";
+import { Firebase } from "../../app/firebase.js";
 import { AbstractComponent } from "../component.js";
 export class LoginComponent extends AbstractComponent {
     constructor(componentProps) {

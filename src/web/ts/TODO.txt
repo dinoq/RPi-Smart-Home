@@ -2,3 +2,5 @@
 - Otestovat ( a případně přepsat) jestli je možné nahradit X.constructor.name za X.name (to první nekdy vrátí Function())
 - LoginForm v konstruktoru vytvořit menu itemy (a ne pomocí innerhtml)
 - Není potřeba upravit čtecí/zapisovací práva ve firebase database?
+- Pořadí zobrazení místností, senzorů a zařízení v RoomCard
+-rušit DB listenery při neaktivní page (vracet při registraci listenerů referenci)

@@ -1,8 +1,8 @@
 import { BaseError } from "../errors/base-error.js";
 import { CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
-import { Config } from "../utils/config.js";
-import { Utils } from "../utils/utils.js";
+import { Config } from "../app/config.js";
+import { Utils } from "../app/utils.js";
 export class Component extends HTMLElement {
     /* static _className = "";
      get className(){
@@ -70,7 +70,7 @@ export class AbstractComponent extends Component {
             if (componentProps.replaceParentContent) {
                 replace = componentProps.replaceParentContent;
             }
-            this.connectComponent(componentProps.connectToParent, componentProps.replaceParentContent);
+            AbstractComponent.connectComponent(componentProps.connectToParent, this, componentProps.replaceParentContent);
         }
         if (componentProps.innerText)
             this.innerText = componentProps.innerText;
@@ -98,31 +98,57 @@ export class AbstractComponent extends Component {
         this.parent.removeChild(this);
         this.componentConnected = false;
     }
+    // Appends one or more custom element (successor of AbstractComponent) to this. For appending pre-defined DOM elements (like div, table etc.) use method appendDOMComponents()
     appendComponents(components, replaceContent = false) {
         if (Array.isArray(components)) {
             components.forEach(component => {
-                component.connectComponent(this, replaceContent);
+                AbstractComponent.connectComponent(this, component, replaceContent);
             });
         }
         else {
-            components.connectComponent(this, replaceContent);
+            AbstractComponent.connectComponent(this, components, replaceContent);
         }
     }
-    connectComponent(parent, replaceContent = false) {
-        if (typeof parent == "string") {
-            this.parent = document.getElementById(parent);
+    // Appends one or more HTMLElement to this. For appending custom elements use method appendComponents()
+    appendDOMComponents(components, replaceContent = false) {
+        if (Array.isArray(components)) {
+            components.forEach(component => {
+                AbstractComponent.connectComponent(this, component, replaceContent);
+            });
         }
         else {
-            this.parent = parent;
+            AbstractComponent.connectComponent(this, components, replaceContent);
         }
-        if (!this.parent)
+    }
+    static appendComponentsToDOMElements(parent, components, replaceContent = false) {
+        if (Array.isArray(components)) {
+            components.forEach(component => {
+                AbstractComponent.connectComponent(parent, component, replaceContent);
+            });
+        }
+        else {
+            AbstractComponent.connectComponent(parent, components, replaceContent);
+        }
+    }
+    static connectComponent(parent, componentToConnect, replaceContent = false) {
+        let parentComponent;
+        if (typeof parent == "string") {
+            parentComponent = document.getElementById(parent);
+        }
+        else {
+            parentComponent = parent;
+        }
+        if (!parentComponent)
             return;
         if (replaceContent) {
-            this.parent.innerHTML = "";
+            parentComponent.innerHTML = "";
         }
-        this.parent.appendChild(this);
-        this.componentConnected = true;
-        this.addListeners();
+        parentComponent.appendChild(componentToConnect);
+        if (componentToConnect instanceof AbstractComponent) {
+            componentToConnect.parent = parentComponent;
+            componentToConnect.componentConnected = true;
+            componentToConnect.addListeners();
+        }
     }
 }
 export class BaseComponent extends AbstractComponent {

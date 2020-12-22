@@ -1,4 +1,4 @@
-import { Config } from "../../utils/config.js";
+import { Config } from "../../app/config.js";
 import { componentProperties } from "../component.js";
 import { LoginComponent } from "../forms/login-form.js";
 import { BasePage } from "./base-page.js";
@@ -11,7 +11,7 @@ export class LoginPage extends BasePage{
         super(componentProps);
         
         this.loginForm = new LoginComponent({});
-        this.loginForm.connectComponent(this);
+        this.appendComponents(this.loginForm);
 
         /*if(redirectAfterLogin != undefined){
             this.login.redirectAfterLogin(redirectAfterLogin);

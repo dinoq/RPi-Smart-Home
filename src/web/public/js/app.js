@@ -5,8 +5,8 @@ import { MenuIcon, MenuItemsContainer } from "./components/menus/hamburger-menu.
 import { MenuItem } from "./components/menus/menu-item.js";
 import { BlankPage } from "./components/pages/blank-page.js";
 import { BaseLayout } from "./layouts/base-layout.js";
-import { PageCreator } from "./utils/page-creator.js";
-import { PageManagerComponent } from "./utils/page-manager.js";
+import { PageCreator } from "./app/page-creator.js";
+import { PageManagerComponent } from "./app/page-manager.js";
 import { LoginPage } from "./components/pages/login-page.js";
 import { Dashboard } from "./components/pages/dashboard-page.js";
 import { HomePage } from "./components/pages/home-page.js";
@@ -14,6 +14,8 @@ import { Icon, RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-c
 import { VerticalStack } from "./layouts/vertical-stack.js";
 import { HorizontalStack } from "./layouts/horizontal-stack.js";
 import { BaseComponent } from "./components/component.js";
+import { SettingsPage } from "./components/pages/settings-page.js";
+import { FrameList, FrameListItem } from "./layouts/frame-list.js";
 export var app = null;
 class AutoHomeApp {
     constructor() {
@@ -32,27 +34,35 @@ class AutoHomeApp {
         this.pageCreator = new PageCreator();
     }
     registerAllComponents() {
+        let components = [
+            BaseComponent,
+            ErrorDialog,
+            LoginComponent,
+            LoginPage,
+            Dashboard,
+            BaseLayout,
+            PageManagerComponent,
+            BlankPage,
+            HeaderComponent,
+            MenuItem,
+            MenuItemsContainer,
+            HomePage,
+            RoomCard,
+            VerticalStack,
+            HorizontalStack,
+            RoomDevice,
+            Slider,
+            MenuIcon,
+            RoomSensor,
+            Icon,
+            SettingsPage,
+            FrameList,
+            FrameListItem,
+        ];
         if (customElements.get("login-form") == undefined) {
-            BaseComponent.defineComponent();
-            ErrorDialog.defineComponent();
-            LoginComponent.defineComponent();
-            LoginPage.defineComponent();
-            Dashboard.defineComponent();
-            BaseLayout.defineComponent();
-            PageManagerComponent.defineComponent();
-            BlankPage.defineComponent();
-            HeaderComponent.defineComponent();
-            MenuItem.defineComponent();
-            MenuItemsContainer.defineComponent();
-            HomePage.defineComponent();
-            RoomCard.defineComponent();
-            VerticalStack.defineComponent();
-            HorizontalStack.defineComponent();
-            RoomDevice.defineComponent();
-            Slider.defineComponent();
-            MenuIcon.defineComponent();
-            RoomSensor.defineComponent();
-            Icon.defineComponent();
+            for (const component of components) {
+                component.defineComponent();
+            }
         }
     }
     initFirebase() {

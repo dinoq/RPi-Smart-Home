@@ -10,6 +10,8 @@ import { LoginPage } from "../components/pages/login-page.js";
 import { Dashboard } from "../components/pages/dashboard-page.js";
 import { HomePage } from "../components/pages/home-page.js";
 import { Firebase } from "./firebase.js";
+import { SettingsPage } from "../components/pages/settings-page.js";
+import { BasePage } from "../components/pages/base-page.js";
 
 
 export class PageCreator {
@@ -36,7 +38,7 @@ export class PageCreator {
 
         if (Firebase.loggedIn()) {
             if (!this.hamburgerMenu.componentConnected) {
-                this.hamburgerMenu.connectComponent(document.body);
+                this.hamburgerMenu.connectToBody();
             }
             this.renderLoggedIn(route);
         } else {
@@ -48,24 +50,26 @@ export class PageCreator {
     }
 
     renderLoggedIn(route: IRoute) {
-        let page;
+        let page: PagesKeys;
         switch (route.page) {
             case Pages.HOME:
-                page = new HomePage();
-                this.pageManager.addPage(page, PagesKeys.HOME);
+                page = PagesKeys.HOME;
+                this.pageManager.addPage(new HomePage(), PagesKeys.HOME);
                 break;
             case Pages.CONDITIONS:
-                page = new HomePage();
-                this.pageManager.addPage(page, PagesKeys.CONDITIONS);
+                page = PagesKeys.CONDITIONS;
+                this.pageManager.addPage(new HomePage(), PagesKeys.CONDITIONS);
                 break;
             case Pages.SETTINGS:
-                page = new HomePage();
-                this.pageManager.addPage(page, PagesKeys.SETTINGS);
+                page = PagesKeys.SETTINGS;
+                this.pageManager.addPage(new SettingsPage(), PagesKeys.SETTINGS);
                 break;
             default:
                 URLManager.replaceURL(Paths.HOME, PagesKeys.HOME);
                 break;
         }
+        
+        this.pageManager.setActive(page, Effects.SWIPE_TO_RIGHT);
     }
 
     renderNotLoggedIn(route: IRoute) {
@@ -75,7 +79,7 @@ export class PageCreator {
                     let login = this.createLogin(route.afterLoginPath);
                     this.pageManager.addPage(login, "login");
                 }
-                this.pageManager.setActive("login", Effects.SWIPE_TO_RIGHT);
+                this.pageManager.setActive("login");
                 break;
             default:
                 break;

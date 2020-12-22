@@ -1,4 +1,4 @@
-import { Config } from "../../utils/config.js";
+import { Config } from "../../app/config.js";
 import { AbstractComponent } from "../component.js";
 export class BasePage extends AbstractComponent {
     constructor(componentProps) {

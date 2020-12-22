@@ -17,14 +17,11 @@ export class PageManager extends Singleton {
         this.pages = new Array();
         this.pagesKeys = new Array();
         this.pageManagerComponent = new PageManagerComponent({});
-        this.pageManagerComponent.connectComponent(document.body);
+        AbstractComponent.appendComponentsToDOMElements(document.body, this.pageManagerComponent);
         this.resizePages();
         window.addEventListener('resize', this.resizePages);
     }
 
-    connect() {
-        this.pageManagerComponent.connectComponent(document.body);
-    }
     addPage(page: BasePage, key: string) {
         if (this.pages.indexOf(page) != -1) {
             //new PageAlreadyAddedToPageManagerError(page, true);            

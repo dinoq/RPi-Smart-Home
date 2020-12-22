@@ -1,5 +1,5 @@
 import { ErrorDialog } from "../components/dialogs/error-dialog.js";
-import { Config } from "../utils/config.js";
+import { Config } from "../app/config.js";
 import { BaseError } from "./base-error.js";
 
 export class MethodNotImplementedError extends BaseError{

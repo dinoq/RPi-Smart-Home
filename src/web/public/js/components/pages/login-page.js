@@ -4,7 +4,7 @@ export class LoginPage extends BasePage {
     constructor(componentProps) {
         super(componentProps);
         this.loginForm = new LoginComponent({});
-        this.loginForm.connectComponent(this);
+        this.appendComponents(this.loginForm);
         /*if(redirectAfterLogin != undefined){
             this.login.redirectAfterLogin(redirectAfterLogin);
         }*/
