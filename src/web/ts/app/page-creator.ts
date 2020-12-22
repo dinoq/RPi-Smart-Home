@@ -1,17 +1,17 @@
 import { LoginComponent } from "../components/forms/login-form.js";
 import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
 import { AbstractComponent } from "../components/component.js";
-import { BlankPage } from "../components/pages/blank-page.js";
+import { BlankPage } from "../pages/blank-page.js";
 import { BaseLayout } from "../layouts/base-layout.js";
 import { Effects, PageManager } from "./page-manager.js";
 import { AppRouter, IRoute, Pages, PagesKeys, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
-import { LoginPage } from "../components/pages/login-page.js";
-import { Dashboard } from "../components/pages/dashboard-page.js";
-import { HomePage } from "../components/pages/home-page.js";
+import { LoginPage } from "../pages/login-page.js";
+import { Dashboard } from "../pages/dashboard-page.js";
+import { HomePage } from "../pages/home-page.js";
 import { Firebase } from "./firebase.js";
-import { SettingsPage } from "../components/pages/settings-page.js";
-import { BasePage } from "../components/pages/base-page.js";
+import { SettingsPage } from "../pages/settings-page.js";
+import { BasePage } from "../pages/base-page.js";
 
 
 export class PageCreator {
@@ -24,7 +24,6 @@ export class PageCreator {
 
         this.pageManager = <PageManager>PageManager.getInstance();
         this.hamburgerMenu = new HamburgerMenu();
-        //menu.hide(true);
 
         this.router = new AppRouter();
         URLManager.registerURLChangeListener(this.renderPage);
@@ -34,7 +33,6 @@ export class PageCreator {
     renderPage = () => {
         let route: IRoute = this.router.getRoute();
         let page: Pages = route.page;
-        //URLManager.setURL(route.path, "", true);
 
         if (Firebase.loggedIn()) {
             if (!this.hamburgerMenu.componentConnected) {
@@ -58,7 +56,7 @@ export class PageCreator {
                 break;
             case Pages.CONDITIONS:
                 page = PagesKeys.CONDITIONS;
-                this.pageManager.addPage(new HomePage(), PagesKeys.CONDITIONS);
+                this.pageManager.addPage(new BlankPage(), PagesKeys.CONDITIONS);
                 break;
             case Pages.SETTINGS:
                 page = PagesKeys.SETTINGS;

@@ -1,8 +1,8 @@
-import { RoomCard } from "../../layouts/room-card.js";
-import { Config } from "../../app/config.js";
-import { Firebase } from "../../app/firebase.js";
-import { componentProperties } from "../component.js";
-import { LoginComponent } from "../forms/login-form.js";
+import { RoomCard } from "../layouts/room-card.js";
+import { Config } from "../app/config.js";
+import { Firebase } from "../app/firebase.js";
+import { componentProperties } from "../components/component.js";
+import { LoginComponent } from "../components/forms/login-form.js";
 import { BasePage } from "./base-page.js";
 
 export class HomePage extends BasePage {

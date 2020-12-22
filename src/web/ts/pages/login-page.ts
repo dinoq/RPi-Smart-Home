@@ -1,6 +1,6 @@
-import { Config } from "../../app/config.js";
-import { componentProperties } from "../component.js";
-import { LoginComponent } from "../forms/login-form.js";
+import { Config } from "../app/config.js";
+import { componentProperties } from "../components/component.js";
+import { LoginComponent } from "../components/forms/login-form.js";
 import { BasePage } from "./base-page.js";
 
 export class LoginPage extends BasePage{

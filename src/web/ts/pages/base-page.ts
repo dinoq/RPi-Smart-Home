@@ -1,5 +1,5 @@
-import { Config } from "../../app/config.js";
-import { AbstractComponent, componentProperties } from "../component.js";
+import { Config } from "../app/config.js";
+import { AbstractComponent, componentProperties } from "../components/component.js";
 
 export class BasePage extends AbstractComponent{    
     static tagName = "base-page";

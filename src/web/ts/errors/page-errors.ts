@@ -1,4 +1,4 @@
-import { BasePage } from "../components/pages/base-page.js";
+import { BasePage } from "../pages/base-page.js";
 import { BaseError } from "./base-error.js";
 
 export class PageNotExistInPageManagerError extends BaseError{

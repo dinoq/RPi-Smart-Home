@@ -1,5 +1,5 @@
 import { AbstractComponent, componentProperties as IComponentProperties } from "../components/component.js";
-import { BasePage } from "../components/pages/base-page.js";
+import { BasePage } from "../pages/base-page.js";
 import { BaseError } from "../errors/base-error.js";
 import { PageAlreadyAddedToPageManagerError, PageNotExistInPageManagerError } from "../errors/page-errors.js";
 import { Config } from "./config.js";

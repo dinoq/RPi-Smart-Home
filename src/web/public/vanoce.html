@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script>
+
+    <!-- If you enabled Analytics in your project, add the Firebase SDK for Analytics -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-analytics.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-database.js"></script>
+    <script>
+        
+        var firebaseConfig = {
+            apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
+            authDomain: "home-automation-80eec.firebaseapp.com",
+            databaseURL: "https://home-automation-80eec.firebaseio.com",
+            projectId: "home-automation-80eec",
+            storageBucket: "home-automation-80eec.appspot.com",
+            messagingSenderId: "970359498290",
+            appId: "1:970359498290:web:a43e83568b9db8eb783e2b",
+            measurementId: "G-YTRZ79TCJJ"
+          };
+          // Initialize Firebase
+          firebase.initializeApp(firebaseConfig);
+          console.log(firebase.database());
+    </script>
+    </head>
+  <body>
+    <!-- 1. The <iframe> (and video player1) will replace this <div> tag. -->
+    <div id="player"></div>
+
+    <script>
+        var myObj = null;
+        class MyClass{
+            constructor(){
+                
+                // 2. This code loads the IFrame Player API code asynchronously.
+                var tag = document.createElement('script');
+
+                tag.src = "https://www.youtube.com/iframe_api";
+                var firstScriptTag = document.getElementsByTagName('script')[0];
+                firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+                // 3. This function creates an <iframe> (and YouTube player1)
+                //    after the API code downloads.
+                this.player1;
+
+                let a = 5;
+                let dbReference = firebase.database().ref("vanoce");
+                dbReference.on('value', (snapshot)=>{
+                    this.dbChanged(snapshot);
+                });
+            }
+
+            
+            onPlayerReady(event) {
+                    console.log('ready event: ', event);
+                }
+            onPlayerStateChange(event) {
+            /*if (event.data == YT.PlayerState.PLAYING && !done) {
+                setTimeout(stopVideo, 6000);
+                done = true;
+            }*/
+            }
+            aaa=()=> {
+                    console.log('zavolalo: ');
+                    setTimeout(()=>{
+                this.player1.playVideo();
+                    },5000);
+                }
+
+            dbChanged = (snapshot) => {
+                console.log("AAA",this.player1);
+                console.log("AAA",this);
+                this.aaa();
+                /*const data = snapshot.val();
+                console.log('data: ', data);
+                if(data.sound == "zvonek"){
+                     player1.loadVideoById({'videoId': 'hrqIq5hBFSw',
+                    'startSeconds': 5,
+                    'endSeconds': 10});
+
+                }else if(data.sound == "koledy"){
+
+                }else{
+
+                }*/
+            }
+            
+                
+            onYouTubeIframeAPIReady() {
+                    this.player1 = new YT.Player('player', {
+                        videoId: 'ZAYZmIfHEiU',
+                        events: {
+                        'onReady': this.onPlayerReady,
+                        'onStateChange': this.onPlayerStateChange
+                        },
+                        playerVars: { 
+                            "origin": "http://127.0.0.1:5500",
+                        }
+                    });
+                console.log('this.player1: ', this.player1);
+                }
+        }
+        function onYouTubeIframeAPIReady(){
+            console.log("api ready", myObj);
+            if(myObj){
+                myObj.onYouTubeIframeAPIReady();
+            }
+        }
+        window.addEventListener('DOMContentLoaded', (event) => {
+            myObj = new MyClass();
+        });
+    </script>
+  </body>
+</html>

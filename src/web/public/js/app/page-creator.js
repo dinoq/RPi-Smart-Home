@@ -1,17 +1,17 @@
 import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
+import { BlankPage } from "../pages/blank-page.js";
 import { Effects, PageManager } from "./page-manager.js";
 import { AppRouter, Pages, PagesKeys, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
-import { LoginPage } from "../components/pages/login-page.js";
-import { HomePage } from "../components/pages/home-page.js";
+import { LoginPage } from "../pages/login-page.js";
+import { HomePage } from "../pages/home-page.js";
 import { Firebase } from "./firebase.js";
-import { SettingsPage } from "../components/pages/settings-page.js";
+import { SettingsPage } from "../pages/settings-page.js";
 export class PageCreator {
     constructor() {
         this.renderPage = () => {
             let route = this.router.getRoute();
             let page = route.page;
-            //URLManager.setURL(route.path, "", true);
             if (Firebase.loggedIn()) {
                 if (!this.hamburgerMenu.componentConnected) {
                     this.hamburgerMenu.connectToBody();
@@ -30,7 +30,6 @@ export class PageCreator {
         };
         this.pageManager = PageManager.getInstance();
         this.hamburgerMenu = new HamburgerMenu();
-        //menu.hide(true);
         this.router = new AppRouter();
         URLManager.registerURLChangeListener(this.renderPage);
         this.renderPage();
@@ -44,7 +43,7 @@ export class PageCreator {
                 break;
             case Pages.CONDITIONS:
                 page = PagesKeys.CONDITIONS;
-                this.pageManager.addPage(new HomePage(), PagesKeys.CONDITIONS);
+                this.pageManager.addPage(new BlankPage(), PagesKeys.CONDITIONS);
                 break;
             case Pages.SETTINGS:
                 page = PagesKeys.SETTINGS;
