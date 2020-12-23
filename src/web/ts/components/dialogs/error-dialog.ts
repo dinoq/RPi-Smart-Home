@@ -1,11 +1,11 @@
 import { Config } from "../../app/config.js";
-import { componentProperties } from "../component.js";
+import { IComponentProperties } from "../component.js";
 import { BaseDialog } from "./base-dialog.js";
 
 export class ErrorDialog extends BaseDialog {
     static tagName = "error-dialog";
     
-    constructor(error: string, componentProps?: componentProperties){
+    constructor(error: string, componentProps?: IComponentProperties){
         super(componentProps);
         this.innerHTML=`
             <div class="overlay">

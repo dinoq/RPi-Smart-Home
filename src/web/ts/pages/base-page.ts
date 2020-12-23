@@ -1,10 +1,10 @@
 import { Config } from "../app/config.js";
-import { AbstractComponent, componentProperties } from "../components/component.js";
+import { AbstractComponent, IComponentProperties } from "../components/component.js";
 
 export class BasePage extends AbstractComponent{    
     static tagName = "base-page";
 
-    constructor(componentProps?: componentProperties){
+    constructor(componentProps?: IComponentProperties){
         super(componentProps);
         let style = this.style;
         style.position = "absolute";

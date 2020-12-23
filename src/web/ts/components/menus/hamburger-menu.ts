@@ -5,7 +5,7 @@ import { Config } from "../../app/config.js";
 import { Firebase } from "../../app/firebase.js";
 import { URLManager } from "../../app/url-manager.js";
 import { Utils } from "../../app/utils.js";
-import { AbstractComponent, componentProperties } from "../component.js";
+import { AbstractComponent, IComponentProperties } from "../component.js";
 import { BaseMenu } from "./base-menu.js";
 import { MenuItem } from "./menu-item.js";
 
@@ -14,7 +14,7 @@ export class HamburgerMenu {
     itemsContainer: MenuItemsContainer;    
     componentConnected: boolean = false;
 
-    constructor(componentProps?: componentProperties) {
+    constructor(componentProps?: IComponentProperties) {
         /*super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString()
         }));*/
@@ -127,7 +127,7 @@ export class MenuItemsContainer extends AbstractComponent{
     static tagName = "menu-items-container";
     
     private menuItems: Array<MenuItem>;
-    constructor(componentProps?: componentProperties){
+    constructor(componentProps?: IComponentProperties){
         super(componentProps);
         //this.style.width="min-content";
     }
@@ -145,7 +145,7 @@ export class MenuIcon extends AbstractComponent{
     set src(val){
         this.querySelector("img").src = val;
     }
-    constructor(componentProps?: componentProperties) {
+    constructor(componentProps?: IComponentProperties) {
         super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString(),
             position: "absolute",

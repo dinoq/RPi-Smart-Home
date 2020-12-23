@@ -1,9 +1,9 @@
-import { AbstractComponent, componentProperties } from "../components/component.js";
+import { AbstractComponent, IComponentProperties } from "../components/component.js";
 
 export class BaseLayout extends AbstractComponent {
     static tagName = "base-layout";
     
-    constructor(layoutProps?: componentProperties) {
+    constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
     }
     

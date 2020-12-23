@@ -1,8 +1,9 @@
-import { AbstractComponent, BaseComponent, componentProperties } from "../components/component.js";
+import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
 import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
+import { Icon } from "../components/others/app-icon.js";
 
 export class RoomCard extends AbstractComponent {
     static tagName = "room-card";
@@ -51,10 +52,34 @@ export class RoomCard extends AbstractComponent {
 
 
         this.roomName = layoutProps.roomDBName;
-        Firebase.addDBListener("/rooms/" + this.roomName, this.updateCard)
+        //Firebase.addDBListener("/rooms/" + this.roomName, this.updateCard)
 
     }
 
+    static getOrderedINOUT(devices, roomName){
+        let orderedIN = new Array();
+        let orderedOUT = new Array();
+
+        for (const espName in devices) {
+            const devIN = devices[espName].IN;
+            for (const pin in devIN) {
+                devIN[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/IN/" + pin;
+                orderedIN.push(devIN[pin]);
+            }
+
+            const devOUT = devices[espName].OUT;
+            for (const pin in devOUT) {
+                devOUT[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/OUT/" + pin;
+                orderedOUT.push(devOUT[pin]);
+            }
+        }
+        orderedIN.sort((a, b) => (a.index > b.index) ? 1 : -1);
+        orderedOUT.sort((a, b) => (a.index > b.index) ? 1 : -1);
+        return {
+            orderedIN: orderedIN,
+            orderedOUT: orderedOUT,
+        }
+    }
     updateCard = (data) => {
         (<HTMLElement>this.querySelector(".room-name")).innerText = data.name;
         this.style.background = (data.img.src.startsWith("https://")) ? "url(" + data.img.src + ")" : "url(img/" + data.img.src + ")";
@@ -63,24 +88,9 @@ export class RoomCard extends AbstractComponent {
 
 
         let devices = data.devices;
-        let orderedIN = new Array();
-        let orderedOUT = new Array();
-
-        for (const espName in devices) {
-            const devIN = devices[espName].IN;
-            for (const pin in devIN) {
-                devIN[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/IN/" + pin;
-                orderedIN.push(devIN[pin]);
-            }
-
-            const devOUT = devices[espName].OUT;
-            for (const pin in devOUT) {
-                devOUT[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/OUT/" + pin;
-                orderedOUT.push(devOUT[pin]);
-            }
-        }
-        orderedIN.sort((a, b) => (a.index > b.index) ? 1 : -1);
-        orderedOUT.sort((a, b) => (a.index > b.index) ? 1 : -1);
+        let ordered = RoomCard.getOrderedINOUT(devices, this.roomName);
+        let orderedIN = ordered.orderedIN;
+        let orderedOUT = ordered.orderedOUT;
         //console.log('orderedIN: ', orderedIN);
         //console.log('orderedOUT: ', orderedOUT);
 
@@ -127,7 +137,7 @@ export class RoomCard extends AbstractComponent {
         for (let i = 0; i < orderedIN.length; i++) {
             this.sensors[i].updateVal(orderedIN[i].value);
         }
-        
+
         // Actualize devices
         for (let i = 0; i < orderedOUT.length; i++) {
             let dev = this.devices[i];
@@ -135,7 +145,7 @@ export class RoomCard extends AbstractComponent {
                 dev.initialize(i, orderedOUT, this.devicesClicked);
             }
             dev.updateVal(orderedOUT[i].value);
-            if(dev.dbID == this.idOfSelectedDevices){
+            if (dev.dbID == this.idOfSelectedDevices) {
                 dev.toggleNameColor();
             }
         }
@@ -164,8 +174,8 @@ export class RoomCard extends AbstractComponent {
         }
     }
 
-    getDeviceByID(id: string){
-        return this.devices.find((device)=>{
+    getDeviceByDBID(id: string) {
+        return this.devices.find((device) => {
             return device.dbID == id;
         })
     }
@@ -178,18 +188,18 @@ export class RoomCard extends AbstractComponent {
             device.toggleNameColor();
         } else { // Clicked first time on that device
             if (this.idOfSelectedDevices) // If is current selected any device, toggle color of name
-                this.getDeviceByID(this.idOfSelectedDevices).toggleNameColor();
-            if(device.type == "int"){// If clicked device is int, show slider
+                this.getDeviceByDBID(this.idOfSelectedDevices).toggleNameColor();
+            if (device.type == "int") {// If clicked device is int, show slider
                 device.toggleNameColor();
                 inputElem.style.visibility = "visible";
                 inputElem.value = val;
                 this.idOfSelectedDevices = device.dbID;
-            }else{ // Else is boolean => hide slider if is visible and send new value (opposite that it was) to database
-                if (this.idOfSelectedDevices){
+            } else { // Else is boolean => hide slider if is visible and send new value (opposite that it was) to database
+                if (this.idOfSelectedDevices) {
                     inputElem.style.visibility = "hidden";
                     this.idOfSelectedDevices = "";
                 }
-                let newVal = (device.value < 512)? 1024 : 0;
+                let newVal = (device.value < 512) ? 1024 : 0;
                 Firebase.updateDBData(device.devicePath, { value: newVal });
             }
         }
@@ -198,7 +208,7 @@ export class RoomCard extends AbstractComponent {
     sliderChanged = (value) => {//Called when slider value changed by mouse/touch
         if (this.idOfSelectedDevices) {
             //this.sliderActiveFor.updateVal(value); NOT SET VALUE DIRECTLY, BUT CALL FIREBASE TO UPDATE VALUE, AND FIREBASE (BECAUSE OF VALUE LISTENER) WILL NOTICE DEVICE WHICH CHANGED
-            let dev = this.getDeviceByID(this.idOfSelectedDevices);
+            let dev = this.getDeviceByDBID(this.idOfSelectedDevices);
             Firebase.updateDBData(dev.devicePath, { value: value });
         }
     }
@@ -206,14 +216,14 @@ export class RoomCard extends AbstractComponent {
 }
 
 
-export interface RoomCardProps extends componentProperties {
+export interface RoomCardProps extends IComponentProperties {
     roomDBName: string
 }
 
 export class Slider extends AbstractComponent {
     static tagName = "slider-component";
 
-    constructor(layoutProps?: componentProperties) {
+    constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
         this.innerHTML = `               
             <input type="range" min="1" max="1024" value="512" class="slider" style="width: 100%; visibility:hidden;margin-bottom: 2rem;">
@@ -232,7 +242,7 @@ export class RoomSensor extends AbstractComponent {
     static tagName = "room-sensor";
     layout: HorizontalStack;
 
-    constructor(layoutProps?: componentProperties) {
+    constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
     }
 
@@ -255,27 +265,6 @@ export class RoomSensor extends AbstractComponent {
     }
 }
 
-export class Icon extends AbstractComponent {
-    static tagName = "app-icon";
-    img: HTMLImageElement;
-
-    constructor(icon: string, layoutProps?: componentProperties) {
-        super(layoutProps);
-        this.innerHTML = "<img>";
-        this.img = this.querySelector("img");
-        this.img.src = Icon.srcFromName(icon);
-
-    }
-
-    static srcFromName(name: string) {
-        switch (name) {
-            case "temp": return "img/icons/temp.png";
-            case "humidity": return "img/icons/humidity.png";
-            case "switch": return "img/icons/temp.png";
-            default: return "img/icons/temp.png";
-        }
-    }
-}
 export class RoomDevice extends AbstractComponent {
     static tagName = "room-device";
 
@@ -289,7 +278,7 @@ export class RoomDevice extends AbstractComponent {
 
     static DEFAULT_DEVICE_WIDTH = 150;
 
-    constructor(layoutProps?: componentProperties) {
+    constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
         //this.innerText = initVal.toString();
         this.innerHTML = `
@@ -311,28 +300,6 @@ export class RoomDevice extends AbstractComponent {
         this.style.justifyContent = "center";
 
         this.bgImage = this.querySelector(".bg-image");
-        /*
-                <div style="position:absolute;top: 0px;left: 0px;width:0px">    
-                    Nazev
-                </div>*/
-
-        /*this.controlledByValDiv = this.querySelector("#controlled");
-        this.slider = this.querySelector(".slider");
-        
-        this.slider.oninput=(event)=>{
-            if(this.type != undefined){
-                let valToSet = this.slider.value;
-                if(this.type=="bool"){
-                    valToSet = (this.slider.value < 512)? "off" : "on";
-                }                
-                this.updateVal(valToSet);
-                let updates = {};
-                updates["/"+Firebase.getFullPath(this.devicePath)+"/value"] = "offf";
-                Firebase.updateDBData(this.devicePath, {value: valToSet});
-            }
-        }*/
-
-        //dodelat onmouseup na prepinani pri bool mezi full a empty??
 
     }
 
@@ -346,12 +313,17 @@ export class RoomDevice extends AbstractComponent {
         })
 
         let deviceName = <HTMLElement>this.querySelector(".device-name");
-        //deviceName.style.bottom = (index % 2) ? "-3rem" : "-1.5rem";
         deviceName.style.bottom = "-1.5rem";
         deviceName.style.color = "white";
         deviceName.innerText = object[index].name;
-        deviceName.style.left = -(deviceName.clientWidth) / 2 + 16 + "px";
+        deviceName.style.left = -(this.calculateStringWidth(object[index].name)/2) + 16 + "px";
         //deviceName.style.backgroundColor = "#00000061";
+    }
+    calculateStringWidth(str){
+        let element = document.createElement('canvas');
+        let context = element.getContext("2d");
+        context.font = "16px Arial";
+        return context.measureText(str).width;
     }
 
     static IMG_HEIGHT = 32;

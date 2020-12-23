@@ -26,7 +26,7 @@ export class Component extends HTMLElement {
          return "";
      }*/
 
-    constructor(componentProps?: componentProperties) {
+    constructor(componentProps?: IComponentProperties) {
         try {
             super();
         }
@@ -54,10 +54,10 @@ export class Component extends HTMLElement {
     }
 }
 export abstract class AbstractComponent extends Component {
-    componentProps: componentProperties;
+    componentProps: IComponentProperties;
     componentConnected: boolean = false;
 
-    constructor(componentProps?: componentProperties) {
+    constructor(componentProps?: IComponentProperties) {
         super(componentProps);
         this.componentProps = componentProps;
         this.initializeFromProps(componentProps);
@@ -65,7 +65,10 @@ export abstract class AbstractComponent extends Component {
 
 
 
-    initializeFromProps(componentProps?: componentProperties): void {
+    initializeFromProps(componentProps?: IComponentProperties): void {
+        if (!this.style.display) { //If not set
+            this.style.display = "block";
+        }
         if (!componentProps)
             return;
         for (const property in componentProps) {
@@ -74,9 +77,6 @@ export abstract class AbstractComponent extends Component {
             } else {//Is not CSS property, thus is meant to be layout property
                 //console.log(property+" is not CSS property!");
             }
-        }
-        if (!this.style.display) { //If not set
-            this.style.display = "block";
         }
         if (componentProps.connectToParent) {
             let replace = false;
@@ -89,16 +89,26 @@ export abstract class AbstractComponent extends Component {
             this.innerText = componentProps.innerText;
         if (componentProps.innerHTML)
             this.innerHTML = componentProps.innerHTML;
+        
+        if(componentProps.classList){
+            if(Array.isArray(componentProps.classList)){
+                componentProps.classList.forEach((className)=>{
+                    this.classList.add(className);
+                })
+            }else{
+                this.classList.add(componentProps.classList);
+            }
+        }
     }
 
 
-    reinitializeFromProps(props: componentProperties) {
+    reinitializeFromProps(props: IComponentProperties) {
         let mergedProperties = Utils.mergeObjects(this.componentProps, props);
         this.componentProps = mergedProperties;
         this.initializeFromProps(mergedProperties);
     }
 
-    addListeners(): void {
+    addListeners(...params): void {
         new MethodNotImplementedError("addListeners", this, true);
     }
     connectedCallback(): void {
@@ -177,13 +187,13 @@ export abstract class AbstractComponent extends Component {
 export class BaseComponent extends AbstractComponent {
     static tagName = "base-component";
 
-    constructor(layoutProps?: componentProperties) {
+    constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
     }
 
 }
 
-export interface componentProperties extends Partial<CSSStyleDeclaration> {
+export interface IComponentProperties extends Partial<CSSStyleDeclaration> {
     // CSS props
     /*x?: string,
     y?: string,
@@ -209,4 +219,5 @@ export interface componentProperties extends Partial<CSSStyleDeclaration> {
     resizable?: boolean,
     connectToParent?: string | HTMLElement,
     replaceParentContent?: boolean,
+    classList?: string | string[]
 }

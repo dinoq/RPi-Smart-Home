@@ -3,6 +3,7 @@ import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
+import { Icon } from "../components/others/app-icon.js";
 export class RoomCard extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
@@ -13,22 +14,9 @@ export class RoomCard extends AbstractComponent {
             this.style.backgroundSize = "cover";
             this.style.backgroundPositionY = data.img.offset + "px";
             let devices = data.devices;
-            let orderedIN = new Array();
-            let orderedOUT = new Array();
-            for (const espName in devices) {
-                const devIN = devices[espName].IN;
-                for (const pin in devIN) {
-                    devIN[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/IN/" + pin;
-                    orderedIN.push(devIN[pin]);
-                }
-                const devOUT = devices[espName].OUT;
-                for (const pin in devOUT) {
-                    devOUT[pin].path = "/rooms/" + this.roomName + "/devices/" + espName + "/OUT/" + pin;
-                    orderedOUT.push(devOUT[pin]);
-                }
-            }
-            orderedIN.sort((a, b) => (a.index > b.index) ? 1 : -1);
-            orderedOUT.sort((a, b) => (a.index > b.index) ? 1 : -1);
+            let ordered = RoomCard.getOrderedINOUT(devices, this.roomName);
+            let orderedIN = ordered.orderedIN;
+            let orderedOUT = ordered.orderedOUT;
             //console.log('orderedIN: ', orderedIN);
             //console.log('orderedOUT: ', orderedOUT);
             let deviceRow = new HorizontalStack({
@@ -114,7 +102,7 @@ export class RoomCard extends AbstractComponent {
             }
             else { // Clicked first time on that device
                 if (this.idOfSelectedDevices) // If is current selected any device, toggle color of name
-                    this.getDeviceByID(this.idOfSelectedDevices).toggleNameColor();
+                    this.getDeviceByDBID(this.idOfSelectedDevices).toggleNameColor();
                 if (device.type == "int") { // If clicked device is int, show slider
                     device.toggleNameColor();
                     inputElem.style.visibility = "visible";
@@ -134,7 +122,7 @@ export class RoomCard extends AbstractComponent {
         this.sliderChanged = (value) => {
             if (this.idOfSelectedDevices) {
                 //this.sliderActiveFor.updateVal(value); NOT SET VALUE DIRECTLY, BUT CALL FIREBASE TO UPDATE VALUE, AND FIREBASE (BECAUSE OF VALUE LISTENER) WILL NOTICE DEVICE WHICH CHANGED
-                let dev = this.getDeviceByID(this.idOfSelectedDevices);
+                let dev = this.getDeviceByDBID(this.idOfSelectedDevices);
                 Firebase.updateDBData(dev.devicePath, { value: value });
             }
         };
@@ -163,9 +151,31 @@ export class RoomCard extends AbstractComponent {
         this.layout.appendComponents([this.leftStack, this.rightStack]);
         this.appendComponents(this.layout);
         this.roomName = layoutProps.roomDBName;
-        Firebase.addDBListener("/rooms/" + this.roomName, this.updateCard);
+        //Firebase.addDBListener("/rooms/" + this.roomName, this.updateCard)
     }
-    getDeviceByID(id) {
+    static getOrderedINOUT(devices, roomName) {
+        let orderedIN = new Array();
+        let orderedOUT = new Array();
+        for (const espName in devices) {
+            const devIN = devices[espName].IN;
+            for (const pin in devIN) {
+                devIN[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/IN/" + pin;
+                orderedIN.push(devIN[pin]);
+            }
+            const devOUT = devices[espName].OUT;
+            for (const pin in devOUT) {
+                devOUT[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/OUT/" + pin;
+                orderedOUT.push(devOUT[pin]);
+            }
+        }
+        orderedIN.sort((a, b) => (a.index > b.index) ? 1 : -1);
+        orderedOUT.sort((a, b) => (a.index > b.index) ? 1 : -1);
+        return {
+            orderedIN: orderedIN,
+            orderedOUT: orderedOUT,
+        };
+    }
+    getDeviceByDBID(id) {
         return this.devices.find((device) => {
             return device.dbID == id;
         });
@@ -209,23 +219,6 @@ export class RoomSensor extends AbstractComponent {
     }
 }
 RoomSensor.tagName = "room-sensor";
-export class Icon extends AbstractComponent {
-    constructor(icon, layoutProps) {
-        super(layoutProps);
-        this.innerHTML = "<img>";
-        this.img = this.querySelector("img");
-        this.img.src = Icon.srcFromName(icon);
-    }
-    static srcFromName(name) {
-        switch (name) {
-            case "temp": return "img/icons/temp.png";
-            case "humidity": return "img/icons/humidity.png";
-            case "switch": return "img/icons/temp.png";
-            default: return "img/icons/temp.png";
-        }
-    }
-}
-Icon.tagName = "app-icon";
 export class RoomDevice extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
@@ -250,26 +243,6 @@ export class RoomDevice extends AbstractComponent {
         this.style.width = "150px";
         this.style.justifyContent = "center";
         this.bgImage = this.querySelector(".bg-image");
-        /*
-                <div style="position:absolute;top: 0px;left: 0px;width:0px">
-                    Nazev
-                </div>*/
-        /*this.controlledByValDiv = this.querySelector("#controlled");
-        this.slider = this.querySelector(".slider");
-        
-        this.slider.oninput=(event)=>{
-            if(this.type != undefined){
-                let valToSet = this.slider.value;
-                if(this.type=="bool"){
-                    valToSet = (this.slider.value < 512)? "off" : "on";
-                }
-                this.updateVal(valToSet);
-                let updates = {};
-                updates["/"+Firebase.getFullPath(this.devicePath)+"/value"] = "offf";
-                Firebase.updateDBData(this.devicePath, {value: valToSet});
-            }
-        }*/
-        //dodelat onmouseup na prepinani pri bool mezi full a empty??
     }
     initialize(index, object, onClickCallback) {
         this.type = object[index].type;
@@ -280,12 +253,17 @@ export class RoomDevice extends AbstractComponent {
             onClickCallback(this.value, this);
         });
         let deviceName = this.querySelector(".device-name");
-        //deviceName.style.bottom = (index % 2) ? "-3rem" : "-1.5rem";
         deviceName.style.bottom = "-1.5rem";
         deviceName.style.color = "white";
         deviceName.innerText = object[index].name;
-        deviceName.style.left = -(deviceName.clientWidth) / 2 + 16 + "px";
+        deviceName.style.left = -(this.calculateStringWidth(object[index].name) / 2) + 16 + "px";
         //deviceName.style.backgroundColor = "#00000061";
+    }
+    calculateStringWidth(str) {
+        let element = document.createElement('canvas');
+        let context = element.getContext("2d");
+        context.font = "16px Arial";
+        return context.measureText(str).width;
     }
     updateVal(value) {
         let val = value;

@@ -1,9 +1,9 @@
-import { AbstractComponent, componentProperties } from "../components/component.js";
+import { AbstractComponent, IComponentProperties } from "../components/component.js";
 
 export class VerticalStack extends AbstractComponent {
     static tagName = "vertical-stack";
     
-    constructor(layoutProps?: componentProperties) {
+    constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
         this.style.display="flex";
     }

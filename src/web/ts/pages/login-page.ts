@@ -1,5 +1,5 @@
 import { Config } from "../app/config.js";
-import { componentProperties } from "../components/component.js";
+import { IComponentProperties } from "../components/component.js";
 import { LoginComponent } from "../components/forms/login-form.js";
 import { BasePage } from "./base-page.js";
 
@@ -7,7 +7,7 @@ export class LoginPage extends BasePage{
     static tagName = "login-page";
 
     loginForm: LoginComponent;    
-    constructor(componentProps?: componentProperties){
+    constructor(componentProps?: IComponentProperties){
         super(componentProps);
         
         this.loginForm = new LoginComponent({});

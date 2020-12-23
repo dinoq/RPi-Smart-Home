@@ -1,10 +1,10 @@
 import { Firebase } from "../../app/firebase.js";
-import { AbstractComponent, componentProperties } from "../component.js";
+import { AbstractComponent, IComponentProperties } from "../component.js";
 
 export class LoginComponent extends AbstractComponent {
     static tagName = "login-form";
 
-    constructor(componentProps?: componentProperties) {
+    constructor(componentProps?: IComponentProperties) {
         super(componentProps);
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";

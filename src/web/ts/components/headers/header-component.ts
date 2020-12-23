@@ -1,9 +1,9 @@
-import { Component, componentProperties } from "../component.js";
+import { Component, IComponentProperties } from "../component.js";
 
 export class HeaderComponent extends Component{
     static tagName = "header-component";
     
-    constructor(componentProps?: componentProperties){
+    constructor(componentProps?: IComponentProperties){
         super(componentProps);
     }
 }

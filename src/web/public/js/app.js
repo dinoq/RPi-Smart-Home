@@ -10,12 +10,14 @@ import { PageManagerComponent } from "./app/page-manager.js";
 import { LoginPage } from "./pages/login-page.js";
 import { Dashboard } from "./pages/dashboard-page.js";
 import { HomePage } from "./pages/home-page.js";
-import { Icon, RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-card.js";
+import { RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-card.js";
 import { VerticalStack } from "./layouts/vertical-stack.js";
 import { HorizontalStack } from "./layouts/horizontal-stack.js";
 import { BaseComponent } from "./components/component.js";
-import { SettingsPage } from "./pages/settings-page.js";
+import { RoomsList, SensorsList, SettingsPage } from "./pages/settings-page.js";
 import { FrameList, FrameListItem } from "./layouts/frame-list.js";
+import { Icon } from "./components/others/app-icon.js";
+import { TabLayout } from "./layouts/tab-layout.js";
 export var app = null;
 class AutoHomeApp {
     constructor() {
@@ -58,6 +60,9 @@ class AutoHomeApp {
             SettingsPage,
             FrameList,
             FrameListItem,
+            RoomsList,
+            SensorsList,
+            TabLayout
         ];
         if (customElements.get("login-form") == undefined) {
             for (const component of components) {

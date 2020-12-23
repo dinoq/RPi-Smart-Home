@@ -255,11 +255,72 @@ room-card .value {
   padding-left: 10px;
 }
 
-frame-list .room-name {
+.frame-list .room-name {
   padding-left: 20px;
 }
 
-frame-list frame-list-item {
+.frame-list frame-list-item {
   border-bottom: 1px solid grey;
+  background-color: #ececec;
+  cursor: pointer;
+}
+
+.frame-list frame-list-item:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+.frame-list frame-list-item:hover {
+  background-color: #d5d5d5;
+}
+
+.frame-list frame-list-item.active {
+  background-color: #78d7f3;
+}
+
+.frame-list frame-list-item > horizontal-stack > *:hover:not(.room-name) {
+  opacity: 0.7;
+}
+
+@keyframes blink {
+  0% {
+    background-color: lime;
+  }
+  100% {
+    background-color: white;
+  }
+}
+
+@-webkit-keyframes blink {
+  0% {
+    background-color: red;
+  }
+  100% {
+    background-color: black;
+  }
+}
+
+.blink button {
+  -webkit-animation: blink 1s linear infinite;
+  animation: blink 1s linear infinite;
+}
+
+tab-layout {
+  margin: 10px 0;
+}
+
+tab-layout .tab {
+  border: 1px solid #959595;
+  border-right: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 5px 5px 0 0;
+}
+
+tab-layout .tab.active {
+  background-color: #78d7f3;
+}
+
+tab-layout .tab:last-child {
+  border-right: 1px solid #959595;
 }
 /*# sourceMappingURL=style.css.map */

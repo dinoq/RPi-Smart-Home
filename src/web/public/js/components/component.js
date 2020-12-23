@@ -52,6 +52,9 @@ export class AbstractComponent extends Component {
         this.initializeFromProps(componentProps);
     }
     initializeFromProps(componentProps) {
+        if (!this.style.display) { //If not set
+            this.style.display = "block";
+        }
         if (!componentProps)
             return;
         for (const property in componentProps) {
@@ -61,9 +64,6 @@ export class AbstractComponent extends Component {
             else { //Is not CSS property, thus is meant to be layout property
                 //console.log(property+" is not CSS property!");
             }
-        }
-        if (!this.style.display) { //If not set
-            this.style.display = "block";
         }
         if (componentProps.connectToParent) {
             let replace = false;
@@ -76,13 +76,23 @@ export class AbstractComponent extends Component {
             this.innerText = componentProps.innerText;
         if (componentProps.innerHTML)
             this.innerHTML = componentProps.innerHTML;
+        if (componentProps.classList) {
+            if (Array.isArray(componentProps.classList)) {
+                componentProps.classList.forEach((className) => {
+                    this.classList.add(className);
+                });
+            }
+            else {
+                this.classList.add(componentProps.classList);
+            }
+        }
     }
     reinitializeFromProps(props) {
         let mergedProperties = Utils.mergeObjects(this.componentProps, props);
         this.componentProps = mergedProperties;
         this.initializeFromProps(mergedProperties);
     }
-    addListeners() {
+    addListeners(...params) {
         new MethodNotImplementedError("addListeners", this, true);
     }
     connectedCallback() {

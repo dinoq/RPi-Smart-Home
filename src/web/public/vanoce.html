@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        
+
+<head>
+
     <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
     <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script>
 
@@ -12,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-database.js"></script>
     <script>
-        
+
         var firebaseConfig = {
             apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
             authDomain: "home-automation-80eec.firebaseapp.com",
@@ -22,21 +23,38 @@
             messagingSenderId: "970359498290",
             appId: "1:970359498290:web:a43e83568b9db8eb783e2b",
             measurementId: "G-YTRZ79TCJJ"
-          };
-          // Initialize Firebase
-          firebase.initializeApp(firebaseConfig);
-          console.log(firebase.database());
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        console.log(firebase.database());
     </script>
-    </head>
-  <body>
-    <!-- 1. The <iframe> (and video player1) will replace this <div> tag. -->
-    <div id="player"></div>
+</head>
 
+<body>
+    <!-- 1. The <iframe> (and video player1) will replace this <div> tag. -->
+
+    <div id="player"></div>
+    <audio controls="controls">
+        <source src="http://domain.com/inanhq.mp3" type="audio/mp3" />
+        <source src=" http://domain.com/inanhq.mp3%22%20type=%22audio/mpeg%22%20/ type="audio/mpeg" />
+      Your browser does not support the audio tag.
+    </audio>
     <script>
         var myObj = null;
-        class MyClass{
-            constructor(){
-                
+        class MyClass {
+            constructor() {
+                this.ready = false;
+                this.player1;
+                this.play = "";
+                setInterval(() => {
+                    console.log(this.play);
+                    if (this.player1 && this.ready) {
+                        if (this.play == "zvonek") {
+                            //this.player1.playVideo();
+                        }
+                    }
+                }, 1000)
+
                 // 2. This code loads the IFrame Player API code asynchronously.
                 var tag = document.createElement('script');
 
@@ -46,36 +64,40 @@
 
                 // 3. This function creates an <iframe> (and YouTube player1)
                 //    after the API code downloads.
-                this.player1;
 
                 let a = 5;
                 let dbReference = firebase.database().ref("vanoce");
-                dbReference.on('value', (snapshot)=>{
-                    this.dbChanged(snapshot);
-                });
+                dbReference.on('value', this.dbChanged);
             }
 
-            
-            onPlayerReady(event) {
-                    console.log('ready event: ', event);
-                }
-            onPlayerStateChange(event) {
-            /*if (event.data == YT.PlayerState.PLAYING && !done) {
-                setTimeout(stopVideo, 6000);
-                done = true;
-            }*/
+
+            onPlayerReady = (event) => {
+                console.log('ready event: ', event);
+                setTimeout(() => {
+
+                    this.player1.playVideo();
+                }, 100)
             }
-            aaa=()=> {
-                    console.log('zavolalo: ');
-                    setTimeout(()=>{
-                this.player1.playVideo();
-                    },5000);
-                }
+            onPlayerStateChange = (event) => {
+                /*if (event.data == YT.PlayerState.PLAYING && !done) {
+                    setTimeout(stopVideo, 6000);
+                    done = true;
+                }*/
+            }
+            aaa = () => {
+                console.log('zavolalo: ');
+                setTimeout(() => {
+                    this.player1.playVideo();
+                }, 5000);
+            }
 
             dbChanged = (snapshot) => {
-                console.log("AAA",this.player1);
-                console.log("AAA",this);
-                this.aaa();
+                console.log("AAA", this.player1);
+                console.log("AAA", this);
+                console.log("AAA", this.ready);
+                //this.aaa();
+
+                this.play = "zvonek";
                 /*const data = snapshot.val();
                 console.log('data: ', data);
                 if(data.sound == "zvonek"){
@@ -89,25 +111,26 @@
 
                 }*/
             }
-            
-                
+
+
             onYouTubeIframeAPIReady() {
-                    this.player1 = new YT.Player('player', {
-                        videoId: 'ZAYZmIfHEiU',
-                        events: {
+                this.player1 = new YT.Player('player', {
+                    videoId: 'ZAYZmIfHEiU',
+                    events: {
                         'onReady': this.onPlayerReady,
                         'onStateChange': this.onPlayerStateChange
-                        },
-                        playerVars: { 
-                            "origin": "http://127.0.0.1:5500",
-                        }
-                    });
+                    },
+                    playerVars: {
+                        "origin": "http://127.0.0.1:5500",
+                    }
+                });
                 console.log('this.player1: ', this.player1);
-                }
+                this.ready = true;
+            }
         }
-        function onYouTubeIframeAPIReady(){
+        function onYouTubeIframeAPIReady() {
             console.log("api ready", myObj);
-            if(myObj){
+            if (myObj) {
                 myObj.onYouTubeIframeAPIReady();
             }
         }
@@ -115,5 +138,6 @@
             myObj = new MyClass();
         });
     </script>
-  </body>
+</body>
+
 </html>
