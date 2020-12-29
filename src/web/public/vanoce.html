@@ -33,106 +33,47 @@
 <body>
     <!-- 1. The <iframe> (and video player1) will replace this <div> tag. -->
 
-    <div id="player"></div>
-    <audio controls="controls">
-        <source src="http://domain.com/inanhq.mp3" type="audio/mp3" />
-        <source src=" http://domain.com/inanhq.mp3%22%20type=%22audio/mpeg%22%20/ type="audio/mpeg" />
-      Your browser does not support the audio tag.
-    </audio>
+        <audio id="bell" >
+            <source src="bell.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+        <audio id="koledy" >
+            <source src="koledy.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+
+          <button></button>
     <script>
         var myObj = null;
         class MyClass {
             constructor() {
-                this.ready = false;
-                this.player1;
-                this.play = "";
-                setInterval(() => {
-                    console.log(this.play);
-                    if (this.player1 && this.ready) {
-                        if (this.play == "zvonek") {
-                            //this.player1.playVideo();
-                        }
-                    }
-                }, 1000)
-
-                // 2. This code loads the IFrame Player API code asynchronously.
-                var tag = document.createElement('script');
-
-                tag.src = "https://www.youtube.com/iframe_api";
-                var firstScriptTag = document.getElementsByTagName('script')[0];
-                firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-                // 3. This function creates an <iframe> (and YouTube player1)
-                //    after the API code downloads.
-
-                let a = 5;
+                this.bell = document.getElementById("bell");
+                this.koledy = document.getElementById("koledy");
                 let dbReference = firebase.database().ref("vanoce");
                 dbReference.on('value', this.dbChanged);
             }
 
 
-            onPlayerReady = (event) => {
-                console.log('ready event: ', event);
-                setTimeout(() => {
-
-                    this.player1.playVideo();
-                }, 100)
-            }
-            onPlayerStateChange = (event) => {
-                /*if (event.data == YT.PlayerState.PLAYING && !done) {
-                    setTimeout(stopVideo, 6000);
-                    done = true;
-                }*/
-            }
-            aaa = () => {
-                console.log('zavolalo: ');
-                setTimeout(() => {
-                    this.player1.playVideo();
-                }, 5000);
-            }
-
             dbChanged = (snapshot) => {
-                console.log("AAA", this.player1);
-                console.log("AAA", this);
-                console.log("AAA", this.ready);
-                //this.aaa();
-
-                this.play = "zvonek";
-                /*const data = snapshot.val();
+                const data = snapshot.val();
                 console.log('data: ', data);
                 if(data.sound == "zvonek"){
-                     player1.loadVideoById({'videoId': 'hrqIq5hBFSw',
-                    'startSeconds': 5,
-                    'endSeconds': 10});
-
+                    this.bell.currentTime = 0.0;
+                    this.bell.play();
+                    this.koledy.pause();
                 }else if(data.sound == "koledy"){
-
+                    this.bell.pause();
+                    this.koledy.play();
+                    this.koledy.currentTime = 0.0;
                 }else{
+                    this.koledy.pause();
+                    this.bell.pause();
+                    this.koledy.currentTime = 0.0;
+                    this.bell.currentTime = 0.0;
 
-                }*/
+                }
             }
 
-
-            onYouTubeIframeAPIReady() {
-                this.player1 = new YT.Player('player', {
-                    videoId: 'ZAYZmIfHEiU',
-                    events: {
-                        'onReady': this.onPlayerReady,
-                        'onStateChange': this.onPlayerStateChange
-                    },
-                    playerVars: {
-                        "origin": "http://127.0.0.1:5500",
-                    }
-                });
-                console.log('this.player1: ', this.player1);
-                this.ready = true;
-            }
-        }
-        function onYouTubeIframeAPIReady() {
-            console.log("api ready", myObj);
-            if (myObj) {
-                myObj.onYouTubeIframeAPIReady();
-            }
         }
         window.addEventListener('DOMContentLoaded', (event) => {
             myObj = new MyClass();
