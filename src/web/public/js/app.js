@@ -18,6 +18,8 @@ import { RoomsList, SensorsList, SettingsPage } from "./pages/settings-page.js";
 import { FrameList, FrameListItem } from "./layouts/frame-list.js";
 import { Icon } from "./components/others/app-icon.js";
 import { TabLayout } from "./layouts/tab-layout.js";
+import { FrameDetail, FrameDetailRow } from "./layouts/frame-detail.js";
+import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
 export var app = null;
 class AutoHomeApp {
     constructor() {
@@ -39,6 +41,7 @@ class AutoHomeApp {
         let components = [
             BaseComponent,
             ErrorDialog,
+            YesNoCancelDialog,
             LoginComponent,
             LoginPage,
             Dashboard,
@@ -60,6 +63,8 @@ class AutoHomeApp {
             SettingsPage,
             FrameList,
             FrameListItem,
+            FrameDetail,
+            FrameDetailRow,
             RoomsList,
             SensorsList,
             TabLayout

@@ -116,7 +116,7 @@ export class MenuIcon extends AbstractComponent {
         super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString(),
             position: "absolute",
-            top: 0,
+            top: "5px",
             innerHTML: `<img src="img/menu.png">`
         }));
     }

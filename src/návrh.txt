@@ -31,3 +31,22 @@ Módy:
 On/Off/keep:zařízení/podmínka
 
 ----------------
+
+
+SMAZAT:
+___________________________
+DetailFrame pro rooms:
+name
+img src
+img offset
+
+
+DetailFrame pro sensors:
+icon type
+name
+unit
+
+DetailFrame pro devices:
+icon type
+name
+___________________________

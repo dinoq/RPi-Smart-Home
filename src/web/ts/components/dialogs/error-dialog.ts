@@ -7,24 +7,25 @@ export class ErrorDialog extends BaseDialog {
     
     constructor(error: string, componentProps?: IComponentProperties){
         super(componentProps);
-        this.innerHTML=`
-            <div class="overlay">
-            </div>
-            <div class="error-dialog">
-                ${error} 
-                <div class="close-btn">
+
+        let errorDiv = document.createElement("div");
+        errorDiv.innerHTML = `        
+            <div class="dialog">
+                <div class="message-box text-danger">
+                    ${error} 
+                </div>
+                <div class="dialog-btn-group">
                     <div class="btn btn-danger">
                         close
                     </div>
                 </div>
             </div>
         `;
-        let overlay = <HTMLElement>this.querySelector(".overlay");
-        overlay.style.width = <string>Config.getWindowWidth(true);
-        overlay.style.height = <string>Config.getWindowHeight(true);
+        this.appendChild(this.overlayContainer);
+        this.appendChild(errorDiv);
 
         document.body.appendChild(this);
-        this.getElementsByClassName("close-btn")[0].addEventListener('click', ()=>{            
+        this.querySelector(".btn").addEventListener('click', ()=>{            
             this.remove();
         })
     }

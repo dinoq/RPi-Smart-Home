@@ -1,5 +1,6 @@
 :root {
   --default-page-bg-color: white;
+  --default-blue-color: #00aaff;
 }
 
 html {
@@ -25,10 +26,6 @@ html #form-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
-  margin-top: 25px;
 }
 
 html #form-wrapper form {
@@ -44,7 +41,7 @@ html #form-wrapper form {
           align-items: center;
   max-width: 300px;
   width: 90%;
-  border: 1px solid #00aaff;
+  border: 1px solid var(--default-blue-color);
   padding: 20px;
 }
 
@@ -77,6 +74,7 @@ html #form-wrapper form .form-label .active-label, html #form-wrapper form .form
   background-color: white;
   border-radius: 25px;
   font-size: 0.8em;
+  border: 1px solid var(--default-blue-color);
 }
 
 html #form-wrapper form input:not([type=checkbox]) {
@@ -89,7 +87,7 @@ html #form-wrapper form input:not([type=checkbox]) {
 
 html #form-wrapper form input:focus {
   outline: none;
-  border: 2px solid #00aaff;
+  border: 2px solid var(--default-blue-color);
 }
 
 html #form-wrapper form .chekbox-wrapper {
@@ -123,31 +121,50 @@ html #form-wrapper form input[type=button] {
   padding: 0 20px;
 }
 
-error-dialog .overlay {
-  z-index: 900;
-  background-color: rgba(0, 0, 0, 0.7);
-  position: absolute;
+login-form #form-wrapper {
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  margin-top: 25px;
 }
 
-error-dialog .error-dialog {
+.dialog-wrapper .dialog {
   display: block;
   position: absolute;
   left: 25%;
   top: 25%;
   width: 50%;
-  height: 50%;
   background-color: white;
   border: 1px solid black;
   border-radius: 25px;
   padding: 50px;
-  color: red;
+  color: black;
   font-size: 1.5em;
   z-index: 1000;
   -webkit-box-shadow: 0px 0px 22px -2px rgba(0, 0, 0, 0.75);
   box-shadow: 0px 0px 22px -2px rgba(0, 0, 0, 0.75);
 }
 
-error-dialog .error-dialog .close-btn {
+.dialog-wrapper .overlay {
+  z-index: 900;
+  background-color: rgba(0, 0, 0, 0.7);
+  position: absolute;
+}
+
+.dialog-wrapper .overlay.light {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.dialog-wrapper .message-box {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+
+.dialog-wrapper .dialog-btn-group {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -158,8 +175,12 @@ error-dialog .error-dialog .close-btn {
   margin-top: 1em;
 }
 
-error-dialog .error-dialog .close-btn div {
-  width: 30%;
+.dialog-wrapper .dialog-btn-group > .btn {
+  margin: 0 10px;
+  font-size: 1.3em;
+}
+
+.dialog-wrapper .close-btn div {
   font-size: 1.3em;
 }
 
@@ -260,7 +281,7 @@ room-card .value {
 }
 
 .frame-list frame-list-item {
-  border-bottom: 1px solid grey;
+  border-bottom: 1px solid var(--default-blue-color);
   background-color: #ececec;
   cursor: pointer;
 }
@@ -274,7 +295,8 @@ room-card .value {
 }
 
 .frame-list frame-list-item.active {
-  background-color: #78d7f3;
+  background-color: var(--default-blue-color);
+  color: white;
 }
 
 .frame-list frame-list-item > horizontal-stack > *:hover:not(.room-name) {
@@ -305,7 +327,7 @@ room-card .value {
 }
 
 tab-layout {
-  margin: 10px 0;
+  margin: 10px 5px;
 }
 
 tab-layout .tab {
@@ -317,10 +339,35 @@ tab-layout .tab {
 }
 
 tab-layout .tab.active {
-  background-color: #78d7f3;
+  background-color: var(--default-blue-color);
+  color: white;
 }
 
 tab-layout .tab:last-child {
   border-right: 1px solid #959595;
+}
+
+settings-page .settings.save-btn {
+  position: absolute;
+  border: 1px solid var(--default-blue-color);
+  top: -34px;
+  height: 36px;
+  border-radius: 15px;
+  width: 30%;
+}
+
+settings-page .settings.save-btn:hover {
+  background-color: #d5d5d5;
+}
+
+settings-page #form-wrapper form {
+  max-width: initial;
+  width: 100%;
+  padding: 5px;
+  margin: 5px;
+}
+
+settings-page #form-wrapper form input:not([type=checkbox]) {
+  max-width: 500px;
 }
 /*# sourceMappingURL=style.css.map */

@@ -11,6 +11,7 @@ $xl: 1200px;
 
 :root {
     --default-page-bg-color: white;
+    --default-blue-color: #00aaff;
   }
 //For responsive design
 @mixin sm-devices { @media (min-width: $sm) {
@@ -50,8 +51,6 @@ html{
 
     #form-wrapper{
         display: flex; 
-        justify-content: center;
-        margin-top: 25px;
 
 
         form{
@@ -60,7 +59,7 @@ html{
             align-items: center;
             max-width: 300px;
             width: 90%;
-            border: 1px solid #00aaff;
+            border: 1px solid var(--default-blue-color);
             padding: 20px;
             
             @include sm-devices(){
@@ -94,6 +93,7 @@ html{
                     background-color: white; 
                     border-radius: 25px;  
                     font-size: 0.8em; 
+                    border: 1px solid var(--default-blue-color);
                 }
             }
 
@@ -107,7 +107,7 @@ html{
             }
             input:focus{                
                 outline: none;    
-                border: 2px solid #00aaff;
+                border: 2px solid var(--default-blue-color);
             }
             .chekbox-wrapper{
                 display: flex;
@@ -135,42 +135,66 @@ html{
     
 }
 
-error-dialog{
+login-form{    
 
-    .overlay{
-        z-index: 900;
-        background-color: rgba(0, 0, 0, 0.7);
-        position: absolute;
+    #form-wrapper{
+        justify-content: center;
+        margin-top: 25px;
     }
-    .error-dialog{        
+}
+
+.dialog-wrapper{
+
+    .dialog{
         display: block;
         position: absolute;
         left: 25%;
         top: 25%;
         width: 50%;
-        height: 50%;
         background-color: white;
         border: 1px solid black;
         border-radius: 25px;
         padding: 50px;
-        color: red;
+        color: black;
         font-size: 1.5em;
         z-index: 1000;
-
+    
         -webkit-box-shadow: 0px 0px 22px -2px rgba(0,0,0,0.75);
         -moz-box-shadow: 0px 0px 22px -2px rgba(0,0,0,0.75);
         box-shadow: 0px 0px 22px -2px rgba(0,0,0,0.75);
+    }
+    
+    .overlay{
+        z-index: 900;
+        background-color: rgba(0, 0, 0, 0.7);
+        position: absolute;
 
-        .close-btn{
-            display: flex;
-            justify-content: center;
-            color: black;
-            margin-top: 1em;
-            
-            div{
-                width: 30%;
-                font-size: 1.3em;
-            }
+        &.light{        
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+    }
+
+
+    .message-box{
+        display: flex;
+        justify-content: center;
+    }
+
+    .dialog-btn-group{
+        display: flex;
+        justify-content: center;
+        color: black;
+        margin-top: 1em;
+
+        >.btn{
+            margin: 0 10px;
+            font-size: 1.3em;
+        }
+    }
+    .close-btn{
+        
+        div{
+            font-size: 1.3em;
         }
     }
 }
@@ -260,7 +284,7 @@ room-card{
         padding-left: 20px;
     }
     frame-list-item{
-        border-bottom: 1px solid grey;
+        border-bottom: 1px solid var(--default-blue-color);
         background-color: #ececec;
         cursor: pointer;
 
@@ -272,7 +296,8 @@ room-card{
             background-color: #d5d5d5;
         }
         &.active{
-            background-color: #78d7f3;
+            background-color: var(--default-blue-color);
+            color: white;
         }
 
         >horizontal-stack > *:hover:not(.room-name){
@@ -298,7 +323,7 @@ $anim-duration: 1s;
 } 
 
 tab-layout{
-    margin: 10px 0;
+    margin: 10px 5px;
     
     $tab-border: 1px solid #959595;
     .tab {
@@ -308,11 +333,38 @@ tab-layout{
         padding: 5px;
         border-radius: 5px 5px 0 0;
         &.active{
-            background-color: #78d7f3;
+            background-color: var(--default-blue-color);
+            color: white;
         }
 
     }
     .tab:last-child {
         border-right: $tab-border;
+    }
+}
+
+settings-page{
+    .settings.save-btn{    
+        position: absolute;
+        border: 1px solid var(--default-blue-color);
+        top: -34px;
+        height: 36px;
+        border-radius: 15px;
+        width: 30%;
+        
+        &:hover{
+            background-color: #d5d5d5;
+        }
+    }
+
+    #form-wrapper form{
+        max-width: initial;
+        width: 100%;
+        padding: 5px;
+        margin: 5px;
+
+        input:not([type=checkbox]){
+            max-width: 500px;
+        }
     }
 }
