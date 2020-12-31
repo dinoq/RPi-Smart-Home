@@ -8,6 +8,7 @@ import { Utils } from "../../app/utils.js";
 import { AbstractComponent, IComponentProperties } from "../component.js";
 import { BaseMenu } from "./base-menu.js";
 import { MenuItem } from "./menu-item.js";
+import { EventManager } from "../../app/event-manager.js";
 
 export class HamburgerMenu {
     private hamburgerIcon: MenuIcon;
@@ -97,7 +98,14 @@ export class HamburgerMenu {
 
     //@overrride
     addListeners(): void {        
-        this.hamburgerIcon.addEventListener("click", () => { this.toggle(true) });
+        this.hamburgerIcon.addEventListener("click", () => { 
+            EventManager.waitIfBlocked()
+            .then(()=>{
+                this.toggle(true);
+            }).catch((err)=>{
+                console.error(err);
+            })
+        });
         window.addEventListener("resize", this.resize);
 
         //Add links

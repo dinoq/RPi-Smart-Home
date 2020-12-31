@@ -1,3 +1,4 @@
+import { Utils } from "../app/utils.js";
 import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 
@@ -13,7 +14,7 @@ export class TabLayout extends AbstractComponent {
 
         this.tabsRow = new HorizontalStack({});
 
-        this.contentRow = new HorizontalStack({});
+        this.contentRow = new HorizontalStack({height: "100%"});
 
 
         this.tabs = tabs;

@@ -4,3 +4,5 @@
 - Není potřeba upravit čtecí/zapisovací práva ve firebase database?
 - Pořadí zobrazení místností, senzorů a zařízení v RoomCard
 -rušit DB listenery při neaktivní page (vracet při registraci listenerů referenci)
+-Předělat na namespace??? (export namespace Image{...})
+- Výška 25% u framelistů v nastavení zřejmě nefunguje (odpozorováno na device listu)

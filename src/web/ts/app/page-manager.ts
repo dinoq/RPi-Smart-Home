@@ -33,7 +33,7 @@ export class PageManager extends Singleton {
             if(page.constructor.name != this.pages[i].constructor.name){
                 new BaseError("Already added page with same key!", this, true);
             }else{
-                console.log("Page already added to pagemanager: " + page.constructor.name );
+                //console.log("Page already added to pagemanager: " + page.constructor.name );
             }
             return;
         }

@@ -6,6 +6,7 @@ import { URLManager } from "../../app/url-manager.js";
 import { Utils } from "../../app/utils.js";
 import { AbstractComponent } from "../component.js";
 import { MenuItem } from "./menu-item.js";
+import { EventManager } from "../../app/event-manager.js";
 export class HamburgerMenu {
     constructor(componentProps) {
         /*super(Utils.mergeObjects(componentProps, {
@@ -64,7 +65,14 @@ export class HamburgerMenu {
     }
     //@overrride
     addListeners() {
-        this.hamburgerIcon.addEventListener("click", () => { this.toggle(true); });
+        this.hamburgerIcon.addEventListener("click", () => {
+            EventManager.waitIfBlocked()
+                .then(() => {
+                this.toggle(true);
+            }).catch((err) => {
+                console.error(err);
+            });
+        });
         window.addEventListener("resize", this.resize);
         //Add links
         let links = Array.from(this.itemsContainer.childNodes);

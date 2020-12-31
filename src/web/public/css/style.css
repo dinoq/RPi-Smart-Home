@@ -1,5 +1,5 @@
 :root {
-  --default-page-bg-color: white;
+  --default-page-bg-color: rgb(241, 241, 241);
   --default-blue-color: #00aaff;
 }
 
@@ -22,13 +22,13 @@ html #form-alert-wrapper {
   margin-top: 25px;
 }
 
-html #form-wrapper {
+html .form-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
 }
 
-html #form-wrapper form {
+html .form-wrapper form {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -45,19 +45,19 @@ html #form-wrapper form {
   padding: 20px;
 }
 
-html #form-wrapper form .form-label {
+html .form-wrapper form .form-label {
   position: relative;
   width: 100%;
 }
 
-html #form-wrapper form .form-label .form-name-label {
+html .form-wrapper form .form-label .form-name-label {
   top: calc(-20px - 0.75em);
   margin-top: 0;
-  background-color: white;
+  background-color: var(--default-page-bg-color);
   left: -10px;
 }
 
-html #form-wrapper form .form-label label {
+html .form-wrapper form .form-label label {
   position: absolute;
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
@@ -68,7 +68,7 @@ html #form-wrapper form .form-label label {
   font-size: 1em;
 }
 
-html #form-wrapper form .form-label .active-label, html #form-wrapper form .form-label .permanent-active-label {
+html .form-wrapper form .form-label .active-label, html .form-wrapper form .form-label .permanent-active-label {
   top: -0.75em;
   left: 10px;
   background-color: white;
@@ -77,7 +77,7 @@ html #form-wrapper form .form-label .active-label, html #form-wrapper form .form
   border: 1px solid var(--default-blue-color);
 }
 
-html #form-wrapper form input:not([type=checkbox]) {
+html .form-wrapper form input:not([type=checkbox]), html .form-wrapper form select {
   margin-top: 20px;
   border: 1px solid gray;
   height: 2.5rem;
@@ -85,12 +85,12 @@ html #form-wrapper form input:not([type=checkbox]) {
   padding-left: 5px;
 }
 
-html #form-wrapper form input:focus {
+html .form-wrapper form input:focus {
   outline: none;
   border: 2px solid var(--default-blue-color);
 }
 
-html #form-wrapper form .chekbox-wrapper {
+html .form-wrapper form .chekbox-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -104,24 +104,24 @@ html #form-wrapper form .chekbox-wrapper {
   margin-top: 0.5em;
 }
 
-html #form-wrapper form .chekbox-wrapper input {
+html .form-wrapper form .chekbox-wrapper input {
   margin-right: 0.5em;
   height: 1.3em;
   width: 1.3em;
 }
 
-html #form-wrapper form .chekbox-wrapper label {
+html .form-wrapper form .chekbox-wrapper label {
   margin: 0;
 }
 
-html #form-wrapper form input[type=button] {
+html .form-wrapper form input[type=button] {
   width: -webkit-fit-content;
   width: -moz-fit-content;
   width: fit-content;
   padding: 0 20px;
 }
 
-login-form #form-wrapper {
+login-form .form-wrapper {
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
@@ -155,13 +155,8 @@ login-form #form-wrapper {
   background-color: rgba(0, 0, 0, 0.4);
 }
 
-.dialog-wrapper .message-box {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
+.dialog-wrapper .message-box:not(.error-message) {
+  text-align: center;
 }
 
 .dialog-wrapper .dialog-btn-group {
@@ -251,6 +246,7 @@ horizontal-stack {
 room-card {
   display: block;
   width: 100%;
+  margin-bottom: 5px;
 }
 
 room-card:nth-child(odd) {
@@ -283,15 +279,15 @@ room-card .value {
 .frame-list frame-list-item {
   border-bottom: 1px solid var(--default-blue-color);
   background-color: #ececec;
-  cursor: pointer;
 }
 
 .frame-list frame-list-item:nth-child(odd) {
   background-color: #fafafa;
 }
 
-.frame-list frame-list-item:hover {
+.frame-list frame-list-item:hover:not(.no-hover) {
   background-color: #d5d5d5;
+  cursor: pointer;
 }
 
 .frame-list frame-list-item.active {
@@ -299,13 +295,23 @@ room-card .value {
   color: white;
 }
 
-.frame-list frame-list-item > horizontal-stack > *:hover:not(.room-name) {
+.frame-list frame-list-item > .components-wrapper > *:hover:not(.room-name):not(.text):not(.btn-wrapper) {
   opacity: 0.7;
+}
+
+.frame-list frame-list-item > .components-wrapper .btn:hover {
+  opacity: 0.7;
+}
+
+frame-detail .form-wrapper .form {
+  border-radius: 10px;
+  background-color: #ffffff;
+  padding: 10px;
 }
 
 @keyframes blink {
   0% {
-    background-color: lime;
+    background-color: #00aaff;
   }
   100% {
     background-color: white;
@@ -314,10 +320,10 @@ room-card .value {
 
 @-webkit-keyframes blink {
   0% {
-    background-color: red;
+    background-color: #00aaff;
   }
   100% {
-    background-color: black;
+    background-color: white;
   }
 }
 
@@ -360,14 +366,14 @@ settings-page .settings.save-btn:hover {
   background-color: #d5d5d5;
 }
 
-settings-page #form-wrapper form {
+settings-page .form-wrapper form {
   max-width: initial;
   width: 100%;
   padding: 5px;
   margin: 5px;
 }
 
-settings-page #form-wrapper form input:not([type=checkbox]) {
+settings-page .form-wrapper form input:not([type=checkbox]), settings-page .form-wrapper form select {
   max-width: 500px;
 }
 /*# sourceMappingURL=style.css.map */

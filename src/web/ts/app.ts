@@ -18,7 +18,7 @@ import { RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-card.js
 import { VerticalStack } from "./layouts/vertical-stack.js";
 import { HorizontalStack } from "./layouts/horizontal-stack.js";
 import { AbstractComponent, BaseComponent } from "./components/component.js";
-import { RoomsList, SensorsList, SettingsPage } from "./pages/settings-page.js";
+import { SettingsPage } from "./pages/settings-page.js";
 import { FrameList, FrameListItem } from "./layouts/frame-list.js";
 import { Icon } from "./components/others/app-icon.js";
 import { TabLayout } from "./layouts/tab-layout.js";
@@ -69,8 +69,6 @@ class AutoHomeApp {
             FrameListItem,
             FrameDetail,
             FrameDetailRow,
-            RoomsList,
-            SensorsList,
             TabLayout
         ];
         if(customElements.get("login-form") == undefined){

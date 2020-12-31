@@ -11,7 +11,7 @@ export class ErrorDialog extends BaseDialog {
         let errorDiv = document.createElement("div");
         errorDiv.innerHTML = `        
             <div class="dialog">
-                <div class="message-box text-danger">
+                <div class="message-box error-message text-danger">
                     ${error} 
                 </div>
                 <div class="dialog-btn-group">

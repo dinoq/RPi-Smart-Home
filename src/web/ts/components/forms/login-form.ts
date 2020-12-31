@@ -14,7 +14,7 @@ export class LoginComponent extends AbstractComponent {
             Nesprávné přihlašovací údaje!
             </div>
         </div>
-        <div id="form-wrapper">
+        <div class="form-wrapper">
             <form id="login-form" action="/dashboard" method="POST">
                 <div class="form-label">
                     <label class="form-name-label" for="login-form">Přihlášení</label>

@@ -4,7 +4,7 @@ export class TabLayout extends AbstractComponent {
     constructor(tabs, layoutProps) {
         super(layoutProps);
         this.tabsRow = new HorizontalStack({});
-        this.contentRow = new HorizontalStack({});
+        this.contentRow = new HorizontalStack({ height: "100%" });
         this.tabs = tabs;
         tabs.forEach(tab => {
             let tabTitle = new BaseComponent({ innerText: tab.title, classList: "tab" });

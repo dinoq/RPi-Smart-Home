@@ -22,5 +22,9 @@ export class URLManager extends Singleton{
         if(!skipRendering){
             (<URLManager>urlManager).onURLChange();
         }
+    }    
+    public static reload(): void{
+        let urlManager = URLManager.getInstance();
+        (<URLManager>urlManager).onURLChange();
     }
 }

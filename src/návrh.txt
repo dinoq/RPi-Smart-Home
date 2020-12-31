@@ -33,6 +33,35 @@ On/Off/keep:zařízení/podmínka
 ----------------
 
 
+
+
+Hodnoty v databázi
+___________________________
+Senzory
+    icon-types: temp, 
+
+___________________________
+
+Struktura databáze:
+ID-uzivatele
+--"default_name" : string,
+--"password" : string,
+--"rooms" : object,
+--"rules" : object,
+--"scenes" : object
+
+rooms
+--id-mistnosti: object
+
+mistnost:
+--"devices": object,
+--"img" :   {
+            "offset" : number,
+            "src" : string
+            },
+--"index" : number,
+--"name" : string
+
 SMAZAT:
 ___________________________
 DetailFrame pro rooms:

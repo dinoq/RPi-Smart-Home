@@ -18,34 +18,49 @@ export class FrameList extends AbstractComponent {
             overflowY: "auto",
             border: "1px solid var(--default-blue-color)",
             borderRadius: "10px",
-            margin: "5px",
+            //margin: "5px",
             classList: "frame-list",
 
         }));
 
         this.type = type;
-        this.initAddItemBtn();
+        this.initialize();
 
+    }
+    
+    initialize(){
+        this.clearItems();
+        this.initAddItemBtn();
+        if(!this.defaultItem)
+            this.defaultItem = new FrameListItem();
+        else
+            this.addItems(this.defaultItem);
+    }
+
+    initDefaultItem(type: ItemTypes, text: string){        
+        this.defaultItem.initialize(type, text);
+        this.addItems(this.defaultItem);
     }
 
     initAddItemBtn() {
         this.addItemBtn = new FrameListItem();
 
-        let wrapper = new BaseComponent({
+        let btn = new BaseComponent({
             backgroundColor: "var(--default-blue-color)",//#78d7f3
             borderRadius: "15px",
             padding: "0px 50px",
             margin: "2px",
             justifyContent: "center",
             display: "flex",
-            color: "#fff700",
+            color: "white",//"#fff700",
             fontWeight: "bold",
             fontSize: "1.5rem",
-            innerText: "+"
+            innerText: "+",
+            classList: "btn"
         });
-        this.addItemBtn.initialize(ItemTypes.TEXT_ONLY, "");
+        this.addItemBtn.initialize(ItemTypes.BTN_ONLY, "");
         //this.addItemBtn.initializeFromProps()
-        this.addItemBtn.name.appendComponents(wrapper);
+        this.addItemBtn.components[ComponentsBtnOnly.btn].appendComponents(btn);
     }
 
     clearItems() {
@@ -79,31 +94,6 @@ export class FrameList extends AbstractComponent {
         this.appendComponents(item);
     }
 
-    frmListItemToTableRow(item: FrameListItem) {
-        let row = document.createElement("tr");
-        if (item.up)
-            row.appendChild(this.getTableTD(item.up));
-        else
-            row.appendChild(new BaseComponent());
-
-        if (item.down)
-            row.appendChild(this.getTableTD(item.down));
-        else
-            row.appendChild(new BaseComponent());
-
-        if (item.name)
-            row.appendChild(this.getTableTD(item.name));
-        else
-            row.appendChild(new BaseComponent());
-
-        return row;
-    }
-    getTableTD(child: HTMLElement) {
-        let td = document.createElement("td");
-        td.appendChild(child);
-        return td;
-    }
-
 }
 
 
@@ -111,18 +101,14 @@ export class FrameListItem extends AbstractComponent {
     static tagName = "frame-list-item";
 
     private layout: HorizontalStack;
-    up: AbstractComponent;
-    down: AbstractComponent;
-    name: AbstractComponent;
-    edit: AbstractComponent;
-    delete: AbstractComponent;
+    public components: Array<any>;
     type: ItemTypes;
     dbCopy: any;
     showArrows: { up: boolean, down: boolean };
 
     constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
-
+        this.components = new Array();
     }
 
     initialize(...args) {
@@ -130,32 +116,42 @@ export class FrameListItem extends AbstractComponent {
         this.type = args[0];
         if (this.layout)
             this.layout.disconnectComponent();
-        this.layout = new HorizontalStack({ padding: "0 10px" });
+        this.layout = new HorizontalStack({ padding: "0 10px", classList: "components-wrapper" });
         if (this.type == ItemTypes.CLASSIC && args.length == 4) {
+            this.components = new Array(5);
             this.dbCopy = args[2];
             this.showArrows = args[3];
 
-            this.up = new BaseComponent({ innerText: "▶", transform: "rotate(-90deg)", classList: "up" });
-            if (!this.showArrows.up)
-                this.up.style.visibility = "hidden";
+            this.components[ComponentsClassic.up] = new BaseComponent({ innerText: "▶", transform: "rotate(-90deg)", classList: "up" });
+            /*if (!this.showArrows.up)
+                this.components[ComponentsClassic.up].style.visibility = "hidden";*/
 
-            this.down = new BaseComponent({ innerText: "▶", transform: "rotate(90deg)", classList: "down" });
-            if (!this.showArrows.down)
-                this.down.style.visibility = "hidden";
+            this.components[ComponentsClassic.down] = new BaseComponent({ innerText: "▶", transform: "rotate(90deg)", classList: "down" });
+            /*if (!this.showArrows.down)
+                this.components[ComponentsClassic.down].style.visibility = "hidden";*/
 
-            this.name = new BaseComponent({ innerText: (this.dbCopy != null) ? this.dbCopy.name : "", classList: "room-name", flexGrow: "1", display: "flex", flexDirection: "column", justifyContent: "center", marginLeft: "15px" });
+            this.components[ComponentsClassic.name] = new BaseComponent({ innerText: (this.dbCopy != null) ? this.dbCopy.name : "", classList: "room-name", flexGrow: "1", display: "flex", flexDirection: "column", justifyContent: "center", marginLeft: "15px" });
 
-            this.edit = new Icon("edit", { marginRight: "10px" });
+            this.components[ComponentsClassic.edit] = new Icon("edit", { marginRight: "10px" });
 
-            this.delete = new Icon("delete");
+            this.components[ComponentsClassic.delete] = new Icon("delete");
 
-            this.layout.pushComponents([this.up, this.down, this.name, this.edit, this.delete]);
+            this.layout.pushComponents(this.components);
             onClickCallback = args[1];
 
         } else if (this.type == ItemTypes.TEXT_ONLY && args.length == 2) {
-            this.name = new BaseComponent({ innerText: args[1], classList: "room-name", flexGrow: "1", display: "flex", flexDirection: "row", justifyContent: "center", marginLeft: "15px" });
+            this.components = new Array(1);
+            this.classList.add("no-hover");
+            this.components[ComponentsTextOnly.text] = new BaseComponent({ innerText: args[1], classList: "text", flexGrow: "1", display: "flex", flexDirection: "row", justifyContent: "center", marginLeft: "15px" });
 
-            this.layout.pushComponents([this.name]);
+            this.layout.pushComponents(this.components);
+
+        }else if (this.type == ItemTypes.BTN_ONLY && args.length == 2) {
+            this.components = new Array(1);
+            this.classList.add("no-hover");
+            this.components[ComponentsBtnOnly.btn] = new BaseComponent({ innerText: args[1], classList: "btn-wrapper", flexGrow: "1", display: "flex", flexDirection: "row", justifyContent: "center", marginLeft: "15px" });
+
+            this.layout.pushComponents(this.components);
 
         }
 
@@ -166,52 +162,43 @@ export class FrameListItem extends AbstractComponent {
     }
 
     updateArrows(upVisible: boolean, downVisible: boolean) {
-        if (this.up) {
-            this.up.style.visibility = upVisible ? "visible" : "hidden";
-            this.showArrows.up = upVisible;
+        if(this.type == ItemTypes.CLASSIC){
+            if (this.components[ComponentsClassic.up]) {
+                this.components[ComponentsClassic.up].style.visibility = upVisible ? "visible" : "hidden";
+                this.showArrows.up = upVisible;
+            }
+            if (this.components[ComponentsClassic.down]) {
+                this.components[ComponentsClassic.down].style.visibility = downVisible ? "visible" : "hidden";
+                this.showArrows.down = downVisible;
+            }
         }
-        if (this.down) {
-            this.down.style.visibility = downVisible ? "visible" : "hidden";
-            this.showArrows.down = downVisible;
-        }
-
-        /*
-        if(increment)
-            index++
-        else
-            index--;
-        if ((index-startIndex) == 0)
-            this.up.style.visibility = "hidden";
-        else
-            this.up.style.visibility = "visible";
-        if (index == maxIndex)
-            this.down.style.visibility = "hidden";
-        else
-            this.down.style.visibility = "visible";*/
     }
 
     addListeners(onClickCallback?): void {
         if (onClickCallback) {
-            if (this.up)
-                this.up.addEventListener("click", (event) => {
-                    onClickCallback(event, this, "up");
-                    event.stopPropagation()
-                })
-            if (this.down)
-                this.down.addEventListener("click", (event) => {
-                    onClickCallback(event, this, "down");
-                    event.stopPropagation()
-                })
-            if (this.edit)
-                this.edit.addEventListener("click", (event) => {
-                    onClickCallback(event, this, "edit");
-                    event.stopPropagation()
-                })
-            if (this.delete)
-                this.delete.addEventListener("click", (event) => {
-                    onClickCallback(event, this, "delete");
-                    event.stopPropagation()
-                })
+            if(this.type == ItemTypes.CLASSIC){
+                if (this.components[ComponentsClassic.up])
+                    this.components[ComponentsClassic.up].addEventListener("click", (event) => {
+                        onClickCallback(event, this, "up");
+                        event.stopPropagation()
+                    })
+                if (this.components[ComponentsClassic.down])
+                    this.components[ComponentsClassic.down].addEventListener("click", (event) => {
+                        onClickCallback(event, this, "down");
+                        event.stopPropagation()
+                    })
+                if (this.components[ComponentsClassic.edit])
+                    this.components[ComponentsClassic.edit].addEventListener("click", (event) => {
+                        onClickCallback(event, this, "edit");
+                        event.stopPropagation()
+                    })
+                if (this.components[ComponentsClassic.delete])
+                    this.components[ComponentsClassic.delete].addEventListener("click", (event) => {
+                        onClickCallback(event, this, "delete");
+                        event.stopPropagation()
+                    })
+
+            }
             this.addEventListener("click", (event) => {
                 onClickCallback(event, this);
             })
@@ -221,9 +208,23 @@ export class FrameListItem extends AbstractComponent {
 
 }
 
+enum ComponentsClassic{
+    up,
+    down,
+    name,
+    edit,
+    delete,
+}
+enum ComponentsTextOnly{
+    text
+}
+enum ComponentsBtnOnly{
+    btn
+}
 export enum ItemTypes {
     CLASSIC,
-    TEXT_ONLY
+    TEXT_ONLY,
+    BTN_ONLY
 }
 
 export enum FrameListTypes{
