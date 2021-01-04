@@ -1,0 +1,10 @@
+//TODO: zabezpečení Wi-Fi
+//TODO CSMA/CA
+//TODO možná modulace
+//TODO možná QoS
+//TODO problémy: https://www.tutorialspoint.com/wi-fi/wifi_major_issues.htm 
+
+do architektura řídícího zařízení:
+
+//TODO: rozdíl mezi zmíněnými architekturami
+//TODO: Digitální signálový procesor

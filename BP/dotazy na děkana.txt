@@ -1,0 +1,16 @@
+Může být v názvech kapitol slovo úvod? (NApř. úvod do automatizace)
+Počítá se s tím, že zařízení nějak "donesu" ukázat na obhajobu?
+Jak přesně citovat obrázky?
+Které zdroje jsou povolené?
+Jak citovat zdroje? Jsou čísla stran nezbytné?
+Kapitoly 5 a 5.1 na stejné straně - je to problém?
+uvádět ceny už ve shrnutí, nebo až v hodnocení současného stavu?
+Mohu se v textu vyjádřovat ve stylu "viz část", "jak uvádím v části"...? (U kapitol, podkapitol i nadpisů?)
+Můžu ESP8266 a ESP32 popisovat až v praktické části? (nemá smysl o mít krátkou kapitolu o nich...)
+Technologie dálkového přenosu pod kapitolu Automatizace domácnosti?
+
+dotazy ke kódu:
+Jsou komentáře v kódu nezbytné?
+Zkouší komise kód? Co když nepujde spustit?
+Mohu popisovat že nějakou část bude možné rozšířit? (Např menu o položky správy místností apod)
+mohu nechat uživatele vpisovat informace do kodu (SSID wifi, či IP RPi) aby si sám program zkompiloval a poslal do esp?

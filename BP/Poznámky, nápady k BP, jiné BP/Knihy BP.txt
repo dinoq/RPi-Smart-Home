@@ -1,0 +1,11 @@
+Home Automation with Raspberry Pi
+Autor Donald Norris
+
+Beginning Sensor Networks with Arduino and Raspberry Pi (anglicky)
+Autor: Bell, Charles
+
+Learn Electronics with Raspberry Pi
+Autor Stewart Watkiss
+
+Smart Home Automation with Linux and Raspberry Pi (anglicky)
+Autor: Goodwin, Steven

@@ -1,0 +1,20 @@
+[0821/232747.847:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232747.854:ERROR:exception_snapshot_win.cc(98)] thread ID 17660 not found in process
+[0821/232747.860:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232747.860:ERROR:exception_snapshot_win.cc(98)] thread ID 17852 not found in process
+[0821/232747.849:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232747.870:ERROR:exception_snapshot_win.cc(98)] thread ID 21288 not found in process
+[0821/232748.010:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232748.011:ERROR:exception_snapshot_win.cc(98)] thread ID 17572 not found in process
+[0821/232748.012:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232748.013:ERROR:exception_snapshot_win.cc(98)] thread ID 23856 not found in process
+[0821/232748.023:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232748.023:ERROR:exception_snapshot_win.cc(98)] thread ID 16044 not found in process
+[0821/232748.041:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232748.041:ERROR:exception_snapshot_win.cc(98)] thread ID 23300 not found in process
+[0821/232748.043:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232748.043:ERROR:exception_snapshot_win.cc(98)] thread ID 2452 not found in process
+[0821/232748.057:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232748.057:ERROR:exception_snapshot_win.cc(98)] thread ID 9604 not found in process
+[0821/232748.086:ERROR:process_reader_win.cc(123)] NtOpenThread: {Pøístup byl odepøen} Proces požadoval pøístup k objektu, ale nebyla mu udìlena odpovídající pøístupová práva. (0xc0000022)
+[0821/232748.086:ERROR:exception_snapshot_win.cc(98)] thread ID 22276 not found in process
