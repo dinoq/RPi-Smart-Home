@@ -1,0 +1,33 @@
+Může být v názvech kapitol slovo úvod? (NApř. úvod do automatizace)
+Počítá se s tím, že zařízení nějak "donesu" ukázat na obhajobu?
+Jak přesně citovat obrázky?
+Které zdroje jsou povolené?
+Jak citovat zdroje? Jsou čísla stran nezbytné?
+Kapitoly 5 a 5.1 na stejné straně - je to problém?
+uvádět ceny už ve shrnutí, nebo až v hodnocení současného stavu?
+Mohu se v textu vyjádřovat ve stylu "viz část", "jak uvádím v části"...? (U kapitol, podkapitol i nadpisů?)
+Můžu ESP8266 a ESP32 popisovat až v praktické části? (nemá smysl o mít krátkou kapitolu o nich...)
+Technologie dálkového přenosu pod kapitolu Automatizace domácnosti?
+
+
+Mohu popisovat implementaci(mám tu a tu třídu a v ní to a to...)? Protože co jiného??
+
+-Když mám obrázek, který je však grafem, mám o něm v textu psát jako o grafu nebo obrázku - a u popisku?
+
+
+DOTAZY KE ZDROJŮM
+-Bude problém když u zdrojů neuvedu nějaký povinný parametr (jako vydání, autor...)-bude někdo zjišťovat jestli některý nechybí? Jak detailně mám každou knihu/zdroj zkoumat - stačí když mrknu do knihkupectví a napíšu co jsem našel?
+-Radiokomunikační řád - mohu použít conference i když to není přímo sborník z konference?
+-Edition - musí být číslo 1,2,3...? Nemůže být rok(třeba ten radiokomunikační řád vím že je edition 2020, ale nvm číslo)-dát to jako edition nebo year?
+-Jak moc specifický být v url na zdroj? Stačí doména? Nebo adresa na které je soubor ke stažení? Nebo celou adresu k souboru? (adresa.cz vs adresa.cz/ke-stazeni/2020 vs adresa.cz/ke-stazeni/2020/soubor.pdf)
+-@Conference volume vs number (Svazek vs Číslo svazku)
+-Mám mít citace z minulého roku i z 2021? Nebo je všechny upravit na 20?
+-U webové stránky parametr path (např. Domů; Umění; Umění citace) - co když neznám cestu? Neuvádět? nebo uvést jak je v lomítkách v url (/blog/wifi-frequency-bands-2.4-ghz-and-5-ghz)? 
+-v url webové stránky - uvádět jen doménu, nebo celou url k článku?
+
+
+dotazy ke kódu:
+Jsou komentáře v kódu nezbytné?
+Zkouší komise kód? Co když nepujde spustit?
+Mohu popisovat že nějakou část bude možné rozšířit? (Např menu o položky správy místností apod)
+mohu nechat uživatele vpisovat informace do kodu (SSID wifi, či IP RPi) aby si sám program zkompiloval a poslal do esp?
