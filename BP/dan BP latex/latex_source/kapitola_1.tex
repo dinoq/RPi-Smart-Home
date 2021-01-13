@@ -1,0 +1,19 @@
+\chapter{Úvod}
+\label{uvod}
+
+Rozpoznávání postojů (také známé jako analýza sentimentu nebo dolování názorů) je soubor analytických technik, jejichž cílem je extrahovat subjektivní názor z textu. Obvykle se rozlišuje mezi pozitivním, negativním a někdy i neutrálním postojem autora.
+Další možností je určování míry pozitivity názoru na předem definované stupnici (například často používaných jedna až pět hvězdiček). Tento úkol je samozřejmě obtížnější než prosté určování polarity. Už ze statistického hlediska je obtížnější určit správnou třídu z pěti než z pouhých dvou. Další komplikací je často nejasná hranice mezi jednotlivými třídami. 
+
+Téma analýzy sentimentu je dnes velice populární. K popularitě dopomohlo množství nestrukturovaných dat, které jsou na webu k dispozici. Těchto dat se společnosti snaží co nejvíce využít, proto do takovýchto analyzátorů investují. Je možné nalézt mnoho komerčních analyzátorů, které nabízí své služby (\emph{Gavagai}\footnote{\url{https://www.gavagai.io/}}, \emph{Natural language API} od firmy Google\footnote{\url{https://cloud.google.com/}} nebo \emph{Brand24}\footnote{\url{https://brand24.com/}}.
+
+Využívaným typem dat pro analýzu sentimentu se staly recenze a to především filmů a seriálů. Důvodem je jejich dostupnost (existují webové stránky specificky vytvořené pro recenze), množství (především filmových recenzí je nespočet) a fakt, že recenze jsou již ohodnoceny autorem (nemusí být manuálně anotovány). Právě z těchto důvodů se v práci snažím prozkoumat využitelnost klasifikátorů natrénovaných na těchto datech v jiných doménách. Dalším prozkoumaným faktorem je potřebné množství dat při trénování analyzátorů.
+
+Tato práce má za cíl navrhnout a implementovat systém, který by byl schopný analyzovat texty filmových recenzí, a tím z nich získat názor autora k danému filmu či seriálu. Data získaná z analýzy by zpracoval a představil uživateli. Analýzu je možné provádět celou řadou metod, vybrané metody jsou tedy porovnány vzhledem k jejich přesnosti. 
+
+Výsledkem práce by měl být systém, který napomůže společnostem točící filmy i zákazníkům, kteří je sledují.
+
+Společnosti za použití tohoto systému mohou jednoduše analyzovat názory lidí na jejich práci. Nejenže zjistí celkový názor na produkt, ale také mají možnost filtrovat názory na různé aspekty tohoto produktu. Důležitou informací získanou tímto systémem je změna názoru na daný film či seriál v čase. Společnost například může po vytvoření marketingové kampaně sledovat její dopad na názory lidí, popřípadě včas zamezit nějakému fiasku.
+
+Zákazníkům tento systém pomůže při hledání filmu, nebo seriálu, který by se jim mohl líbit. Dále by mohl napomáhat uživatelům s doplňováním \uv{hvězdičkového} hodnocení při dopsání nové recenze (obsah recenze a výsledné hodnocení uživatele se občas dost liší).  
+
+Text práce se skládá z následujících částí. Kapitola \ref{teorie} nabízí pohled na teorii potřebnou k vytvoření tohoto systému. Prozkoumány jsou základní i pokročilé techniky analýzy sentimentu, možnosti získávání dat z webu, jejich uložení a techniky pro předzpracování dat. Kapitola \ref{navrh} využívá teorii k návrhu a kapitola \ref{implementace} k implementaci popisovaného systému. V kapitole \ref{vysledky} je vytvořený systém vyhodnocen. Aplikace běží na adrese \url{http://athena1.fit.vutbr.cz:8078/}.

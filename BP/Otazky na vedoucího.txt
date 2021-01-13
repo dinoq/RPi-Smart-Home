@@ -1,9 +1,6 @@
 Může být v názvech kapitol slovo úvod? (NApř. úvod do automatizace)
 Počítá se s tím, že zařízení nějak "donesu" ukázat na obhajobu?
 Jak přesně citovat obrázky?
-Které zdroje jsou povolené?
-Jak citovat zdroje? Jsou čísla stran nezbytné?
-Kapitoly 5 a 5.1 na stejné straně - je to problém?
 uvádět ceny už ve shrnutí, nebo až v hodnocení současného stavu?
 Mohu se v textu vyjádřovat ve stylu "viz část", "jak uvádím v části"...? (U kapitol, podkapitol i nadpisů?)
 Můžu ESP8266 a ESP32 popisovat až v praktické části? (nemá smysl o mít krátkou kapitolu o nich...)
@@ -24,7 +21,10 @@ DOTAZY KE ZDROJŮM
 -Mám mít citace z minulého roku i z 2021? Nebo je všechny upravit na 20?
 -U webové stránky parametr path (např. Domů; Umění; Umění citace) - co když neznám cestu? Neuvádět? nebo uvést jak je v lomítkách v url (/blog/wifi-frequency-bands-2.4-ghz-and-5-ghz)? 
 -v url webové stránky - uvádět jen doménu, nebo celou url k článku?
-
+- U web. článků - když je jen přezdívka psát ji jako autor?
+- u web -článků-uvádět revizi jen když je u článku uvedena, nebo projít historii pomocí nástroje web.archive.org?
+-u  web článků bez autora kde je jasné že to psal někdo za organizaci -napsat tu organizaci? (např. arduino nebo když oracle má definici databáze https://www.oracle.com/cz/database/what-is-database/)
+-Mám se u online zdrojů zabývat jejich proměnnou? Např. když se změní datum revize/cesta k článku apod...(jako jestli je mám průběžně aktualizovat když si toho všimnu)?
 
 dotazy ke kódu:
 Jsou komentáře v kódu nezbytné?
