@@ -6,3 +6,6 @@
 -rušit DB listenery při neaktivní page (vracet při registraci listenerů referenci)
 -Předělat na namespace??? (export namespace Image{...})
 - Výška 25% u framelistů v nastavení zřejmě nefunguje (odpozorováno na device listu)
+-Posun obrázků v nastavení udělat spíše relativně (možná i pomocí posuvníku)...jinak bude vždy jinak posunutý na základě velikosti displeje
+-v dialozích použít AppOverlay místo toho co tam je teď
+-U různých elementů ikona (I) - po najetí nápověda

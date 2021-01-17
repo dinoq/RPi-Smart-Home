@@ -33,7 +33,7 @@ $xl: 1200px;
 html{
     background-color: var(--default-page-bg-color);
     
-    overflow:hidden;
+    overflow-x:hidden;
   
     
     header{
@@ -200,14 +200,20 @@ login-form{
 
 menu-icon{
     margin: 5px;
+    right: 0;
+    background-color: #ffffff96;
+    padding: 5px;
+    top: 5px;
+    border-radius: 10px;
+    position: fixed;
 }
 
 menu-items-container{
     display: block;
-    position: absolute;
+    position: fixed;
     height: 100%;
     left: 0px;
-    top: 42px;
+    top: 0;
     padding: 10px;
     padding-right: 25px;
     border-right: 1px solid #939393;
@@ -216,7 +222,7 @@ menu-items-container{
     menu-item{
         display: block;
         cursor: pointer;
-        font-size: 1.25rem;
+        font-size: 1.75rem;
         border-radius: 5px;
     
         &:not(:last-child){
@@ -235,10 +241,6 @@ page-manager{
     top: 0px;
     left: 0px;
     background-color: var(--default-page-bg-color);
-
-    > * {
-        margin-top: 42px;
-    }
 }
 
 vertical-stack{
@@ -346,16 +348,25 @@ tab-layout{
         border: $tab-border;
         border-right: none;
         cursor: pointer;
+        font-size: 0.8rem;
         padding: 5px;
+        padding-top: calc(5px + 0.2rem);
         border-radius: 5px 5px 0 0;
         &.active{
             background-color: var(--default-blue-color);
             color: white;
+            font-size: 1rem;
+            padding-top: 5px;
         }
 
     }
     .tab:last-child {
         border-right: $tab-border;
+    }
+    &>horizontal-stack:nth-child(2) {
+        border: 2px solid #00aaff;
+        padding: 5px;
+        background: #0000001a;
     }
 }
 
@@ -363,7 +374,7 @@ settings-page{
     .settings.save-btn{    
         position: absolute;
         border: 1px solid var(--default-blue-color);
-        top: -34px;
+        top: 5px;
         height: 36px;
         border-radius: 15px;
         width: 30%;

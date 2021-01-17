@@ -43,4 +43,4 @@ export class YesNoCancelDialog extends BaseDialog {
         });
     }
 }
-YesNoCancelDialog.tagName = "yes-no-cancel-dialog";
+YesNoCancelDialog.tagName = "ok-cancel-dialog";

@@ -5,7 +5,7 @@ import { HorizontalStack } from "./horizontal-stack.js";
 export class FrameList extends AbstractComponent {
     constructor(type, layoutProps) {
         super(Utils.mergeObjects(layoutProps, {
-            maxHeight: "25%",
+            //maxHeight: "25%",
             overflowY: "auto",
             border: "1px solid var(--default-blue-color)",
             borderRadius: "10px",
@@ -190,5 +190,6 @@ export var FrameListTypes;
     FrameListTypes[FrameListTypes["BASE"] = 0] = "BASE";
     FrameListTypes[FrameListTypes["SENSORS"] = 1] = "SENSORS";
     FrameListTypes[FrameListTypes["DEVICES"] = 2] = "DEVICES";
-    FrameListTypes[FrameListTypes["ROOMS"] = 3] = "ROOMS";
+    FrameListTypes[FrameListTypes["MODULES"] = 3] = "MODULES";
+    FrameListTypes[FrameListTypes["ROOMS"] = 4] = "ROOMS";
 })(FrameListTypes || (FrameListTypes = {}));

@@ -14,7 +14,7 @@ export class FrameList extends AbstractComponent {
 
     constructor(type: FrameListTypes, layoutProps?: IComponentProperties) {
         super(Utils.mergeObjects(layoutProps, {
-            maxHeight: "25%",
+            //maxHeight: "25%",
             overflowY: "auto",
             border: "1px solid var(--default-blue-color)",
             borderRadius: "10px",
@@ -231,5 +231,6 @@ export enum FrameListTypes{
     BASE,
     SENSORS,
     DEVICES,
+    MODULES,
     ROOMS
 }

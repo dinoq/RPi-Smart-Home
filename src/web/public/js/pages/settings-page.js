@@ -9,6 +9,7 @@ import { FrameDetail } from "../layouts/frame-detail.js";
 import { YesNoCancelDialog } from "../components/dialogs/yes-no-cancel-dialog.js";
 import { DialogResponses } from "../components/dialogs/base-dialog.js";
 import { EventManager } from "../app/event-manager.js";
+import { BaseLayout } from "../layouts/base-layout.js";
 export class SettingsPage extends BasePage {
     constructor(componentProps) {
         super(componentProps);
@@ -144,17 +145,20 @@ export class SettingsPage extends BasePage {
             }
             list.updatedOrderHandler();
         };
+        this.detail = new FrameDetail();
         this.roomsList = new FrameList(FrameListTypes.ROOMS);
         this.roomsList.initDefaultItem(ItemTypes.TEXT_ONLY, "Vyčkejte, načítají se data z databáze");
-        this.roomsList.style.borderRadius = "0 10px 10px 10px";
+        //this.roomsList.style.borderRadius = "0 10px 10px 10px";
         this.sensorsList = new FrameList(FrameListTypes.SENSORS);
-        this.sensorsList.initDefaultItem(ItemTypes.TEXT_ONLY, "Vyberte místnost");
+        this.sensorsList.initDefaultItem(ItemTypes.TEXT_ONLY, "Vyberte modul");
         this.saveBtn = new HorizontalStack({ innerHTML: `
             <button class="settings save-btn">Uložit</button>
         `, justifyContent: "center" });
         this.saveBtn.querySelector(".save-btn").addEventListener("click", this.saveChanges);
         this.devicesList = new FrameList(FrameListTypes.DEVICES);
-        this.devicesList.initDefaultItem(ItemTypes.TEXT_ONLY, "Vyberte místnost");
+        this.devicesList.initDefaultItem(ItemTypes.TEXT_ONLY, "Vyberte modul");
+        this.modulesList = new FrameList(FrameListTypes.MODULES);
+        this.modulesList.initDefaultItem(ItemTypes.TEXT_ONLY, "Vyberte místnost");
         this.sensorsDevicesTabPanel = new TabLayout([{
                 title: "Snímače",
                 container: this.sensorsList
@@ -162,14 +166,18 @@ export class SettingsPage extends BasePage {
                 title: "Zařízení",
                 container: this.devicesList
             }]);
-        this.detail = new FrameDetail();
-        let firstTab = new BaseComponent();
-        firstTab.appendComponents([this.saveBtn, this.roomsList, this.sensorsDevicesTabPanel, this.detail]);
+        let modulesContainer = new BaseComponent();
+        modulesContainer.appendComponents([this.modulesList, this.sensorsDevicesTabPanel]);
+        this.modulesTabPanel = new TabLayout([{
+                title: "Moduly",
+                container: modulesContainer
+            }]);
+        let firstTab = new BaseLayout({ componentsToConnect: [this.saveBtn, this.roomsList, this.modulesTabPanel] });
         this.mainTabPanel = new TabLayout([{
                 title: "Místnosti",
                 container: firstTab
             }], { height: "100%" });
-        this.appendComponents(this.mainTabPanel);
+        this.appendComponents([this.mainTabPanel, this.detail]);
         this.initPageFromDB();
         document.addEventListener("click", async (e) => {
             let path = e.path.map((element) => {

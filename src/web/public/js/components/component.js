@@ -86,6 +86,22 @@ export class AbstractComponent extends Component {
                 this.classList.add(componentProps.classList);
             }
         }
+        if (componentProps.componentsToConnect) { // Connect components
+            if (Array.isArray(componentProps.componentsToConnect)) {
+                componentProps.componentsToConnect.forEach(component => {
+                    if (component instanceof AbstractComponent)
+                        this.appendComponents(component);
+                    else
+                        this.appendDOMComponents(component);
+                });
+            }
+            else {
+                if (componentProps.componentsToConnect instanceof AbstractComponent)
+                    this.appendComponents(componentProps.componentsToConnect);
+                else
+                    this.appendDOMComponents(componentProps.componentsToConnect);
+            }
+        }
     }
     reinitializeFromProps(props) {
         let mergedProperties = Utils.mergeObjects(this.componentProps, props);

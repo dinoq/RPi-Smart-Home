@@ -23,28 +23,4 @@ export class Config {
     // Z-indexes
     public static defaultMenuDepth = 100;
     public static defaultPageDepth = 50;
-
-    public static getWindowWidth(withPixelUnit: boolean = false): number | string {
-        let width = window.innerWidth
-            || document.documentElement.clientWidth
-            || document.body.clientWidth;
-
-        if (withPixelUnit) {
-            return (width + "px");
-        } else {
-            return width;
-        }
-    }
-
-    public static getWindowHeight(withPixelUnit: boolean = false): number | string {
-        let height = window.innerHeight
-            || document.documentElement.clientHeight
-            || document.body.clientHeight;
-
-        if (withPixelUnit) {
-            return (height + "px");
-        } else {
-            return height;
-        }
-    }
 }

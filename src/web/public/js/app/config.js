@@ -2,28 +2,6 @@ export class Config {
     static evaluateCondition(condition) {
         return (condition || Config.showAllErrorsAndWarnings) && Config.showAnyErrorOrWarning;
     }
-    static getWindowWidth(withPixelUnit = false) {
-        let width = window.innerWidth
-            || document.documentElement.clientWidth
-            || document.body.clientWidth;
-        if (withPixelUnit) {
-            return (width + "px");
-        }
-        else {
-            return width;
-        }
-    }
-    static getWindowHeight(withPixelUnit = false) {
-        let height = window.innerHeight
-            || document.documentElement.clientHeight
-            || document.body.clientHeight;
-        if (withPixelUnit) {
-            return (height + "px");
-        }
-        else {
-            return height;
-        }
-    }
 }
 // Common configuration
 Config.defaultTransitionTime = 1000;

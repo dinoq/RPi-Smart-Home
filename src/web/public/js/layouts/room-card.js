@@ -1,9 +1,9 @@
 import { AbstractComponent, BaseComponent } from "../components/component.js";
-import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
 import { Icon } from "../components/others/app-icon.js";
+import { Utils } from "../app/utils.js";
 export class RoomCard extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
@@ -40,7 +40,7 @@ export class RoomCard extends AbstractComponent {
                 for (const device of orderedOUT) {
                     let lamp = new RoomDevice({});
                     this.devices.push(lamp);
-                    if ((deviceRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) < Config.getWindowWidth() * 0.7) {
+                    if ((deviceRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) < Utils.getWindowWidth() * 0.7) {
                         deviceRow.pushComponents(lamp);
                     }
                     else {
@@ -76,9 +76,9 @@ export class RoomCard extends AbstractComponent {
             let deviceRow = new HorizontalStack({
                 justifyContent: "space-between"
             });
-            let devicesInRow = Math.floor((Config.getWindowWidth() * 0.7) / RoomDevice.DEFAULT_DEVICE_WIDTH);
+            let devicesInRow = Math.floor((Utils.getWindowWidth() * 0.7) / RoomDevice.DEFAULT_DEVICE_WIDTH);
             for (let i = 0; i < this.devices.length; i++) {
-                if ((i * RoomDevice.DEFAULT_DEVICE_WIDTH) < Config.getWindowWidth() * 0.7) {
+                if ((i * RoomDevice.DEFAULT_DEVICE_WIDTH) < Utils.getWindowWidth() * 0.7) {
                     deviceRow.pushComponents(this.devices[i]);
                 }
                 else {

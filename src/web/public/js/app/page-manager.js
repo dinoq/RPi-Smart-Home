@@ -3,20 +3,21 @@ import { BaseError } from "../errors/base-error.js";
 import { PageNotExistInPageManagerError } from "../errors/page-errors.js";
 import { Config } from "./config.js";
 import { Singleton } from "./singleton.js";
+import { Utils } from "./utils.js";
 export class PageManager extends Singleton {
     constructor() {
         super();
         this.activePageIndex = 0;
         this.activePage = null;
         this.resizePages = () => {
-            this.pageManagerComponent.style.width = Config.getWindowWidth(true);
-            this.pageManagerComponent.style.height = Config.getWindowHeight(true);
+            this.pageManagerComponent.style.width = Utils.getWindowWidth(true);
+            this.pageManagerComponent.style.height = Utils.getWindowHeight(true);
             this.pages.forEach((child, index, array) => {
                 let childStyle = child.style;
-                childStyle.width = Config.getWindowWidth(true);
-                childStyle.height = Config.getWindowHeight(true);
+                childStyle.width = Utils.getWindowWidth(true);
+                childStyle.height = Utils.getWindowHeight(true);
                 if (index != this.activePageIndex) {
-                    childStyle.left = Config.getWindowWidth(true);
+                    childStyle.left = Utils.getWindowWidth(true);
                 }
             });
         };
@@ -26,6 +27,9 @@ export class PageManager extends Singleton {
         AbstractComponent.appendComponentsToDOMElements(document.body, this.pageManagerComponent);
         this.resizePages();
         window.addEventListener('resize', this.resizePages);
+    }
+    static getInstance() {
+        return super.getInstance();
     }
     addPage(page, key) {
         if (this.pages.indexOf(page) != -1) {
@@ -51,7 +55,7 @@ export class PageManager extends Singleton {
             page.style.left = "0px";
         }
         else {
-            page.style.left = Config.getWindowWidth(true);
+            page.style.left = Utils.getWindowWidth(true);
             //page.style.display = "none";
         }
     }
@@ -74,11 +78,11 @@ export class PageManager extends Singleton {
                     let recentActiveStyle = this.activePage.style;
                     recentActiveStyle.transition = "left " + Config.defaultTransitionTime + "ms";
                     setTimeout(() => { recentActiveStyle.transition = ""; }, Config.defaultTransitionTime);
-                    recentActiveStyle.left = "-" + Config.getWindowWidth(true);
+                    recentActiveStyle.left = "-" + Utils.getWindowWidth(true);
                     this.activePage = this.pages[page];
                     this.activePageIndex = page;
                     let actualActiveStyle = this.activePage.style;
-                    actualActiveStyle.left = Config.getWindowWidth(true);
+                    actualActiveStyle.left = Utils.getWindowWidth(true);
                     setTimeout(() => {
                         actualActiveStyle.transition = "left " + Config.defaultTransitionTime + "ms";
                         setTimeout(() => { actualActiveStyle.transition = ""; }, Config.defaultTransitionTime);
@@ -86,7 +90,7 @@ export class PageManager extends Singleton {
                     }, 0);
                 }
                 else {
-                    this.activePage.style.left = Config.getWindowWidth(true);
+                    this.activePage.style.left = Utils.getWindowWidth(true);
                     this.activePage = this.pages[page];
                     this.activePageIndex = page;
                     this.activePage.style.left = "0px";
@@ -94,11 +98,12 @@ export class PageManager extends Singleton {
             }
             else {
                 new PageNotExistInPageManagerError(page, this.pages.length, true);
+                return;
             }
         }
         else if (typeof page == "string") {
             if (this.containsPageKey(page)) {
-                this.activePage.style.left = Config.getWindowWidth(true);
+                this.activePage.style.left = Utils.getWindowWidth(true);
                 this.activePage = this.getPageByKey(page);
                 this.activePageIndex = this.getIndexByKey(page);
                 this.activePage.style.left = "0px";
@@ -112,8 +117,16 @@ export class PageManager extends Singleton {
             }
             else {
                 new PageNotExistInPageManagerError(page, this.pages.length, true);
+                return;
             }
         }
+        this.pages.forEach(page => {
+            if (page == this.activePage)
+                page.style.display = "block";
+            else
+                page.style.display = "none";
+        });
+        //this.styleActivePage();
     }
 }
 export class PageManagerComponent extends AbstractComponent {

@@ -12,7 +12,7 @@ import { EventManager } from "../../app/event-manager.js";
 
 export class HamburgerMenu {
     private hamburgerIcon: MenuIcon;
-    itemsContainer: MenuItemsContainer;    
+    itemsContainer: MenuItemsContainer;
     componentConnected: boolean = false;
 
     constructor(componentProps?: IComponentProperties) {
@@ -21,13 +21,13 @@ export class HamburgerMenu {
         }));*/
 
         this.itemsContainer = new MenuItemsContainer();
-        for(const title of HamburgerMenu.MENU_TITLES){
-            let item = new MenuItem({innerText: title});
+        for (const title of HamburgerMenu.MENU_TITLES) {
+            let item = new MenuItem({ innerText: title });
             this.itemsContainer.addMenuItem(item);
         }
         this.hamburgerIcon = new MenuIcon();
         this.addListeners();
-        
+
     }
 
     disconnectComponent() {
@@ -41,16 +41,6 @@ export class HamburgerMenu {
         this.show(false, false);
     }
 
-    static MENU_CONTENT = `
-    <img src="img/menu.png"></img>
-    <menu-items-container>
-        <menu-item>Domů</menu-item>
-        <menu-item>Podmínky</menu-item>
-        <menu-item>Nastavení</menu-item>
-        <menu-item>Odhlásit se</menu-item>
-    </menu-items-container>
-    `;
-
     static MENU_HREFS = [
         Paths.HOME,
         Paths.CONDITIONS,
@@ -62,6 +52,7 @@ export class HamburgerMenu {
         "Domů",
         "Podmínky",
         "Nastavení",
+        "Maximalizovat okno",
         "Odhlásit se"
     ];
 
@@ -97,14 +88,14 @@ export class HamburgerMenu {
 
 
     //@overrride
-    addListeners(): void {        
-        this.hamburgerIcon.addEventListener("click", () => { 
+    addListeners(): void {
+        this.hamburgerIcon.addEventListener("click", () => {
             EventManager.waitIfBlocked()
-            .then(()=>{
-                this.toggle(true);
-            }).catch((err)=>{
-                console.error(err);
-            })
+                .then(() => {
+                    this.toggle(true);
+                }).catch((err) => {
+                    console.error(err);
+                })
         });
         window.addEventListener("resize", this.resize);
 
@@ -116,7 +107,17 @@ export class HamburgerMenu {
                 if (i == (links.length - 1)) {
                     Firebase.logout();
                 }
-                URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
+                if (i == (links.length - 2)) { // Requested fullscreen
+                    if (links[i].innerText.toUpperCase().includes("MAX")) {
+                        links[i].innerText = "Zmenšit okno"
+                        document.documentElement.requestFullscreen();
+                    } else {
+                        links[i].innerText = HamburgerMenu.MENU_TITLES[HamburgerMenu.MENU_TITLES.length - 2];
+                        document.exitFullscreen();
+                    }
+                } else {
+                    URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
+                }
                 this.toggle();
             });
 
@@ -131,37 +132,35 @@ export class HamburgerMenu {
 }
 
 
-export class MenuItemsContainer extends AbstractComponent{    
+export class MenuItemsContainer extends AbstractComponent {
     static tagName = "menu-items-container";
-    
+
     private menuItems: Array<MenuItem>;
-    constructor(componentProps?: IComponentProperties){
+    constructor(componentProps?: IComponentProperties) {
         super(componentProps);
         //this.style.width="min-content";
     }
 
-    addMenuItem(item: AbstractComponent){
-        this.appendChild(item);    
+    addMenuItem(item: AbstractComponent) {
+        this.appendChild(item);
     }
-    
+
 }
 
 
-export class MenuIcon extends AbstractComponent{
+export class MenuIcon extends AbstractComponent {
     static tagName = "menu-icon";
 
-    set src(val){
+    set src(val) {
         this.querySelector("img").src = val;
     }
     constructor(componentProps?: IComponentProperties) {
         super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString(),
-            position: "absolute",
-            top: "5px",
             innerHTML: `<img src="img/menu.png">`
         }));
 
-        
-    
+
+
     }
 }

@@ -82,21 +82,24 @@ export class HamburgerMenu {
                 if (i == (links.length - 1)) {
                     Firebase.logout();
                 }
-                URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
+                if (i == (links.length - 2)) { // Requested fullscreen
+                    if (links[i].innerText.toUpperCase().includes("MAX")) {
+                        links[i].innerText = "Zmenšit okno";
+                        document.documentElement.requestFullscreen();
+                    }
+                    else {
+                        links[i].innerText = HamburgerMenu.MENU_TITLES[HamburgerMenu.MENU_TITLES.length - 2];
+                        document.exitFullscreen();
+                    }
+                }
+                else {
+                    URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
+                }
                 this.toggle();
             });
         }
     }
 }
-HamburgerMenu.MENU_CONTENT = `
-    <img src="img/menu.png"></img>
-    <menu-items-container>
-        <menu-item>Domů</menu-item>
-        <menu-item>Podmínky</menu-item>
-        <menu-item>Nastavení</menu-item>
-        <menu-item>Odhlásit se</menu-item>
-    </menu-items-container>
-    `;
 HamburgerMenu.MENU_HREFS = [
     Paths.HOME,
     Paths.CONDITIONS,
@@ -107,6 +110,7 @@ HamburgerMenu.MENU_TITLES = [
     "Domů",
     "Podmínky",
     "Nastavení",
+    "Maximalizovat okno",
     "Odhlásit se"
 ];
 export class MenuItemsContainer extends AbstractComponent {
@@ -123,8 +127,6 @@ export class MenuIcon extends AbstractComponent {
     constructor(componentProps) {
         super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString(),
-            position: "absolute",
-            top: "5px",
             innerHTML: `<img src="img/menu.png">`
         }));
     }

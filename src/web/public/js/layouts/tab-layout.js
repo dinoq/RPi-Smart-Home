@@ -14,10 +14,10 @@ export class TabLayout extends AbstractComponent {
             this.tabsRow.pushComponents(tabTitle);
             this.contentRow.appendDOMComponents(tab.container);
             tab.container.style.margin = "0";
-            if (tab.container.style.borderRadius) {
+            /*if(tab.container.style.borderRadius){//Left-Up corner
                 let tmpVal = tab.container.style.borderRadius;
                 tab.container.style.borderRadius = `0px ${tmpVal} ${tmpVal} ${tmpVal}`;
-            }
+            }*/
             tab.container.style.width = "100%";
         });
         this.appendComponents([this.tabsRow, this.contentRow]);

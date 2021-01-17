@@ -62,6 +62,13 @@ mistnost:
 --"index" : number,
 --"name" : string
 
+___________________________
+Do databáze doplnit:
+do ESP - type (bude esp8266 např...podle typu pak v klientovi budou v nastavení přístupné piny)
+Action nebo tak něco do rootu - bude tam např. searching ESP
+
+
+___________________________
 SMAZAT:
 ___________________________
 DetailFrame pro rooms:
@@ -71,11 +78,21 @@ img offset
 
 
 DetailFrame pro sensors:
-icon type
+Modul
+vstup => zobrazit typ (Analogový/digitální senzor)
+icon type=>náhled
 name
 unit
 
 DetailFrame pro devices:
-icon type
+Modul
+výstup => zobrazit typ (Analogový/digitální senzor)
+icon type=>náhled
+name
+
+DetailFrame pro ESP:
+Identifikátor (získaný z IP na text)-needitovatelné
+typ (např ESP8266)-needitovatelné =>zobrazit vybavení(V/V piny, počet pwm...)
 name
 ___________________________
+

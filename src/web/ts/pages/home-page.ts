@@ -4,6 +4,7 @@ import { Firebase } from "../app/firebase.js";
 import { IComponentProperties } from "../components/component.js";
 import { LoginComponent } from "../components/forms/login-form.js";
 import { BasePage } from "./base-page.js";
+import { PageManager } from "../app/page-manager.js";
 
 export class HomePage extends BasePage {
     static tagName = "home-page";
@@ -50,7 +51,7 @@ export class HomePage extends BasePage {
             for (let i = 0; i < this.roomsCards.length ; i++) {
                 const roomCard = this.roomsCards[i];
                 roomCard.updateCard(rooms[i]);
-            }      
+            }
             
         })
 

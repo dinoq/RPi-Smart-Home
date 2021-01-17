@@ -1,4 +1,5 @@
 import { Config } from "../../app/config.js";
+import { Utils } from "../../app/utils.js";
 import { AbstractComponent, IComponentProperties } from "../component.js";
 
 export class BaseDialog extends AbstractComponent {
@@ -14,8 +15,8 @@ export class BaseDialog extends AbstractComponent {
             </div>
         `;
         let overlay = <HTMLElement>this.overlayContainer.querySelector(".overlay");
-        overlay.style.width = <string>Config.getWindowWidth(true);
-        overlay.style.height = <string>Config.getWindowHeight(true);
+        overlay.style.width = <string>Utils.getWindowWidth(true);
+        overlay.style.height = <string>Utils.getWindowHeight(true);
     }
 }
 
