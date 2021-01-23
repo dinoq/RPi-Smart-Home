@@ -11,7 +11,7 @@ export class FrameDetail extends AbstractComponent {
         this.innerHTML = `        
             <div class="form-wrapper">
                 <form class="form" action="/dashboard" method="POST">
-                    <div class="editing-name">Pro editaci klikněte na název místnosti/senzoru/zařízení</div>
+                    <div class="editing-name">Pro editaci klikněte na název místnosti/snímače/zařízení</div>
                     <div class="detail-frame-rows" style="width: 100%;"></div>
                 </form>
             </div>        
@@ -33,6 +33,11 @@ export class FrameDetail extends AbstractComponent {
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("room-name", "Název místnosti", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("img-src", "URL obrázku na pozadí", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("img-offset", "Posun obrázku", INPUT_TYPES.TEXT_FIELD));
+            }
+            else if (type == FrameListTypes.MODULES) {
+                this.rows.innerHTML = "";
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-id", "ID modulu", INPUT_TYPES.TEXT_FIELD));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-name", "Název modulu", INPUT_TYPES.TEXT_FIELD));
             }
             else if (type == FrameListTypes.SENSORS) {
                 this.rows.innerHTML = "";

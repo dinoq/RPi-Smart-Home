@@ -2,15 +2,15 @@ import { Singleton } from "./singleton.js";
 
 export class EventManager extends Singleton{
 
-    private _blocked = false;
+    private _blockedByUnsavedChanges = false;
     
-    public static set blocked(val : boolean) {
+    public static set blockedByUnsavedChanges(val : boolean) {
         let eManager = EventManager.getInstance();
-        eManager._blocked = val;
+        eManager._blockedByUnsavedChanges = val;
     }
-    public static get blocked() {
+    public static get blockedByUnsavedChanges() {
         let eManager = EventManager.getInstance();
-        return eManager._blocked;
+        return eManager._blockedByUnsavedChanges;
     }
     
     private callbacks: any = {};
@@ -21,14 +21,14 @@ export class EventManager extends Singleton{
         return <EventManager>super.getInstance();
     }
 
-    public static async waitIfBlocked(){
+    public static async waitIfUnsavedChanges(){
         let eManager = EventManager.getInstance();
         return new Promise((resolve, reject)=>{
-            if(EventManager.blocked){
-                eManager.addEventListener("unblocked", ()=>{
+            if(EventManager.blockedByUnsavedChanges){
+                eManager.addListener("changesSaved", ()=>{
                     resolve(null);
                 });
-                eManager.addEventListener("cancelEvents", ()=>{
+                eManager.addListener("changesCanceled", ()=>{
                     reject("Action Canceled");
                 });
             }else{
@@ -37,20 +37,20 @@ export class EventManager extends Singleton{
         })
     }
 
-    public addEventListener(event: string, callback) {
+    public addListener(event: string, callback) {
         if(!this.callbacks[event]){
             this.callbacks[event] = new Array();
         }
         this.callbacks[event].push(callback);
     }
 
-    public static dispatchEvent(event: string){
+    public static dispatchEvent(eventName: string){
         let eManager = EventManager.getInstance();
-        if(!eManager.callbacks[event])
+        if(!eManager.callbacks[eventName])
             return;
-        eManager.callbacks[event].forEach(callback => {
+        eManager.callbacks[eventName].forEach(callback => {
             callback();
         });
-        eManager.callbacks[event] = undefined;
+        eManager.callbacks[eventName] = undefined;
     }
 }

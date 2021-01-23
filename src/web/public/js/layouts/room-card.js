@@ -14,7 +14,7 @@ export class RoomCard extends AbstractComponent {
             this.style.backgroundSize = "cover";
             this.style.backgroundPositionY = data.img.offset + "px";
             let devices = data.devices;
-            let ordered = RoomCard.getOrderedINOUT(devices, this.roomName);
+            let ordered = this.getOrderedINOUT(devices, this.roomName);
             let orderedIN = ordered.orderedIN;
             let orderedOUT = ordered.orderedOUT;
             //console.log('orderedIN: ', orderedIN);
@@ -150,10 +150,10 @@ export class RoomCard extends AbstractComponent {
         //Append both stacks
         this.layout.appendComponents([this.leftStack, this.rightStack]);
         this.appendComponents(this.layout);
-        this.roomName = layoutProps.roomDBName;
+        this.roomName = layoutProps.dbID;
         //Firebase.addDBListener("/rooms/" + this.roomName, this.updateCard)
     }
-    static getOrderedINOUT(devices, roomName) {
+    getOrderedINOUT(devices, roomName) {
         let orderedIN = new Array();
         let orderedOUT = new Array();
         for (const espName in devices) {

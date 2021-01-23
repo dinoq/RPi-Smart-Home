@@ -1,27 +1,31 @@
-import { AbstractComponent, BaseComponent } from "../components/component.js";
+import { AbstractComponent } from "../components/component.js";
+import { BaseLayout } from "./base-layout.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 export class TabLayout extends AbstractComponent {
     constructor(tabs, layoutProps) {
         super(layoutProps);
+        this.active = -1;
         this.tabsRow = new HorizontalStack({});
         this.contentRow = new HorizontalStack({ height: "100%" });
-        this.tabs = tabs;
-        tabs.forEach(tab => {
-            let tabTitle = new BaseComponent({ innerText: tab.title, classList: "tab" });
-            tabTitle.addEventListener("click", (event) => {
-                this.setActive(Array.from(this.tabsRow.childNodes).indexOf(tabTitle));
+        if (tabs) {
+            tabs.forEach(tab => {
+                this.addTab(tab.title, tab.container);
             });
-            this.tabsRow.pushComponents(tabTitle);
-            this.contentRow.appendDOMComponents(tab.container);
-            tab.container.style.margin = "0";
-            /*if(tab.container.style.borderRadius){//Left-Up corner
-                let tmpVal = tab.container.style.borderRadius;
-                tab.container.style.borderRadius = `0px ${tmpVal} ${tmpVal} ${tmpVal}`;
-            }*/
-            tab.container.style.width = "100%";
-        });
+            this.setActive(0);
+        }
         this.appendComponents([this.tabsRow, this.contentRow]);
-        this.setActive(0);
+    }
+    addTab(title, content) {
+        let tabTitle = new BaseLayout({ innerText: title, classList: "tab" });
+        this.tabsRow.pushComponents(tabTitle);
+        tabTitle.addEventListener("click", (event) => {
+            this.setActive(Array.from(this.tabsRow.childNodes).indexOf(tabTitle));
+        });
+        this.contentRow.appendDOMComponents(content);
+        content.style.margin = "0";
+        content.style.width = "100%";
+        if (this.active == -1)
+            this.setActive(0);
     }
     setActive(tabIndex) {
         this.tabsRow.childNodes.forEach((element, index) => {

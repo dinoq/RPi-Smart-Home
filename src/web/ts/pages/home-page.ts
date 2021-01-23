@@ -19,7 +19,7 @@ export class HomePage extends BasePage {
             let rooms = new Array();
             for(const roomDBName in data){
                 let room = data[roomDBName];
-                room.dbName = roomDBName;
+                room.dbID = roomDBName;
                 rooms.push(room);
             }
 
@@ -41,7 +41,7 @@ export class HomePage extends BasePage {
                 this.roomsCards = new Array();
                 this.roomsIndexes = new Array();
                 for (let i = 0; i < rooms.length; i++) {
-                    const roomCard = new RoomCard({ roomDBName: rooms[i].dbName });
+                    const roomCard = new RoomCard({ dbID: rooms[i].dbID });
                     this.appendComponents(roomCard);
                     this.roomsCards.push(roomCard);
                     this.roomsIndexes.push(rooms[i].index)

@@ -41,4 +41,26 @@ export class Utils {
             return height;
         }
     }
+            
+    public static itemIsAnyFromEnum(item: any, fromEnum: any, values: string[]):boolean{
+        return values.some(value=>{
+            return (fromEnum[item] == value)
+        })
+    }
+
+    public static forEachLoop(arrayOrObject: Array<any> | Object, cycleBody: (item, index?, array?)=>void){
+        if(!arrayOrObject)
+            return;
+
+        let i = 0;
+        if(Array.isArray(arrayOrObject)){
+            for(; i < arrayOrObject.length; i++){
+                cycleBody(arrayOrObject[i], i, arrayOrObject);
+            }
+        }else{
+            for(const propertyName in arrayOrObject){
+                cycleBody(arrayOrObject[propertyName], i++, arrayOrObject);
+            }
+        }
+    }
 }

@@ -294,20 +294,19 @@ room-card{
         }
 
         &:hover:not(.no-hover){
-            background-color: #d5d5d5;
             cursor: pointer;
+            &:not(.active){
+                background-color: #d5d5d5;
+            }
         }
+
         &.active{
             background-color: var(--default-blue-color);
             color: white;
         }
 
         >.components-wrapper{
-            > *:hover:not(.room-name):not(.text):not(.btn-wrapper){
-                opacity: 0.7;
-            }
-            
-            .btn:hover{
+            > *:hover:not(.room-name):not(.text):not(.btn-wrapper), .btn:hover{
                 opacity: 0.7;
             }
         }
@@ -342,6 +341,7 @@ $anim-duration: 1s;
 
 tab-layout{
     margin: 10px 5px;
+    margin-bottom: 0px;
     
     $tab-border: 1px solid #959595;
     .tab {
@@ -366,21 +366,26 @@ tab-layout{
     &>horizontal-stack:nth-child(2) {
         border: 2px solid #00aaff;
         padding: 5px;
+        padding-bottom: 2px;
         background: #0000001a;
     }
 }
 
 settings-page{
-    .settings.save-btn{    
+    .settings-btns-stack{
         position: absolute;
-        border: 1px solid var(--default-blue-color);
         top: 5px;
-        height: 36px;
-        border-radius: 15px;
-        width: 30%;
-        
-        &:hover{
-            background-color: #d5d5d5;
+        width: 100%;
+
+        .save-btn{    
+            border: 1px solid var(--default-blue-color);
+            height: 36px;
+            border-radius: 15px;
+            padding: 0 20px;
+            
+            &:hover{
+                background-color: #d5d5d5;
+            }
         }
     }
 

@@ -66,12 +66,9 @@ export class HamburgerMenu {
     //@overrride
     addListeners() {
         this.hamburgerIcon.addEventListener("click", () => {
-            EventManager.waitIfBlocked()
-                .then(() => {
-                this.toggle(true);
-            }).catch((err) => {
-                console.error(err);
-            });
+            EventManager.waitIfUnsavedChanges()
+                .then(() => this.toggle(true))
+                .catch((err) => console.error(err));
         });
         window.addEventListener("resize", this.resize);
         //Add links
@@ -102,13 +99,11 @@ export class HamburgerMenu {
 }
 HamburgerMenu.MENU_HREFS = [
     Paths.HOME,
-    Paths.CONDITIONS,
     Paths.SETTINGS,
     Paths.LOGIN
 ];
 HamburgerMenu.MENU_TITLES = [
     "Domů",
-    "Podmínky",
     "Nastavení",
     "Maximalizovat okno",
     "Odhlásit se"

@@ -52,12 +52,12 @@ export class RoomCard extends AbstractComponent {
         this.appendComponents(this.layout);
 
 
-        this.roomName = layoutProps.roomDBName;
+        this.roomName = layoutProps.dbID;
         //Firebase.addDBListener("/rooms/" + this.roomName, this.updateCard)
 
     }
 
-    static getOrderedINOUT(devices, roomName){
+    getOrderedINOUT(devices, roomName){
         let orderedIN = new Array();
         let orderedOUT = new Array();
 
@@ -89,7 +89,7 @@ export class RoomCard extends AbstractComponent {
 
 
         let devices = data.devices;
-        let ordered = RoomCard.getOrderedINOUT(devices, this.roomName);
+        let ordered = this.getOrderedINOUT(devices, this.roomName);
         let orderedIN = ordered.orderedIN;
         let orderedOUT = ordered.orderedOUT;
         //console.log('orderedIN: ', orderedIN);
@@ -218,7 +218,7 @@ export class RoomCard extends AbstractComponent {
 
 
 export interface RoomCardProps extends IComponentProperties {
-    roomDBName: string
+    dbID: string
 }
 
 export class Slider extends AbstractComponent {

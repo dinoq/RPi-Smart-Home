@@ -39,8 +39,8 @@ export class Firebase extends Singleton {
     }
     static getFullPath(dbPath) {
         let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;
-        ;
-        return Firebase.getInstance().uid + path;
+        let slash = (path.lastIndexOf("/") == path.length - 1) ? "" : "/";
+        return Firebase.getInstance().uid + path + slash;
     }
     static addDBListener(dbPath, callback) {
         let dbReference = firebase.database().ref(Firebase.getFullPath(dbPath));
@@ -50,14 +50,41 @@ export class Firebase extends Singleton {
                 callback(data);
         });
     }
-    static getDBData(dbPath, callback) {
+    static getDBData(dbPath) {
+        return new Promise((resolve, reject) => {
+            firebase.database().ref(Firebase.getFullPath(dbPath)).once('value')
+                .then((snapshot) => {
+                resolve(snapshot.val());
+            })
+                .catch((value) => {
+                reject(new Error("Error in Firebase.getDBData()"));
+            });
+        });
+        /**
+         *
         return firebase.database().ref(Firebase.getFullPath(dbPath)).once('value').then((snapshot) => {
             const data = snapshot.val();
-            if (data)
+            if(data)
                 callback(data);
         });
+         *
+         */
     }
     static updateDBData(dbPath, updates) {
-        firebase.database().ref(Firebase.getFullPath(dbPath) + "/").update(updates);
+        return firebase.database().ref(Firebase.getFullPath(dbPath)).update(updates);
+    }
+    static deleteDBData(dbPath) {
+        return firebase.database().ref(Firebase.getFullPath(dbPath)).remove();
+    }
+    static pushNewDBData(dbPath, data) {
+        return firebase.database().ref().child(Firebase.getFullPath(dbPath)).push(data);
+    }
+    static pushNewDBDataAndUpdate(dbPath, updates) {
+        /* let k = Firebase.pushNewDBData(dbPath);
+         let prom = firebase.database().ref(Firebase.getFullPath(dbPath)+k).update(updates);
+         return {
+             key: k,
+             promise: prom
+         };*/
     }
 }

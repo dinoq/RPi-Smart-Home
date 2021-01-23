@@ -50,8 +50,9 @@ export class Firebase extends Singleton {
     }
 
     static getFullPath(dbPath: string){//Adds uid/ at start of dbPath parameter
-        let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;;
-        return Firebase.getInstance().uid + path;
+        let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;
+        let slash = (path.lastIndexOf("/") == path.length-1)? "": "/";
+        return Firebase.getInstance().uid + path + slash;
     }
 
     static addDBListener(dbPath: string, callback) {
@@ -64,16 +65,46 @@ export class Firebase extends Singleton {
 
     }
 
-    static getDBData(dbPath: string, callback) {
+    static getDBData(dbPath: string): Promise<any> {
+        return new Promise((resolve, reject)=>{
+            firebase.database().ref(Firebase.getFullPath(dbPath)).once('value')
+            .then((snapshot) => {
+                resolve(snapshot.val());
+            })
+            .catch((value) => {
+                reject(new Error("Error in Firebase.getDBData()"));
+            })
+        }) 
+        /**
+         * 
         return firebase.database().ref(Firebase.getFullPath(dbPath)).once('value').then((snapshot) => {
             const data = snapshot.val();
             if(data)
                 callback(data);
         });
+         * 
+         */
     }
 
-    static updateDBData(dbPath: string, updates: object) {
-        firebase.database().ref(Firebase.getFullPath(dbPath)+"/").update(updates);
+    static updateDBData(dbPath: string, updates: object): Promise<any> {
+        return firebase.database().ref(Firebase.getFullPath(dbPath)).update(updates);
+    }
+
+    static deleteDBData(dbPath: string): Promise<any> {
+        return firebase.database().ref(Firebase.getFullPath(dbPath)).remove();
+    }
+
+    static pushNewDBData(dbPath: string, data: object): Promise<any> {
+        return firebase.database().ref().child(Firebase.getFullPath(dbPath)).push(data);
+    }
+
+    static pushNewDBDataAndUpdate(dbPath: string, updates: object)/*: { key: string, promise: Promise<any> }*/ {
+       /* let k = Firebase.pushNewDBData(dbPath);
+        let prom = firebase.database().ref(Firebase.getFullPath(dbPath)+k).update(updates);
+        return {
+            key: k,
+            promise: prom
+        };*/
     }
 }
 

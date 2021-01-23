@@ -66,11 +66,7 @@ export class AbstractComponent extends Component {
             }
         }
         if (componentProps.connectToParent) {
-            let replace = false;
-            if (componentProps.replaceParentContent) {
-                replace = componentProps.replaceParentContent;
-            }
-            AbstractComponent.connectComponent(componentProps.connectToParent, this, componentProps.replaceParentContent);
+            AbstractComponent.connectComponent(componentProps.connectToParent, this);
         }
         if (componentProps.innerText)
             this.innerText = componentProps.innerText;
@@ -125,38 +121,38 @@ export class AbstractComponent extends Component {
         this.componentConnected = false;
     }
     // Appends one or more custom element (successor of AbstractComponent) to this. For appending pre-defined DOM elements (like div, table etc.) use method appendDOMComponents()
-    appendComponents(components, replaceContent = false) {
+    appendComponents(components, position = -1) {
         if (Array.isArray(components)) {
             components.forEach(component => {
-                AbstractComponent.connectComponent(this, component, replaceContent);
+                AbstractComponent.connectComponent(this, component, position);
             });
         }
         else {
-            AbstractComponent.connectComponent(this, components, replaceContent);
+            AbstractComponent.connectComponent(this, components, position);
         }
     }
     // Appends one or more HTMLElement to this. For appending custom elements use method appendComponents()
-    appendDOMComponents(components, replaceContent = false) {
+    appendDOMComponents(components, position = -1) {
         if (Array.isArray(components)) {
             components.forEach(component => {
-                AbstractComponent.connectComponent(this, component, replaceContent);
+                AbstractComponent.connectComponent(this, component, position);
             });
         }
         else {
-            AbstractComponent.connectComponent(this, components, replaceContent);
+            AbstractComponent.connectComponent(this, components, position);
         }
     }
-    static appendComponentsToDOMElements(parent, components, replaceContent = false) {
+    static appendComponentsToDOMElements(parent, components, position = -1) {
         if (Array.isArray(components)) {
             components.forEach(component => {
-                AbstractComponent.connectComponent(parent, component, replaceContent);
+                AbstractComponent.connectComponent(parent, component, position);
             });
         }
         else {
-            AbstractComponent.connectComponent(parent, components, replaceContent);
+            AbstractComponent.connectComponent(parent, components, position);
         }
     }
-    static connectComponent(parent, componentToConnect, replaceContent = false) {
+    static connectComponent(parent, componentToConnect, position = -1) {
         let parentComponent;
         if (typeof parent == "string") {
             parentComponent = document.getElementById(parent);
@@ -166,10 +162,10 @@ export class AbstractComponent extends Component {
         }
         if (!parentComponent)
             return;
-        if (replaceContent) {
-            parentComponent.innerHTML = "";
-        }
-        parentComponent.appendChild(componentToConnect);
+        if (position == -1)
+            parentComponent.appendChild(componentToConnect);
+        else
+            parentComponent.insertBefore(componentToConnect, parentComponent.children[position]);
         if (componentToConnect instanceof AbstractComponent) {
             componentToConnect.parent = parentComponent;
             componentToConnect.componentConnected = true;
