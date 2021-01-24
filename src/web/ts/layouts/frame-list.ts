@@ -115,6 +115,20 @@ export class FrameListItem extends AbstractComponent {
     text: string;
     showArrows: { up: boolean, down: boolean };
 
+    private _active: boolean = false;
+
+    get active(){
+        return this._active;
+    }
+    set active(val){
+        this._active = val;
+        if(val)
+            this.classList.add("active");
+        else
+            this.classList.remove("active");
+        
+    }
+
     constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
         this.components = new Array();

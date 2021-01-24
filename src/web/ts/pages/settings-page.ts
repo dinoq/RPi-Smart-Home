@@ -15,7 +15,6 @@ import { EventManager } from "../app/event-manager.js";
 import { URLManager } from "../app/url-manager.js";
 import { PageManager } from "../app/page-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
-
 export class SettingsPage extends BasePage {
     static tagName = "settings-page";
 
@@ -31,9 +30,25 @@ export class SettingsPage extends BasePage {
     private saveBtnContainer: HorizontalStack;
     private _readyToSave: boolean = false;
     private detail: FrameDetail;
-    private itemInDetail: { item: any, parentListType: FrameListTypes };
-    private selectedItemsIDHierarchy: number[] = new Array(3);
+    private itemInDetail: { item: FrameListItem, parentListType: FrameListTypes };
+    private selectedItemsIDHierarchy: string[] = new Array(3);
     rooms: any[];
+
+
+    defaultItemsStrings = {
+        noItem: [
+            "Žádná místnost v databázi. Zkuste nějakou přidat.",
+            "Nenalezeny žádné moduly pro zvolenou místnost. Zkuste nějaké přidat",
+            "Nenalezeny žádné snímače pro zvolený modul. Zkuste nějaké přidat",
+            "Nenalezeny žádná zařízení pro zvolený modul. Zkuste nějaké přidat"
+        ],
+        choseItem: [
+            "Vyčkejte, načítají se data z databáze",
+            "Vyberte místnost",
+            "Vyberte modul",
+            "Vyberte modul"
+        ]
+    };
 
 
     set readyToSave(val) {
@@ -68,14 +83,14 @@ export class SettingsPage extends BasePage {
         this.modulesTabPanel = new TabLayout(null);
         this.sensorsDevicesTabPanel = new TabLayout(null);
 
-        this.modulesList = new FrameList(FrameListTypes.MODULES);
-        this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, "Vyberte místnost");
         this.roomsList = new FrameList(FrameListTypes.ROOMS);
-        this.roomsList.initDefaultItem(FrameListTypes.TEXT_ONLY, "Vyčkejte, načítají se data z databáze");
+        this.roomsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.ROOMS));
+        this.modulesList = new FrameList(FrameListTypes.MODULES);
+        this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
         this.sensorsList = new FrameList(FrameListTypes.SENSORS);
-        this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, "Vyberte modul");
+        this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
         this.devicesList = new FrameList(FrameListTypes.DEVICES);
-        this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, "Vyberte modul");
+        this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
 
         // Add tabs to all Tab Panels
         this.sensorsDevicesTabPanel.addTab("Snímače", this.sensorsList);
@@ -97,11 +112,11 @@ export class SettingsPage extends BasePage {
                 await this.showSaveDialog();
             }
         });
-
     }
 
     async initPageFromDB() {
         let data = await Firebase.getDBData("/rooms/");
+
         let rooms = new Array();
         for (const roomDBName in data) {
             let room = data[roomDBName];
@@ -116,41 +131,43 @@ export class SettingsPage extends BasePage {
     }
 
     saveChanges = async (event) => {
-        if (this.itemInDetail.parentListType == FrameListTypes.ROOMS) {
+        let update = {};
+        let path = "";
+        const listType = this.itemInDetail.parentListType;
+        if (listType == FrameListTypes.ROOMS) {
             let name = (<HTMLInputElement>document.getElementById("room-name")).value;
             let imgSrc = (<HTMLInputElement>document.getElementById("img-src")).value;
             let imgOffset = parseInt((<HTMLInputElement>document.getElementById("img-offset")).value);
             imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
             let itemToUpdate = { name: name, img: { src: imgSrc, offset: imgOffset } }
             let path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
-            Firebase.updateDBData(path, itemToUpdate);
-
-            let dbID = this.itemInDetail.item.dbCopy.dbID;
-
-            // Re-inicialize page
-            await this.initPageFromDB();
-            this.detail.initialize();
-            this.modulesList.initialize();
-            this.sensorsList.initialize();
-            this.devicesList.initialize();
-
-            //Select room, which was edited (due to re-inicialization it was de-activated)
-            this.selectItemByID(dbID)
         }
+        if(Object.keys(update).length != 0){ // If is there something to update...
+            await Firebase.updateDBData(path, update);
+            let dbID = this.itemInDetail.item.dbCopy.dbID;
+            // Re-inicialize page
+            await this.pageReinicialize();
+        }
+
         this.readyToSave = false;
     }
 
-    async selectItemByID(dbID){
-        let anyItem = undefined;
+    async selectItemByID(dbID, timeLimit: number = 1000) {
+        try{
+            let anyItem = await this.getItemByDbID(dbID, timeLimit);
+            await this.itemClicked(null, anyItem);
+        }catch (err){
+            throw new Error(err);
+        }
+    }
 
+    async getItemByDbID(dbID, timeLimit: number = 1000): Promise<FrameListItem>{
+        let anyItem: FrameListItem = undefined;
         let sleep = undefined;
-        let timeLimit = setTimeout(()=>{ // Set limit for searching to 5 sec
-            if(sleep)
-                clearTimeout(sleep); // We must clear sleep timeout, otherwise it will continue executing (after timeout) of itemClicked method (even though thrown error)
-            throw  new Error("Time limit: " + dbID);
-        }, 5000);
+        let sleepTime = 10;
+        let cycle = 0;
 
-        while (!anyItem) {// When this method is called more than one (selecting next items in hierarchy), we need some delay to build DOM tree, so we check if item was found and if not, wait for little bit of time and try again.
+        while (!anyItem && (++cycle * sleepTime) <= timeLimit) {// When this method is called more than one (selecting next items in hierarchy), we need some delay to build DOM tree, so we check if item was found and if not, wait for little bit of time and try again.
             let activeRoom = <FrameListItem>Array.from(this.roomsList.children).find((value, index, array) => {
                 return (<FrameListItem>value).dbCopy.dbID == dbID;
             });
@@ -163,13 +180,17 @@ export class SettingsPage extends BasePage {
             let activeDevice = <FrameListItem>Array.from(this.devicesList.children).find((value, index, array) => {
                 return (<FrameListItem>value).dbCopy.dbID == dbID;
             });
-            anyItem = activeRoom||activeModule||activeSensor||activeDevice;
-            if(!anyItem){
-                await new Promise((resolve, reject) => sleep = setTimeout(resolve, 5));
+            anyItem = activeRoom || activeModule || activeSensor || activeDevice;
+            if (!anyItem) {
+                await new Promise(resolve => sleep = setTimeout(resolve, sleepTime));
             }
         }
-        clearTimeout(timeLimit);
-        await this.itemClicked(null, anyItem);
+        console.log('anyItem: ', anyItem);
+        
+        if(!anyItem)
+            return Promise.reject("Time limit of " + (timeLimit / 1000) + " seconds expired!"); 
+        return  anyItem;
+
     }
 
     /**
@@ -233,7 +254,7 @@ export class SettingsPage extends BasePage {
         return false;
     }
 
-    editSelectedItemsIDHierarchy(parentList: FrameList, item: FrameListItem){
+    editSelectedItemsIDHierarchy(parentList: FrameList, item: FrameListItem) {
         let index = 0;//default 0 = ROOMS
         switch (parentList.type) {
             case FrameListTypes.MODULES:
@@ -245,10 +266,32 @@ export class SettingsPage extends BasePage {
                 break;
         }
         this.selectedItemsIDHierarchy[index] = item.dbCopy.dbID;
-        if(index < 2) 
-            this.selectedItemsIDHierarchy.splice(index+1);
+        if (index < 2)
+            this.selectedItemsIDHierarchy.splice(index + 1);
     }
 
+    async pageReinicialize(){    
+        await this.initPageFromDB();
+        this.detail.initialize();
+        this.modulesList.initialize();
+        this.sensorsList.initialize();
+        this.devicesList.initialize();  
+        await this.selectSavedIDs();
+    }
+
+    async selectSavedIDs(){    
+        let tmpSelectedIDs = [...this.selectedItemsIDHierarchy]; // Method selectItemByID (which is called from this forEach) mainpulates with selectedItemsIDHierarchy array, so we need to work with copy
+        for(let i = 0; i < tmpSelectedIDs.length; i++){
+            let id: string = tmpSelectedIDs[i];
+            if (id) {
+                try {
+                    await this.selectItemByID(id);
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }    
+    }
 
     /**
      * Event hadler for click on any FrameListItem
@@ -268,7 +311,7 @@ export class SettingsPage extends BasePage {
 
         let parentList: FrameList = this.getItemsList(item);
 
-        if (Utils.itemIsAnyFromEnum(item.type, FrameListTypes, ARROWABLE_LISTS)) {
+        if (Utils.itemIsAnyFromEnum(item.type, FrameListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
             this.editSelectedItemsIDHierarchy(parentList, item);
         }
 
@@ -279,17 +322,17 @@ export class SettingsPage extends BasePage {
              */
             if (Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["SENSORS", "DEVICES"])) {
                 Array.from(this.sensorsList.childNodes).forEach(listItem => {
-                    (<FrameListItem>listItem).classList.remove("active");
+                    (<FrameListItem>listItem).active = false
                 });
                 Array.from(this.devicesList.childNodes).forEach(listItem => {
-                    (<FrameListItem>listItem).classList.remove("active");
+                    (<FrameListItem>listItem).active = false
                 });
             } else {//Else remove class "active" only from current list
                 Array.from(parentList.childNodes).forEach(listItem => {
-                    (<FrameListItem>listItem).classList.remove("active");
+                    (<FrameListItem>listItem).active = false
                 });
             }
-            item.classList.add("active");
+            item.active = true;
             if (parentList.type == FrameListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
                 await this.initModulesList(item);
             } else if (parentList.type == FrameListTypes.MODULES) { // We want to initialize sensors and devices only when click on room, not on sensor or device
@@ -326,8 +369,8 @@ export class SettingsPage extends BasePage {
                     itemPath = item.dbCopy.path;
                     otherItemPath = otherItem.dbCopy.path;
                 }
-                Firebase.updateDBData(itemPath, { index: newIndex })
-                Firebase.updateDBData(otherItemPath, { index: oldIndex })
+                await Firebase.updateDBData(itemPath, { index: newIndex })
+                await Firebase.updateDBData(otherItemPath, { index: oldIndex })
 
                 parentList.updatedOrderHandler();
             } else if (clickedElem == "add") {// Add item to database
@@ -347,32 +390,40 @@ export class SettingsPage extends BasePage {
                 let key = (await Firebase.pushNewDBData(item.dbCopy.parentPath, data)).key;
 
                 // Re-inicialize page and again select what was selected
-                await this.initPageFromDB();
-                this.detail.initialize();
-                this.modulesList.initialize();
-                this.sensorsList.initialize();
-                this.devicesList.initialize();
-                let tmpSelectedIDs = [...this.selectedItemsIDHierarchy];
-                await tmpSelectedIDs.forEach(async (id, index, array) => { // Method selectItemByID (which is called from this forEach) mainpulates with selectedItemsIDHierarchy array, so we need to work with copy
-                    if(id){
-                        await this.selectItemByID(id);
-                    }
-                })
-                //Init new item and add it to parent list
-                /*let newItem = new FrameListItem({ borderBottom: "1px solid var(--default-blue-color)" });
-                data.path = item.dbCopy.parentPath + key;
-                data.dbID = key;
-                newItem.initialize(FrameListTypes.ROOMS, this.itemClicked, data, (<any>data).name, { up: false, down: parentList.children.length });
-                parentList.addItems(newItem, 1);
-                parentList.updatedOrderHandler();*/
+                this.pageReinicialize();
+
             } else if (clickedElem == "delete") {
                 await Firebase.deleteDBData(item.dbCopy.path);
                 item.disconnectComponent();
                 console.log("DEL", item.dbCopy.path);
                 parentList.updatedOrderHandler();
-                if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, remove it and add default item
-                    parentList.clearItems();
-                    parentList.addItems(parentList.defaultItem);
+                if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, add default item
+                    parentList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
+                }
+                
+                if(item.active){// We removed item, which was in detailt or (TODO!) item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item list (maybe do via dbID's??)
+                    this.pageReinicialize();
+                    switch (item.type) {
+                        case FrameListTypes.ROOMS:
+                            this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
+                            this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
+                            this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+                            break;
+                        case FrameListTypes.MODULES:
+                            //this.detail.initialize(); //Možná bude potřeba - vyzkouset
+                           /* this.itemInDetail = { item: item, parentListType: parentList.type };
+                            this.initDetail();
+                            this.modulesList.initialize();
+                            this.sensorsList.initialize();
+                            this.devicesList.initialize();  
+                            await this.selectSavedIDs();*/
+                            
+                            this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
+                            this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+                            break;
+                        default:
+                            break;
+                    }
                 }
 
             }
@@ -406,17 +457,23 @@ export class SettingsPage extends BasePage {
     }
 
     initRoomsList(rooms: any[]) {
-        this.roomsList.clearItems();
-        this.roomsList.initAddItemBtn(this.itemClicked, "/rooms/");
-        this.roomsList.addItems(this.roomsList.addItemBtn);
-        for (let i = 0; i < rooms.length; i++) {
-            let bottom = (i != (rooms.length - 1)) ? "1px solid var(--default-blue-color)" : "none";
-            let item = new FrameListItem({ borderBottom: bottom });
-            rooms[i]["path"] = "rooms/" + rooms[i].dbID;
-            item.initialize(FrameListTypes.ROOMS, this.itemClicked, rooms[i], rooms[i].name, { up: (i != 0), down: (i != (rooms.length - 1)) });
-            this.roomsList.addItems(item);
+        let list = this.roomsList;
+        list.clearItems();
+        list.initAddItemBtn(this.itemClicked, "/rooms/");
+        list.addItems(list.addItemBtn);
+        if(!rooms.length){
+            list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.ROOMS, true));
+            list.addItems(list.defaultItem);
+        }else{
+            for (let i = 0; i < rooms.length; i++) {
+                let bottom = (i != (rooms.length - 1)) ? "1px solid var(--default-blue-color)" : "none";
+                let item = new FrameListItem({ borderBottom: bottom });
+                rooms[i]["path"] = "rooms/" + rooms[i].dbID;
+                item.initialize(FrameListTypes.ROOMS, this.itemClicked, rooms[i], rooms[i].name, { up: (i != 0), down: (i != (rooms.length - 1)) });
+                list.addItems(item);
+            }
+            list.updatedOrderHandler();
         }
-        this.roomsList.updatedOrderHandler();
     }
 
     initModulesList = async (item) => {
@@ -427,7 +484,7 @@ export class SettingsPage extends BasePage {
         list.initAddItemBtn(this.itemClicked, "/rooms/" + item.dbCopy.dbID + "/devices/");
         list.addItems(list.addItemBtn);
         if (!devs || devs.length == 0) {
-            list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, "Nenalezeny žádné moduly pro zvolenou místnost. Zkuste nějaké přidat");
+            list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES, true));
             list.addItems(list.defaultItem);
 
             if (!devs)
@@ -467,7 +524,7 @@ export class SettingsPage extends BasePage {
             list.addItems(item);
         }
         if (!orderedIN || !orderedIN.length) {
-            list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, "Nenalezeny žádné snímače pro zvolenou místnost. Zkuste nějaké přidat");
+            list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS, true));
             list.addItems(list.defaultItem);
         }
         list.updatedOrderHandler();
@@ -491,7 +548,7 @@ export class SettingsPage extends BasePage {
         }
 
         if (!orderedOUT || !orderedOUT.length) {
-            list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, "Nenalezena žádná zařízení pro zvolenou místnost. Zkuste nějaké přidat");
+            list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES, true));
             list.addItems(list.defaultItem);
         }
         list.updatedOrderHandler();
@@ -515,4 +572,24 @@ export class SettingsPage extends BasePage {
 
     }
 
+    itemTypeToDefaultTypeIndex(type: FrameListTypes) {
+        return defaultItemTypesIndexes[FrameListTypes[type]];
+    }
+
+    itemTypeToDefItmStr(type: FrameListTypes, noItem: boolean = false) {
+        if(noItem){
+            return this.defaultItemsStrings.noItem[this.itemTypeToDefaultTypeIndex(type)];
+        }else{
+            return this.defaultItemsStrings.choseItem[this.itemTypeToDefaultTypeIndex(type)];
+        }
+    }
+
 }
+
+
+enum defaultItemTypesIndexes {
+    ROOMS,
+    MODULES,
+    SENSORS,
+    DEVICES
+};

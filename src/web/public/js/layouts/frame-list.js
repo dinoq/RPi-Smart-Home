@@ -89,7 +89,18 @@ FrameList.tagName = "frame-list";
 export class FrameListItem extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
+        this._active = false;
         this.components = new Array();
+    }
+    get active() {
+        return this._active;
+    }
+    set active(val) {
+        this._active = val;
+        if (val)
+            this.classList.add("active");
+        else
+            this.classList.remove("active");
     }
     initialize(...args) {
         let onClickCallback = null;
