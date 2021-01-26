@@ -4,7 +4,8 @@
     "description": "using babel with node",
     "main": "public/js/app.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "ts": "tsc -w",
+        "server": "node server.js"
     },
     "author": "",
     "license": "ISC",

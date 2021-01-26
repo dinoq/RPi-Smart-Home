@@ -12,10 +12,10 @@
                 "icon" : "switch",
                 "id" : "qwe",
                 "index" : 1,
-                "name" : "teplota kuchyň",
+                "name" : "teplota",
                 "type" : "bool",
                 "unit" : "°C",
-                "value" : "on"
+                "value" : "15"
               }
             },
             "IP" : "192.168.100.0",
@@ -37,7 +37,7 @@
                 "value" : 0
               }
             },
-            "name" : "esp obyv",
+            "name" : "ESP 1",
             "publish_to" : [ "home/kitchen" ],
             "subscribe_from" : [ "home/kitchen/svetla" ]
           },
@@ -47,10 +47,10 @@
                 "icon" : "humidity",
                 "id" : "ligt_sensor",
                 "index" : 0,
-                "name" : "Svit slunce",
+                "name" : "intenzita osvětlení",
                 "type" : "int",
                 "unit" : "%",
-                "value" : 100
+                "value" : 50
               }
             },
             "IP" : "192.168.100.1",
@@ -96,7 +96,7 @@
                 "value" : 930.925925925926
               }
             },
-            "name" : "esp obyv",
+            "name" : "ESP 2",
             "publish_to" : [ "home/kitchen" ],
             "subscribe_from" : [ "home/kitchen/svetla" ]
           },
@@ -112,7 +112,7 @@
                 "value" : 0
               }
             },
-            "name" : "esp obyv",
+            "name" : "ESP 3",
             "publish_to" : [ "home/kitchen" ],
             "subscribe_from" : [ "home/kitchen/svetla" ]
           },
@@ -136,7 +136,7 @@
                 "value" : 100.24
               }
             },
-            "name" : "esp obyv",
+            "name" : "ESP 4",
             "publish_to" : [ "home/kitchen" ],
             "subscribe_from" : [ "home/kitchen/svetla" ]
           }
@@ -146,7 +146,7 @@
           "src" : "kitchen.jpg"
         },
         "index" : 5,
-        "name" : "Obývací pokojík"
+        "name" : "Obývací pokoj"
       },
       "kuchyn" : {
         "devices" : {
@@ -156,7 +156,7 @@
                 "icon" : "temp",
                 "id" : "temp127",
                 "index" : 50,
-                "name" : "teplota kuchyň",
+                "name" : "Teplota",
                 "type" : "int",
                 "unit" : "°C",
                 "value" : 535
@@ -176,7 +176,7 @@
                 "icon" : "light-bulb",
                 "id" : "servo1801300",
                 "index" : 1,
-                "name" : "žaluzie kuchyň",
+                "name" : "žaluzie",
                 "type" : "bool",
                 "value" : 1024
               }
@@ -191,10 +191,10 @@
                 "icon" : "temp",
                 "id" : "ligt_sensor2000",
                 "index" : 0,
-                "name" : "Svit slunce",
+                "name" : "Intenzita osvětlení",
                 "type" : "int",
                 "unit" : "%",
-                "value" : 100
+                "value" : 80
               }
             },
             "IP" : "192.168.100.1",
@@ -203,7 +203,7 @@
                 "icon" : "light-bulb",
                 "id" : "light3000",
                 "index" : 4,
-                "name" : "lika",
+                "name" : "linka",
                 "type" : "bool",
                 "value" : 1024
               },
@@ -211,7 +211,7 @@
                 "icon" : "light-bulb",
                 "id" : "dim_light4000",
                 "index" : 2,
-                "name" : "linklůa - LED pásek",
+                "name" : "linka - LED pásek",
                 "type" : "int",
                 "value" : "827"
               },
@@ -224,7 +224,7 @@
                 "value" : "651"
               }
             },
-            "name" : "esp obyv",
+            "name" : "esp 3",
             "publish_to" : [ "home/kitchen" ],
             "subscribe_from" : [ "home/kitchen/svetla" ]
           },
@@ -250,7 +250,7 @@
           "src" : "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
         },
         "index" : 1,
-        "name" : "kuchyňka"
+        "name" : "Kuchyně"
       },
       "pokojík" : {
         "devices" : {
@@ -260,7 +260,7 @@
                 "icon" : "temp",
                 "id" : "temp7010",
                 "index" : 0,
-                "name" : "teplota nejaka",
+                "name" : "teplota",
                 "type" : "int",
                 "unit" : "°C",
                 "value" : 535
@@ -280,7 +280,7 @@
                 "icon" : "light-bulb",
                 "id" : "servo1809090",
                 "index" : 1,
-                "name" : "žaluzie kuchyň",
+                "name" : "žaluzie",
                 "type" : "bool",
                 "value" : "on"
               }
@@ -295,7 +295,7 @@
                 "icon" : "temp",
                 "id" : "ligt_sensor10800",
                 "index" : 0,
-                "name" : "Svit slunce",
+                "name" : "Intenzita osvětlení",
                 "type" : "int",
                 "unit" : "°C",
                 "value" : 100
@@ -307,7 +307,7 @@
                 "icon" : "light-bulb",
                 "id" : "light123456",
                 "index" : 4,
-                "name" : "lika",
+                "name" : "linka",
                 "type" : "bool",
                 "value" : "off"
               },
@@ -315,7 +315,7 @@
                 "icon" : "light-bulb",
                 "id" : "dim_light789",
                 "index" : 2,
-                "name" : "linklůa - LED pásek",
+                "name" : "linka - LED pásek",
                 "type" : "int",
                 "value" : "610"
               },
@@ -354,7 +354,7 @@
           "src" : "https://cdn.decoist.com/wp-content/uploads/2020/02/Beautiful-small-white-living-room-blends-monochromatic-beauty-with-modernity-53868.jpg"
         },
         "index" : 0,
-        "name" : "pokoj"
+        "name" : "Pokoj"
       }
     },
     "rules" : {
