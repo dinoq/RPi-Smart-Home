@@ -1,13 +1,9 @@
-Může být v názvech kapitol slovo úvod? (NApř. úvod do automatizace)
-Počítá se s tím, že zařízení nějak "donesu" ukázat na obhajobu?
-Jak přesně citovat obrázky?
-uvádět ceny už ve shrnutí, nebo až v hodnocení současného stavu?
-Technologie dálkového přenosu pod kapitolu Automatizace domácnosti?
+Dotazy před obhajobou:
+-Jak moc se hrotí zdroje?
 
 Testování - v případě že přijdu na nedostatek, jak to řešit? Přepsat BP a pak v testování zmínit že finální podoba je díky testování?
 
 Uvádět v praktické části nějak odkaz na eshopy? Kvůli cenám zařízení když je sděluji...jako literaturu? Nebo footnote?
-
 Mohu popisovat implementaci(mám tu a tu třídu a v ní to a to...)? Protože co jiného??
 
 
@@ -30,3 +26,9 @@ Jsou komentáře v kódu nezbytné?
 Zkouší komise kód? Co když nepujde spustit?
 Mohu popisovat že nějakou část bude možné rozšířit? (Např menu o položky správy místností apod)
 mohu nechat uživatele vpisovat informace do kodu (SSID wifi, či IP RPi) aby si sám program zkompiloval a poslal do esp?
+
+
+
+Dotazy na později:
+Počítá se s tím, že zařízení nějak "donesu" ukázat na obhajobu?
+Jak přesně citovat obrázky?
