@@ -180,13 +180,6 @@ export class SettingsPage extends BasePage {
                                 this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
                                 break;
                             case FrameListTypes.MODULES:
-                                //this.detail.initialize(); //Možná bude potřeba - vyzkouset
-                                /* this.itemInDetail = { item: item, parentListType: parentList.type };
-                                 this.initDetail();
-                                 this.modulesList.initialize();
-                                 this.sensorsList.initialize();
-                                 this.devicesList.initialize();
-                                 await this.selectSavedIDs();*/
                                 this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
                                 this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
                                 break;
@@ -493,13 +486,13 @@ export class SettingsPage extends BasePage {
             values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset];
         }
         else if (parenListType == FrameListTypes.MODULES) {
-            values = [item.dbCopy.dbID, item.dbCopy.name];
+            values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];
         }
         else if (parenListType == FrameListTypes.SENSORS) {
-            values = [item.dbCopy.name, item.dbCopy.icon, item.dbCopy.unit];
+            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.pin, item.dbCopy.unit];
         }
         else if (parenListType == FrameListTypes.DEVICES) {
-            values = [item.dbCopy.name, item.dbCopy.icon];
+            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.pin];
         }
         this.detail.updateDetail(title, parenListType, (event) => { this.readyToSave = true; }, values);
     }

@@ -190,7 +190,7 @@ export class RoomCard extends AbstractComponent {
         } else { // Clicked first time on that device
             if (this.idOfSelectedDevices) // If is current selected any device, toggle color of name
                 this.getDeviceByDBID(this.idOfSelectedDevices).toggleNameColor();
-            if (device.type == "int") {// If clicked device is int, show slider
+            if (device.valueType == "int") {// If clicked device is int, show slider
                 device.toggleNameColor();
                 inputElem.style.visibility = "visible";
                 inputElem.value = val;
@@ -254,8 +254,8 @@ export class RoomSensor extends AbstractComponent {
 
     initialize(sensor: any) {
         this.layout = new HorizontalStack();
-        let icon = new Icon(sensor.icon);
-        this.layout.pushComponents(icon);
+        let type = new Icon(sensor.type);
+        this.layout.pushComponents(type);
         let name = new BaseComponent({ innerText: sensor.name });
         let value = new BaseComponent({ innerText: sensor.value });
         value.classList.add("value");
@@ -271,7 +271,7 @@ export class RoomDevice extends AbstractComponent {
 
     bgImage: any;
     slider: any;
-    type: any;
+    valueType: any;
     devicePath: string;
     initialized: boolean = false;
     value: number = 0;
@@ -305,7 +305,7 @@ export class RoomDevice extends AbstractComponent {
     }
 
     initialize(index, object, onClickCallback) {
-        this.type = object[index].type;
+        this.valueType = object[index].valueType;
         this.devicePath = object[index].path;
         this.dbID = object[index].id;
         this.initialized = true;
@@ -331,7 +331,7 @@ export class RoomDevice extends AbstractComponent {
 
     updateVal(value) {
         let val = value;
-        if (this.type == "bool")
+        if (this.valueType == "bool")
             val = (value > 512) ? 1024 : 0;
         this.updateSlider(val);
         //console.log('value: ', val);
@@ -352,7 +352,7 @@ export class RoomDevice extends AbstractComponent {
     }
 
     convertNumToDBVal(val: number) {
-        if (this.type == "bool")
+        if (this.valueType == "bool")
             return (val < 512) ? "off" : "on";
         return val;
     }

@@ -1,7 +1,7 @@
 import { Utils } from "../app/utils.js";
 import { AbstractComponent, IComponentProperties } from "../components/component.js";
 import { UnknownValueInDatabaseError } from "../errors/db-errors.js";
-import { FrameListTypes } from "./frame-list.js";
+import { FrameList, FrameListItem, FrameListTypes } from "./frame-list.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
 
@@ -16,7 +16,7 @@ export class FrameDetail extends AbstractComponent {
         this.initialize();
     }
 
-    initialize(){
+    initialize() {
         this.innerHTML = `        
             <div class="form-wrapper">
                 <form class="form" action="/dashboard" method="POST">
@@ -47,17 +47,20 @@ export class FrameDetail extends AbstractComponent {
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("img-offset", "Posun obrázku", INPUT_TYPES.TEXT_FIELD));
             } else if (type == FrameListTypes.MODULES) {
                 this.rows.innerHTML = "";
-                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-id", "ID modulu", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-name", "Název modulu", INPUT_TYPES.TEXT_FIELD));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-id", "ID modulu", INPUT_TYPES.DISABLED_TEXT_FIELD));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-type", "Typ modulu", INPUT_TYPES.DISABLED_TEXT_FIELD));
             } else if (type == FrameListTypes.SENSORS) {
                 this.rows.innerHTML = "";
-                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název zařízení", INPUT_TYPES.TEXT_FIELD));
-                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("icon-type", "Typ ikony", INPUT_TYPES.SELECT_SENSORS));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název snímače", INPUT_TYPES.TEXT_FIELD));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("sensor-type", "Typ snímače", INPUT_TYPES.SELECT_SENSOR_TYPE));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("pin", "Vstup", INPUT_TYPES.SELECT_SENSOR_INPUT));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("unit", "Jednotky", INPUT_TYPES.TEXT_FIELD));
             } else if (type == FrameListTypes.DEVICES) {
                 this.rows.innerHTML = "";
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název zařízení", INPUT_TYPES.TEXT_FIELD));
-                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("icon-type", "Typ ikony", INPUT_TYPES.SELECT_DEVICES));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("icon-type", "Typ zařízení", INPUT_TYPES.SELECT_DEVICE_TYPE));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("pin", "Výstup", INPUT_TYPES.SELECT_DEVICE_OUTPUT));
             }
         }
 
@@ -84,24 +87,49 @@ export class FrameDetailRow extends AbstractComponent {
         super(Utils.mergeObjects(layoutProps, {
         }));
 
+
         this.innerHTML = `        
             <div class="form-label">
                 <label for="${id}" class="active-label">${name}</label>
                 <div class="input-field">
-                    <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value=""/>
                 </div>
             </div>
         `;
+
         let input = this.querySelector(".input-field");
-        if (type == INPUT_TYPES.SELECT_SENSORS) {
+        if (type == INPUT_TYPES.TEXT_FIELD) {
+            input.innerHTML = `        
+                <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value=""/>                   
+            `;
+        } else if (type == INPUT_TYPES.DISABLED_TEXT_FIELD) {
+            input.innerHTML = `          
+                <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value="" disabled/> 
+            `;
+        } else if (type == INPUT_TYPES.SELECT_SENSOR_TYPE) {
             input.innerHTML = `                            
                 <select id="${id}" name="${id}">
-                    <option value="temp">Teploměr</option>
-                    <option value="humidity">Kapka</option>
-                    <option value="switch">Spínač</option>
+                    <option value="temp">BME280</option>
+                    <option value="switch">Kontakt</option>
+                    <option value="threshold">Prahová hodnota</option>
                 </select>
             `;
-        } else if (type == INPUT_TYPES.SELECT_DEVICES) {
+        } else if (type == INPUT_TYPES.SELECT_SENSOR_INPUT) {
+            let selectedModule = <FrameListItem>document.querySelectorAll("frame-list")[1].querySelector(".active");
+            let moduleType = selectedModule.dbCopy.type;
+            if (moduleType == "ESP8266") {
+                input.innerHTML = `                            
+                    <select id="${id}" name="${id}">
+                        <option value="A0">A0</option>
+                        <option value="D0">D0</option>
+                        <option value="D1">D1</option>
+                        <option value="D2">D2</option>
+                        <option value="D3">D3</option>
+                    </select>
+                `;
+            } else if (moduleType == "ESP32") {
+
+            }
+        } else if (type == INPUT_TYPES.SELECT_DEVICE_TYPE) {
             input.innerHTML = `                            
                 <select id="${id}" name="${id}">
                     <option value="light-bulb">Žárovka</option>
@@ -110,6 +138,22 @@ export class FrameDetailRow extends AbstractComponent {
                     <option value="blinds">Žaluzie</option>
                 </select>
             `;
+        } else if (type == INPUT_TYPES.SELECT_DEVICE_OUTPUT) {
+            let selectedModule = <FrameListItem>document.querySelectorAll("frame-list")[1].querySelector(".active");
+            let moduleType = selectedModule.dbCopy.type;
+            if (moduleType == "ESP8266") {
+                input.innerHTML = `                            
+                    <select id="${id}" name="${id}">
+                        <option value="A0">A0</option>
+                        <option value="D0">D0</option>
+                        <option value="D1">D1</option>
+                        <option value="D2">D2</option>
+                        <option value="D3">D3</option>
+                    </select>
+                `;
+            } else if (moduleType == "ESP32") {
+
+            }
         }
         this.type = type;
         this.inputID = id;
@@ -119,7 +163,7 @@ export class FrameDetailRow extends AbstractComponent {
     initialize(val: string, onInputCallback) {
         (<HTMLInputElement>this.input).value = val;
         this.input.addEventListener("input", onInputCallback);
-        if((<HTMLInputElement>this.input).value != val){
+        if ((<HTMLInputElement>this.input).value != val) {
             new UnknownValueInDatabaseError(val, this.type);
         }
     }
@@ -127,7 +171,10 @@ export class FrameDetailRow extends AbstractComponent {
 }
 
 export enum INPUT_TYPES {
+    DISABLED_TEXT_FIELD,
     TEXT_FIELD,
-    SELECT_SENSORS,
-    SELECT_DEVICES
+    SELECT_SENSOR_TYPE,
+    SELECT_SENSOR_INPUT,
+    SELECT_DEVICE_TYPE,
+    SELECT_DEVICE_OUTPUT
 }
