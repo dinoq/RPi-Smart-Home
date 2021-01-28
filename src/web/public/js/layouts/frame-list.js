@@ -219,15 +219,16 @@ export const DBTemplates = {
             index: 0,
             in: {},
             out: {},
-            name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase()
+            name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            type: "ESP8266"
         };
     },
     get SENSORS() {
         return {
-            icon: "switch",
+            type: "switch",
             index: 0,
             name: "Snímač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "bool",
+            valueType: "bool",
             unit: "°C",
             value: "on",
             pin: "A0"
@@ -235,13 +236,13 @@ export const DBTemplates = {
     },
     get DEVICES() {
         return {
-            icon: "switch",
+            type: "switch",
             index: 0,
             name: "Zařízení " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "bool",
+            valueType: "bool",
             unit: "°C",
             value: "on",
-            pin: "A0"
+            pin: "D1"
         };
     }
 };
