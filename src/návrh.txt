@@ -31,3 +31,68 @@ Módy:
 On/Off/keep:zařízení/podmínka
 
 ----------------
+
+
+
+
+Hodnoty v databázi
+___________________________
+Senzory
+    icon-types: temp, 
+
+___________________________
+
+Struktura databáze:
+ID-uzivatele
+--"default_name" : string,
+--"password" : string,
+--"rooms" : object,
+--"rules" : object,
+--"scenes" : object
+
+rooms
+--id-mistnosti: object
+
+mistnost:
+--"devices": object,
+--"img" :   {
+            "offset" : number,
+            "src" : string
+            },
+--"index" : number,
+--"name" : string
+
+___________________________
+Do databáze doplnit:
+do ESP - type (bude esp8266 např...podle typu pak v klientovi budou v nastavení přístupné piny)
+Action nebo tak něco do rootu - bude tam např. searching ESP
+
+
+___________________________
+SMAZAT:
+___________________________
+DetailFrame pro rooms:
+name
+img src
+img offset
+
+
+DetailFrame pro sensors:
+Modul
+vstup => zobrazit typ (Analogový/digitální senzor)
+icon type=>náhled
+name
+unit
+
+DetailFrame pro devices:
+Modul
+výstup => zobrazit typ (Analogový/digitální senzor)
+icon type=>náhled
+name
+
+DetailFrame pro ESP:
+Identifikátor (získaný z IP na text)-needitovatelné
+typ (např ESP8266)-needitovatelné =>zobrazit vybavení(V/V piny, počet pwm...)
+name
+___________________________
+

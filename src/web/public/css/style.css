@@ -1,10 +1,20 @@
+:root {
+  --default-page-bg-color: #eaeaea;
+  --default-blue-color: #00aaff;
+}
+
+html {
+  background-color: var(--default-page-bg-color);
+  overflow-x: hidden;
+}
+
 html header #header-wrapper {
   width: 100%;
   height: 50px;
   background-color: #5CE1E6;
 }
 
-html main #form-alert-wrapper {
+html #form-alert-wrapper {
   display: none;
   -webkit-box-pack: center;
       -ms-flex-pack: center;
@@ -12,17 +22,13 @@ html main #form-alert-wrapper {
   margin-top: 25px;
 }
 
-html main #form-wrapper {
+html .form-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
-  margin-top: 25px;
 }
 
-html main #form-wrapper form {
+html .form-wrapper form {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -35,23 +41,23 @@ html main #form-wrapper form {
           align-items: center;
   max-width: 300px;
   width: 90%;
-  border: 1px solid #00aaff;
+  border: 1px solid var(--default-blue-color);
   padding: 20px;
 }
 
-html main #form-wrapper form .form-label {
+html .form-wrapper form .form-label {
   position: relative;
   width: 100%;
 }
 
-html main #form-wrapper form .form-label .form-name-label {
+html .form-wrapper form .form-label .form-name-label {
   top: calc(-20px - 0.75em);
   margin-top: 0;
-  background-color: white;
+  background-color: var(--default-page-bg-color);
   left: -10px;
 }
 
-html main #form-wrapper form .form-label label {
+html .form-wrapper form .form-label label {
   position: absolute;
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
@@ -62,15 +68,16 @@ html main #form-wrapper form .form-label label {
   font-size: 1em;
 }
 
-html main #form-wrapper form .form-label .active-label, html main #form-wrapper form .form-label .permanent-active-label {
+html .form-wrapper form .form-label .active-label, html .form-wrapper form .form-label .permanent-active-label {
   top: -0.75em;
   left: 10px;
   background-color: white;
   border-radius: 25px;
   font-size: 0.8em;
+  border: 1px solid var(--default-blue-color);
 }
 
-html main #form-wrapper form input:not([type=checkbox]) {
+html .form-wrapper form input:not([type=checkbox]), html .form-wrapper form select {
   margin-top: 20px;
   border: 1px solid gray;
   height: 2.5rem;
@@ -78,12 +85,12 @@ html main #form-wrapper form input:not([type=checkbox]) {
   padding-left: 5px;
 }
 
-html main #form-wrapper form input:focus {
+html .form-wrapper form input:focus {
   outline: none;
-  border: 2px solid #00aaff;
+  border: 2px solid var(--default-blue-color);
 }
 
-html main #form-wrapper form .chekbox-wrapper {
+html .form-wrapper form .chekbox-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -97,20 +104,293 @@ html main #form-wrapper form .chekbox-wrapper {
   margin-top: 0.5em;
 }
 
-html main #form-wrapper form .chekbox-wrapper input {
+html .form-wrapper form .chekbox-wrapper input {
   margin-right: 0.5em;
   height: 1.3em;
   width: 1.3em;
 }
 
-html main #form-wrapper form .chekbox-wrapper label {
+html .form-wrapper form .chekbox-wrapper label {
   margin: 0;
 }
 
-html main #form-wrapper form input[type=button] {
+html .form-wrapper form input[type=button] {
   width: -webkit-fit-content;
   width: -moz-fit-content;
   width: fit-content;
   padding: 0 20px;
+}
+
+login-form .form-wrapper {
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  margin-top: 25px;
+}
+
+.dialog-wrapper .dialog {
+  display: block;
+  position: absolute;
+  left: 25%;
+  top: 25%;
+  width: 50%;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 25px;
+  padding: 50px;
+  color: black;
+  font-size: 1.5em;
+  z-index: 1000;
+  -webkit-box-shadow: 0px 0px 22px -2px rgba(0, 0, 0, 0.75);
+  box-shadow: 0px 0px 22px -2px rgba(0, 0, 0, 0.75);
+}
+
+.dialog-wrapper .overlay {
+  z-index: 900;
+  background-color: rgba(0, 0, 0, 0.7);
+  position: absolute;
+}
+
+.dialog-wrapper .overlay.light {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.dialog-wrapper .message-box:not(.error-message) {
+  text-align: center;
+}
+
+.dialog-wrapper .dialog-btn-group {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  color: black;
+  margin-top: 1em;
+}
+
+.dialog-wrapper .dialog-btn-group > .btn {
+  margin: 0 10px;
+  font-size: 1.3em;
+}
+
+.dialog-wrapper .close-btn div {
+  font-size: 1.3em;
+}
+
+menu-icon {
+  margin: 5px;
+  right: 0;
+  background-color: #ffffff96;
+  padding: 5px;
+  top: 5px;
+  border-radius: 10px;
+  position: fixed;
+}
+
+menu-items-container {
+  display: block;
+  position: fixed;
+  height: 100%;
+  left: 0px;
+  top: 0;
+  padding: 10px;
+  padding-right: 25px;
+  border-right: 1px solid #939393;
+  background-color: white;
+}
+
+menu-items-container menu-item {
+  display: block;
+  cursor: pointer;
+  font-size: 1.75rem;
+  border-radius: 5px;
+}
+
+menu-items-container menu-item:not(:last-child) {
+  border-bottom: 1px solid #d6d6d6;
+}
+
+menu-items-container menu-item:hover {
+  background: -webkit-gradient(linear, left top, right top, from(#b7b7b7), to(#f0f0f0));
+  background: linear-gradient(to right, #b7b7b7, #f0f0f0);
+}
+
+page-manager {
+  display: block;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: var(--default-page-bg-color);
+}
+
+vertical-stack {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+horizontal-stack {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+}
+
+room-card {
+  display: block;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+room-card:nth-child(odd) {
+  background-color: #a5a5a5;
+}
+
+room-card:nth-child(even) {
+  background-color: #ebebeb;
+}
+
+room-card > horizontal-stack {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+room-card .room-name {
+  color: white;
+  font-size: 2.5rem;
+  text-decoration: underline;
+  padding-left: 10%;
+}
+
+room-card .value {
+  padding-left: 10px;
+}
+
+.frame-list .room-name {
+  padding-left: 20px;
+}
+
+.frame-list frame-list-item {
+  border-bottom: 1px solid var(--default-blue-color);
+  background-color: #ececec;
+}
+
+.frame-list frame-list-item:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+.frame-list frame-list-item:hover:not(.no-hover) {
+  cursor: pointer;
+}
+
+.frame-list frame-list-item:hover:not(.no-hover):not(.active) {
+  background-color: #d5d5d5;
+}
+
+.frame-list frame-list-item.active {
+  background-color: var(--default-blue-color);
+  color: white;
+}
+
+.frame-list frame-list-item > .components-wrapper > *:hover:not(.room-name):not(.text):not(.btn-wrapper), .frame-list frame-list-item > .components-wrapper .btn:hover {
+  opacity: 0.7;
+}
+
+frame-detail .form-wrapper .form {
+  border-radius: 10px;
+  background-color: #ffffff;
+  padding: 10px;
+}
+
+@keyframes blink {
+  0% {
+    background-color: #00aaff;
+  }
+  100% {
+    background-color: white;
+  }
+}
+
+@-webkit-keyframes blink {
+  0% {
+    background-color: #00aaff;
+  }
+  100% {
+    background-color: white;
+  }
+}
+
+.blink button {
+  -webkit-animation: blink 1s linear infinite;
+  animation: blink 1s linear infinite;
+}
+
+tab-layout {
+  margin: 10px 5px;
+  margin-bottom: 0px;
+}
+
+tab-layout .tab {
+  border: 1px solid #959595;
+  border-right: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 5px;
+  padding-top: calc(5px + 0.2rem);
+  border-radius: 5px 5px 0 0;
+}
+
+tab-layout .tab.active {
+  background-color: var(--default-blue-color);
+  color: white;
+  font-size: 1rem;
+  padding-top: 5px;
+}
+
+tab-layout .tab:last-child {
+  border-right: 1px solid #959595;
+}
+
+tab-layout > horizontal-stack:nth-child(2) {
+  border: 2px solid #00aaff;
+  padding: 5px;
+  padding-bottom: 2px;
+  background: #0000001a;
+}
+
+settings-page .settings-btns-stack {
+  position: absolute;
+  top: 5px;
+  width: 100%;
+}
+
+settings-page .settings-btns-stack .save-btn {
+  border: 1px solid var(--default-blue-color);
+  height: 36px;
+  border-radius: 15px;
+  padding: 0 20px;
+}
+
+settings-page .settings-btns-stack .save-btn:hover {
+  background-color: #d5d5d5;
+}
+
+settings-page .form-wrapper form {
+  max-width: initial;
+  width: 100%;
+  padding: 5px;
+  margin: 5px;
+}
+
+settings-page .form-wrapper form input:not([type=checkbox]), settings-page .form-wrapper form select {
+  max-width: 500px;
 }
 /*# sourceMappingURL=style.css.map */

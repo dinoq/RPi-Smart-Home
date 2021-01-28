@@ -1,0 +1,15 @@
+
+- Otestovat ( a případně přepsat) jestli je možné nahradit X.constructor.name za X.name (to první nekdy vrátí Function())
+- LoginForm v konstruktoru vytvořit menu itemy (a ne pomocí innerhtml)
+- Není potřeba upravit čtecí/zapisovací práva ve firebase database?
+- Pořadí zobrazení místností, senzorů a zařízení v RoomCard
+-rušit DB listenery při neaktivní page (vracet při registraci listenerů referenci)
+-Předělat na namespace??? (export namespace Image{...})
+- Výška 25% u framelistů v nastavení zřejmě nefunguje (odpozorováno na device listu)
+-Posun obrázků v nastavení udělat spíše relativně (možná i pomocí posuvníku)...jinak bude vždy jinak posunutý na základě velikosti displeje
+-v dialozích použít AppOverlay místo toho co tam je teď
+-U různých elementů ikona (I) - po najetí nápověda
+-Předělat na BEM (css)
+-Funkce v lokální síti (vyřešit login a databázi)
+-login - funkce zapamatovat (i opačně, nepamatovat - myslím že Firebase funkce si defaultně uživatele pamatují)
+-registrace

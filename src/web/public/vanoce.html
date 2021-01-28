@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script>
+
+    <!-- If you enabled Analytics in your project, add the Firebase SDK for Analytics -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-analytics.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-database.js"></script>
+    <script>
+
+        var firebaseConfig = {
+            apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
+            authDomain: "home-automation-80eec.firebaseapp.com",
+            databaseURL: "https://home-automation-80eec.firebaseio.com",
+            projectId: "home-automation-80eec",
+            storageBucket: "home-automation-80eec.appspot.com",
+            messagingSenderId: "970359498290",
+            appId: "1:970359498290:web:a43e83568b9db8eb783e2b",
+            measurementId: "G-YTRZ79TCJJ"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        console.log(firebase.database());
+    </script>
+</head>
+
+<body>
+    <!-- 1. The <iframe> (and video player1) will replace this <div> tag. -->
+
+        <audio id="bell" >
+            <source src="bell.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+        <audio id="koledy" >
+            <source src="koledy.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+
+          <button></button>
+    <script>
+        var myObj = null;
+        class MyClass {
+            constructor() {
+                this.bell = document.getElementById("bell");
+                this.koledy = document.getElementById("koledy");
+                let dbReference = firebase.database().ref("vanoce");
+                dbReference.on('value', this.dbChanged);
+            }
+
+
+            dbChanged = (snapshot) => {
+                const data = snapshot.val();
+                console.log('data: ', data);
+                if(data.sound == "zvonek"){
+                    this.bell.currentTime = 0.0;
+                    this.bell.play();
+                    this.koledy.pause();
+                }else if(data.sound == "koledy"){
+                    this.bell.pause();
+                    this.koledy.play();
+                    this.koledy.currentTime = 0.0;
+                }else{
+                    this.koledy.pause();
+                    this.bell.pause();
+                    this.koledy.currentTime = 0.0;
+                    this.bell.currentTime = 0.0;
+
+                }
+            }
+
+        }
+        window.addEventListener('DOMContentLoaded', (event) => {
+            myObj = new MyClass();
+        });
+    </script>
+</body>
+
+</html>

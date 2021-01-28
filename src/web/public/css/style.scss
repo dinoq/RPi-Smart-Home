@@ -9,6 +9,10 @@ $md: 768px;
 $lg: 992px;
 $xl: 1200px;
 
+:root {
+    --default-page-bg-color: #eaeaea;
+    --default-blue-color: #00aaff;
+  }
 //For responsive design
 @mixin sm-devices { @media (min-width: $sm) {
     @content;
@@ -27,6 +31,10 @@ $xl: 1200px;
 }}
 
 html{
+    background-color: var(--default-page-bg-color);
+    
+    overflow-x:hidden;
+  
     
     header{
         #header-wrapper{
@@ -35,96 +43,360 @@ html{
             background-color: #5CE1E6;
         }
     }
-    main{
-        #form-alert-wrapper{
-            display: none; 
-            justify-content: center;
-            margin-top: 25px;
-        }
+    #form-alert-wrapper{
+        display: none; 
+        justify-content: center;
+        margin-top: 25px;
+    }
 
-        #form-wrapper{
-            display: flex; 
-            justify-content: center;
-            margin-top: 25px;
+    .form-wrapper{
+        display: flex; 
 
 
-            form{
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                max-width: 300px;
-                width: 90%;
-                border: 1px solid #00aaff;
-                padding: 20px;
-                
-                @include sm-devices(){
+        form{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 300px;
+            width: 90%;
+            border: 1px solid var(--default-blue-color);
+            padding: 20px;
+            
+            @include sm-devices(){
+            }
+            @include lg-devices(){
+                //max-width: 90%;
+            }
+
+            .form-label{
+                position: relative;
+                width: 100%;
+
+                .form-name-label{                        
+                    top: calc(-20px - 0.75em);
+                    margin-top: 0;
+                    background-color: var(--default-page-bg-color);
+                    left: -10px;
                 }
-                @include lg-devices(){
-                    //max-width: 90%;
-                }
-    
-                .form-label{
-                    position: relative;
-                    width: 100%;
-    
-                    .form-name-label{                        
-                        top: calc(-20px - 0.75em);
-                        margin-top: 0;
-                        background-color: white;
-                        left: -10px;
-                    }
-                    label{
-                        position: absolute;
-                        transition: all 0.5s;
-                        margin-top: 20px;
-                        padding: 0 10px;  
-                        top: 0.5em;
-                        left: 0px;
-                        font-size: 1em;
-                    }
-                    .active-label, .permanent-active-label{               
-                        top: -0.75em;
-                        left: 10px;
-                        background-color: white; 
-                        border-radius: 25px;  
-                        font-size: 0.8em; 
-                    }
-                }
-
-                input:not([type=checkbox]){
+                label{
+                    position: absolute;
+                    transition: all 0.5s;
                     margin-top: 20px;
-                    border: 1px solid gray;
-                    height: 2.5rem;
-                    width: 100%;
-                    padding-left: 5px;
-
+                    padding: 0 10px;  
+                    top: 0.5em;
+                    left: 0px;
+                    font-size: 1em;
                 }
-                input:focus{                
-                    outline: none;    
-                    border: 2px solid #00aaff;
-                }
-                .chekbox-wrapper{
-                    display: flex;
-                    align-items: center;
-                    justify-content: flex-start;
-                    width: 90%;
-                    margin-top: 0.5em;
-
-                    input{
-                        margin-right: 0.5em;
-                        height: 1.3em;
-                        width: 1.3em;
-                    }
-
-                    label{
-                        margin: 0;
-                    }
-                }
-                input[type=button]{                    
-                    width: fit-content;
-                    padding: 0 20px;
+                .active-label, .permanent-active-label{               
+                    top: -0.75em;
+                    left: 10px;
+                    background-color: white; 
+                    border-radius: 25px;  
+                    font-size: 0.8em; 
+                    border: 1px solid var(--default-blue-color);
                 }
             }
+
+            input:not([type=checkbox]), select{
+                margin-top: 20px;
+                border: 1px solid gray;
+                height: 2.5rem;
+                width: 100%;
+                padding-left: 5px;
+
+            }
+            input:focus{                
+                outline: none;    
+                border: 2px solid var(--default-blue-color);
+            }
+            .chekbox-wrapper{
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                width: 90%;
+                margin-top: 0.5em;
+
+                input{
+                    margin-right: 0.5em;
+                    height: 1.3em;
+                    width: 1.3em;
+                }
+
+                label{
+                    margin: 0;
+                }
+            }
+            input[type=button]{                    
+                width: fit-content;
+                padding: 0 20px;
+            }
+        }
+    }
+    
+}
+
+login-form{    
+
+    .form-wrapper{
+        justify-content: center;
+        margin-top: 25px;
+    }
+}
+
+.dialog-wrapper{
+
+    .dialog{
+        display: block;
+        position: absolute;
+        left: 25%;
+        top: 25%;
+        width: 50%;
+        background-color: white;
+        border: 1px solid black;
+        border-radius: 25px;
+        padding: 50px;
+        color: black;
+        font-size: 1.5em;
+        z-index: 1000;
+    
+        -webkit-box-shadow: 0px 0px 22px -2px rgba(0,0,0,0.75);
+        -moz-box-shadow: 0px 0px 22px -2px rgba(0,0,0,0.75);
+        box-shadow: 0px 0px 22px -2px rgba(0,0,0,0.75);
+    }
+    
+    .overlay{
+        z-index: 900;
+        background-color: rgba(0, 0, 0, 0.7);
+        position: absolute;
+
+        &.light{        
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+    }
+
+
+    .message-box:not(.error-message){
+        text-align: center;
+    }
+
+    .dialog-btn-group{
+        display: flex;
+        justify-content: center;
+        color: black;
+        margin-top: 1em;
+
+        >.btn{
+            margin: 0 10px;
+            font-size: 1.3em;
+        }
+    }
+    .close-btn{
+        
+        div{
+            font-size: 1.3em;
+        }
+    }
+}
+
+menu-icon{
+    margin: 5px;
+    right: 0;
+    background-color: #ffffff96;
+    padding: 5px;
+    top: 5px;
+    border-radius: 10px;
+    position: fixed;
+}
+
+menu-items-container{
+    display: block;
+    position: fixed;
+    height: 100%;
+    left: 0px;
+    top: 0;
+    padding: 10px;
+    padding-right: 25px;
+    border-right: 1px solid #939393;
+    background-color: white;
+
+    menu-item{
+        display: block;
+        cursor: pointer;
+        font-size: 1.75rem;
+        border-radius: 5px;
+    
+        &:not(:last-child){
+            border-bottom: 1px solid rgb(214, 214, 214);
+        }
+
+        &:hover{
+            background: linear-gradient(to right, #b7b7b7, #f0f0f0);
+        }
+    }
+}
+
+page-manager{    
+    display: block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: var(--default-page-bg-color);
+}
+
+vertical-stack{
+    display: flex;
+    flex-direction: column;
+}
+horizontal-stack{
+    display: flex;
+    flex-direction: row;
+}
+
+room-card{
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+
+    &:nth-child(odd){
+        background-color: rgb(165, 165, 165);
+    }
+    &:nth-child(even){
+        background-color: rgb(235, 235, 235);
+    }
+
+    > horizontal-stack{
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .room-name{        
+        color: white;
+        font-size: 2.5rem;
+        text-decoration: underline;
+        padding-left: 10%;
+    }
+
+    .value{
+        padding-left: 10px;
+    }
+
+}
+
+.frame-list{
+    .room-name{        
+        padding-left: 20px;
+    }
+    frame-list-item{
+        border-bottom: 1px solid var(--default-blue-color);
+        background-color: #ececec;
+
+        &:nth-child(odd){
+            background-color: #fafafa;
+        }
+
+        &:hover:not(.no-hover){
+            cursor: pointer;
+            &:not(.active){
+                background-color: #d5d5d5;
+            }
+        }
+
+        &.active{
+            background-color: var(--default-blue-color);
+            color: white;
+        }
+
+        >.components-wrapper{
+            > *:hover:not(.room-name):not(.text):not(.btn-wrapper), .btn:hover{
+                opacity: 0.7;
+            }
+        }
+    }
+}
+
+frame-detail{    
+    .form-wrapper{
+        .form{
+            border-radius: 10px;
+            background-color: #ffffff;
+            padding: 10px;
+        }
+    }
+}
+
+@keyframes blink {  
+    0% { background-color: #00aaff; }
+    100% { background-color: white; }
+}
+@-webkit-keyframes blink {
+    0% { background-color: #00aaff; }
+    100% { background-color: white; }
+}
+
+$anim-duration: 1s;
+.blink button {
+    -webkit-animation: blink $anim-duration linear infinite;
+    -moz-animation: blink $anim-duration linear infinite;
+    animation: blink $anim-duration linear infinite;
+} 
+
+tab-layout{
+    margin: 10px 5px;
+    margin-bottom: 0px;
+    
+    $tab-border: 1px solid #959595;
+    .tab {
+        border: $tab-border;
+        border-right: none;
+        cursor: pointer;
+        font-size: 0.8rem;
+        padding: 5px;
+        padding-top: calc(5px + 0.2rem);
+        border-radius: 5px 5px 0 0;
+        &.active{
+            background-color: var(--default-blue-color);
+            color: white;
+            font-size: 1rem;
+            padding-top: 5px;
+        }
+
+    }
+    .tab:last-child {
+        border-right: $tab-border;
+    }
+    &>horizontal-stack:nth-child(2) {
+        border: 2px solid #00aaff;
+        padding: 5px;
+        padding-bottom: 2px;
+        background: #0000001a;
+    }
+}
+
+settings-page{
+    .settings-btns-stack{
+        position: absolute;
+        top: 5px;
+        width: 100%;
+
+        .save-btn{    
+            border: 1px solid var(--default-blue-color);
+            height: 36px;
+            border-radius: 15px;
+            padding: 0 20px;
+            
+            &:hover{
+                background-color: #d5d5d5;
+            }
+        }
+    }
+
+    .form-wrapper form{
+        max-width: initial;
+        width: 100%;
+        padding: 5px;
+        margin: 5px;
+
+        input:not([type=checkbox]), select{
+            max-width: 500px;
         }
     }
 }
