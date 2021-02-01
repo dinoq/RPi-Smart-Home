@@ -213,7 +213,16 @@ export class SettingsPage extends BasePage {
             };
         };
         this.initModulesList = async (item) => {
-            let devs = item.dbCopy.devices;
+            let getOrderedModules = (devices) => {
+                let ordered = new Array();
+                for (const dev in devices) {
+                    ordered.push(devices[dev]);
+                    devices[dev]["dbID"] = dev;
+                }
+                ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);
+                return ordered;
+            };
+            let devs = getOrderedModules(item.dbCopy.devices);
             let list = this.modulesList;
             list.clearItems();
             list.initAddItemBtn(this.itemClicked, "/rooms/" + item.dbCopy.dbID + "/devices/");
@@ -221,18 +230,13 @@ export class SettingsPage extends BasePage {
             if (!devs || devs.length == 0) {
                 list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES, true));
                 list.addItems(list.defaultItem);
-                if (!devs)
-                    return;
             }
-            let i = 0;
-            for (const devName in devs) {
+            for (let i = 0; i < devs.length; i++) {
                 let listItem = new FrameListItem();
-                devs[devName]["dbID"] = devName;
-                devs[devName]["path"] = "rooms/" + item.dbCopy.dbID + "/devices/" + devName;
+                devs[i]["path"] = "rooms/" + item.dbCopy.dbID + "/devices/" + devs[i]["dbID"];
                 //devs[devName]["parentPath"] = item.dbCopy.path;
-                listItem.initialize(FrameListTypes.MODULES, this.itemClicked, devs[devName], devs[devName].name, { up: (i != 0), down: (i != (Object.keys(devs).length - 1)) });
+                listItem.initialize(FrameListTypes.MODULES, this.itemClicked, devs[i], devs[i].name, { up: (i != 0), down: (i != (devs.length - 1)) });
                 list.addItems(listItem);
-                i++;
             }
             // Empty sensor and device list...
             this.sensorsList.clearItems();
