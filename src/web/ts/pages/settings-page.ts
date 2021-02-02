@@ -15,6 +15,7 @@ import { EventManager } from "../app/event-manager.js";
 import { URLManager } from "../app/url-manager.js";
 import { PageManager } from "../app/page-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
+import { Loader } from "../components/others/loader.js";
 export class SettingsPage extends BasePage {
     static tagName = "settings-page";
 
@@ -74,7 +75,6 @@ export class SettingsPage extends BasePage {
             innerHTML: `
             <button class="save-btn">Uložit</button>
             `,
-            justifyContent: "center",
             classList: "settings-btns-stack"
         });
         this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", this.saveChanges)
@@ -102,6 +102,7 @@ export class SettingsPage extends BasePage {
 
         this.appendComponents([this.mainTabPanel, this.detail, this.saveBtnContainer]);
 
+        Loader.show();
         this.initPageFromDB();
 
         document.addEventListener("click", async (e) => {
@@ -116,7 +117,7 @@ export class SettingsPage extends BasePage {
 
     async initPageFromDB() {
         let data = await Firebase.getDBData("/rooms/");
-
+        Loader.hide();
         let rooms = new Array();
         for (const roomDBName in data) {
             let room = data[roomDBName];
@@ -469,7 +470,17 @@ export class SettingsPage extends BasePage {
     }
 
     initModulesList = async (item) => {
-        let devs = item.dbCopy.devices;
+        let getOrderedModules = (devices) => {
+            let ordered = new Array();
+            for(const dev in devices){
+                ordered.push(devices[dev]);
+                devices[dev]["dbID"] = dev;
+            }
+            ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);       
+            return ordered; 
+        }
+
+        let devs = getOrderedModules(item.dbCopy.devices);
 
         let list = this.modulesList;
         list.clearItems();
@@ -478,19 +489,13 @@ export class SettingsPage extends BasePage {
         if (!devs || devs.length == 0) {
             list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES, true));
             list.addItems(list.defaultItem);
-
-            if (!devs)
-                return;
         }
-        let i = 0;
-        for (const devName in devs) {
+        for(let i = 0; i < devs.length; i++){
             let listItem = new FrameListItem();
-            devs[devName]["dbID"] = devName;
-            devs[devName]["path"] = "rooms/" + item.dbCopy.dbID + "/devices/" + devName;
+            devs[i]["path"] = "rooms/" + item.dbCopy.dbID + "/devices/" + devs[i]["dbID"];
             //devs[devName]["parentPath"] = item.dbCopy.path;
-            listItem.initialize(FrameListTypes.MODULES, this.itemClicked, devs[devName], devs[devName].name, { up: (i != 0), down: (i != (Object.keys(devs).length - 1)) });
+            listItem.initialize(FrameListTypes.MODULES, this.itemClicked, devs[i], devs[i].name, { up: (i != 0), down: (i != (devs.length - 1)) });
             list.addItems(listItem);
-            i++;
         }
 
         // Empty sensor and device list...

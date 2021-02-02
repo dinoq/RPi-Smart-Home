@@ -1,6 +1,7 @@
 :root {
   --default-page-bg-color: #eaeaea;
   --default-blue-color: #00aaff;
+  --spinner-size: 100px;
 }
 
 html {
@@ -217,14 +218,6 @@ menu-items-container menu-item:hover {
   background: linear-gradient(to right, #b7b7b7, #f0f0f0);
 }
 
-page-manager {
-  display: block;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  background-color: var(--default-page-bg-color);
-}
-
 vertical-stack {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -263,15 +256,66 @@ room-card > horizontal-stack {
   background: rgba(0, 0, 0, 0.5);
 }
 
-room-card .room-name {
+room-card .card-container {
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+}
+
+room-card .card-container .left-stack {
+  width: 30%;
+  min-width: -webkit-min-content;
+  min-width: -moz-min-content;
+  min-width: min-content;
+  -webkit-box-flex: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
+}
+
+room-card .card-container .left-stack .room-name {
   color: white;
   font-size: 2.5rem;
   text-decoration: underline;
   padding-left: 10%;
 }
 
-room-card .value {
+room-card .card-container .left-stack .sensors-stack {
+  padding-left: 15%;
+  padding-right: 10%;
+}
+
+room-card .card-container .left-stack .sensors-stack room-sensor {
+  color: white;
+  margin: 5px 0;
+}
+
+room-card .card-container .left-stack .sensors-stack room-sensor:first-child {
+  font-size: 1.2rem;
+}
+
+room-card .card-container .left-stack .sensors-stack room-sensor app-icon {
+  margin-right: 10px;
+}
+
+room-card .card-container .left-stack .sensors-stack room-sensor .value {
   padding-left: 10px;
+}
+
+room-card .card-container .right-stack {
+  width: 70%;
+  -webkit-box-flex: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: reverse;
+      -ms-flex-direction: column-reverse;
+          flex-direction: column-reverse;
+  padding: 40px 0;
+}
+
+room-card .card-container .right-stack .devices-row {
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
 }
 
 .frame-list .room-name {
@@ -366,31 +410,110 @@ tab-layout > horizontal-stack:nth-child(2) {
   background: #0000001a;
 }
 
-settings-page .settings-btns-stack {
+page-manager {
+  display: block;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: var(--default-page-bg-color);
+}
+
+page-manager settings-page .settings-btns-stack {
   position: absolute;
   top: 5px;
   width: 100%;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
 }
 
-settings-page .settings-btns-stack .save-btn {
+page-manager settings-page .settings-btns-stack .save-btn {
   border: 1px solid var(--default-blue-color);
   height: 36px;
   border-radius: 15px;
   padding: 0 20px;
 }
 
-settings-page .settings-btns-stack .save-btn:hover {
+page-manager settings-page .settings-btns-stack .save-btn:hover {
   background-color: #d5d5d5;
 }
 
-settings-page .form-wrapper form {
+page-manager settings-page .form-wrapper form {
   max-width: initial;
   width: 100%;
   padding: 5px;
   margin: 5px;
 }
 
-settings-page .form-wrapper form input:not([type=checkbox]), settings-page .form-wrapper form select {
+page-manager settings-page .form-wrapper form input:not([type=checkbox]), page-manager settings-page .form-wrapper form select {
   max-width: 500px;
+}
+
+/*
+ABSOLUTE POSITION
+*/
+app-loader {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000000a6;
+  z-index: 100;
+}
+
+app-loader .spinner {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: var(--spinner-size);
+  height: var(--spinner-size);
+  position: relative;
+  top: calc(50% - var(--spinner-size) / 2);
+  left: calc(50% - var(--spinner-size) / 2);
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+
+app-loader .message-container {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  top: calc(50% - var(--spinner-size) / 2 + 10px);
+  position: relative;
+}
+
+app-loader .message-container .message {
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  color: white;
+  background-color: #252525;
+  padding: 10px;
+  border-radius: 10px;
 }
 /*# sourceMappingURL=style.css.map */

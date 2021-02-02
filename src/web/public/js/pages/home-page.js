@@ -1,10 +1,13 @@
 import { RoomCard } from "../layouts/room-card.js";
 import { Firebase } from "../app/firebase.js";
 import { BasePage } from "./base-page.js";
+import { Loader } from "../components/others/loader.js";
 export class HomePage extends BasePage {
     constructor(componentProps) {
         super(componentProps);
+        Loader.show();
         Firebase.addDBListener("/rooms/", (data) => {
+            Loader.hide();
             let rooms = new Array();
             for (const roomDBName in data) {
                 let room = data[roomDBName];

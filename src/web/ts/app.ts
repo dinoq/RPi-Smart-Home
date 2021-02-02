@@ -24,6 +24,7 @@ import { Icon } from "./components/others/app-icon.js";
 import { TabLayout } from "./layouts/tab-layout.js";
 import { FrameDetail, FrameDetailRow } from "./layouts/frame-detail.js";
 import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
+import { Loader, LoaderComponent } from "./components/others/loader.js";
 
 export declare var firebase: any;
 
@@ -63,20 +64,21 @@ class AutoHomeApp {
             MenuIcon,
             RoomSensor,
             Icon,
+            LoaderComponent,
 
             SettingsPage,
             FrameList,
             FrameListItem,
             FrameDetail,
             FrameDetailRow,
-            TabLayout
+            TabLayout,
+            
         ];
         if(customElements.get("login-form") == undefined){
             for(const component of components){
                 component.defineComponent();
             }
         }
-
     }
 
     ajax=()=>{

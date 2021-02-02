@@ -12,6 +12,7 @@ $xl: 1200px;
 :root {
     --default-page-bg-color: #eaeaea;
     --default-blue-color: #00aaff;
+    --spinner-size: 100px;
   }
 //For responsive design
 @mixin sm-devices { @media (min-width: $sm) {
@@ -235,13 +236,6 @@ menu-items-container{
     }
 }
 
-page-manager{    
-    display: block;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    background-color: var(--default-page-bg-color);
-}
 
 vertical-stack{
     display: flex;
@@ -267,16 +261,63 @@ room-card{
     > horizontal-stack{
         background: rgba(0, 0, 0, 0.5);
     }
-    
-    .room-name{        
-        color: white;
-        font-size: 2.5rem;
-        text-decoration: underline;
-        padding-left: 10%;
-    }
+    .card-container{        
+        flex-wrap: wrap;
 
-    .value{
-        padding-left: 10px;
+        .left-stack{            
+            width: 30%;
+            min-width: min-content;
+            flex-grow: 1;
+            
+            .room-name{        
+                color: white;
+                font-size: 2.5rem;
+                text-decoration: underline;
+                padding-left: 10%;
+            }
+
+            .sensors-stack{
+                padding-left: 15%;                
+                padding-right: 10%;
+        
+                room-sensor{
+                    color: white;
+                    margin: 5px 0;
+
+                    &:first-child{                        
+                        font-size: 1.2rem;
+                    }
+
+                    app-icon{                        
+                        margin-right: 10px;
+                    }
+
+                    .value{
+                        padding-left: 10px;
+                    }
+                }
+            }
+        }
+
+        .right-stack{
+            width: 70%;
+            flex-grow: 1;
+            flex-direction: column-reverse;
+            padding: 40px 0;
+
+            slider-component{
+                margin-right: 5px;
+                
+                input{
+                    width: 100%; 
+                    margin-bottom: 2rem;
+                }
+            }
+
+            .devices-row{
+                justify-content: space-between;
+            }
+        }
     }
 
 }
@@ -371,32 +412,89 @@ tab-layout{
     }
 }
 
-settings-page{
-    .settings-btns-stack{
-        position: absolute;
-        top: 5px;
-        width: 100%;
+page-manager{    
+    display: block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: var(--default-page-bg-color);
 
-        .save-btn{    
-            border: 1px solid var(--default-blue-color);
-            height: 36px;
-            border-radius: 15px;
-            padding: 0 20px;
-            
-            &:hover{
-                background-color: #d5d5d5;
+    
+    settings-page{
+        .settings-btns-stack{
+            position: absolute;
+            top: 5px;
+            width: 100%;
+            justify-content: center;
+
+            .save-btn{    
+                border: 1px solid var(--default-blue-color);
+                height: 36px;
+                border-radius: 15px;
+                padding: 0 20px;
+                
+                &:hover{
+                    background-color: #d5d5d5;
+                }
+            }
+        }
+
+        .form-wrapper form{
+            max-width: initial;
+            width: 100%;
+            padding: 5px;
+            margin: 5px;
+
+            input:not([type=checkbox]), select{
+                max-width: 500px;
             }
         }
     }
+}
 
-    .form-wrapper form{
-        max-width: initial;
-        width: 100%;
-        padding: 5px;
-        margin: 5px;
 
-        input:not([type=checkbox]), select{
-            max-width: 500px;
+/*
+ABSOLUTE POSITION
+*/
+
+app-loader{
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000a6;
+    z-index: 100;
+
+    .spinner{
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #3498db;
+        width: var(--spinner-size);
+        height: var(--spinner-size);
+        position: relative;
+        top: calc(50% - var(--spinner-size) / 2);
+        left: calc(50% - var(--spinner-size) / 2);
+        -webkit-animation: spin 2s linear infinite; 
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .message-container{
+        display: flex;
+        justify-content: center;
+        top: calc(50% - var(--spinner-size) / 2 + 10px);
+        position: relative;
+
+        .message{        
+            width: fit-content;
+            color: white;
+            background-color: #252525;
+            padding: 10px;
+            border-radius: 10px;        
         }
     }
 }
