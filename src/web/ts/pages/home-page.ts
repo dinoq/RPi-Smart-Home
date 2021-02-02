@@ -5,6 +5,7 @@ import { IComponentProperties } from "../components/component.js";
 import { LoginComponent } from "../components/forms/login-form.js";
 import { BasePage } from "./base-page.js";
 import { PageManager } from "../app/page-manager.js";
+import { Loader } from "../components/others/loader.js";
 
 export class HomePage extends BasePage {
     static tagName = "home-page";
@@ -14,8 +15,9 @@ export class HomePage extends BasePage {
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
 
-        
-        Firebase.addDBListener("/rooms/", (data)=>{            
+        Loader.show();
+        Firebase.addDBListener("/rooms/", (data)=>{      
+            Loader.hide();      
             let rooms = new Array();
             for(const roomDBName in data){
                 let room = data[roomDBName];

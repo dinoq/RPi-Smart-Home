@@ -15,6 +15,7 @@ import { EventManager } from "../app/event-manager.js";
 import { URLManager } from "../app/url-manager.js";
 import { PageManager } from "../app/page-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
+import { Loader } from "../components/others/loader.js";
 export class SettingsPage extends BasePage {
     static tagName = "settings-page";
 
@@ -74,7 +75,6 @@ export class SettingsPage extends BasePage {
             innerHTML: `
             <button class="save-btn">Uložit</button>
             `,
-            justifyContent: "center",
             classList: "settings-btns-stack"
         });
         this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", this.saveChanges)
@@ -102,6 +102,7 @@ export class SettingsPage extends BasePage {
 
         this.appendComponents([this.mainTabPanel, this.detail, this.saveBtnContainer]);
 
+        Loader.show();
         this.initPageFromDB();
 
         document.addEventListener("click", async (e) => {
@@ -116,7 +117,7 @@ export class SettingsPage extends BasePage {
 
     async initPageFromDB() {
         let data = await Firebase.getDBData("/rooms/");
-
+        Loader.hide();
         let rooms = new Array();
         for (const roomDBName in data) {
             let room = data[roomDBName];

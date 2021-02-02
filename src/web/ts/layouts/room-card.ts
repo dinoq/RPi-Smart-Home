@@ -23,24 +23,20 @@ export class RoomCard extends AbstractComponent {
     constructor(layoutProps?: RoomCardProps) {
         super(layoutProps);
 
-        this.layout = new HorizontalStack();
+        this.layout = new HorizontalStack({classList: "card-container"});
 
         // Everything to Left stack
-        this.leftStack = new VerticalStack();
-        this.leftStack.style.width = "30%";
-        let name = new HorizontalStack({ innerText: "Místnost" });
-        name.classList.add("room-name");
+        this.leftStack = new VerticalStack({ classList: ["left-stack"]});
+        let name = new HorizontalStack({ innerText: "Místnost", classList: "room-name" });
         this.leftStack.pushComponents(name);
         this.sensors = new Array();
-        this.sensorsStack = new VerticalStack({ paddingLeft: "15%"/*alignItems: "center"*/ });
+        this.sensorsStack = new VerticalStack({ classList: "sensors-stack" });
         this.leftStack.pushComponents(this.sensorsStack);
 
         // Everything to right stack
         this.rightStack = new VerticalStack({
-            flexDirection: "column-reverse",
-            padding: "40px 0"
+            classList: "right-stack"
         });
-        this.rightStack.style.width = "70%";
         this.slider = new Slider();
         this.slider.initialize(this.sliderChanged);
         this.devices = new Array();
@@ -96,19 +92,17 @@ export class RoomCard extends AbstractComponent {
         //console.log('orderedOUT: ', orderedOUT);
 
 
-        let deviceRow = new HorizontalStack({
-            justifyContent: "space-between"
+        let devicesRow = new HorizontalStack({
+            classList: "devices-row"
         });
 
         //Fill sensors and sensorsStack from orderedIN
         this.sensorsStack.innerHTML = "";
         this.sensors = new Array();
         for (const sensor of orderedIN) {
-            let s = new RoomSensor({ color: "white" });
+            let s = new RoomSensor();
             s.initialize(sensor);
             this.sensors.push(s);
-            if (!this.sensorsStack.childElementCount)
-                s.style.fontSize = "2rem";
             this.sensorsStack.pushComponents(s);
         }
 
@@ -119,19 +113,19 @@ export class RoomCard extends AbstractComponent {
             for (const device of orderedOUT) {
                 let lamp = new RoomDevice({});
                 this.devices.push(lamp)
-                if ((deviceRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) < (<number>Utils.getWindowWidth()) * 0.7) {
-                    deviceRow.pushComponents(lamp);
+                if ((devicesRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) < (<number>Utils.getWindowWidth()) * 0.7) {
+                    devicesRow.pushComponents(lamp);
                 } else {
-                    this.devicesStack.pushComponents(deviceRow);
-                    deviceRow = new HorizontalStack({
-                        justifyContent: "space-between",
+                    this.devicesStack.pushComponents(devicesRow);
+                    devicesRow = new HorizontalStack({
+                        classList: "devices-row",
                         marginTop: "3.5rem"
                     });
                 }
             }
         }
-        if (deviceRow.childElementCount) {
-            this.devicesStack.pushComponents(deviceRow);
+        if (devicesRow.childElementCount) {
+            this.devicesStack.pushComponents(devicesRow);
         }
 
         // Actualize sensors
@@ -227,9 +221,8 @@ export class Slider extends AbstractComponent {
     constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
         this.innerHTML = `               
-            <input type="range" min="1" max="1024" value="512" class="slider" style="width: 100%; visibility:hidden;margin-bottom: 2rem;">
+            <input type="range" min="1" max="1024" value="512" class="slider" style="visibility:hidden;">
         `;
-        this.style.marginRight = "5px";
     }
 
     initialize(sliderChanged) {

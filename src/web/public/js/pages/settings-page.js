@@ -9,6 +9,7 @@ import { YesNoCancelDialog } from "../components/dialogs/yes-no-cancel-dialog.js
 import { DialogResponses } from "../components/dialogs/base-dialog.js";
 import { EventManager } from "../app/event-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
+import { Loader } from "../components/others/loader.js";
 export class SettingsPage extends BasePage {
     constructor(componentProps) {
         super(componentProps);
@@ -287,7 +288,6 @@ export class SettingsPage extends BasePage {
             innerHTML: `
             <button class="save-btn">Uložit</button>
             `,
-            justifyContent: "center",
             classList: "settings-btns-stack"
         });
         this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", this.saveChanges);
@@ -310,6 +310,7 @@ export class SettingsPage extends BasePage {
         let firstTab = new BaseLayout({ componentsToConnect: [this.roomsList, this.modulesTabPanel] });
         this.mainTabPanel.addTab("Místnosti", firstTab);
         this.appendComponents([this.mainTabPanel, this.detail, this.saveBtnContainer]);
+        Loader.show();
         this.initPageFromDB();
         document.addEventListener("click", async (e) => {
             let path = e.path.map((element) => {
@@ -339,6 +340,7 @@ export class SettingsPage extends BasePage {
     }
     async initPageFromDB() {
         let data = await Firebase.getDBData("/rooms/");
+        Loader.hide();
         let rooms = new Array();
         for (const roomDBName in data) {
             let room = data[roomDBName];
