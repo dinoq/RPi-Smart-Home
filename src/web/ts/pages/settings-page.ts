@@ -267,7 +267,7 @@ export class SettingsPage extends BasePage {
                 break;
         }
         this.selectedItemsIDHierarchy[index] = item.dbCopy.dbID;
-        if (index < 2)
+        if (index < 2)//remove subordinate active items from selectedItemsIDHierarchy - eg. if we save new room, we don't want to keep old modules, sensors and devices list...
             this.selectedItemsIDHierarchy.splice(index + 1);
     }
 
@@ -390,8 +390,13 @@ export class SettingsPage extends BasePage {
                 }
                 let key = (await Firebase.pushNewDBData(item.dbCopy.parentPath, data)).key;
 
-                // Re-inicialize page and again select what was selected
-                this.pageReinicialize();
+                // Re-inicialize page
+                await this.pageReinicialize();
+                
+                //Select aded item
+                let newItem: FrameListItem = <FrameListItem>parentList.children[0];
+                newItem = <FrameListItem> ((Utils.itemIsAnyFromEnum((<FrameListItem>parentList.children[0]).type, FrameListTypes, ["BTN_ONLY"]))? parentList.children[1] : newItem);
+                this.itemClicked(null, newItem,"edit");
 
             } else if (clickedElem == "delete") {
                 await Firebase.deleteDBData(item.dbCopy.path);
@@ -401,7 +406,7 @@ export class SettingsPage extends BasePage {
                 if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, add default item
                     parentList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
                 }
-                this.pageReinicialize();
+                await this.pageReinicialize();
 
                 if(item.active){// We removed item, which was in detailt or item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item lists
                     switch (item.type) {
