@@ -312,6 +312,15 @@ room-card .card-container .right-stack {
   padding: 40px 0;
 }
 
+room-card .card-container .right-stack slider-component {
+  margin-right: 5px;
+}
+
+room-card .card-container .right-stack slider-component input {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
 room-card .card-container .right-stack .devices-row {
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
