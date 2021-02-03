@@ -12,7 +12,11 @@ export class Loader extends Singleton {
         AbstractComponent.appendComponentsToDOMElements(document.body, Loader.getInstance().element);
     }
     static hide() {
-        document.body.removeChild(Loader.getInstance().element);
+        try {
+            document.body.removeChild(Loader.getInstance().element);
+        }
+        catch (error) {
+        }
     }
 }
 export class LoaderComponent extends AbstractComponent {

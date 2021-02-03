@@ -16,7 +16,10 @@ export class Loader extends Singleton{
     }
 
     static hide(){
-        document.body.removeChild(Loader.getInstance().element);
+        try {
+            document.body.removeChild(Loader.getInstance().element);            
+        } catch (error) {            
+        }
     }
 
 }

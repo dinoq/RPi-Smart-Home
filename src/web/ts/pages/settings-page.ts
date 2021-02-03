@@ -401,9 +401,9 @@ export class SettingsPage extends BasePage {
                 if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, add default item
                     parentList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
                 }
-                
-                if(item.active){// We removed item, which was in detailt or (TODO!) item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item list (maybe do via dbID's??)
-                    this.pageReinicialize();
+                this.pageReinicialize();
+
+                if(item.active){// We removed item, which was in detailt or item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item lists
                     switch (item.type) {
                         case FrameListTypes.ROOMS:
                             this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
