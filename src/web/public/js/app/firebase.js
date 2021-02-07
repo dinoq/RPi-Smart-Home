@@ -46,8 +46,7 @@ export class Firebase extends Singleton {
         let dbReference = firebase.database().ref(Firebase.getFullPath(dbPath));
         dbReference.on('value', (snapshot) => {
             const data = snapshot.val();
-            if (data)
-                callback(data);
+            callback(data);
         });
     }
     static getDBData(dbPath) {

@@ -15,7 +15,7 @@ export class Icon extends AbstractComponent {
         switch (name) {
             case "temp": return "img/icons/temp.png";
             case "humidity": return "img/icons/humidity.png";
-            case "switch": return "img/icons/temp.png";
+            case "switch": return "img/icons/switch2.png";
             case "edit": return "img/icons/edit.png";
             case "delete": return "img/icons/delete.png";
             default: return "";

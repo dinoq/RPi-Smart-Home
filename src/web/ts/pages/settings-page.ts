@@ -132,18 +132,24 @@ export class SettingsPage extends BasePage {
     }
 
     saveChanges = async (event) => {
-        let update = {};
         let path = "";
+        let name = (<HTMLInputElement>document.getElementById("device-name")).value;
+        let update: any = { name: name };
         const listType = this.itemInDetail.parentListType;
         if (listType == FrameListTypes.ROOMS) {
-            let name = (<HTMLInputElement>document.getElementById("room-name")).value;
             let imgSrc = (<HTMLInputElement>document.getElementById("img-src")).value;
             let imgOffset = parseInt((<HTMLInputElement>document.getElementById("img-offset")).value);
             imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
-            let itemToUpdate = { name: name, img: { src: imgSrc, offset: imgOffset } }
-            let path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
+            update.img = { src: imgSrc, offset: imgOffset };
+            path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
+        } else if (listType == FrameListTypes.MODULES) {
+            path = this.itemInDetail.item.dbCopy.path;
+        } else if (listType == FrameListTypes.SENSORS) {
+            path = this.itemInDetail.item.dbCopy.path;
+        } else if (listType == FrameListTypes.DEVICES) {
+            path = this.itemInDetail.item.dbCopy.path;
         }
-        if(Object.keys(update).length != 0){ // If is there something to update...
+        if (Object.keys(update).length != 0) { // If is there something to update...
             await Firebase.updateDBData(path, update);
             let dbID = this.itemInDetail.item.dbCopy.dbID;
             // Re-inicialize page
@@ -154,15 +160,15 @@ export class SettingsPage extends BasePage {
     }
 
     async selectItemByID(dbID, timeLimit: number = 1000) {
-        try{
+        try {
             let anyItem = await this.getItemByDbID(dbID, timeLimit);
             await this.itemClicked(null, anyItem);
-        }catch (err){
+        } catch (err) {
             throw new Error(err);
         }
     }
 
-    async getItemByDbID(dbID, timeLimit: number = 1000): Promise<FrameListItem>{
+    async getItemByDbID(dbID, timeLimit: number = 1000): Promise<FrameListItem> {
         let anyItem: FrameListItem = undefined;
         let sleep = undefined;
         let sleepTime = 10;
@@ -187,10 +193,10 @@ export class SettingsPage extends BasePage {
             }
         }
         console.log('anyItem: ', anyItem);
-        
-        if(!anyItem)
-            return Promise.reject("Time limit of " + (timeLimit / 1000) + " seconds expired!"); 
-        return  anyItem;
+
+        if (!anyItem)
+            return Promise.reject("Time limit of " + (timeLimit / 1000) + " seconds expired!");
+        return anyItem;
 
     }
 
@@ -271,18 +277,18 @@ export class SettingsPage extends BasePage {
             this.selectedItemsIDHierarchy.splice(index + 1);
     }
 
-    async pageReinicialize(){    
+    async pageReinicialize() {
         await this.initPageFromDB();
         this.detail.initialize();
         this.modulesList.initialize();
         this.sensorsList.initialize();
-        this.devicesList.initialize();  
+        this.devicesList.initialize();
         await this.selectSavedIDs();
     }
 
-    async selectSavedIDs(){    
+    async selectSavedIDs() {
         let tmpSelectedIDs = [...this.selectedItemsIDHierarchy]; // Method selectItemByID (which is called from this forEach) mainpulates with selectedItemsIDHierarchy array, so we need to work with copy
-        for(let i = 0; i < tmpSelectedIDs.length; i++){
+        for (let i = 0; i < tmpSelectedIDs.length; i++) {
             let id: string = tmpSelectedIDs[i];
             if (id) {
                 try {
@@ -291,7 +297,7 @@ export class SettingsPage extends BasePage {
                     console.log(error);
                 }
             }
-        }    
+        }
     }
 
     /**
@@ -392,11 +398,11 @@ export class SettingsPage extends BasePage {
 
                 // Re-inicialize page
                 await this.pageReinicialize();
-                
+
                 //Select aded item
                 let newItem: FrameListItem = <FrameListItem>parentList.children[0];
-                newItem = <FrameListItem> ((Utils.itemIsAnyFromEnum((<FrameListItem>parentList.children[0]).type, FrameListTypes, ["BTN_ONLY"]))? parentList.children[1] : newItem);
-                this.itemClicked(null, newItem,"edit");
+                newItem = <FrameListItem>((Utils.itemIsAnyFromEnum((<FrameListItem>parentList.children[0]).type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
+                this.itemClicked(null, newItem, "edit");
 
             } else if (clickedElem == "delete") {
                 await Firebase.deleteDBData(item.dbCopy.path);
@@ -408,14 +414,14 @@ export class SettingsPage extends BasePage {
                 }
                 await this.pageReinicialize();
 
-                if(item.active){// We removed item, which was in detailt or item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item lists
+                if (item.active) {// We removed item, which was in detailt or item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item lists
                     switch (item.type) {
                         case FrameListTypes.ROOMS:
                             this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
                             this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
                             this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
                             break;
-                        case FrameListTypes.MODULES:                            
+                        case FrameListTypes.MODULES:
                             this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
                             this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
                             break;
@@ -459,10 +465,10 @@ export class SettingsPage extends BasePage {
         list.clearItems();
         list.initAddItemBtn(this.itemClicked, "/rooms/");
         list.addItems(list.addItemBtn);
-        if(!rooms.length){
+        if (!rooms.length) {
             list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.ROOMS, true));
             list.addItems(list.defaultItem);
-        }else{
+        } else {
             for (let i = 0; i < rooms.length; i++) {
                 let bottom = (i != (rooms.length - 1)) ? "1px solid var(--default-blue-color)" : "none";
                 let item = new FrameListItem({ borderBottom: bottom });
@@ -477,12 +483,12 @@ export class SettingsPage extends BasePage {
     initModulesList = async (item) => {
         let getOrderedModules = (devices) => {
             let ordered = new Array();
-            for(const dev in devices){
+            for (const dev in devices) {
                 ordered.push(devices[dev]);
                 devices[dev]["dbID"] = dev;
             }
-            ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);       
-            return ordered; 
+            ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);
+            return ordered;
         }
 
         let devs = getOrderedModules(item.dbCopy.devices);
@@ -495,7 +501,7 @@ export class SettingsPage extends BasePage {
             list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES, true));
             list.addItems(list.defaultItem);
         }
-        for(let i = 0; i < devs.length; i++){
+        for (let i = 0; i < devs.length; i++) {
             let listItem = new FrameListItem();
             devs[i]["path"] = "rooms/" + item.dbCopy.dbID + "/devices/" + devs[i]["dbID"];
             //devs[devName]["parentPath"] = item.dbCopy.path;
@@ -579,9 +585,9 @@ export class SettingsPage extends BasePage {
     }
 
     itemTypeToDefItmStr(type: FrameListTypes, noItem: boolean = false) {
-        if(noItem){
+        if (noItem) {
             return this.defaultItemsStrings.noItem[this.itemTypeToDefaultTypeIndex(type)];
-        }else{
+        } else {
             return this.defaultItemsStrings.choseItem[this.itemTypeToDefaultTypeIndex(type)];
         }
     }

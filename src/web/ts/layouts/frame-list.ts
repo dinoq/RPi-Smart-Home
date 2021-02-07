@@ -274,7 +274,7 @@ export const DBTemplates = {
     },
     get SENSORS() {
         return {
-            type: "switch",
+            type: "temp",
             index: 0,
             name: "Snímač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
             valueType: "bool",
