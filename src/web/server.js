@@ -22,17 +22,17 @@ console.log("ASD3",firebase.database());*/
 firebase.auth().signInWithEmailAndPassword("marek.petr10@seznam.cz", "Automation123")
     .then((user) => {
         console.log("USER:", firebase.auth().currentUser.uid);
-        firebase.auth().signOut().then((value) => {
-            console.log("USER:", firebase.auth().currentUser, "V:",value);
-        })
-
+        firebase.database().ref(firebase.auth().currentUser.uid).on('value', (snapshot) => {
+            const data = snapshot.val();
+            console.log(data);
+        });
     }).catch((error) => {
         console.log('error user: ', error);
     });
 
 firebase.database().ref("/Ay9EuCEgoGOZYhFApXU2jczd0X32").once('value')
 .then((snapshot) => {
-    console.log(snapshot.val());
+    //console.log(snapshot.val());
 })
 .catch((value) => {
     console.log(new Error("Error in Firebase.getDBData()"));
@@ -49,5 +49,5 @@ app.use('/*',express.static(p));
   app.use("/", function (req, res) {
     return res.redirect(req.url);
   });
-let port = 80;
+let port = 8080;
 var server = app.listen(port);
