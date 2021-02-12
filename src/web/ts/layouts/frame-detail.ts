@@ -42,12 +42,12 @@ export class FrameDetail extends AbstractComponent {
             this.actualFrameListType = type;
             if (type == FrameListTypes.ROOMS) {
                 this.rows.innerHTML = "";
-                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("room-name", "Název místnosti", INPUT_TYPES.TEXT_FIELD));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název místnosti", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("img-src", "URL obrázku na pozadí", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("img-offset", "Posun obrázku", INPUT_TYPES.TEXT_FIELD));
             } else if (type == FrameListTypes.MODULES) {
                 this.rows.innerHTML = "";
-                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-name", "Název modulu", INPUT_TYPES.TEXT_FIELD));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název modulu", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-id", "ID modulu", INPUT_TYPES.DISABLED_TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-type", "Typ modulu", INPUT_TYPES.DISABLED_TEXT_FIELD));
             } else if (type == FrameListTypes.SENSORS) {

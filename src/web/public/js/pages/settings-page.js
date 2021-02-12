@@ -30,16 +30,25 @@ export class SettingsPage extends BasePage {
             ]
         };
         this.saveChanges = async (event) => {
-            let update = {};
             let path = "";
+            let name = document.getElementById("device-name").value;
+            let update = { name: name };
             const listType = this.itemInDetail.parentListType;
             if (listType == FrameListTypes.ROOMS) {
-                let name = document.getElementById("room-name").value;
                 let imgSrc = document.getElementById("img-src").value;
                 let imgOffset = parseInt(document.getElementById("img-offset").value);
                 imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
-                let itemToUpdate = { name: name, img: { src: imgSrc, offset: imgOffset } };
-                let path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
+                update.img = { src: imgSrc, offset: imgOffset };
+                path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
+            }
+            else if (listType == FrameListTypes.MODULES) {
+                path = this.itemInDetail.item.dbCopy.path;
+            }
+            else if (listType == FrameListTypes.SENSORS) {
+                path = this.itemInDetail.item.dbCopy.path;
+            }
+            else if (listType == FrameListTypes.DEVICES) {
+                path = this.itemInDetail.item.dbCopy.path;
             }
             if (Object.keys(update).length != 0) { // If is there something to update...
                 await Firebase.updateDBData(path, update);
