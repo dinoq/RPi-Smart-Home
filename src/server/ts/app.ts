@@ -1,40 +1,30 @@
 
+var express = require('express');
+var path = require('path');
 
 module.exports = class ServerApp{
+    private app: any = express();
     constructor(){     
 
-       /* var p = path.join(__dirname, '../../web/public');
+        var p = path.join(__dirname, '../../web/public');
         console.log(' p: ',  p);
-        app.use("/files", function (req, res) {
+        this.app.use("/files", function (req, res) {
             return res.send("I will be served instead of a files directory");
         });
-        app.use(express.static(p));
-        app.use('/*',express.static(p));
-          app.use("/", function (req, res) {
-            return res.redirect(req.url);
-          });
-*/
-        /**
-         * 
-         * 
-        app.use('/',function (req, res,next) {
-            console.log("serve from:", p);
-            express.static(p);
-            //next();
-            //express.static(p);
-        });
-         */
-        //app.get(express.static(p));
-        //app.use('/*',express.static(p));
-        /*app.use("/", function (req, res) {
-            console.log("posledni");
-            return res.redirect(req.url);
+        this.app.use(express.static(p));
+        this.app.use('/*',express.static(p));
+        this.app.post('/domu', function (req,res){
+            console.log("qqqqq",req.url);
+            res.redirect(req.url);
+        })
+        /*this.app.use('/*',express.static(p));
+        this.app.use("/", function (req, res) {
+            console.log("ADFG",req.url);
+            res.redirect(req.url);
         });*/
-        let port = 8080;
-        //var server = app.listen(port);
     }
 
-    start(){
-
+    start(port: number = 8084){
+        var server = this.app.listen(port);
     }
 }

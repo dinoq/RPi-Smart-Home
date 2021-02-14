@@ -2,24 +2,9 @@ let Firebase = require('./firebase.js');
 const ServerApp = require('./app.js');
 /*var ip = require("ip");
 console.log("http://"+ip.address() );*/
-var express = require('express');
-var app = express();
-var path = require('path');
 let f = new Firebase();
-const serverApp = new ServerApp();
-var p = path.join(__dirname, '../../web/public');
-p = path.normalize(p);
-console.log(' p: ', p);
-app.use("/files", function (req, res) {
-    return res.send("I will be served instead of a files directory");
-});
-app.use(express.static(p));
-app.use('/*', express.static(p));
-app.use("/", function (req, res) {
-    return res.redirect(req.url);
-});
-let port = 8080;
-var server = app.listen(port);
+new ServerApp().start();
+/*
 var firebase = require('firebase');
 var fb = firebase.initializeApp({
     apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
@@ -30,7 +15,7 @@ var fb = firebase.initializeApp({
     messagingSenderId: "970359498290",
     appId: "1:970359498290:web:a43e83568b9db8eb783e2b",
     measurementId: "G-YTRZ79TCJJ"
-});
+});*/
 /*console.log("ASD0");
 console.log("ASD",app);
 console.log("ASD2",app.database());
