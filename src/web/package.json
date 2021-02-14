@@ -4,9 +4,6 @@
   "description": "using babel with node",
   "main": "public/js/app.js",
   "scripts": {
-    "ts": "tsc -w",
-    "server": "node server.js",
-    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",

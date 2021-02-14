@@ -3,7 +3,7 @@ var app = express();
 var path = require('path');
 /*var ip = require("ip");
 console.log("http://"+ip.address() );*/
-
+/*
 var firebase = require('firebase');
 var fb = firebase.initializeApp({ 
     apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
@@ -14,12 +14,12 @@ var fb = firebase.initializeApp({
     messagingSenderId: "970359498290",
     appId: "1:970359498290:web:a43e83568b9db8eb783e2b",
     measurementId: "G-YTRZ79TCJJ"
-});
+});*/
 /*console.log("ASD0");
 console.log("ASD",app);
 console.log("ASD2",app.database());
 console.log("ASD3",firebase.database());*/
-firebase.auth().signInWithEmailAndPassword("marek.petr10@seznam.cz", "Automation123")
+/*firebase.auth().signInWithEmailAndPassword("marek.petr10@seznam.cz", "Automation123")
     .then((user) => {
         console.log("USER:", firebase.auth().currentUser.uid);
         firebase.database().ref(firebase.auth().currentUser.uid).on('value', (snapshot) => {
@@ -37,7 +37,7 @@ firebase.database().ref("/Ay9EuCEgoGOZYhFApXU2jczd0X32").once('value')
 .catch((value) => {
     console.log(new Error("Error in Firebase.getDBData()"));
 });
-
+*/
 
 var p = path.join(__dirname, '/public');
 console.log(' p: ',  p);
