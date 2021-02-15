@@ -1,5 +1,6 @@
 var express = require('express');
 var path = require('path');
+const config = require("../config.json");
 module.exports = class ServerApp {
     constructor() {
         this.app = express();
@@ -20,7 +21,7 @@ module.exports = class ServerApp {
             res.redirect(req.url);
         });*/
     }
-    start(port = 8084) {
-        var server = this.app.listen(port);
+    start(port) {
+        var server = this.app.listen(port || config.port);
     }
 };
