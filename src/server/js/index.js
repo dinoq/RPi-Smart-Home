@@ -5,7 +5,6 @@ console.log("http://"+ip.address() );*/
 let f = new Firebase();
 new ServerApp().start();
 /*
-var firebase = require('firebase');
 var fb = firebase.initializeApp({
     apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
     authDomain: "home-automation-80eec.firebaseapp.com",

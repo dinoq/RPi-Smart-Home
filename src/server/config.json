@@ -1,3 +1,4 @@
 {
-    "port": 8085
+    "port": 8085,
+    "db_file_path": "db.json"
 }
