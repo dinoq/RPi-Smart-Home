@@ -8,8 +8,11 @@ module.exports = class Firebase{
     private _dbCopy;
     private _dbInited: boolean = false;
 
+    changes: IChangeMessage[] = new Array();
+
     constructor(){
         this.initFirebase();
+
         firebase.auth().signInWithEmailAndPassword("marek.petr10@seznam.cz", "Automation123")
         .then((user) => {
             this._fb.database().ref("/Ay9EuCEgoGOZYhFApXU2jczd0X32").on('value', (snapshot) => {
@@ -24,7 +27,7 @@ module.exports = class Firebase{
         if(!this._dbInited){
             this.initLocalDB(data);
         }else{
-
+            console.log(this.handleDbChange(data));
         }
     }
 
@@ -47,6 +50,71 @@ module.exports = class Firebase{
         }
         fs.writeFileSync(conf.db_file_path, JSON.stringify(data));
         this._dbCopy = data;
+        this._dbInited = true;
+    }
+
+    handleDbChange(data){
+        const newRooms = data["rooms"];
+
+        console.log('__________________________________');
+        let newRoomsIDs = new Array();
+        for(const newRoomID in newRooms){
+            newRoomsIDs.push(newRoomID);
+            const room = newRooms[newRoomID];
+            const localRoom = this._dbCopy["rooms"][newRoomID];
+            const modules = room["devices"];
+            const localmodules = localRoom["devices"];
+            for(const moduleID in modules){
+                const sensors = modules[moduleID]["IN"];
+                const localSensors = localmodules[moduleID]["IN"];
+                for(const sensorID in sensors){
+                    
+                }
+                const devices = modules[moduleID]["OUT"];
+                const localDevices = localmodules[moduleID]["OUT"];
+                for(const deviceID in devices){
+                    if(devices[deviceID].value != localDevices[deviceID].value){
+                        this.changes.push({type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, value: devices[deviceID].value});     
+                    }
+                }
+            }
+        }
+
+        const localRooms = this._dbCopy["rooms"];
+        for(const localRoomID in localRooms){
+            if(newRoomsIDs.includes(localRoomID)){ // New rooms doesn't contain localRoomID from local saved rooms => room was deleted
+                newRoomsIDs.splice(newRoomsIDs.indexOf(localRoomID), 1);            
+            }else{   
+                this.changes.push({type: ChangeMessageTypes.DELETED, level: DevicesTypes.ROOM, value: {path: localRoomID}});             
+            }
+        }
+
+        for(const roomID of newRoomsIDs){
+            this.changes.push({type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, value: {path: roomID}});
+            newRoomsIDs.splice(newRoomsIDs.indexOf(roomID), 1);
+        }
+        console.log('zustalo: ', newRoomsIDs);
+
+        this._dbCopy = data;
+        return this.changes;
     }
 }
 
+interface IChangeMessage{
+    type: ChangeMessageTypes,
+    level: DevicesTypes,
+    value?: any
+}
+
+enum ChangeMessageTypes{
+    DELETED,
+    ADDED,
+    VALUE_CHANGED
+}
+
+enum DevicesTypes{
+    ROOM,
+    MODULE,
+    SENSOR,
+    DEVICE
+}
