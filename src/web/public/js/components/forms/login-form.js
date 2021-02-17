@@ -45,14 +45,14 @@ export class LoginComponent extends AbstractComponent {
                 </div>
                 <div class="form-label">
                     <label for="login" class="active-label">Email</label>
-                    <input type="email" id="login" onfocusin=${fin} onfocusout=${fout} required autocomplete />
+                    <input type="email" id="login" name="login" onfocusin=${fin} onfocusout=${fout} required autocomplete />
                 </div>
                 <div class="form-label">
                     <label for="password" class="active-label">Heslo</label>
-                    <input type="password" id="password" onfocusin=${fin} onfocusout=${fout} required />
+                    <input type="password" id="password"  name="password" onfocusin=${fin} onfocusout=${fout} required />
                 </div>
                 <div class="chekbox-wrapper">
-                    <input type="checkbox" id="remember" />                    
+                    <input type="checkbox" id="remember" name="remember" />                    
                     <label for="remember">Zapamatovat účet</label>
                 </div>
                 <input type="submit" id="submit-login" class="btn btn-primary" value="Přihlásit"/>

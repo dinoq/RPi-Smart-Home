@@ -10,14 +10,14 @@ module.exports = class ServerApp {
         this.app.use("/files", function (req, res) {
             return res.send("I will be served instead of a files directory");
         });
-        this.app.use(bodyParser.json());
+        //this.app.use(bodyParser.json())
         this.app.use(bodyParser.urlencoded({
             extended: true
         }));
         this.app.post('/domu', function (req, res) {
             if (req.get('Referer').includes("uzivatel/login")) { // Logged in
-                console.log(req.body);
             }
+            console.log(req.body);
             console.log("qqqqq", req.url);
             res.redirect(req.url);
         });

@@ -10,10 +10,10 @@ module.exports = class Firebase{
 
     changes: IChangeMessage[] = new Array();
 
-    constructor(){
+    constructor(username: string = "marek.petr10@seznam.cz", pwd: string = "Automation123"){
         this.initFirebase();
 
-        firebase.auth().signInWithEmailAndPassword("marek.petr10@seznam.cz", "Automation123")
+        firebase.auth().signInWithEmailAndPassword(username, pwd)
         .then((user) => {
             this._fb.database().ref("/Ay9EuCEgoGOZYhFApXU2jczd0X32").on('value', (snapshot) => {
                 const data = snapshot.val();
