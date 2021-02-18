@@ -1,4 +1,5 @@
 {
-    "port": 8085,
-    "db_file_path": "db.json"
+    "port": 80,
+    "db_file_path": "db.json",
+    "ESP_AP_PWD": "ESP_HOME_AUTOMATION"
 }

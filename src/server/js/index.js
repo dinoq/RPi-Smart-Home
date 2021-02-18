@@ -1,8 +1,6 @@
-let Firebase = require('./firebase.js');
 const ServerApp = require('./app.js');
 /*var ip = require("ip");
 console.log("http://"+ip.address() );*/
-let f = new Firebase();
 new ServerApp().start();
 /*
 var fb = firebase.initializeApp({

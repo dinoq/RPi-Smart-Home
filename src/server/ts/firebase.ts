@@ -2,19 +2,30 @@
 var firebase = require('firebase');
 const fs = require("fs");
 const conf = require("../config.json");
+const WifiManager = require('./wifi-manager.js');
 
 module.exports = class Firebase{
     private _fb;
     private _dbCopy;
     private _dbInited: boolean = false;
+    private _loggedIn: boolean = false;
+    private _wifiManager: typeof WifiManager;
+
+    public get loggedIn(): boolean{
+        return this._loggedIn;
+    }
 
     changes: IChangeMessage[] = new Array();
 
-    constructor(username: string = "marek.petr10@seznam.cz", pwd: string = "Automation123"){
+    constructor(){
         this.initFirebase();
+        this._wifiManager = new WifiManager();
+    }
 
+    public login(username: string, pwd: string){
         firebase.auth().signInWithEmailAndPassword(username, pwd)
         .then((user) => {
+            this._loggedIn = true;
             this._fb.database().ref("/Ay9EuCEgoGOZYhFApXU2jczd0X32").on('value', (snapshot) => {
                 const data = snapshot.val();
                 this._databaseUpdatedHandler(data);
@@ -23,11 +34,13 @@ module.exports = class Firebase{
             console.log('error user: ', error);
         });
     }
+
     private _databaseUpdatedHandler(data: any) {
         if(!this._dbInited){
             this.initLocalDB(data);
         }else{
-            console.log(this.handleDbChange(data));
+            console.log(this.saveDbChange(data));
+            this._processDbChanges();
         }
     }
 
@@ -53,7 +66,7 @@ module.exports = class Firebase{
         this._dbInited = true;
     }
 
-    handleDbChange(data){
+    saveDbChange(data){
         const newRooms = data["rooms"];
 
         console.log('__________________________________');
@@ -94,9 +107,24 @@ module.exports = class Firebase{
             newRoomsIDs.splice(newRoomsIDs.indexOf(roomID), 1);
         }
         console.log('zustalo: ', newRoomsIDs);
+        
 
         this._dbCopy = data;
         return this.changes;
+    }
+
+    private _processDbChanges(): void {
+        console.log("process");
+        for(let i = 0; i < this.changes.length; i++) {
+            let change = this.changes[i];
+            if(change.type == ChangeMessageTypes.ADDED && change.level == DevicesTypes.MODULE){// Module was added => init communication
+                console.log("Module added!");
+                this._wifiManager.initCommunicationWithESP().then((value) => {
+                    let index = this.changes.indexOf(change);
+                    this.changes.splice(index, 1); // Remove change
+                })
+            }
+        }
     }
 }
 

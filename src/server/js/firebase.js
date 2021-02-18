@@ -1,13 +1,22 @@
 var firebase = require('firebase');
 const fs = require("fs");
 const conf = require("../config.json");
+const WifiManager = require('./wifi-manager.js');
 module.exports = class Firebase {
     constructor() {
         this._dbInited = false;
+        this._loggedIn = false;
         this.changes = new Array();
         this.initFirebase();
-        firebase.auth().signInWithEmailAndPassword("marek.petr10@seznam.cz", "Automation123")
+        this._wifiManager = new WifiManager();
+    }
+    get loggedIn() {
+        return this._loggedIn;
+    }
+    login(username, pwd) {
+        firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
+            this._loggedIn = true;
             this._fb.database().ref("/Ay9EuCEgoGOZYhFApXU2jczd0X32").on('value', (snapshot) => {
                 const data = snapshot.val();
                 this._databaseUpdatedHandler(data);
@@ -21,7 +30,8 @@ module.exports = class Firebase {
             this.initLocalDB(data);
         }
         else {
-            console.log(this.handleDbChange(data));
+            console.log(this.saveDbChange(data));
+            this._processDbChanges();
         }
     }
     initFirebase() {
@@ -43,7 +53,7 @@ module.exports = class Firebase {
         this._dbCopy = data;
         this._dbInited = true;
     }
-    handleDbChange(data) {
+    saveDbChange(data) {
         const newRooms = data["rooms"];
         console.log('__________________________________');
         let newRoomsIDs = new Array();
@@ -83,6 +93,19 @@ module.exports = class Firebase {
         console.log('zustalo: ', newRoomsIDs);
         this._dbCopy = data;
         return this.changes;
+    }
+    _processDbChanges() {
+        console.log("process");
+        for (let i = 0; i < this.changes.length; i++) {
+            let change = this.changes[i];
+            if (change.type == ChangeMessageTypes.ADDED && change.level == DevicesTypes.MODULE) { // Module was added => init communication
+                console.log("Module added!");
+                this._wifiManager.initCommunicationWithESP().then((value) => {
+                    let index = this.changes.indexOf(change);
+                    this.changes.splice(index, 1); // Remove change
+                });
+            }
+        }
     }
 };
 var ChangeMessageTypes;
