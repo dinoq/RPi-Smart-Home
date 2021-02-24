@@ -25,6 +25,24 @@ module.exports = class Firebase{
     public login(username: string, pwd: string){
         firebase.auth().signInWithEmailAndPassword(username, pwd)
         .then((user) => {
+            console.log("Succesfully logged in");
+            const coap = require('coap');
+
+            
+            let req = coap.request({
+                host: '192.168.1.6',
+                pathname: '/light',
+                query: "pin=A0&val=100"
+            });
+            //console.log(req);
+            setTimeout(() => {
+                req.end()
+            }, 2000);
+            console.log("req end");
+
+            
+
+
             this._loggedIn = true;
             this._fb.database().ref("/Ay9EuCEgoGOZYhFApXU2jczd0X32").on('value', (snapshot) => {
                 const data = snapshot.val();

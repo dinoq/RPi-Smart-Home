@@ -1,5 +1,13 @@
 {
     "port": 80,
     "db_file_path": "db.json",
-    "ESP_AP_PWD": "ESP_HOME_AUTOMATION"
+    "ESP_AP_IP": "192.168.10.10",
+    "ESP_AP_PWD": "esp12345678",
+    "ESP_SSID_PREFIX" : "ESP_MODULE",
+    "ESP_AP_PORT": "60000",
+
+
+
+    "username": "marek.petr10@seznam.cz",
+    "password": "Automation123"
 }

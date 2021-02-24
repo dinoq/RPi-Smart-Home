@@ -26,7 +26,7 @@ module.exports = class WifiManager{
         let SSIDs = await this._scanSSIDAsync();
         console.log('SSIDs: ', SSIDs);
         let index = SSIDs.findIndex((ssid) => {
-            return ssid.includes("ESP_MODULE");
+            return ssid.includes(Config.ESP_SSID_PREFIX);
         })
         if(index == -1)
             return null;
