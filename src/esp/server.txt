@@ -1,0 +1,20 @@
+Při návrhu aplikace na Raspberry Pi a ESP8266 jsem se snažil přenést co nejvíce zodpovědnosti za interpretaci dat na Raspberry Pi, které má mnohem větší výpočetní výkon, než ESP8266. Samozřejmě s ohledem na možnost budoucího rozvoje aplikace na ESP8266.
+
+Komuikace mezi Raspberry Pi a ESP8266
+Ke komunikaci mezi Raspberry Pi a ESP8266 jsem se rozhodl použít protokol CoAP. (VYSVĚTLIT PROČ NE JINÉ-JAKO MQTT). Zprávy přenášené po síti budou mít V/V pin, či sběrnici specifikovanou jako cestu ke zdroji a v samotném datovém obsahu (payload) přenášenou hodnotu. Příklad získání hodnoty senzoru na pinu A0 může Raspberry Pi získat následujícím GET požadavkem:
+
+coap://192.168.5.1/A0
+
+V případě posílání se pak pošle POST žádost s příslušným datovým obsahem, což bude číslo od 0 do 1024. To jsou totiž hodnoty, ve kterých je ESP8266 modul schopný převádět digitální hodnoty na analogové (jak bylo zmíněno již dříve).
+
+Přidání nového modulu do systému
+Jelikož systém není uzavřený, ale je možné jej rozšiřovat o nové moduly (nová ovládaná zařízení), musel jsem vytvořit mechanismus, kterým se do systému budou přidávat nové moduly.......
+Postup při přidávání modulu do systému je následující:
+
+- Uživatel upraví v kódu pro ESP8266 SSID a heslo k WiFi síti, ve které bude modul operovat.
+- Program zkompiluje a načte do ESP8266.
+- Spustí modul. Ten se přihlásí k multicastové skupině 224.0.1.187 (All CoAP Nodes skupina)
+- V konfiguraci systému (v klientské aplikaci) klikne na tlačítko pro přidání modulu (pro požadovanou místnost)
+- Tím se ve všech aktuálně spuštěných klientských aplikacích, které jsou připojené k internetu zobrazí dialogové okno s informací o čekání na přidání nového modulu do systému. Tímto oknem se zablokují jakékoliv akce v klientské aplikaci dokud se nepřidá nový modul. Dialogové okno bude obsahovat tlačítko na zrušení akce.
+- Raspberry Pi v reakci na žádost o přidání modulu vyšle dotaz na multicastovou skupinu, přes který nově přidávanému modulu sdělí svou IP
+

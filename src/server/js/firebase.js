@@ -2,6 +2,7 @@ var firebase = require('firebase');
 const fs = require("fs");
 const conf = require("../config.json");
 const WifiManager = require('./wifi-manager.js');
+const CommunicationManager = require('./communication-manager.js');
 module.exports = class Firebase {
     constructor() {
         this._dbInited = false;
@@ -9,6 +10,7 @@ module.exports = class Firebase {
         this.changes = new Array();
         this.initFirebase();
         this._wifiManager = new WifiManager();
+        this._communicationManager = new CommunicationManager();
     }
     get loggedIn() {
         return this._loggedIn;
@@ -17,19 +19,8 @@ module.exports = class Firebase {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
             console.log("Succesfully logged in");
-            const coap = require('coap');
-            let req = coap.request({
-                host: '192.168.1.6',
-                pathname: '/light',
-                query: "pin=A0&val=100"
-            });
-            //console.log(req);
-            setTimeout(() => {
-                req.end();
-            }, 2000);
-            console.log("req end");
             this._loggedIn = true;
-            this._fb.database().ref("/Ay9EuCEgoGOZYhFApXU2jczd0X32").on('value', (snapshot) => {
+            this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
                 const data = snapshot.val();
                 this._databaseUpdatedHandler(data);
             });
@@ -74,17 +65,22 @@ module.exports = class Firebase {
             const room = newRooms[newRoomID];
             const localRoom = this._dbCopy["rooms"][newRoomID];
             const modules = room["devices"];
-            const localmodules = localRoom["devices"];
+            const localmodules = (localRoom) ? localRoom["devices"] : undefined;
             for (const moduleID in modules) {
+                if (!(localmodules && localmodules[moduleID])) { // Module added
+                    let path = "rooms/" + newRoomID + "/devices/" + moduleID;
+                    console.log('new module path: ', path);
+                    this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: moduleID, path: path } });
+                }
                 const sensors = modules[moduleID]["IN"];
-                const localSensors = localmodules[moduleID]["IN"];
+                const localSensors = (localmodules && localmodules[moduleID]) ? localmodules[moduleID]["IN"] : undefined;
                 for (const sensorID in sensors) {
                 }
                 const devices = modules[moduleID]["OUT"];
-                const localDevices = localmodules[moduleID]["OUT"];
+                const localDevices = (localmodules && localmodules[moduleID]) ? localmodules[moduleID]["OUT"] : undefined;
                 for (const deviceID in devices) {
                     if (devices[deviceID].value != localDevices[deviceID].value) {
-                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, value: devices[deviceID].value });
+                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], value: devices[deviceID].value } });
                     }
                 }
             }
@@ -95,11 +91,11 @@ module.exports = class Firebase {
                 newRoomsIDs.splice(newRoomsIDs.indexOf(localRoomID), 1);
             }
             else {
-                this.changes.push({ type: ChangeMessageTypes.DELETED, level: DevicesTypes.ROOM, value: { path: localRoomID } });
+                this.changes.push({ type: ChangeMessageTypes.DELETED, level: DevicesTypes.ROOM, data: { path: localRoomID } });
             }
         }
         for (const roomID of newRoomsIDs) {
-            this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, value: { path: roomID } });
+            this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, data: { path: roomID } });
             newRoomsIDs.splice(newRoomsIDs.indexOf(roomID), 1);
         }
         console.log('zustalo: ', newRoomsIDs);
@@ -112,10 +108,18 @@ module.exports = class Firebase {
             let change = this.changes[i];
             if (change.type == ChangeMessageTypes.ADDED && change.level == DevicesTypes.MODULE) { // Module was added => init communication
                 console.log("Module added!");
-                this._wifiManager.initCommunicationWithESP().then((value) => {
-                    let index = this.changes.indexOf(change);
-                    this.changes.splice(index, 1); // Remove change
+                let index = this.changes.indexOf(change);
+                this.changes.splice(index, 1); // Remove change
+                this._communicationManager.initCommunicationWithESP().then((espIP) => {
+                    //console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
+                    this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP });
+                    this._communicationManager.sendESPItsID(change.data.id);
+                    console.log('change.data.id: ', change.data.id);
                 });
+            }
+            else if (change.type == ChangeMessageTypes.VALUE_CHANGED && change.level == DevicesTypes.DEVICE) {
+                console.log("change val!!!");
+                this._communicationManager.putVal();
             }
         }
     }

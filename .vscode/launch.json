@@ -75,7 +75,7 @@
         {
             "type": "pwa-node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Raspberry Pi server",
             "skipFiles": [
                 "<node_internals>/**"
             ],

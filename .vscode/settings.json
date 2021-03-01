@@ -1,3 +1,14 @@
 {
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "files.associations": {
+        "*.latte": "html",
+        "functional": "cpp",
+        "algorithm": "cpp",
+        "iomanip": "cpp",
+        "xlocmon": "cpp",
+        "xlocnum": "cpp",
+        "bitset": "cpp",
+        "cstdlib": "cpp",
+        "regex": "cpp"
+    }
 }

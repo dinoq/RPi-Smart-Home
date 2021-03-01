@@ -1,6 +1,5 @@
 
 var wifi = require('node-wifi');
-const CommunicationManager = require('./communication-manager.js');
 const Config = require('../config.json');
 
 module.exports = class WifiManager{

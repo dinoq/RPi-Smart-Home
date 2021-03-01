@@ -4,7 +4,6 @@ const ServerApp = require('./app.js');
 console.log("http://"+ip.address() );*/
 
 
-
  new ServerApp().start();
 /*
 var fb = firebase.initializeApp({ 
