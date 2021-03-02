@@ -32,53 +32,33 @@ module.exports = class CommunicationManager {
         return new Promise((resolve, reject) => {
             console.log('initCommunicationWithESP: ');
             const localIP = CommunicationManager.getServerIP();
-            /*
             const socket = dgram.createSocket({ type: "udp4" });
             socket.addMembership(COnfig.COAP_MULTICAST_ADDR, localIP);
-            function sendMessage() {
-                const message = localIP;
-                socket.send(message, 0, message.length, COnfig.COAP_PORT, COnfig.COAP_MULTICAST_ADDR, function() {
-                    console.info(`Sending message "${message}"`);
-                });
-            }
-            sendMessage();
+            const message = "RPi-server-IP:" + localIP;
+            socket.send(message, 0, message.length, COnfig.COAP_PORT, COnfig.COAP_MULTICAST_ADDR, function () {
+                console.info(`Sending message "${message}"`);
+            });
             let espIP = null;
-            socket.on("message", function(message, rinfo) {
-                if(espIP)
+            socket.on("message", function (message, rinfo) {
+                if (espIP)
                     return;
                 espIP = rinfo.address;
-                setTimeout(() => {resolve(espIP);}, 0)
-            });*/
-            let req = coap.request({
-                host: COnfig.COAP_MULTICAST_ADDR,
-                pathname: '/getip',
-                //method: "PUT",
-                confirmable: false,
-                multicast: true
+                setTimeout(() => { resolve(espIP); }, 0);
             });
-            req.write(localIP);
-            req.on('error', function (err) {
-                console.log('e: ', err);
-            });
-            req.end();
-            console.log("req end");
         });
     }
     async sendESPItsID(id) {
         //TODO
     }
-    async putVal(ip = "224.0.1.187", pin = "D0") {
+    async putVal(ip, pin, val) {
         let req = coap.request({
             host: ip,
-            pathname: '/io',
+            pathname: '/set-io',
             query: "pin=" + pin,
             //method: "PUT",
             confirmable: true
         });
-        req.write(JSON.stringify({
-            title: 'this is a test payload',
-            body: 'containing nothing useful'
-        }));
+        req.write(val);
         req.on('error', function (err) {
             console.log('e: ', err);
         });

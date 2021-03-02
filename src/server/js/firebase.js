@@ -103,15 +103,13 @@ module.exports = class Firebase {
         return this.changes;
     }
     _processDbChanges() {
-        console.log("process");
         for (let i = 0; i < this.changes.length; i++) {
             let change = this.changes[i];
+            let index = this.changes.indexOf(change);
+            this.changes.splice(index, 1); // Remove change
             if (change.type == ChangeMessageTypes.ADDED && change.level == DevicesTypes.MODULE) { // Module was added => init communication
-                console.log("Module added!");
-                let index = this.changes.indexOf(change);
-                this.changes.splice(index, 1); // Remove change
                 this._communicationManager.initCommunicationWithESP().then((espIP) => {
-                    //console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
+                    console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
                     this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP });
                     this._communicationManager.sendESPItsID(change.data.id);
                     console.log('change.data.id: ', change.data.id);
@@ -119,7 +117,7 @@ module.exports = class Firebase {
             }
             else if (change.type == ChangeMessageTypes.VALUE_CHANGED && change.level == DevicesTypes.DEVICE) {
                 console.log("change val!!!");
-                this._communicationManager.putVal();
+                this._communicationManager.putVal("192.168.1.2", "D2", change.data.value.toString());
             }
         }
     }

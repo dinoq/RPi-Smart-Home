@@ -9,6 +9,7 @@
         "xlocnum": "cpp",
         "bitset": "cpp",
         "cstdlib": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "system_error": "cpp"
     }
 }

@@ -20,6 +20,7 @@ IPAddress subnet(255,255,255,0);
 
 WiFiUDP Udp;
 unsigned int localUdpPort = 4210;  // local port to listen on
+unsigned int CoAPPort = 5683;
 char incomingPacket[255];  // buffer for incoming packets
 char  replyPacket[] = "Hi there! Got the message :-)";  // a reply string to send back
 
@@ -94,80 +95,81 @@ void callback_light(CoapPacket &packet, IPAddress ip, int port) {
   char str[] = "GfG"; /* Stored in stack segment */
 
   //coap.sendResponse(ip, port, packet.messageid, p,packet.payloadlen,COAP_CHANGED, COAP_APPLICATION_JSON, packet.token, packet.tokenlen);
-  coap.sendResponse(ip, port, packet.messageid-1, str, sizeof(str),COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+  coap.sendResponse(ip, port, packet.messageid, str, sizeof(str),COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
   //delay(10000);
   //coap.sendResponse(ip, port, packet.messageid-1, NULL, 0,COAP_CHANGED, COAP_TEXT_PLAIN, packet.token, packet.tokenlen);
   //coap.sendResponse(ip, port, packet.messageid, p);
 }
 
-void callback_light2(CoapPacket &packet, IPAddress ip, int port) {
-  Serial.println("[Light] ON/OFF22");
+void get_IP(CoapPacket &packet, IPAddress ip, int port) {
+    Serial.println("ip requested via multicast");
+    String localIPStr = WiFi.localIP().toString();
+    int ipLen = localIPStr.length() + 1;
+    char localIP[ipLen];
+    localIPStr.toCharArray(localIP, ipLen);
+    coap.sendResponse(ip, port, packet.messageid, localIP, sizeof(localIP),COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }
-void callback_light3(CoapPacket &packet, IPAddress ip, int port) {
-  Serial.println("[Light] ON/OFF33");
-}
-void callback_light4(CoapPacket &packet, IPAddress ip, int port) {
-  Serial.println("[Light] ON/OFF44");
-}
+
 void setup() {
-  //delay(1000);
-  Serial.begin(115200);
+    //delay(1000);
+    Serial.begin(115200);
 
-  randomSeed(micros());
-  
-  
-//   Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
-//   Serial.println(WiFi.softAP(ssid/*+String(random(1000))*/, password) ? "Ready" : "Failed!");
-//   Serial.print("Soft-AP IP address = ");
-//   Serial.println(WiFi.softAPIP());
+    randomSeed(micros());
 
-
+    /*
     WiFi.mode(WIFI_STA);
     // the below instructions and now u will receive.
-    wifi_set_sleep_type(NONE_SLEEP_T); //LIGHT_SLEEP_T and MODE_SLEEP_T
-  
-  WiFi.begin(ssid, password);  
-  while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-  }
+    wifi_set_sleep_type(NONE_SLEEP_T); //LIGHT_SLEEP_T and MODE_SLEEP_T*/
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+    WiFi.begin(ssid, password);  
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
 
-  // LED State
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
-  LEDSTATE = true;
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
 
-  Serial.println("Setup Callback Light ver 4");
-  coap.server(callback_light, "light");  
-  client_count = 0;
-  //wifiServer.begin();
+    // LED State
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, HIGH);
+    LEDSTATE = true;
 
-  
-  Udp.beginMulticast(WiFi.localIP(), multicastIP, 50136);
-  Serial.printf("Now listening at IP %s IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(),multicastIP.toString().c_str(), 50136);
-  
-  coap.start();
+    Serial.println("Setup Callback Light ver 4");
+    coap.server(callback_light, "io");  
+    coap.server(get_IP, "getip");  
+    client_count = 0;
+    //wifiServer.begin();
+
+
+    Udp.beginMulticast(WiFi.localIP(), multicastIP, CoAPPort);
+    Serial.printf("Now listening at IP %s IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(),multicastIP.toString().c_str(), CoAPPort);
+
+    coap.start();
 }
 
 void loop() {
     
-  delay(1000);
-  coap.loop();
-  
-  int packetSize = Udp.parsePacket();
-  if (packetSize)
-  {
+    delay(1000);
+    int packetSize = Udp.parsePacket();
+    if (packetSize)
+    {
+        // receive incoming UDP packets
+        Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+    }
+    coap.loop();
+
+    /*int packetSize = Udp.parsePacket();
+    if (packetSize)
+    {
     // receive incoming UDP packets
     Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
     int len = Udp.read(incomingPacket, 255);
     if (len > 0)
     {
-      incomingPacket[len] = 0;
+        incomingPacket[len] = 0;
     }
     Serial.printf("UDP packet contents: %s\n", incomingPacket);
 
@@ -175,40 +177,40 @@ void loop() {
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(replyPacket);
     Udp.endPacket();
-  }
+    }*/
 
-  /*
-    
-  WiFiClient client = wifiServer.available();
-  int stop = 0;
-  if (client) {
+    /*
+
+    WiFiClient client = wifiServer.available();
+    int stop = 0;
+    if (client) {
     clear_message_buffer();
     Serial.println("client connecteeeed");
     while (client.connected()) { 
-      while (client.available()==0) {
+        while (client.available()==0) {
         if(!client.connected()){
             break;
         }
-      }
-      Serial.print("client.available()");
-      Serial.print(client.available());
-      Serial.println();
-      while (client.available()>0) {
+        }
+        Serial.print("client.available()");
+        Serial.print(client.available());
+        Serial.println();
+        while (client.available()>0) {
         char c = client.read();
         message_buffer[data_index++] = c;
         
-          Serial.write(c);
+            Serial.write(c);
         if(client.available() == 0){
-          stop=1;          
-          //Serial.write("\nkonec\n");
+            stop=1;          
+            //Serial.write("\nkonec\n");
         }
-      }
-      if(stop == 1){
+        }
+        if(stop == 1){
         //break;
-      }
-      delay(10);
+        }
+        delay(10);
     }
- 
+
     client.stop();
     int val = message_buffer[0]*256 + message_buffer[1];
     Serial.println("\nPřijatá data:"); 
@@ -217,8 +219,8 @@ void loop() {
     Serial.println("\nPřijatá data2:"); 
     Serial.print(val);
     //analogWrite(4, val);
-    
-    
+
+
     Serial.println("\nPřijatá data w:");
     Serial.write(message_buffer,4);
     Serial.println("\n");
@@ -242,7 +244,7 @@ void loop() {
     //Serial.print(sizeof(message_buffer));
     Serial.println();
     Serial.println((String)"Client " + client_count++ + " disconnected");
-  }*/
+    }*/
 }
 
 void clear_message_buffer(){
@@ -252,3 +254,5 @@ void clear_message_buffer(){
   data_index = 0;
   
 }
+
+//netsh interface ip show joins
