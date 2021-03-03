@@ -18,7 +18,7 @@ import { SettingsPage } from "./pages/settings-page.js";
 import { FrameList, FrameListItem } from "./layouts/frame-list.js";
 import { Icon } from "./components/others/app-icon.js";
 import { TabLayout } from "./layouts/tab-layout.js";
-import { FrameDetail, FrameDetailRow } from "./layouts/frame-detail.js";
+import { FrameDetail, FrameDetailRow, SlidableImg } from "./layouts/frame-detail.js";
 import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
 import { LoaderComponent } from "./components/others/loader.js";
 export var app = null;
@@ -68,6 +68,7 @@ class AutoHomeApp {
             FrameDetail,
             FrameDetailRow,
             TabLayout,
+            SlidableImg,
         ];
         if (customElements.get("login-form") == undefined) {
             for (const component of components) {

@@ -18,3 +18,11 @@ Postup při přidávání modulu do systému je následující:
 - Tím se ve všech aktuálně spuštěných klientských aplikacích, které jsou připojené k internetu zobrazí dialogové okno s informací o čekání na přidání nového modulu do systému. Tímto oknem se zablokují jakékoliv akce v klientské aplikaci dokud se nepřidá nový modul. Dialogové okno bude obsahovat tlačítko na zrušení akce.
 - Raspberry Pi v reakci na žádost o přidání modulu vyšle dotaz na multicastovou skupinu, přes který nově přidávanému modulu sdělí svou IP
 
+
+
+
+
+
+
+------------
+Uvést že jsem váhal mezi přímo rozšířením HTML elementů (custom elementy) a kompozicí (je to správně?) a vysvětlit proč jsem nezvolil kompozici... (přístup k objektům díky DOMu)

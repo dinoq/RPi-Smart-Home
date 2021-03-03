@@ -61,12 +61,14 @@ export class RoomCard extends AbstractComponent {
             const devIN = devices[espName].IN;
             for (const pin in devIN) {
                 devIN[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/IN/" + pin;
+                devIN[pin].id = pin;
                 orderedIN.push(devIN[pin]);
             }
 
             const devOUT = devices[espName].OUT;
             for (const pin in devOUT) {
                 devOUT[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/OUT/" + pin;
+                devOUT[pin].id = pin;
                 orderedOUT.push(devOUT[pin]);
             }
         }
@@ -81,7 +83,13 @@ export class RoomCard extends AbstractComponent {
         (<HTMLElement>this.querySelector(".room-name")).innerText = data.name;
         this.style.background = (data.img.src.startsWith("https://")) ? "url(" + data.img.src + ")" : "url(img/" + data.img.src + ")";
         this.style.backgroundSize = "cover";
-        this.style.backgroundPositionY = data.img.offset + "px";
+        
+        let img = new Image();
+        img.addEventListener("load", ()=>{
+            let newHeight = (this.clientWidth / img.naturalWidth) * img.naturalHeight - this.clientHeight;
+            this.style.backgroundPositionY = -(newHeight * data.img.offset) + "px";
+        });
+        img.src = data.img.src;
 
 
         let devices = data.devices;

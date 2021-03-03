@@ -6,6 +6,7 @@
 
 html {
   background-color: var(--default-page-bg-color);
+  scroll-behavior: smooth;
   overflow-x: hidden;
 }
 
@@ -357,12 +358,6 @@ room-card .card-container .right-stack .devices-row {
   opacity: 0.7;
 }
 
-frame-detail .form-wrapper .form {
-  border-radius: 10px;
-  background-color: #ffffff;
-  padding: 10px;
-}
-
 @keyframes blink {
   0% {
     background-color: #00aaff;
@@ -379,6 +374,17 @@ frame-detail .form-wrapper .form {
   100% {
     background-color: white;
   }
+}
+
+frame-detail .form-wrapper .form {
+  border-radius: 10px;
+  background-color: #ffffff;
+  padding: 10px;
+}
+
+frame-detail .blinking {
+  -webkit-animation: blink 1s linear 3;
+          animation: blink 1s linear 3;
 }
 
 .blink button {
@@ -454,8 +460,12 @@ page-manager settings-page .form-wrapper form {
   margin: 5px;
 }
 
-page-manager settings-page .form-wrapper form input:not([type=checkbox]), page-manager settings-page .form-wrapper form select {
+page-manager settings-page .form-wrapper form input:not([type=checkbox]), page-manager settings-page .form-wrapper form select, page-manager settings-page .form-wrapper form slidable-img {
   max-width: 500px;
+}
+
+page-manager settings-page .form-wrapper form slidable-img {
+  background-color: #c1c1c1;
 }
 
 /*

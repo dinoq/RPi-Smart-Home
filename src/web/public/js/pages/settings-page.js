@@ -35,8 +35,8 @@ export class SettingsPage extends BasePage {
             let update = { name: name };
             const listType = this.itemInDetail.parentListType;
             if (listType == FrameListTypes.ROOMS) {
-                let imgSrc = document.getElementById("img-src").value;
-                let imgOffset = parseInt(document.getElementById("img-offset").value);
+                let imgSrc = document.getElementById("bg-img-src").value;
+                let imgOffset = parseFloat(document.getElementById("slider-for-image").value);
                 imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
                 update.img = { src: imgSrc, offset: imgOffset };
                 path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
@@ -176,6 +176,9 @@ export class SettingsPage extends BasePage {
                     let newItem = parentList.children[0];
                     newItem = ((Utils.itemIsAnyFromEnum(parentList.children[0].type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
                     this.itemClicked(null, newItem, "edit");
+                    //Scroll to bottom and blink detail
+                    this.detail.scrollIntoView();
+                    this.detail.blink();
                 }
                 else if (clickedElem == "delete") {
                     await Firebase.deleteDBData(item.dbCopy.path);
@@ -502,7 +505,7 @@ export class SettingsPage extends BasePage {
         let title = this.getTitleForEditingFromItem(item, item.dbCopy.name);
         let values;
         if (parenListType == FrameListTypes.ROOMS) {
-            values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset];
+            values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset, item.dbCopy.img.offset];
         }
         else if (parenListType == FrameListTypes.MODULES) {
             values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];

@@ -33,9 +33,8 @@ $xl: 1200px;
 
 html{
     background-color: var(--default-page-bg-color);
-    
-    overflow-x:hidden;
-  
+    scroll-behavior: smooth;
+    overflow-x:hidden;  
     
     header{
         #header-wrapper{
@@ -354,15 +353,6 @@ room-card{
     }
 }
 
-frame-detail{    
-    .form-wrapper{
-        .form{
-            border-radius: 10px;
-            background-color: #ffffff;
-            padding: 10px;
-        }
-    }
-}
 
 @keyframes blink {  
     0% { background-color: #00aaff; }
@@ -374,6 +364,22 @@ frame-detail{
 }
 
 $anim-duration: 1s;
+frame-detail{    
+    .form-wrapper{
+        .form{
+            border-radius: 10px;
+            background-color: #ffffff;
+            padding: 10px;
+        }
+    }
+    
+    .blinking{
+        -webkit-animation: blink $anim-duration linear infinite;
+        -moz-animation: blink $anim-duration linear infinite;
+        animation: blink $anim-duration linear infinite;
+    }
+}
+
 .blink button {
     -webkit-animation: blink $anim-duration linear infinite;
     -moz-animation: blink $anim-duration linear infinite;
@@ -445,8 +451,12 @@ page-manager{
             padding: 5px;
             margin: 5px;
 
-            input:not([type=checkbox]), select{
+            input:not([type=checkbox]), select, slidable-img{
                 max-width: 500px;
+            }
+
+            slidable-img{                
+                background-color: #c1c1c1;
             }
         }
     }

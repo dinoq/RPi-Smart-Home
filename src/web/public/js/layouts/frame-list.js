@@ -209,7 +209,7 @@ export const DBTemplates = {
             index: 0,
             img: {
                 src: "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg",
-                offset: 700
+                offset: 0
             },
             name: "Místnost " + Math.random().toString(36).substring(2, 6).toUpperCase()
         };

@@ -1,7 +1,7 @@
 import { Utils } from "../app/utils.js";
 import { AbstractComponent, IComponentProperties } from "../components/component.js";
 import { UnknownValueInDatabaseError } from "../errors/db-errors.js";
-import { FrameList, FrameListItem, FrameListTypes } from "./frame-list.js";
+import { ARROWABLE_LISTS, FrameList, FrameListItem, FrameListTypes } from "./frame-list.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
 
@@ -10,6 +10,8 @@ export class FrameDetail extends AbstractComponent {
 
     rows: any;
     actualFrameListType: FrameListTypes;
+
+    blinkable: string[] = new Array(); // String array of blinkable elements (for query)
     constructor(layoutProps?: IComponentProperties) {
         super(Utils.mergeObjects(layoutProps, {
         }));
@@ -43,24 +45,29 @@ export class FrameDetail extends AbstractComponent {
             if (type == FrameListTypes.ROOMS) {
                 this.rows.innerHTML = "";
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název místnosti", INPUT_TYPES.TEXT_FIELD));
-                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("img-src", "URL obrázku na pozadí", INPUT_TYPES.TEXT_FIELD));
-                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("img-offset", "Posun obrázku", INPUT_TYPES.TEXT_FIELD));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("bg-img-src", "URL obrázku na pozadí", INPUT_TYPES.TEXT_FIELD));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("slider-for-image", "Posun obrázku", INPUT_TYPES.SLIDER_FOR_IMG_PREV));
+                AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("img-preview", "Náhled obrázku", INPUT_TYPES.IMG_PREVIEW));
+                this.blinkable = new Array("#device-name", "#bg-img-src", "#slider-for-image", "#img-preview");
             } else if (type == FrameListTypes.MODULES) {
                 this.rows.innerHTML = "";
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název modulu", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-id", "ID modulu", INPUT_TYPES.DISABLED_TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("module-type", "Typ modulu", INPUT_TYPES.DISABLED_TEXT_FIELD));
+                this.blinkable = new Array("#device-name", "#module-id", "#module-type");
             } else if (type == FrameListTypes.SENSORS) {
                 this.rows.innerHTML = "";
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název snímače", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("sensor-type", "Typ snímače", INPUT_TYPES.SELECT_SENSOR_TYPE));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("pin", "Vstup", INPUT_TYPES.SELECT_SENSOR_INPUT));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("unit", "Jednotky", INPUT_TYPES.TEXT_FIELD));
+                this.blinkable = new Array("#device-name", "#sensor-type", "#pin", "#unit");
             } else if (type == FrameListTypes.DEVICES) {
                 this.rows.innerHTML = "";
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("device-name", "Název zařízení", INPUT_TYPES.TEXT_FIELD));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("icon-type", "Typ zařízení", INPUT_TYPES.SELECT_DEVICE_TYPE));
                 AbstractComponent.appendComponentsToDOMElements(this.rows, new FrameDetailRow("pin", "Výstup", INPUT_TYPES.SELECT_DEVICE_OUTPUT));
+                this.blinkable = new Array("#device-name", "#icon-type", "#pin");
             }
         }
 
@@ -69,9 +76,20 @@ export class FrameDetail extends AbstractComponent {
             (<FrameDetailRow>row).initialize(val, onInputCallback);
 
         });
+    }
+    
+    blink() {
+        for(let i = 0; i < this.blinkable.length; i++){
+            let element: HTMLElement = this.querySelector(this.blinkable[i]);
+            element?.classList.add("blinking");
+        }
 
-
-
+        setTimeout(() => {
+            for(let i = 0; i < this.blinkable.length; i++){
+                let element: HTMLElement = this.querySelector(this.blinkable[i]);
+                element?.classList.remove("blinking");
+            }
+        }, 3000);
     }
 
 }
@@ -96,7 +114,7 @@ export class FrameDetailRow extends AbstractComponent {
             </div>
         `;
 
-        let input = this.querySelector(".input-field");
+        let input: HTMLElement = this.querySelector(".input-field");
         if (type == INPUT_TYPES.TEXT_FIELD) {
             input.innerHTML = `        
                 <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value=""/>                   
@@ -154,6 +172,13 @@ export class FrameDetailRow extends AbstractComponent {
             } else if (moduleType == "ESP32") {
 
             }
+        }else if(type == INPUT_TYPES.SLIDER_FOR_IMG_PREV){
+            input.innerHTML = `
+                <input type="range" min="0" max="1" step="0.01" value="0.8"  class="slider" id="${id}" name="${id}">
+            `;
+        }else if(type == INPUT_TYPES.IMG_PREVIEW){
+            let slider: HTMLInputElement = <HTMLInputElement>document.getElementById("slider-for-image");
+            AbstractComponent.appendComponentsToDOMElements(input, new SlidableImg(slider));
         }
         this.type = type;
         this.inputID = id;
@@ -161,13 +186,70 @@ export class FrameDetailRow extends AbstractComponent {
     }
 
     initialize(val: string, onInputCallback) {
-        (<HTMLInputElement>this.input).value = val;
-        this.input.addEventListener("input", onInputCallback);
-        if ((<HTMLInputElement>this.input).value != val) {
-            new UnknownValueInDatabaseError(val, this.type);
+        if(Utils.itemIsAnyFromEnum(this.type, INPUT_TYPES, ["IMG_PREVIEW"])){ // Don't set value directly!
+
+        }else{
+            (<HTMLInputElement>this.input).value = val;
+            this.input.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
+            this.input.addEventListener("input", onInputCallback);
+            if ((<HTMLInputElement>this.input).value != val) {
+                new UnknownValueInDatabaseError(val, this.type);
+            }
         }
+            
     }
 
+}
+
+
+export class SlidableImg extends AbstractComponent {
+    static tagName = "slidable-img";
+
+    private offset: number;
+    private bgURL: string;
+    viewHeight: number;
+    constructor(slider: HTMLInputElement, layoutProps?: IComponentProperties) {
+        super(layoutProps);
+
+        let srcImgChangedHandler = () => {
+            this.bgURL = (<HTMLInputElement>document.getElementById("bg-img-src")).value;
+            this.connectedCallback();
+        }
+        let imgSrcInput = <HTMLInputElement>document.getElementById("bg-img-src");
+        imgSrcInput.addEventListener("input",srcImgChangedHandler);
+        imgSrcInput.addEventListener("change", srcImgChangedHandler);
+        this.bgURL = (<HTMLInputElement>document.getElementById("bg-img-src")).value;
+
+
+        this.offset = Number.parseInt(slider.value);
+
+        let sliderValueChangedHandler = ()=>{
+            this.offset = Number.parseFloat(slider.value);
+            this.connectedCallback();
+        }
+        slider.addEventListener("change", sliderValueChangedHandler);
+        slider.addEventListener("input", sliderValueChangedHandler);
+    }
+    connectedCallback(): void {
+        this.viewHeight = this.clientWidth/5;
+        this.style.height = this.viewHeight + "px";
+        this.parent.parentElement.querySelector("label").style.top = "-30px";
+
+        this.style.background = "url(" + this.bgURL + ")";
+        this.style.backgroundSize = "cover";
+
+        this.setBgImgOffsetY();
+    }
+
+    setBgImgOffsetY(){        
+        var img = new Image();
+        img.addEventListener("load", ()=>{
+            let newHeight = (this.clientWidth / img.naturalWidth) * img.naturalHeight - this.viewHeight;
+            this.style.backgroundPositionY = -(newHeight * this.offset) + "px";
+        });
+        img.src = this.bgURL;
+        console.log('this.bgURL: ', this.bgURL);
+    }
 }
 
 export enum INPUT_TYPES {
@@ -176,5 +258,7 @@ export enum INPUT_TYPES {
     SELECT_SENSOR_TYPE,
     SELECT_SENSOR_INPUT,
     SELECT_DEVICE_TYPE,
-    SELECT_DEVICE_OUTPUT
+    SELECT_DEVICE_OUTPUT,
+    IMG_PREVIEW,
+    SLIDER_FOR_IMG_PREV
 }
