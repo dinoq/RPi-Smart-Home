@@ -1,10 +1,24 @@
 OUT:
 Relé
 -obrazky: 
-relé, znak dimmable, žárovka se znakem dimmable, bzučák,
+relé, znak dimmable, žárovka se znakem dimmable, bzučák, 
 
-Mosfet
-tranzistor, spínač, žárovka se znakem spínače,žaluzie (čtverec)
+Mosfet tranzistor, spínač, žárovka se znakem spínače,žaluzie (čtverec)
+
+Typ výstupu (definitivně):
+Spínač - jen když zbude čas
+Digitální (ON/OFF)
+Ikona: 
+světlo
+Spínač
+motor
+
+Analogový (Plynulý)
+Ikona: 
+Stmívatelné světlo
+servo motor
+
+
 
 INPUT:
 Analog-symboly před,možnost mít jeden hlavní
@@ -76,23 +90,20 @@ name
 img src
 img offset
 
-
-DetailFrame pro sensors:
-Modul
-vstup => zobrazit typ (Analogový/digitální senzor)
-icon type=>náhled
-name
-unit
-
-DetailFrame pro devices:
-Modul
-výstup => zobrazit typ (Analogový/digitální senzor)
-icon type=>náhled
-name
-
 DetailFrame pro ESP:
 Identifikátor (získaný z IP na text)-needitovatelné
 typ (např ESP8266)-needitovatelné =>zobrazit vybavení(V/V piny, počet pwm...)
 name
+
+DetailFrame pro sensors:
+name
+icon type=>náhled
+vstup => zobrazit typ (Analogový/digitální senzor)
+unit
+
+DetailFrame pro devices:
+name
+icon type=>náhled
+výstup => zobrazit typ (Analogový/digitální senzor)
 ___________________________
 

@@ -277,21 +277,20 @@ export const DBTemplates = {
             type: "temp",
             index: 0,
             name: "Snímač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            valueType: "bool",
             unit: "°C",
             value: "on",
-            pin: "A0"
+            pin: "A0",
+            icon: "light"
         }
     },
     get DEVICES() {
         return {
-            type: "switch",
             index: 0,
             name: "Zařízení " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            valueType: "bool",
-            unit: "°C",
-            value: "on",
-            pin: "D1"
+            pin: "D1",
+            type: "digital",
+            value: 0,
+            icon: "light"
         }
     }
 };

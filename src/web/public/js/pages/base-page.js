@@ -5,7 +5,8 @@ export class BasePage extends AbstractComponent {
         super(componentProps);
         let style = this.style;
         style.position = "absolute";
-        style.width = Utils.getWindowWidth() + "px";
+        let scrollbarWidth = Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue('--scrollbar-width')); // From CSS file
+        style.width = (Utils.getWindowWidth() - scrollbarWidth) + "px";
         //style.height = Config.getWindowHeight() + "px";
         //style.backgroundColor = "#e8e8e8";
     }

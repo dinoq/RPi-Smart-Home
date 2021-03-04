@@ -36,7 +36,7 @@ export class SettingsPage extends BasePage {
             const listType = this.itemInDetail.parentListType;
             if (listType == FrameListTypes.ROOMS) {
                 let imgSrc = document.getElementById("bg-img-src").value;
-                let imgOffset = parseFloat(document.getElementById("slider-for-image").value);
+                let imgOffset = parseFloat(document.getElementById("slider-for-image-input").value);
                 imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
                 update.img = { src: imgSrc, offset: imgOffset };
                 path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
@@ -48,6 +48,12 @@ export class SettingsPage extends BasePage {
                 path = this.itemInDetail.item.dbCopy.path;
             }
             else if (listType == FrameListTypes.DEVICES) {
+                let outputType = document.getElementById("output-type").value;
+                let iconType = document.getElementById("icon-type").value;
+                let pin = document.getElementById("pin").value;
+                update.type = outputType;
+                update.icon = iconType;
+                update.pin = pin;
                 path = this.itemInDetail.item.dbCopy.path;
             }
             if (Object.keys(update).length != 0) { // If is there something to update...
@@ -126,6 +132,8 @@ export class SettingsPage extends BasePage {
                 }
                 this.itemInDetail = { item: item, parentListType: parentList.type };
                 this.initDetail();
+                this.detail.scrollIntoView();
+                this.detail.blink(1);
             }
             else {
                 let itemIndex = Array.from(parentList.childNodes).indexOf(item);
@@ -175,7 +183,7 @@ export class SettingsPage extends BasePage {
                     //Select aded item
                     let newItem = parentList.children[0];
                     newItem = ((Utils.itemIsAnyFromEnum(parentList.children[0].type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
-                    this.itemClicked(null, newItem, "edit");
+                    await this.itemClicked(null, newItem, "edit");
                     //Scroll to bottom and blink detail
                     this.detail.scrollIntoView();
                     this.detail.blink();
@@ -400,7 +408,6 @@ export class SettingsPage extends BasePage {
                 await new Promise(resolve => sleep = setTimeout(resolve, sleepTime));
             }
         }
-        console.log('anyItem: ', anyItem);
         if (!anyItem)
             return Promise.reject("Time limit of " + (timeLimit / 1000) + " seconds expired!");
         return anyItem;
@@ -505,7 +512,7 @@ export class SettingsPage extends BasePage {
         let title = this.getTitleForEditingFromItem(item, item.dbCopy.name);
         let values;
         if (parenListType == FrameListTypes.ROOMS) {
-            values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset, item.dbCopy.img.offset];
+            values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset, null]; // Last element is slidable image, which doesn't need init val directly (it asks slider for value)
         }
         else if (parenListType == FrameListTypes.MODULES) {
             values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];
@@ -514,7 +521,7 @@ export class SettingsPage extends BasePage {
             values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.pin, item.dbCopy.unit];
         }
         else if (parenListType == FrameListTypes.DEVICES) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.pin];
+            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.icon, item.dbCopy.pin];
         }
         this.detail.updateDetail(title, parenListType, (event) => { this.readyToSave = true; }, values);
     }

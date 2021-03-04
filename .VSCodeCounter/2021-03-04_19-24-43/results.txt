@@ -1,0 +1,80 @@
+Date : 2021-03-04 19:24:43
+Directory : c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts
+Total : 45 files,  2918 codes, 131 comments, 517 blanks, all 3566 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| TypeScript |         45 |      2,918 |        131 |        517 |      3,566 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                   | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                      |         45 |      2,918 |        131 |        517 |      3,566 |
+| app                                                                                                    |          9 |        577 |         24 |         98 |        699 |
+| components                                                                                             |         14 |        612 |         50 |        124 |        786 |
+| components\dialogs                                                                                     |          4 |        134 |          0 |         25 |        159 |
+| components\forms                                                                                       |          1 |         76 |          0 |         11 |         87 |
+| components\headers                                                                                     |          1 |          7 |          0 |          3 |         10 |
+| components\menus                                                                                       |          3 |        142 |          6 |         36 |        184 |
+| components\others                                                                                      |          3 |         69 |          0 |         17 |         86 |
+| errors                                                                                                 |          8 |        159 |          0 |         22 |        181 |
+| errors\system-errors                                                                                   |          3 |         26 |          0 |          8 |         34 |
+| layouts                                                                                                |          7 |        863 |         24 |        164 |      1,051 |
+| pages                                                                                                  |          6 |        606 |         32 |         97 |        735 |
++--------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                                               | language   | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app.ts                                       | TypeScript |        101 |          1 |         12 |        114 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\app-router.ts                            | TypeScript |        105 |          0 |         15 |        120 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\config.ts                                | TypeScript |         16 |          3 |          7 |         26 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\event-manager.ts                         | TypeScript |         49 |          0 |          7 |         56 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\firebase.ts                              | TypeScript |         78 |         16 |         16 |        110 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\page-creator.ts                          | TypeScript |        101 |          1 |         16 |        118 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\page-manager.ts                          | TypeScript |        135 |          4 |         23 |        162 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\singleton.ts                             | TypeScript |          9 |          0 |          2 |         11 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\url-manager.ts                           | TypeScript |         28 |          0 |          2 |         30 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\app\utils.ts                                 | TypeScript |         56 |          0 |         10 |         66 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\component.ts                      | TypeScript |        178 |         27 |         30 |        235 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\dialogs\base-dialog.ts            | TypeScript |         24 |          0 |          4 |         28 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\dialogs\cancel-dialog.ts          | TypeScript |         34 |          0 |          8 |         42 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\dialogs\error-dialog.ts           | TypeScript |         28 |          0 |          5 |         33 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\dialogs\yes-no-cancel-dialog.ts   | TypeScript |         48 |          0 |          8 |         56 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\example-component.ts              | TypeScript |          6 |         17 |          2 |         25 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\forms\login-form.ts               | TypeScript |         76 |          0 |         11 |         87 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\headers\header-component.ts       | TypeScript |          7 |          0 |          3 |         10 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\menus\base-menu.ts                | TypeScript |          8 |          0 |          5 |         13 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\menus\hamburger-menu.ts           | TypeScript |        127 |          6 |         28 |        161 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\menus\menu-item.ts                | TypeScript |          7 |          0 |          3 |         10 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\others\app-icon.ts                | TypeScript |         26 |          0 |          4 |         30 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\others\app-overlay.ts             | TypeScript |         10 |          0 |          4 |         14 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\components\others\loader.ts                  | TypeScript |         33 |          0 |          9 |         42 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\errors\base-error.ts                         | TypeScript |         28 |          0 |          2 |         30 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\errors\component-errors.ts                   | TypeScript |         28 |          0 |          3 |         31 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\errors\db-errors.ts                          | TypeScript |         13 |          0 |          3 |         16 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\errors\method-errors.ts                      | TypeScript |         37 |          0 |          3 |         40 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\errors\page-errors.ts                        | TypeScript |         27 |          0 |          3 |         30 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\errors\system-errors\example-system-error.ts | TypeScript |          9 |          0 |          3 |         12 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\errors\system-errors\uknown-page-error.ts    | TypeScript |          8 |          0 |          2 |         10 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\errors\system-errors\undefined-page-error.ts | TypeScript |          9 |          0 |          3 |         12 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\layouts\base-layout.ts                       | TypeScript |          7 |          0 |          5 |         12 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\layouts\frame-detail.ts                      | TypeScript |        236 |          1 |         35 |        272 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\layouts\frame-list.ts                        | TypeScript |        248 |          6 |         43 |        297 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\layouts\horizontal-stack.ts                  | TypeScript |         10 |          0 |          5 |         15 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\layouts\room-card.ts                         | TypeScript |        302 |         17 |         57 |        376 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\layouts\tab-layout.ts                        | TypeScript |         51 |          0 |         14 |         65 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\layouts\vertical-stack.ts                    | TypeScript |          9 |          0 |          5 |         14 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\pages\base-page.ts                           | TypeScript |         13 |          2 |          3 |         18 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\pages\blank-page.ts                          | TypeScript |          9 |          0 |          3 |         12 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\pages\dashboard-page.ts                      | TypeScript |          8 |          0 |          2 |         10 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\pages\home-page.ts                           | TypeScript |         52 |          0 |         10 |         62 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\pages\login-page.ts                          | TypeScript |         13 |          3 |          5 |         21 |
+| c:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\web\ts\pages\settings-page.ts                       | TypeScript |        511 |         27 |         74 |        612 |
+| Total                                                                                                  |            |      2,918 |        131 |        517 |      3,566 |
++--------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+

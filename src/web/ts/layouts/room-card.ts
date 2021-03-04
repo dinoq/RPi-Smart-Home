@@ -79,17 +79,29 @@ export class RoomCard extends AbstractComponent {
             orderedOUT: orderedOUT,
         }
     }
-    updateCard = (data) => {
-        (<HTMLElement>this.querySelector(".room-name")).innerText = data.name;
-        this.style.background = (data.img.src.startsWith("https://")) ? "url(" + data.img.src + ")" : "url(img/" + data.img.src + ")";
-        this.style.backgroundSize = "cover";
+
+    updateBGImg = (data: any)=>{        
+        //Does img changed?
+        let newSrc = (data.img.src.startsWith("https://")) ? `url("${data.img.src}")` : `url(img/"${data.img.src}")`;
+        if(newSrc != this.style.backgroundImage){ // Don't reload if it is not needed!
+            this.style.backgroundImage = newSrc;
+            this.style.backgroundSize = "cover";
+        }
+        
         
         let img = new Image();
         img.addEventListener("load", ()=>{
             let newHeight = (this.clientWidth / img.naturalWidth) * img.naturalHeight - this.clientHeight;
-            this.style.backgroundPositionY = -(newHeight * data.img.offset) + "px";
+            let newPosY = Math.round(-(newHeight * data.img.offset)) + "px";
+            if(newPosY!=this.style.backgroundPositionY)
+                this.style.backgroundPositionY = newPosY;
         });
         img.src = data.img.src;
+    }
+    updateCard = (data) => {
+        (<HTMLElement>this.querySelector(".room-name")).innerText = data.name;
+        
+        this.updateBGImg(data);
 
 
         let devices = data.devices;
@@ -121,15 +133,14 @@ export class RoomCard extends AbstractComponent {
             for (const device of orderedOUT) {
                 let lamp = new RoomDevice({});
                 this.devices.push(lamp)
-                if ((devicesRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) < (<number>Utils.getWindowWidth()) * 0.7) {
-                    devicesRow.pushComponents(lamp);
-                } else {
+                if ((devicesRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) > (<number>Utils.getWindowWidth()) * 0.7 - 10) { // -10px left padding
                     this.devicesStack.pushComponents(devicesRow);
                     devicesRow = new HorizontalStack({
                         classList: "devices-row",
                         marginTop: "3.5rem"
                     });
-                }
+                } 
+                devicesRow.pushComponents(lamp);
             }
         }
         if (devicesRow.childElementCount) {
@@ -192,7 +203,7 @@ export class RoomCard extends AbstractComponent {
         } else { // Clicked first time on that device
             if (this.idOfSelectedDevices) // If is current selected any device, toggle color of name
                 this.getDeviceByDBID(this.idOfSelectedDevices).toggleNameColor();
-            if (device.valueType == "int") {// If clicked device is int, show slider
+            if (device.type == "analog") {// If clicked device is int, show slider
                 device.toggleNameColor();
                 inputElem.style.visibility = "visible";
                 inputElem.value = val;
@@ -272,7 +283,7 @@ export class RoomDevice extends AbstractComponent {
 
     bgImage: any;
     slider: any;
-    valueType: any;
+    type: any;
     devicePath: string;
     initialized: boolean = false;
     value: number = 0;
@@ -306,7 +317,7 @@ export class RoomDevice extends AbstractComponent {
     }
 
     initialize(index, object, onClickCallback) {
-        this.valueType = object[index].valueType;
+        this.type = object[index].type;
         this.devicePath = object[index].path;
         this.dbID = object[index].id;
         this.initialized = true;
@@ -332,7 +343,7 @@ export class RoomDevice extends AbstractComponent {
 
     updateVal(value) {
         let val = value;
-        if (this.valueType == "bool")
+        if (this.type == "digital")
             val = (value > 512) ? 1024 : 0;
         this.updateSlider(val);
         //console.log('value: ', val);
@@ -350,12 +361,6 @@ export class RoomDevice extends AbstractComponent {
 
     updateSlider(value) {
         //this.slider.value=value;
-    }
-
-    convertNumToDBVal(val: number) {
-        if (this.valueType == "bool")
-            return (val < 512) ? "off" : "on";
-        return val;
     }
 
     static convertToNumVal(val: string, type: string) {
