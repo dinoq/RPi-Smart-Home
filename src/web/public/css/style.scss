@@ -39,16 +39,16 @@ $xl: 1200px;
     @media (min-width: $xl) {
         @content;
     }
-}
+}/*
 body::-webkit-scrollbar {
     width: var(--scrollbar-width);
-    background-color: #aaa; /* or add it to the track */
+    background-color: #aaa; 
 }
 body::-webkit-scrollbar-thumb {
     background: var(--default-blue-color);
     border-radius: 20px;
     border: 1px solid white;
-}
+}*/
 
 html {
     background-color: var(--default-page-bg-color);
@@ -460,8 +460,9 @@ page-manager {
 
     settings-page {
         .settings-btns-stack {
-            position: absolute;
-            top: 5px;
+            /*position: absolute;
+            top: 5px;*/
+            margin-top: 10px;
             width: 100%;
             justify-content: center;
 

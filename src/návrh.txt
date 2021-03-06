@@ -97,9 +97,10 @@ name
 
 DetailFrame pro sensors:
 name
-icon type=>náhled
-vstup => zobrazit typ (Analogový/digitální senzor)
-unit
+typ (analog/digital)
+ikona (teploměr, spínač, senzor intenzity osvětlení.....)
+unit (%, °C, Papnuto/Vypnuto, sepnuto/rozepnuto/ číslo (0-1024), číslo namapované na vlastní rozsah => zobrazit pole pro maximalni hodnotu(nebo rozsah pokud to nebude od 0))
+vstup => (Pin A0, D5, Senzor BME, sběrnice/rozhraní I2C)
 
 DetailFrame pro devices:
 name

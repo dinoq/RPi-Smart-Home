@@ -1,0 +1,323 @@
+{
+  "Ay9EuCEgoGOZYhFApXU2jczd0X32" : {
+    "rooms" : {
+      "-MSdX2qJNHrs5lWWoTva" : {
+        "devices" : {
+          "-MSdYaJwgWcwobP-qG5F" : {
+            "IN" : {
+              "-MSdZgtCO-W7Kzs0ygiY" : {
+                "icon" : "switch",
+                "index" : 0,
+                "input" : "A0",
+                "name" : "Oknoo",
+                "type" : "digital",
+                "unit" : "c",
+                "value" : 0
+              }
+            },
+            "OUT" : {
+              "-MSdcsUs78jQi71vs5hL" : {
+                "icon" : "light",
+                "index" : 2,
+                "name" : "Lustr",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 1024
+              },
+              "-MSdcuYkrr9zYYHnwcY0" : {
+                "icon" : "light",
+                "index" : 1,
+                "name" : "Kávovar",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 1024
+              },
+              "-MSdd0b5KjYlSBxnT19p" : {
+                "icon" : "light",
+                "index" : 0,
+                "name" : "Linka",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 0
+              }
+            },
+            "index" : 2,
+            "name" : "Modul okno",
+            "type" : "wemosD1"
+          },
+          "-MSdYb7Hd9107GhBsU4b" : {
+            "IN" : {
+              "-MSd_T2sAoFr9B0UQ89l" : {
+                "icon" : "temp",
+                "index" : 0,
+                "input" : "A0",
+                "name" : "Teplota",
+                "type" : "digital",
+                "unit" : "number",
+                "value" : 20
+              }
+            },
+            "OUT" : {
+              "-MSd_YExcXe0wmPiBvZG" : {
+                "icon" : "light",
+                "index" : 0,
+                "name" : "Led pásek - okno",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 1024
+              }
+            },
+            "index" : 1,
+            "name" : "Modul H247",
+            "type" : "wemosD1"
+          },
+          "-MUj25PeP_JdTeUD7-nF" : {
+            "index" : 0,
+            "name" : "Modul 3XO8",
+            "type" : "wemosD1"
+          }
+        },
+        "img" : {
+          "offset" : 0.5,
+          "src" : "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+        },
+        "index" : 54,
+        "name" : "Kuchyně"
+      },
+      "-MSdYLIUt8U6X-1-slTs" : {
+        "devices" : {
+          "-MSdYaJwgWcwobP-qG5F" : {
+            "IN" : {
+              "-MSdZgtCO-W7Kzs0ygiY" : {
+                "icon" : "switch",
+                "index" : 0,
+                "input" : "D1",
+                "name" : "Okno",
+                "type" : "digital",
+                "unit" : "on-off1",
+                "value" : 0
+              }
+            },
+            "OUT" : {
+              "-MSdcsUs78jQi71vs5hL" : {
+                "icon" : "light",
+                "index" : 2,
+                "name" : "Lustr",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 1024
+              },
+              "-MSdcuYkrr9zYYHnwcY0" : {
+                "icon" : "light",
+                "index" : 1,
+                "name" : "Kávovar",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 0
+              },
+              "-MSdd0b5KjYlSBxnT19p" : {
+                "icon" : "light",
+                "index" : 0,
+                "name" : "Linka",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 1024
+              }
+            },
+            "index" : 1,
+            "name" : "Modul okno",
+            "type" : "wemosD1"
+          },
+          "-MSdYb7Hd9107GhBsU4b" : {
+            "IN" : {
+              "-MSd_T2sAoFr9B0UQ89l" : {
+                "icon" : "switch",
+                "index" : 0,
+                "input" : "A0",
+                "name" : "Teplota",
+                "type" : "digital",
+                "unit" : "on-off1",
+                "value" : 20
+              }
+            },
+            "OUT" : {
+              "-MSd_YExcXe0wmPiBvZG" : {
+                "icon" : "light",
+                "index" : 0,
+                "name" : "Led pásek - okno",
+                "output" : "D1",
+                "type" : "analog",
+                "value" : 400
+              }
+            },
+            "index" : 0,
+            "name" : "Modul H247",
+            "type" : "wemosD1"
+          }
+        },
+        "img" : {
+          "offset" : 0.5,
+          "src" : "https://cdn.decoist.com/wp-content/uploads/2020/02/Beautiful-small-white-living-room-blends-monochromatic-beauty-with-modernity-53868.jpg"
+        },
+        "index" : 53,
+        "name" : "Obývák"
+      },
+      "-MSdYOJMkwSVBYFAStPF" : {
+        "devices" : {
+          "-MSdYaJwgWcwobP-qG5F" : {
+            "IN" : {
+              "-MSdZgtCO-W7Kzs0ygiY" : {
+                "icon" : "switch",
+                "index" : 0,
+                "input" : "D1",
+                "name" : "Okno",
+                "type" : "digital",
+                "unit" : "c",
+                "value" : 100
+              }
+            },
+            "OUT" : {
+              "-MSdcsUs78jQi71vs5hL" : {
+                "icon" : "light",
+                "index" : 2,
+                "name" : "Lustr",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 0
+              },
+              "-MSdcuYkrr9zYYHnwcY0" : {
+                "icon" : "light",
+                "index" : 1,
+                "name" : "Kávovar",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 0
+              },
+              "-MSdd0b5KjYlSBxnT19p" : {
+                "icon" : "switch",
+                "index" : 0,
+                "name" : "Linka",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 1024
+              }
+            },
+            "index" : 1,
+            "name" : "Modul okno",
+            "type" : "wemosD1"
+          },
+          "-MSdYb7Hd9107GhBsU4b" : {
+            "IN" : {
+              "-MSd_T2sAoFr9B0UQ89l" : {
+                "icon" : "temp",
+                "index" : 0,
+                "input" : "A0",
+                "name" : "Teplota",
+                "type" : "analog",
+                "unit" : "c",
+                "value" : 20
+              }
+            },
+            "OUT" : {
+              "-MSd_YExcXe0wmPiBvZG" : {
+                "icon" : "dimmable-light",
+                "index" : 0,
+                "name" : "Led pásek - okno",
+                "output" : "D1",
+                "type" : "analog",
+                "value" : 20
+              }
+            },
+            "index" : 0,
+            "name" : "Modul H247",
+            "type" : "wemosD1"
+          }
+        },
+        "img" : {
+          "offset" : 0.5,
+          "src" : "https://cdn.decoist.com/wp-content/uploads/2020/02/Beautiful-small-white-living-room-blends-monochromatic-beauty-with-modernity-53868.jpg"
+        },
+        "index" : 52,
+        "name" : "Pokoj"
+      },
+      "-MSdYQeWewpTLYzOyGMF" : {
+        "devices" : {
+          "-MSdYaJwgWcwobP-qG5F" : {
+            "IN" : {
+              "-MSdZgtCO-W7Kzs0ygiY" : {
+                "icon" : "temp",
+                "index" : 0,
+                "input" : "A0",
+                "name" : "Okno",
+                "type" : "analog",
+                "unit" : "number",
+                "value" : 0
+              }
+            },
+            "OUT" : {
+              "-MSdcsUs78jQi71vs5hL" : {
+                "icon" : "light",
+                "index" : 2,
+                "name" : "Lustr",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 1024
+              },
+              "-MSdcuYkrr9zYYHnwcY0" : {
+                "icon" : "light",
+                "index" : 1,
+                "name" : "Kávovar",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 0
+              },
+              "-MSdd0b5KjYlSBxnT19p" : {
+                "icon" : "light",
+                "index" : 0,
+                "name" : "Linka",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 0
+              }
+            },
+            "index" : 1,
+            "name" : "Modul okno",
+            "type" : "wemosD1"
+          },
+          "-MSdYb7Hd9107GhBsU4b" : {
+            "IN" : {
+              "-MSd_T2sAoFr9B0UQ89l" : {
+                "icon" : "temp",
+                "index" : 0,
+                "input" : "A0",
+                "name" : "Teplota",
+                "type" : "analog",
+                "unit" : "-",
+                "value" : 20
+              }
+            },
+            "OUT" : {
+              "-MSd_YExcXe0wmPiBvZG" : {
+                "icon" : "light",
+                "index" : 0,
+                "name" : "Led pásek - okno",
+                "output" : "D1",
+                "type" : "digital",
+                "value" : 500
+              }
+            },
+            "index" : 0,
+            "name" : "Modul H247",
+            "type" : "wemosD1"
+          }
+        },
+        "img" : {
+          "offset" : 0.5,
+          "src" : "https://cdn.decoist.com/wp-content/uploads/2020/02/Beautiful-small-white-living-room-blends-monochromatic-beauty-with-modernity-53868.jpg"
+        },
+        "index" : 51,
+        "name" : "Pracovna"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@ import { ARROWABLE_LISTS, DBTemplates, FrameList, FrameListItem, FrameListTypes 
 import { RoomCard } from "../layouts/room-card.js";
 import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
-import { BaseComponent, IComponentProperties } from "../components/component.js";
+import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
 import { LoginComponent } from "../components/forms/login-form.js";
 import { BasePage } from "./base-page.js";
 import { Utils } from "../app/utils.js";
@@ -70,7 +70,7 @@ export class SettingsPage extends BasePage {
     }
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
-        this.detail = new FrameDetail();
+        this.detail = new FrameDetail(this.saveChanges);
         this.saveBtnContainer = new HorizontalStack({
             innerHTML: `
             <button class="save-btn">Uložit</button>
@@ -100,7 +100,9 @@ export class SettingsPage extends BasePage {
         let firstTab = new BaseLayout({ componentsToConnect: [this.roomsList, this.modulesTabPanel] });
         this.mainTabPanel.addTab("Místnosti", firstTab);
 
-        this.appendComponents([this.mainTabPanel, this.detail, this.saveBtnContainer]);
+        let detailFormWrpr = <HTMLElement>this.detail.querySelector("form");
+        AbstractComponent.appendComponentsToDOMElements(detailFormWrpr, [this.saveBtnContainer]);
+        this.appendComponents([this.mainTabPanel, this.detail]);
 
         Loader.show();
         this.initPageFromDB();
@@ -146,15 +148,24 @@ export class SettingsPage extends BasePage {
         } else if (listType == FrameListTypes.MODULES) {
             path = this.itemInDetail.item.dbCopy.path;
         } else if (listType == FrameListTypes.SENSORS) {
+            let inputType = (<HTMLInputElement>document.getElementById("input-type")).value;
+            let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
+            let input = (<HTMLInputElement>document.getElementById("input")).value;
+            let unit = (<HTMLInputElement>document.getElementById("unit")).value;
+
+            update.type = inputType;
+            update.icon = iconType;
+            update.input = input;
+            update.unit = unit;
             path = this.itemInDetail.item.dbCopy.path;
         } else if (listType == FrameListTypes.DEVICES) {
             let outputType = (<HTMLInputElement>document.getElementById("output-type")).value;
             let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
-            let pin = (<HTMLInputElement>document.getElementById("pin")).value;
+            let output = (<HTMLInputElement>document.getElementById("output")).value;
 
             update.type = outputType;
             update.icon = iconType;
-            update.pin = pin;
+            update.output = output;
             path = this.itemInDetail.item.dbCopy.path;
         }
         if (Object.keys(update).length != 0) { // If is there something to update...
@@ -286,7 +297,7 @@ export class SettingsPage extends BasePage {
 
     async pageReinicialize() {
         await this.initPageFromDB();
-        this.detail.initialize();
+        this.detail.initialize(this.saveChanges);
         this.modulesList.initialize();
         this.sensorsList.initialize();
         this.devicesList.initialize();
@@ -587,9 +598,9 @@ export class SettingsPage extends BasePage {
         } else if (parenListType == FrameListTypes.MODULES) {
             values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];
         } else if (parenListType == FrameListTypes.SENSORS) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.pin, item.dbCopy.unit];
+            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
         } else if (parenListType == FrameListTypes.DEVICES) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.icon, item.dbCopy.pin];
+            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
         }
         this.detail.updateDetail(title, parenListType, (event) => { this.readyToSave = true }, values);
 

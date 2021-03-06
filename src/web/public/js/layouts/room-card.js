@@ -15,13 +15,27 @@ export class RoomCard extends AbstractComponent {
                 this.style.backgroundImage = newSrc;
                 this.style.backgroundSize = "cover";
             }
+            let shiftTimeLimit = setTimeout(() => {
+                shiftTimeLimit = undefined;
+            }, 10000);
+            let shiftBgImg = () => {
+                if (!shiftTimeLimit)
+                    return;
+                if (this.devices.every(device => device.imgLoaded)) {
+                    let newHeight = (this.clientWidth / img.naturalWidth) * img.naturalHeight - this.clientHeight;
+                    let newPosY = Math.round(-(newHeight * data.img.offset)) + "px";
+                    if (newPosY != this.style.backgroundPositionY)
+                        this.style.backgroundPositionY = newPosY;
+                    return;
+                }
+                else {
+                    setTimeout(() => {
+                        return shiftBgImg();
+                    }, 20);
+                }
+            };
             let img = new Image();
-            img.addEventListener("load", () => {
-                let newHeight = (this.clientWidth / img.naturalWidth) * img.naturalHeight - this.clientHeight;
-                let newPosY = Math.round(-(newHeight * data.img.offset)) + "px";
-                if (newPosY != this.style.backgroundPositionY)
-                    this.style.backgroundPositionY = newPosY;
-            });
+            img.addEventListener("load", shiftBgImg);
             img.src = data.img.src;
         };
         this.updateCard = (data) => {
@@ -64,10 +78,6 @@ export class RoomCard extends AbstractComponent {
             }
             if (devicesRow.childElementCount) {
                 this.devicesStack.pushComponents(devicesRow);
-            }
-            // Actualize sensors
-            for (let i = 0; i < orderedIN.length; i++) {
-                this.sensors[i].updateVal(orderedIN[i].value);
             }
             // Actualize devices
             for (let i = 0; i < orderedOUT.length; i++) {
@@ -124,7 +134,7 @@ export class RoomCard extends AbstractComponent {
                         inputElem.style.visibility = "hidden";
                         this.idOfSelectedDevices = "";
                     }
-                    let newVal = (device.value < 512) ? 1024 : 0;
+                    let newVal = (device.value < 512) ? 1023 : 0;
                     Firebase.updateDBData(device.devicePath, { value: newVal });
                 }
             }
@@ -194,7 +204,7 @@ export class Slider extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
         this.innerHTML = `               
-            <input type="range" min="1" max="1024" value="512" class="slider" style="visibility:hidden;">
+            <input type="range" min="1" max="1023" value="512" class="slider" style="visibility:hidden;">
         `;
     }
     initialize(sliderChanged) {
@@ -209,20 +219,65 @@ export class RoomSensor extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
     }
-    updateVal(value) {
-        let val = this.querySelector(".value");
-        val.innerText = value;
-    }
     initialize(sensor) {
         this.layout = new HorizontalStack();
-        let type = new Icon(sensor.type);
-        this.layout.pushComponents(type);
+        let icon = this.getIcon(sensor);
+        this.layout.pushComponents(icon);
         let name = new BaseComponent({ innerText: sensor.name });
-        let value = new BaseComponent({ innerText: sensor.value });
+        let valAndUnit = this.getValueAndUnitText(sensor);
+        let value = new BaseComponent({ innerText: valAndUnit.valueText });
         value.classList.add("value");
-        let unit = new BaseComponent({ innerText: sensor.unit });
+        let unit = new BaseComponent({ innerText: valAndUnit.unitText, marginLeft: "0.5rem" });
         this.layout.pushComponents([name, value, unit]);
         this.appendComponents(this.layout);
+    }
+    getIcon(sensor) {
+        let icon;
+        switch (sensor.icon) {
+            case "light-intensity":
+                icon = new Icon(sensor.icon);
+                break;
+            case "switch":
+                if (sensor.value > 512)
+                    icon = new Icon("switch-closed-90");
+                else
+                    icon = new Icon("switch-opened-90");
+                break;
+            case "-":
+                icon = new Icon("no-icon");
+                break;
+            default:
+                icon = new Icon(sensor.icon);
+                break;
+        }
+        return icon;
+    }
+    getValueAndUnitText(sensor) {
+        let valueText = "";
+        let unitText = "";
+        switch (sensor.unit) {
+            case "-":
+                unitText = "";
+        }
+        if (sensor.unit.includes("on-off")) {
+            let values = ["On", "Off", "Zapnuto", "Vypnuto", "Sepnuto", "Rozepnuto", "Otevřeno", "Zavřeno"];
+            let valueIdx = Number.parseInt(sensor.unit.substring("on-off".length));
+            valueText = (sensor.value > 512) ? values[valueIdx * 2] : values[valueIdx * 2 + 1];
+            unitText = "";
+        }
+        else if (sensor.unit == "c") {
+            unitText = "°C";
+            valueText = (sensor.value) ? sensor.value : "0";
+        }
+        else if (sensor.unit == "percentages") {
+            unitText = "%";
+            valueText = (Math.round(sensor.value / 1023) * 100).toString();
+        }
+        else if (sensor.unit == "number") {
+            unitText = "";
+            valueText = sensor.value;
+        }
+        return { valueText, unitText };
     }
 }
 RoomSensor.tagName = "room-sensor";
@@ -231,28 +286,73 @@ export class RoomDevice extends AbstractComponent {
         super(layoutProps);
         this.initialized = false;
         this.value = 0;
+        this.imgLoaded = false; // We use it when shifting bg img of room card
         //this.innerText = initVal.toString();
         this.innerHTML = `
             <div style="position:relative;">    
                 <div class="device-name" style="position:absolute;width: max-content;">
                    Nazev
                 </div>  
-                <div class="bg-image" style="position:absolute;height: 16px;bottom: 0px;overflow: hidden;">
-                    <img src="img/bulb2.png">
-                </div> 
-                <div style="position:relative;display: flex;justify-content: center;">
-                    <img src="img/bulb.png">
+                <div class="device-icon-wrapper">
                 </div>
                 
             </div>
         `;
+        this.iconWrapper = this.querySelector(".device-icon-wrapper");
         this.style.display = "flex";
         this.style.width = "150px";
         this.style.justifyContent = "center";
-        this.bgImage = this.querySelector(".bg-image");
+    }
+    initIcon() {
+        /*
+        
+                ["light", "Světlo", "switch", "Spínač", "motor", "Motor"],  // digital
+                ["dimmable-light", "Stmívatelné světlo", "servo-motor", "Servo motor"]  //analog
+        */
+        switch (this.icon) {
+            case "light":
+                this.iconWrapper.innerHTML = `        
+                    <div class="bg-image" style="position:absolute;height: 0px;bottom: 0px;overflow: hidden;">
+                        <img src="img/icons/bulb2.png">
+                    </div> 
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/bulb.png">
+                    </div>
+                `;
+                break;
+            case "dimmable-light":
+                this.iconWrapper.innerHTML = `        
+                    <div class="bg-image" style="position:absolute;height: 16px;bottom: 0px;overflow: hidden;">
+                        <img src="img/icons/bulb2.png">
+                    </div> 
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/bulb-dimmable2.png">
+                    </div>
+                `;
+                break;
+            case "switch":
+                this.iconWrapper.innerHTML = `        
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/switch-closed.png">
+                    </div>
+                `;
+                break;
+            default:
+                break;
+        }
+        let img = this.iconWrapper?.querySelector("img");
+        if (img) {
+            img.addEventListener('load', (event) => {
+                this.imgLoaded = true;
+            });
+        }
+        else {
+            this.imgLoaded = true;
+        }
     }
     initialize(index, object, onClickCallback) {
         this.type = object[index].type;
+        this.icon = object[index].icon;
         this.devicePath = object[index].path;
         this.dbID = object[index].id;
         this.initialized = true;
@@ -265,6 +365,7 @@ export class RoomDevice extends AbstractComponent {
         deviceName.innerText = object[index].name;
         deviceName.style.left = -(this.calculateStringWidth(object[index].name) / 2) + 16 + "px";
         //deviceName.style.backgroundColor = "#00000061";
+        this.initIcon();
     }
     calculateStringWidth(str) {
         let element = document.createElement('canvas');
@@ -275,10 +376,30 @@ export class RoomDevice extends AbstractComponent {
     updateVal(value) {
         let val = value;
         if (this.type == "digital")
-            val = (value > 512) ? 1024 : 0;
+            val = (value > 512) ? 1023 : 0;
         this.updateSlider(val);
         //console.log('value: ', val);
-        this.bgImage.style.height = Math.round((val / 1024) * RoomDevice.IMG_HEIGHT) + "px";
+        let bgImage;
+        switch (this.icon) {
+            case "light":
+                bgImage = this.querySelector(".bg-image");
+                bgImage.style.height = Math.round((val / 1023) * RoomDevice.IMG_HEIGHT) + "px";
+                break;
+            case "dimmable-light":
+                bgImage = this.querySelector(".bg-image");
+                bgImage.style.height = Math.round((val / 1023) * RoomDevice.IMG_HEIGHT) + "px";
+                break;
+            case "switch":
+                let iconName = (val) ? "switch-closed" : "switch-opened";
+                this.iconWrapper.innerHTML = `        
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/${iconName}.png">
+                    </div>
+                `;
+                break;
+            default:
+                break;
+        }
         this.value = val;
     }
     toggleNameColor() {

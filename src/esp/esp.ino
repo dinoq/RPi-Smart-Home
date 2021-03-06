@@ -163,18 +163,14 @@ void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
     int valueToSet = payload.toInt();
     pinMode(pinNumber, OUTPUT);
     if(digital){ // Digital pin
-        Serial.print("IS DIGITAAAAAAAAAL, val: ");
         Serial.println(valueToSet);
         if(valueToSet > 512){
             digitalWrite(pinNumber, LOW);
-            Serial.println("SET H:");
         }
         else{            
             digitalWrite(pinNumber, HIGH);
-            Serial.println("SET L:");
         }
     }else{ // Analog pin
-        Serial.println("IS ANALOOOOOOOOOOOOOOG");
         analogWrite(pinNumber,valueToSet);
     }
 

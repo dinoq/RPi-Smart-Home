@@ -269,25 +269,25 @@ export const DBTemplates = {
             out: {
             },
             name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "ESP8266"
+            type: "wemosD1"
         }
     },
     get SENSORS() {
         return {
-            type: "temp",
+            type: "analog",
             index: 0,
             name: "Snímač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            unit: "°C",
-            value: "on",
-            pin: "A0",
-            icon: "light"
+            unit: "percentages",
+            value: 0,
+            input: "A17",
+            icon: "temp"
         }
     },
     get DEVICES() {
         return {
             index: 0,
             name: "Zařízení " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            pin: "D1",
+            output: "D1",
             type: "digital",
             value: 0,
             icon: "light"

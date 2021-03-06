@@ -5,18 +5,16 @@
   --scrollbar-width: 15px;
 }
 
+/*
 body::-webkit-scrollbar {
-  width: var(--scrollbar-width);
-  background-color: #aaa;
-  /* or add it to the track */
+    width: var(--scrollbar-width);
+    background-color: #aaa; 
 }
-
 body::-webkit-scrollbar-thumb {
-  background: var(--default-blue-color);
-  border-radius: 20px;
-  border: 1px solid white;
-}
-
+    background: var(--default-blue-color);
+    border-radius: 20px;
+    border: 1px solid white;
+}*/
 html {
   background-color: var(--default-page-bg-color);
   scroll-behavior: smooth;
@@ -461,8 +459,9 @@ page-manager {
 }
 
 page-manager settings-page .settings-btns-stack {
-  position: absolute;
-  top: 5px;
+  /*position: absolute;
+            top: 5px;*/
+  margin-top: 10px;
   width: 100%;
   -webkit-box-pack: center;
       -ms-flex-pack: center;

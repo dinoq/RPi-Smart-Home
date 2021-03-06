@@ -49,11 +49,11 @@ export class HamburgerMenu {
             containerStyle.transition = "left 1s";
         }
         if (show) {
-            this.hamburgerIcon.src = "img/close.png";
+            this.hamburgerIcon.src = "img/icons/close.png";
             containerStyle.left = "0px";
         }
         else {
-            this.hamburgerIcon.src = "img/menu.png";
+            this.hamburgerIcon.src = "img/icons/menu.png";
             containerStyle.left = -this.itemsContainer.clientWidth -
                 Utils.pxToNumber(getComputedStyle(this.itemsContainer).left) + "px";
         }
@@ -122,7 +122,7 @@ export class MenuIcon extends AbstractComponent {
     constructor(componentProps) {
         super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString(),
-            innerHTML: `<img src="img/menu.png">`
+            innerHTML: `<img src="img/icons/menu.png">`
         }));
     }
     set src(val) {
