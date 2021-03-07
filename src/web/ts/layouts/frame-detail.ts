@@ -58,6 +58,8 @@ export class FrameDetail extends AbstractComponent {
             classList: "settings-btns-stack"
         });
         this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", saveCallback);
+        this.readyToSave = false;
+        
         let form = <HTMLElement>this.querySelector("form");
         AbstractComponent.appendComponentsToDOMElements(form, [this.saveBtnContainer]);
     }
@@ -66,7 +68,7 @@ export class FrameDetail extends AbstractComponent {
         (<HTMLDivElement>this.querySelector(".editing-name")).innerText = title;
     }
 
-    updateDetail(title: string, type: FrameListTypes, onInputCallback, values) {
+    updateDetail(title: string, type: FrameListTypes, values) {
         this.updateTitle(title);
 
         let elementsToCreate: Array<any>;
@@ -112,7 +114,7 @@ export class FrameDetail extends AbstractComponent {
 
         Array.from(this.rows.children).forEach((row, index) => {
             let val = ((typeof values[index] == "string")) ? values[index] : (values[index])?.toString();
-            (<FrameDetailRow>row).initialize(val, onInputCallback);
+            (<FrameDetailRow>row).initialize(val,  (event) => { this.readyToSave = true });
         });
     }
 

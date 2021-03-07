@@ -5,51 +5,54 @@ const conf = require("../config.json");
 const WifiManager = require('./wifi-manager.js');
 const CommunicationManager = require('./communication-manager.js');
 
-module.exports = class Firebase{
+module.exports = class Firebase {
     private _fb;
     private _dbCopy;
     private _dbInited: boolean = false;
     private _loggedIn: boolean = false;
     private _wifiManager: typeof WifiManager;
     private _communicationManager: typeof CommunicationManager;
+    private _sensors: Array<any> = new Array();
+    private _sensorValueInterval: any; 
+    private _sensorValueIntervalTime: number = 10000; 
 
-    public get loggedIn(): boolean{
+    public get loggedIn(): boolean {
         return this._loggedIn;
     }
 
     changes: IChangeMessage[] = new Array();
 
-    constructor(){
+    constructor() {
         this.initFirebase();
         this._wifiManager = new WifiManager();
         this._communicationManager = new CommunicationManager();
     }
 
-    public login(username: string, pwd: string){
+    public login(username: string, pwd: string) {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
-        .then((user) => {
-            console.log("Succesfully logged in"); 
-            this._loggedIn = true;
-            this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
-                const data = snapshot.val();
-                this._databaseUpdatedHandler(data);
+            .then((user) => {
+                console.log("Succesfully logged in");
+                this._loggedIn = true;
+                this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    this._databaseUpdatedHandler(data);
+                });
+            }).catch((error) => {
+                console.log('error user: ', error);
             });
-        }).catch((error) => {
-            console.log('error user: ', error);
-        });
     }
 
     private _databaseUpdatedHandler(data: any) {
-        if(!this._dbInited){
+        if (!this._dbInited) {
             this.initLocalDB(data);
-        }else{
+        } else {
             console.log(this.saveDbChange(data));
             this._processDbChanges();
         }
     }
 
-    initFirebase(){
-        this._fb = firebase.initializeApp({ 
+    initFirebase() {
+        this._fb = firebase.initializeApp({
             apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
             authDomain: "home-automation-80eec.firebaseapp.com",
             databaseURL: "https://home-automation-80eec.firebaseio.com",
@@ -61,100 +64,133 @@ module.exports = class Firebase{
         });
     }
 
-    initLocalDB(data){
-        if(!fs.existsSync('db.json')){// local database file doesn't exist => create it!
+    initLocalDB(data) {
+        if (!fs.existsSync('db.json')) {// local database file doesn't exist => create it!
 
         }
         fs.writeFileSync(conf.db_file_path, JSON.stringify(data));
         this._dbCopy = data;
         this._dbInited = true;
+
+        this.getSensors(data);
     }
 
-    saveDbChange(data){
+    getSensors(data){
+        const rooms = data["rooms"];
+        for (const roomID in rooms) {
+            const modules = rooms[roomID]["devices"];
+            for (const moduleID in modules) {
+                const sensors = modules[moduleID]["IN"];
+                for (const sensorID in sensors) {
+                    sensors[sensorID]["IP"] = modules[moduleID]["IP"];
+                    this._sensors.push(sensors[sensorID]);
+                }
+            }
+
+        }
+        this._sensorValueInterval = setInterval(this._updateSensorsValues, this._sensorValueIntervalTime)
+    }
+
+    private _updateSensorsValues = ()=>{
+        this._sensors.forEach((sensor) =>{
+
+            if(sensor.IP){
+                console.log('sensor: ', sensor);
+                this._communicationManager.getVal(sensor.IP, sensor.input);
+            }
+        });
+        console.log("___________________");
+
+
+        //update in Database
+    }
+
+    saveDbChange(data) {
         const newRooms = data["rooms"];
 
         console.log('__________________________________');
         let newRoomsIDs = new Array();
-        for(const newRoomID in newRooms){
+        for (const newRoomID in newRooms) {
             newRoomsIDs.push(newRoomID);
             const room = newRooms[newRoomID];
             const localRoom = this._dbCopy["rooms"][newRoomID];
             const modules = room["devices"];
-            const localmodules = (localRoom)? localRoom["devices"] : undefined;
-            for(const moduleID in modules){
+            const localmodules = (localRoom) ? localRoom["devices"] : undefined;
+            for (const moduleID in modules) {
                 if (!(localmodules && localmodules[moduleID])) { // Module added
                     let path = "rooms/" + newRoomID + "/devices/" + moduleID;
                     console.log('new module path: ', path);
-                    this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: {id: moduleID, path: path}});
+                    this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: moduleID, path: path } });
                 }
                 const sensors = modules[moduleID]["IN"];
-                const localSensors = (localmodules && localmodules[moduleID])? localmodules[moduleID]["IN"] : undefined;
+                const localSensors = (localmodules && localmodules[moduleID]) ? localmodules[moduleID]["IN"] : undefined;
                 for (const sensorID in sensors) {
                 }
                 const devices = modules[moduleID]["OUT"];
-                const localDevices = (localmodules && localmodules[moduleID])? localmodules[moduleID]["OUT"] : undefined;
-                for(const deviceID in devices){
-                    if(devices[deviceID].value != localDevices[deviceID].value){
-                        this.changes.push({type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: {ip: modules[moduleID]["IP"], value: devices[deviceID].value}});     
+                const localDevices = (localmodules && localmodules[moduleID]) ? localmodules[moduleID]["OUT"] : undefined;
+                for (const deviceID in devices) {
+                    if (devices[deviceID].value != localDevices[deviceID].value) {
+                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: devices[deviceID].output.toString(), value: devices[deviceID].value.toString() } });
                     }
                 }
             }
         }
 
         const localRooms = this._dbCopy["rooms"];
-        for(const localRoomID in localRooms){
-            if(newRoomsIDs.includes(localRoomID)){ // New rooms doesn't contain localRoomID from local saved rooms => room was deleted
-                newRoomsIDs.splice(newRoomsIDs.indexOf(localRoomID), 1);            
-            }else{   
-                this.changes.push({type: ChangeMessageTypes.DELETED, level: DevicesTypes.ROOM, data: {path: localRoomID}});             
+        for (const localRoomID in localRooms) {
+            if (newRoomsIDs.includes(localRoomID)) { // New rooms doesn't contain localRoomID from local saved rooms => room was deleted
+                newRoomsIDs.splice(newRoomsIDs.indexOf(localRoomID), 1);
+            } else {
+                this.changes.push({ type: ChangeMessageTypes.DELETED, level: DevicesTypes.ROOM, data: { path: localRoomID } });
             }
         }
 
-        for(const roomID of newRoomsIDs){
-            this.changes.push({type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, data: {path: roomID}});
+        for (const roomID of newRoomsIDs) {
+            this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, data: { path: roomID } });
             newRoomsIDs.splice(newRoomsIDs.indexOf(roomID), 1);
         }
         console.log('zustalo: ', newRoomsIDs);
-        
+
 
         this._dbCopy = data;
         return this.changes;
     }
 
     private _processDbChanges(): void {
-        for(let i = 0; i < this.changes.length; i++) {
+        for (let i = 0; i < this.changes.length; i++) {
             let change = this.changes[i];
-            
+
             let index = this.changes.indexOf(change);
             this.changes.splice(index, 1); // Remove change
-            if(change.type == ChangeMessageTypes.ADDED && change.level == DevicesTypes.MODULE){// Module was added => init communication
+            if (change.type == ChangeMessageTypes.ADDED && change.level == DevicesTypes.MODULE) {// Module was added => init communication
                 this._communicationManager.initCommunicationWithESP().then((espIP) => {
                     console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
-                    this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({IP: espIP});
+                    this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP });
                     this._communicationManager.sendESPItsID(change.data.id);
                     console.log('change.data.id: ', change.data.id);
                 })
-            }else if(change.type == ChangeMessageTypes.VALUE_CHANGED && change.level == DevicesTypes.DEVICE){
+            } else if (change.type == ChangeMessageTypes.VALUE_CHANGED && change.level == DevicesTypes.DEVICE) {
                 console.log("change val!!!");
-                this._communicationManager.putVal("192.168.1.2", "D2", change.data.value.toString());
+                if(change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
+                    this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
             }
         }
     }
 }
 
-interface IChangeMessage{
+interface IChangeMessage {
     type: ChangeMessageTypes,
     level: DevicesTypes,
     data?: any
 }
 
-enum ChangeMessageTypes{
+enum ChangeMessageTypes {
     DELETED,
     ADDED,
     VALUE_CHANGED
 }
 
-enum DevicesTypes{
+enum DevicesTypes {
     ROOM,
     MODULE,
     SENSOR,

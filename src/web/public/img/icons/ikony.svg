@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="15.839192"
-     inkscape:cx="36.870651"
-     inkscape:cy="1051.089"
+     inkscape:zoom="5.6"
+     inkscape:cx="1.5604932"
+     inkscape:cy="1020.679"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -141,5 +141,58 @@
          d="m 15.824559,19.864656 0.02368,-5.286534"
          style="fill:none;stroke:#ffffff;stroke-width:0.63127905px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
+    <rect
+       style="opacity:1;fill:#d3d3d3;fill-opacity:1;stroke:#ffffff;stroke-width:0.4621363;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect14516-8"
+       width="8.00453"
+       height="8.0045309"
+       x="7.4315147"
+       y="24.587395"
+       inkscape:export-xdpi="96.000008"
+       inkscape:export-ydpi="96.000008" />
+    <g
+       id="g4532-1"
+       inkscape:export-xdpi="96.000008"
+       inkscape:export-ydpi="96.000008"
+       transform="matrix(0,-0.70359826,0.70359826,0,-2.1230852,41.924359)"
+       style="opacity:1">
+      <circle
+         r="2.3623512"
+         cy="22.268461"
+         cx="15.869129"
+         id="path4520-3"
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.72626674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         sodipodi:nodetypes="ccscccc"
+         inkscape:connector-curvature="0"
+         id="path4522-2"
+         d="M 14.857829,20.103085 14.991464,14.9028 c 0,0 0.02331,-1.018102 0.89753,-1.015563 1.038585,0.003 0.950344,0.936585 0.950344,0.936585 l 0.05011,5.208392 c -0.655046,-0.315178 -1.334236,-0.261238 -2.031622,0.07087 z"
+         style="fill:none;stroke:#ffffff;stroke-width:0.6907351;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <circle
+         r="1.0209526"
+         cy="22.268461"
+         cx="15.869129"
+         id="path4524-1"
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.60312861;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path4526-9"
+         d="m 15.824559,19.864656 0.02368,-5.286534"
+         style="fill:none;stroke:#ffffff;stroke-width:0.63127905px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:4.09019327px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.10225482;opacity:1;"
+       x="6.9415736"
+       y="28.001459"
+       id="text2039"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"><tspan
+         sodipodi:role="line"
+         id="tspan2037"
+         x="6.9415736"
+         y="28.001459"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:0.10225482;">BME</tspan></text>
   </g>
 </svg>

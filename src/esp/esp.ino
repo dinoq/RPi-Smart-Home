@@ -83,9 +83,10 @@ void checkMulticast()
     int packetSize = Udp.parsePacket();
     if (packetSize)
     {
-        if(Udp.destinationIP().toString().equals(multicastIP.toString())){
+        if(!Udp.destinationIP().toString().equals(multicastIP.toString())){
             Serial.println("Received via multicast");
         }else{            
+            return;
             Serial.println("NOT!! via multicast");
         }
         // receive incoming UDP packets
@@ -186,7 +187,7 @@ void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
 // CoAP server endpoint URL 
 void callback_get_io(CoapPacket &packet, IPAddress ip, int port)
 {
-    Serial.println("Get IO");
+    //Serial.println("Get IO");
 
     CoapOption option;   
     for(int i = 0; i<COAP_MAX_OPTION_NUM; i++){
@@ -212,24 +213,17 @@ void callback_get_io(CoapPacket &packet, IPAddress ip, int port)
     bool digital = pin.substring(0,1).equals("D"); // If first char is D => digital pin. Analog otherwise.
     int pinNumber = pin.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
     
-    pinMode(pinNumber, INPUT);
-    int val=-1;
-    if(digital){ // Digital pin
-        val = digitalRead(pinNumber);
-    }else{ // Analog pin
-        val = analogRead(pinNumber);
-    }
-
-    if(val > -1){ // Send result
-        String str = "ESP-val:" + val;
-        char msgToClient[str.length()];
-        strncpy(msgToClient, str.c_str(), str.length());
-        msgToClient[sizeof(msgToClient) - 1] = 0;
-        
-        coap.sendResponse(ip, port, packet.messageid, msgToClient, sizeof(msgToClient), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
-    }else{ // Else send error
-
-    }
+    //Serial.println("pin:" + String(pinNumber));
+    //Serial.println("read:" + String(analogRead(pinNumber)));
+    String str = String("ESP-get-val:" + String(analogRead(pinNumber)));
+    Serial.println("str to return:" + str);
+    Serial.println("len:" + String(sizeof(str)));
+    Serial.println("len2:" + String(str.length()));
+    char msgToClient[str.length()+1];
+    strncpy(msgToClient, str.c_str(), sizeof(msgToClient));
+    msgToClient[str.length()] = 0;
+    
+    coap.sendResponse(ip, port, packet.messageid, msgToClient, sizeof(msgToClient), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }
 //netsh interface ip show joins
 

@@ -47,13 +47,14 @@ export class FrameDetail extends AbstractComponent {
             classList: "settings-btns-stack"
         });
         this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", saveCallback);
+        this.readyToSave = false;
         let form = this.querySelector("form");
         AbstractComponent.appendComponentsToDOMElements(form, [this.saveBtnContainer]);
     }
     updateTitle(title) {
         this.querySelector(".editing-name").innerText = title;
     }
-    updateDetail(title, type, onInputCallback, values) {
+    updateDetail(title, type, values) {
         this.updateTitle(title);
         let elementsToCreate;
         if (type == this.actualFrameListType) { //Layout already created
@@ -100,7 +101,7 @@ export class FrameDetail extends AbstractComponent {
         }
         Array.from(this.rows.children).forEach((row, index) => {
             let val = ((typeof values[index] == "string")) ? values[index] : (values[index])?.toString();
-            row.initialize(val, onInputCallback);
+            row.initialize(val, (event) => { this.readyToSave = true; });
         });
     }
     blink(count = 3) {

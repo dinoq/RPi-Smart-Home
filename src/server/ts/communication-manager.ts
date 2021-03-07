@@ -66,7 +66,7 @@ module.exports = class CommunicationManager{
             host: ip,
             pathname: '/set-io',
             query: "pin=" + pin,
-            //method: "PUT",
+            method: "PUT",
             confirmable: true
         });
 
@@ -75,6 +75,27 @@ module.exports = class CommunicationManager{
             console.log('e: ', err);
 
         })
+        req.end();
+        console.log("req end");
+    }
+
+    public async getVal(ip: string, pin: string){        
+        let req = coap.request({
+            host: ip,
+            pathname: '/get-io',
+            query: "pin=" + pin,
+            method: "GET",
+            confirmable: true
+        });
+
+        req.on('error', function(err) { 
+            console.log('e: ', err);
+
+        })
+        req.on('response', function(res) {
+            console.log('res: ', res.payload.toString());
+            console.log("response");
+          })
         req.end();
         console.log("req end");
     }

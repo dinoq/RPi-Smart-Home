@@ -18,8 +18,8 @@ Ikona:
 Stmívatelné světlo
 servo motor
 
-
-
+Pokud bude čas, tak ještě něco jak typ/způsob výstupu (impulzní/"kontinualní") => také pole výchozí hodnota
+----------------------
 INPUT:
 Analog-symboly před,možnost mít jeden hlavní
 Digital

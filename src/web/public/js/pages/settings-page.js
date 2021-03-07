@@ -1,9 +1,7 @@
 import { ARROWABLE_LISTS, DBTemplates, FrameList, FrameListItem, FrameListTypes } from "../layouts/frame-list.js";
 import { Firebase } from "../app/firebase.js";
-import { AbstractComponent } from "../components/component.js";
 import { BasePage } from "./base-page.js";
 import { Utils } from "../app/utils.js";
-import { HorizontalStack } from "../layouts/horizontal-stack.js";
 import { TabLayout } from "../layouts/tab-layout.js";
 import { FrameDetail } from "../layouts/frame-detail.js";
 import { YesNoCancelDialog } from "../components/dialogs/yes-no-cancel-dialog.js";
@@ -14,7 +12,6 @@ import { Loader } from "../components/others/loader.js";
 export class SettingsPage extends BasePage {
     constructor(componentProps) {
         super(componentProps);
-        this._readyToSave = false;
         this.selectedItemsIDHierarchy = new Array(3);
         this.defaultItemsStrings = {
             noItem: [
@@ -71,21 +68,21 @@ export class SettingsPage extends BasePage {
                 // Re-inicialize page
                 await this.pageReinicialize();
             }
-            this.readyToSave = false;
+            this.detail.readyToSave = false;
         };
         /**
          * Show Save dialog and call events to unblock EventManager (other classes can use it to know, whether they can handle events, lets see Hamb)
          */
         this.showSaveDialog = async () => {
             let dialog = new YesNoCancelDialog("V detailu máte rozpracované změny. <br>Uložit změny?");
-            if (this.readyToSave) {
+            if (this.detail.readyToSave) {
                 let ans = await dialog.show();
                 if (ans == DialogResponses.YES) {
                     this.saveChanges(null);
                 }
                 else if (ans == DialogResponses.NO) {
                     this.initDetail();
-                    this.readyToSave = false;
+                    this.detail.readyToSave = false;
                 }
                 else {
                     EventManager.dispatchEvent("changesCanceled");
@@ -317,13 +314,6 @@ export class SettingsPage extends BasePage {
             list.updatedOrderHandler();
         };
         this.detail = new FrameDetail(this.saveChanges);
-        this.saveBtnContainer = new HorizontalStack({
-            innerHTML: `
-            <button class="save-btn">Uložit</button>
-            `,
-            classList: "settings-btns-stack"
-        });
-        this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", this.saveChanges);
         this.mainTabPanel = new TabLayout(null);
         this.modulesTabPanel = new TabLayout(null);
         this.sensorsDevicesTabPanel = new TabLayout(null);
@@ -342,8 +332,6 @@ export class SettingsPage extends BasePage {
         this.modulesTabPanel.addTab("Moduly", modulesContainer);
         let firstTab = new BaseLayout({ componentsToConnect: [this.roomsList, this.modulesTabPanel] });
         this.mainTabPanel.addTab("Místnosti", firstTab);
-        let detailFormWrpr = this.detail.querySelector("form");
-        AbstractComponent.appendComponentsToDOMElements(detailFormWrpr, [this.saveBtnContainer]);
         this.appendComponents([this.mainTabPanel, this.detail]);
         Loader.show();
         this.initPageFromDB();
@@ -355,23 +343,6 @@ export class SettingsPage extends BasePage {
                 await this.showSaveDialog();
             }
         });
-    }
-    set readyToSave(val) {
-        if (val) {
-            this.saveBtnContainer.classList.add("blink");
-            this.saveBtnContainer.children[0].style.fontWeight = "bold";
-            this.saveBtnContainer.children[0].removeAttribute("disabled");
-        }
-        else {
-            this.saveBtnContainer.classList.remove("blink");
-            this.saveBtnContainer.children[0].style.fontWeight = "normal";
-            this.saveBtnContainer.children[0].setAttribute("disabled", "true");
-        }
-        this._readyToSave = val;
-        EventManager.blockedByUnsavedChanges = val;
-    }
-    get readyToSave() {
-        return this._readyToSave;
     }
     async initPageFromDB() {
         let data = await Firebase.getDBData("/rooms/");
@@ -385,7 +356,7 @@ export class SettingsPage extends BasePage {
         rooms.sort((a, b) => (a.index > b.index) ? 1 : -1);
         this.rooms = rooms;
         this.initRoomsList(rooms);
-        this.readyToSave = false;
+        this.detail.readyToSave = false;
     }
     async selectItemByID(dbID, timeLimit = 1000) {
         try {
@@ -534,7 +505,7 @@ export class SettingsPage extends BasePage {
         else if (parenListType == FrameListTypes.DEVICES) {
             values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
         }
-        this.detail.updateDetail(title, parenListType, (event) => { this.readyToSave = true; }, values);
+        this.detail.updateDetail(title, parenListType, values);
     }
     itemTypeToDefaultTypeIndex(type) {
         return defaultItemTypesIndexes[FrameListTypes[type]];

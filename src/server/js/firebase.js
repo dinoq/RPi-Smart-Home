@@ -7,7 +7,19 @@ module.exports = class Firebase {
     constructor() {
         this._dbInited = false;
         this._loggedIn = false;
+        this._sensors = new Array();
+        this._sensorValueIntervalTime = 10000;
         this.changes = new Array();
+        this._updateSensorsValues = () => {
+            this._sensors.forEach((sensor) => {
+                if (sensor.IP) {
+                    console.log('sensor: ', sensor);
+                    this._communicationManager.getVal(sensor.IP, sensor.input);
+                }
+            });
+            console.log("___________________");
+            //update in Database
+        };
         this.initFirebase();
         this._wifiManager = new WifiManager();
         this._communicationManager = new CommunicationManager();
@@ -55,6 +67,21 @@ module.exports = class Firebase {
         fs.writeFileSync(conf.db_file_path, JSON.stringify(data));
         this._dbCopy = data;
         this._dbInited = true;
+        this.getSensors(data);
+    }
+    getSensors(data) {
+        const rooms = data["rooms"];
+        for (const roomID in rooms) {
+            const modules = rooms[roomID]["devices"];
+            for (const moduleID in modules) {
+                const sensors = modules[moduleID]["IN"];
+                for (const sensorID in sensors) {
+                    sensors[sensorID]["IP"] = modules[moduleID]["IP"];
+                    this._sensors.push(sensors[sensorID]);
+                }
+            }
+        }
+        this._sensorValueInterval = setInterval(this._updateSensorsValues, this._sensorValueIntervalTime);
     }
     saveDbChange(data) {
         const newRooms = data["rooms"];
@@ -80,7 +107,7 @@ module.exports = class Firebase {
                 const localDevices = (localmodules && localmodules[moduleID]) ? localmodules[moduleID]["OUT"] : undefined;
                 for (const deviceID in devices) {
                     if (devices[deviceID].value != localDevices[deviceID].value) {
-                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], value: devices[deviceID].value } });
+                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: devices[deviceID].output.toString(), value: devices[deviceID].value.toString() } });
                     }
                 }
             }
@@ -117,7 +144,8 @@ module.exports = class Firebase {
             }
             else if (change.type == ChangeMessageTypes.VALUE_CHANGED && change.level == DevicesTypes.DEVICE) {
                 console.log("change val!!!");
-                this._communicationManager.putVal("192.168.1.2", "D2", change.data.value.toString());
+                if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
+                    this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
             }
         }
     }

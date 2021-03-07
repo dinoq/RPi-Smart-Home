@@ -29,7 +29,6 @@ export class SettingsPage extends BasePage {
     private sensorsDevicesTabPanel: TabLayout;
 
     private saveBtnContainer: HorizontalStack;
-    private _readyToSave: boolean = false;
     private detail: FrameDetail;
     private itemInDetail: { item: FrameListItem, parentListType: FrameListTypes };
     private selectedItemsIDHierarchy: string[] = new Array(3);
@@ -52,32 +51,9 @@ export class SettingsPage extends BasePage {
     };
 
 
-    set readyToSave(val) {
-        if (val) {
-            this.saveBtnContainer.classList.add("blink");
-            (<HTMLButtonElement>(<HorizontalStack>this.saveBtnContainer).children[0]).style.fontWeight = "bold";
-            this.saveBtnContainer.children[0].removeAttribute("disabled");
-        } else {
-            this.saveBtnContainer.classList.remove("blink");
-            (<HTMLButtonElement>(<HorizontalStack>this.saveBtnContainer).children[0]).style.fontWeight = "normal";
-            this.saveBtnContainer.children[0].setAttribute("disabled", "true");
-        }
-        this._readyToSave = val;
-        EventManager.blockedByUnsavedChanges = val;
-    }
-    get readyToSave() {
-        return this._readyToSave;
-    }
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
         this.detail = new FrameDetail(this.saveChanges);
-        this.saveBtnContainer = new HorizontalStack({
-            innerHTML: `
-            <button class="save-btn">Uložit</button>
-            `,
-            classList: "settings-btns-stack"
-        });
-        this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", this.saveChanges)
 
         this.mainTabPanel = new TabLayout(null);
         this.modulesTabPanel = new TabLayout(null);
@@ -100,8 +76,6 @@ export class SettingsPage extends BasePage {
         let firstTab = new BaseLayout({ componentsToConnect: [this.roomsList, this.modulesTabPanel] });
         this.mainTabPanel.addTab("Místnosti", firstTab);
 
-        let detailFormWrpr = <HTMLElement>this.detail.querySelector("form");
-        AbstractComponent.appendComponentsToDOMElements(detailFormWrpr, [this.saveBtnContainer]);
         this.appendComponents([this.mainTabPanel, this.detail]);
 
         Loader.show();
@@ -130,7 +104,7 @@ export class SettingsPage extends BasePage {
         rooms.sort((a, b) => (a.index > b.index) ? 1 : -1);
         this.rooms = rooms;
         this.initRoomsList(rooms);
-        this.readyToSave = false;
+        this.detail.readyToSave = false;
     }
 
     saveChanges = async (event) => {
@@ -175,7 +149,7 @@ export class SettingsPage extends BasePage {
             await this.pageReinicialize();
         }
 
-        this.readyToSave = false;
+        this.detail.readyToSave = false;
     }
 
     async selectItemByID(dbID, timeLimit: number = 1000) {
@@ -263,13 +237,13 @@ export class SettingsPage extends BasePage {
      */
     showSaveDialog = async () => {
         let dialog = new YesNoCancelDialog("V detailu máte rozpracované změny. <br>Uložit změny?");
-        if (this.readyToSave) {
+        if (this.detail.readyToSave) {
             let ans = await dialog.show();
             if (ans == DialogResponses.YES) {
                 this.saveChanges(null);
             } else if (ans == DialogResponses.NO) {
                 this.initDetail();
-                this.readyToSave = false;
+                this.detail.readyToSave = false;
             } else {
                 EventManager.dispatchEvent("changesCanceled");
                 return true;
@@ -602,7 +576,7 @@ export class SettingsPage extends BasePage {
         } else if (parenListType == FrameListTypes.DEVICES) {
             values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
         }
-        this.detail.updateDetail(title, parenListType, (event) => { this.readyToSave = true }, values);
+        this.detail.updateDetail(title, parenListType, values);
 
     }
 
