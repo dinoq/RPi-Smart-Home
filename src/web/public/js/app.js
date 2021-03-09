@@ -8,7 +8,6 @@ import { BaseLayout } from "./layouts/base-layout.js";
 import { PageCreator } from "./app/page-creator.js";
 import { PageManagerComponent } from "./app/page-manager.js";
 import { LoginPage } from "./pages/login-page.js";
-import { Dashboard } from "./pages/dashboard-page.js";
 import { HomePage } from "./pages/home-page.js";
 import { RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-card.js";
 import { VerticalStack } from "./layouts/vertical-stack.js";
@@ -45,7 +44,6 @@ class AutoHomeApp {
             YesNoCancelDialog,
             LoginComponent,
             LoginPage,
-            Dashboard,
             BaseLayout,
             PageManagerComponent,
             BlankPage,

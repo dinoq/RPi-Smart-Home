@@ -72,7 +72,7 @@ html {
     .form-wrapper {
         display: flex;
 
-        form {
+        form, .form {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -478,7 +478,7 @@ page-manager {
             }
         }
 
-        .form-wrapper form {
+        .form-wrapper form, .form-wrapper .form {
             max-width: initial;
             width: 100%;
             padding: 5px;

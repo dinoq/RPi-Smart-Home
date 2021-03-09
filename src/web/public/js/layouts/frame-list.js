@@ -92,6 +92,15 @@ export class FrameListItem extends AbstractComponent {
         this._active = false;
         this.components = new Array();
     }
+    get text() {
+        return this._text;
+    }
+    set text(val) {
+        if (val.length)
+            this._text = val;
+        else
+            this._text = "(Bez názvu)";
+    }
     get active() {
         return this._active;
     }

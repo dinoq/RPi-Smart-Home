@@ -32,10 +32,10 @@ export class FrameDetail extends AbstractComponent {
     initialize(saveCallback) {
         this.innerHTML = `        
             <div class="form-wrapper">
-                <form class="form" action="/dashboard" method="POST">
+                <div class="form">
                     <div class="editing-name">Pro editaci klikněte na název místnosti/snímače/zařízení</div>
                     <div class="detail-frame-rows" style="width: 100%;"></div>
-                </form>
+                </div>
             </div>        
         `;
         this.rows = this.querySelector(".detail-frame-rows");
@@ -48,7 +48,7 @@ export class FrameDetail extends AbstractComponent {
         });
         this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", saveCallback);
         this.readyToSave = false;
-        let form = this.querySelector("form");
+        let form = this.querySelector(".form");
         AbstractComponent.appendComponentsToDOMElements(form, [this.saveBtnContainer]);
     }
     updateTitle(title) {

@@ -112,9 +112,19 @@ export class FrameListItem extends AbstractComponent {
     public components: Array<any>;
     type: FrameListTypes;
     dbCopy: any;
-    text: string;
+    _text: string;
     showArrows: { up: boolean, down: boolean };
 
+    get text(){
+        return this._text;
+    }
+
+    set text(val) {
+        if(val.length)
+            this._text = val;
+        else
+            this._text = "(Bez názvu)";
+    }
     private _active: boolean = false;
 
     get active(){

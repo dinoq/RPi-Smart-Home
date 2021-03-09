@@ -13,8 +13,8 @@ module.exports = class Firebase {
     private _wifiManager: typeof WifiManager;
     private _communicationManager: typeof CommunicationManager;
     private _sensors: Array<any> = new Array();
-    private _sensorValueInterval: any; 
-    private _sensorValueIntervalTime: number = 10000; 
+    private _sensorValueTimeout: any;
+    private _sensorValueTimeoutTime: number = 20000;
 
     public get loggedIn(): boolean {
         return this._loggedIn;
@@ -75,7 +75,7 @@ module.exports = class Firebase {
         this.getSensors(data);
     }
 
-    getSensors(data){
+    getSensors(data) {
         const rooms = data["rooms"];
         for (const roomID in rooms) {
             const modules = rooms[roomID]["devices"];
@@ -83,26 +83,45 @@ module.exports = class Firebase {
                 const sensors = modules[moduleID]["IN"];
                 for (const sensorID in sensors) {
                     sensors[sensorID]["IP"] = modules[moduleID]["IP"];
+                    sensors[sensorID]["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${roomID}/devices/${moduleID}/IN/${sensorID}/value`;
                     this._sensors.push(sensors[sensorID]);
                 }
             }
 
         }
-        this._sensorValueInterval = setInterval(this._updateSensorsValues, this._sensorValueIntervalTime)
+        this._sensorValueTimeout = setTimeout(this._updateSensorsValues, this._sensorValueTimeoutTime);
     }
 
-    private _updateSensorsValues = ()=>{
-        this._sensors.forEach((sensor) =>{
+    private _updateSensorsValues = async () => {
+        const updates = {};
 
-            if(sensor.IP){
-                console.log('sensor: ', sensor);
-                this._communicationManager.getVal(sensor.IP, sensor.input);
+        for(let i= 0; i < this._sensors.length; i++){
+            const sensor = this._sensors[i];
+            if (sensor.IP) {
+                //console.log('sensor: ', sensor);
+                let newVal;
+                try {
+                    if(sensor.type == "bus"){ // BMP returns float
+                        newVal = Number.parseFloat(await this._communicationManager.getVal(sensor.IP, sensor.input));
+                    }else{
+                        newVal = Number.parseInt(await this._communicationManager.getVal(sensor.IP, sensor.input));
+                    }
+                    //console.log('newVal: ', newVal);
+                    if (newVal != sensor.value) {
+                        sensor.value = newVal;
+                        updates[sensor.pathToValue] = newVal;
+                        updates[sensor.pathToValue] = newVal;
+                    }
+                } catch (error) {           
+                }
             }
-        });
+        }
         console.log("___________________");
 
 
         //update in Database
+        await firebase.database().ref().update(updates);
+        this._sensorValueTimeout = setTimeout(this._updateSensorsValues, this._sensorValueTimeoutTime);
     }
 
     saveDbChange(data) {
@@ -171,7 +190,7 @@ module.exports = class Firebase {
                 })
             } else if (change.type == ChangeMessageTypes.VALUE_CHANGED && change.level == DevicesTypes.DEVICE) {
                 console.log("change val!!!");
-                if(change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
+                if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
                     this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
             }
         }

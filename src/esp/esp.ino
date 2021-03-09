@@ -3,6 +3,12 @@
 #include <ESP8266WiFi.h>
 #include "user_interface.h"
 
+
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BMP280.h>
+
+
 #ifndef APSSID
 #define APSSID "sprintel_antlova"
 #define APPSK "netis111"
@@ -35,6 +41,12 @@ String pinPrefix = "pin=";
 int pinPrefixLen = 4;
 
 /**
+ * BMP280
+ */
+#define BMP280_ADRESS (0x76)
+Adafruit_BMP280 bmp;
+
+/**
  * 
  * Functions implementations
  * */
@@ -61,11 +73,15 @@ void setup()
     Serial.println("Setup Callback Light ver 4");
     coap.server(callback_set_io, "set-io");
     coap.server(callback_get_io, "get-io");
-
+    
     Udp.beginMulticast(WiFi.localIP(), multicastIP, CoAPPort);
     Serial.printf("Now listening at IP %s IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), multicastIP.toString().c_str(), CoAPPort);
 
     coap.start();
+    
+    if (!bmp.begin(BMP280_ADRESS)) {
+      Serial.println("BMP280 senzor nenalezen");
+    }
 }
 
 // Loop function
@@ -74,6 +90,7 @@ void loop()
     delay(1000);
     checkMulticast();
     coap.loop();
+    
 }
 
 void checkMulticast()
@@ -147,40 +164,30 @@ void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
     int pinNumber = pin.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
 
     String payload(p);
-    /*
-    Serial.println("payload:");
-    Serial.println(payload);
-    Serial.println("query opt:");
-    Serial.println(String(queryOpt));
-    Serial.println();
-    Serial.println("opt w:");
-    Serial.write((packet.options[0].buffer),packet.options[0].length);
-    Serial.println();
-    Serial.write((packet.options[1].buffer),packet.options[1].length);
-    Serial.println("\nkonec opt");*/
     
-    Serial.print("PINNN: ");
-    Serial.println(pinNumber);
     int valueToSet = payload.toInt();
     pinMode(pinNumber, OUTPUT);
     if(digital){ // Digital pin
         Serial.println(valueToSet);
         if(valueToSet > 512){
             digitalWrite(pinNumber, LOW);
+            Serial.println("LOW"+ String(pinNumber));
         }
         else{            
             digitalWrite(pinNumber, HIGH);
+            Serial.println("HEIGHT"+ String(pinNumber));
         }
     }else{ // Analog pin
         analogWrite(pinNumber,valueToSet);
+            Serial.println("ANALOG:" + String(valueToSet));
     }
 
-    String str = "set A/D: " + pin.substring(0,1) + ", val: " + valueToSet + ", pin: " + pinNumber;
-    char msgToClient[str.length()];
-    strncpy(msgToClient, str.c_str(), str.length());
-    msgToClient[sizeof(msgToClient) - 1] = 0;
+    String responseStr = "set A/D: " + pin.substring(0,1) + ", val: " + valueToSet + ", pin: " + pinNumber;
+    char response[responseStr.length()];
+    strncpy(response, responseStr.c_str(), responseStr.length());
+    response[sizeof(response) - 1] = 0;
     
-    coap.sendResponse(ip, port, packet.messageid, msgToClient, sizeof(msgToClient), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }
 
 
@@ -210,20 +217,32 @@ void callback_get_io(CoapPacket &packet, IPAddress ip, int port)
     queryOpt[option.length] = NULL;
     
     String pin = String(queryOpt).substring(pinPrefixLen);
-    bool digital = pin.substring(0,1).equals("D"); // If first char is D => digital pin. Analog otherwise.
-    int pinNumber = pin.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
-    
+    bool digital = pin.substring(0,1).equals("D"); // If first char is D => digital pin.
+    bool analog = pin.substring(0,1).equals("A"); // If first char is D => digital pin.
+    bool i2c = pin.substring(0,3).equals("I2C"); // If first char is D => digital pin.
+    int pinNumber; 
+
+    String responseStr = "";
+    if(digital){
+       pinNumber = pin.substring(1).toInt();//Here we use pin number directly (without constants like A0, D5 etc...)
+    }else if(analog){
+       pinNumber = pin.substring(1).toInt();//Here we use pin number directly (without constants like A0, D5 etc...)
+       responseStr = String("ESP-get-val:"+String(analogRead(pinNumber)) /*+ String(analogRead(pinNumber))*/);
+    }else if(i2c){
+        float teplota = bmp.readTemperature();
+       responseStr = String("ESP-get-val:"+String(teplota) /*+ String(analogRead(pinNumber))*/);
+      
+    }
     //Serial.println("pin:" + String(pinNumber));
     //Serial.println("read:" + String(analogRead(pinNumber)));
-    String str = String("ESP-get-val:" + String(analogRead(pinNumber)));
-    Serial.println("str to return:" + str);
-    Serial.println("len:" + String(sizeof(str)));
-    Serial.println("len2:" + String(str.length()));
-    char msgToClient[str.length()+1];
-    strncpy(msgToClient, str.c_str(), sizeof(msgToClient));
-    msgToClient[str.length()] = 0;
-    
-    coap.sendResponse(ip, port, packet.messageid, msgToClient, sizeof(msgToClient), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+    /*
+    Serial.println("len:" + String(sizeof(responseStr)));
+    Serial.println("len2:" + String(responseStr.length()));*/
+    char response[responseStr.length()];
+    strncpy(response, responseStr.c_str(), sizeof(response));
+    //response[responseStr.length()] = 0;
+    Serial.println("responseStr to return:" + responseStr);
+    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }
 //netsh interface ip show joins
 

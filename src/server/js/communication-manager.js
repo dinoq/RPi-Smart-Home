@@ -65,22 +65,25 @@ module.exports = class CommunicationManager {
         req.end();
         console.log("req end");
     }
-    async getVal(ip, pin) {
-        let req = coap.request({
-            host: ip,
-            pathname: '/get-io',
-            query: "pin=" + pin,
-            method: "GET",
-            confirmable: true
+    getVal(ip, pin) {
+        return new Promise((resolve, reject) => {
+            let req = coap.request({
+                host: ip,
+                pathname: '/get-io',
+                query: "pin=" + pin,
+                method: "GET",
+                confirmable: true
+            });
+            req.on('error', function (err) {
+                console.log('No reply in 5s from ' + ip);
+                reject(err);
+            });
+            req.on('response', function (res) {
+                const prefixLen = "ESP-get-val:".length;
+                const val = res.payload.toString().substring(prefixLen);
+                resolve(val);
+            });
+            req.end();
         });
-        req.on('error', function (err) {
-            console.log('e: ', err);
-        });
-        req.on('response', function (res) {
-            console.log('res: ', res.payload.toString());
-            console.log("response");
-        });
-        req.end();
-        console.log("req end");
     }
 };

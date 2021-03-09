@@ -42,7 +42,7 @@ html .form-wrapper {
   display: flex;
 }
 
-html .form-wrapper form {
+html .form-wrapper form, html .form-wrapper .form {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -59,19 +59,19 @@ html .form-wrapper form {
   padding: 20px;
 }
 
-html .form-wrapper form .form-label {
+html .form-wrapper form .form-label, html .form-wrapper .form .form-label {
   position: relative;
   width: 100%;
 }
 
-html .form-wrapper form .form-label .form-name-label {
+html .form-wrapper form .form-label .form-name-label, html .form-wrapper .form .form-label .form-name-label {
   top: calc(-20px - 0.75em);
   margin-top: 0;
   background-color: var(--default-page-bg-color);
   left: -10px;
 }
 
-html .form-wrapper form .form-label label {
+html .form-wrapper form .form-label label, html .form-wrapper .form .form-label label {
   position: absolute;
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
@@ -83,7 +83,8 @@ html .form-wrapper form .form-label label {
 }
 
 html .form-wrapper form .form-label .active-label,
-html .form-wrapper form .form-label .permanent-active-label {
+html .form-wrapper form .form-label .permanent-active-label, html .form-wrapper .form .form-label .active-label,
+html .form-wrapper .form .form-label .permanent-active-label {
   top: -0.75em;
   left: 10px;
   background-color: white;
@@ -93,7 +94,8 @@ html .form-wrapper form .form-label .permanent-active-label {
 }
 
 html .form-wrapper form input:not([type="checkbox"]),
-html .form-wrapper form select {
+html .form-wrapper form select, html .form-wrapper .form input:not([type="checkbox"]),
+html .form-wrapper .form select {
   margin-top: 20px;
   border: 1px solid gray;
   height: 2.5rem;
@@ -101,12 +103,12 @@ html .form-wrapper form select {
   padding-left: 5px;
 }
 
-html .form-wrapper form input:focus {
+html .form-wrapper form input:focus, html .form-wrapper .form input:focus {
   outline: none;
   border: 2px solid var(--default-blue-color);
 }
 
-html .form-wrapper form .chekbox-wrapper {
+html .form-wrapper form .chekbox-wrapper, html .form-wrapper .form .chekbox-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -120,17 +122,17 @@ html .form-wrapper form .chekbox-wrapper {
   margin-top: 0.5em;
 }
 
-html .form-wrapper form .chekbox-wrapper input {
+html .form-wrapper form .chekbox-wrapper input, html .form-wrapper .form .chekbox-wrapper input {
   margin-right: 0.5em;
   height: 1.3em;
   width: 1.3em;
 }
 
-html .form-wrapper form .chekbox-wrapper label {
+html .form-wrapper form .chekbox-wrapper label, html .form-wrapper .form .chekbox-wrapper label {
   margin: 0;
 }
 
-html .form-wrapper form input[type="button"] {
+html .form-wrapper form input[type="button"], html .form-wrapper .form input[type="button"] {
   width: -webkit-fit-content;
   width: -moz-fit-content;
   width: fit-content;
@@ -479,14 +481,14 @@ page-manager settings-page .settings-btns-stack .save-btn:hover {
   background-color: #d5d5d5;
 }
 
-page-manager settings-page .form-wrapper form {
+page-manager settings-page .form-wrapper form, page-manager settings-page .form-wrapper .form {
   max-width: initial;
   width: 100%;
   padding: 5px;
   margin: 5px;
 }
 
-page-manager settings-page .form-wrapper form slidable-img {
+page-manager settings-page .form-wrapper form slidable-img, page-manager settings-page .form-wrapper .form slidable-img {
   background-color: #c1c1c1;
 }
 

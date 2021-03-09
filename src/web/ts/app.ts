@@ -12,7 +12,6 @@ import { Effects, PageManager, PageManagerComponent } from "./app/page-manager.j
 import { AppRouter, IRoute, Pages } from "./app/app-router.js";
 import { URLManager } from "./app/url-manager.js";
 import { LoginPage } from "./pages/login-page.js";
-import { Dashboard } from "./pages/dashboard-page.js";
 import { HomePage } from "./pages/home-page.js";
 import { RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-card.js";
 import { VerticalStack } from "./layouts/vertical-stack.js";
@@ -47,7 +46,6 @@ class AutoHomeApp {
             
             LoginComponent,
             LoginPage,
-            Dashboard,
             BaseLayout,
             PageManagerComponent,
             BlankPage,

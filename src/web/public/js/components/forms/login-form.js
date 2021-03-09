@@ -39,7 +39,7 @@ export class LoginComponent extends AbstractComponent {
             </div>
         </div>
         <div class="form-wrapper">
-            <form id="login-form" action="/dashboard" method="POST">
+            <form id="login-form" action="/" method="POST">
                 <div class="form-label">
                     <label class="form-name-label" for="login-form">Přihlášení</label>
                 </div>

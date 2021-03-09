@@ -7,7 +7,6 @@ import { Effects, PageManager } from "./page-manager.js";
 import { AppRouter, IRoute, Pages, PagesKeys, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
 import { LoginPage } from "../pages/login-page.js";
-import { Dashboard } from "../pages/dashboard-page.js";
 import { HomePage } from "../pages/home-page.js";
 import { Firebase } from "./firebase.js";
 import { SettingsPage } from "../pages/settings-page.js";

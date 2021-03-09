@@ -8,17 +8,37 @@ module.exports = class Firebase {
         this._dbInited = false;
         this._loggedIn = false;
         this._sensors = new Array();
-        this._sensorValueIntervalTime = 10000;
+        this._sensorValueTimeoutTime = 20000;
         this.changes = new Array();
-        this._updateSensorsValues = () => {
-            this._sensors.forEach((sensor) => {
+        this._updateSensorsValues = async () => {
+            const updates = {};
+            for (let i = 0; i < this._sensors.length; i++) {
+                const sensor = this._sensors[i];
                 if (sensor.IP) {
-                    console.log('sensor: ', sensor);
-                    this._communicationManager.getVal(sensor.IP, sensor.input);
+                    //console.log('sensor: ', sensor);
+                    let newVal;
+                    try {
+                        if (sensor.type == "bus") { // BMP returns float
+                            newVal = Number.parseFloat(await this._communicationManager.getVal(sensor.IP, sensor.input));
+                        }
+                        else {
+                            newVal = Number.parseInt(await this._communicationManager.getVal(sensor.IP, sensor.input));
+                        }
+                        //console.log('newVal: ', newVal);
+                        if (newVal != sensor.value) {
+                            sensor.value = newVal;
+                            updates[sensor.pathToValue] = newVal;
+                            updates[sensor.pathToValue] = newVal;
+                        }
+                    }
+                    catch (error) {
+                    }
                 }
-            });
+            }
             console.log("___________________");
             //update in Database
+            await firebase.database().ref().update(updates);
+            this._sensorValueTimeout = setTimeout(this._updateSensorsValues, this._sensorValueTimeoutTime);
         };
         this.initFirebase();
         this._wifiManager = new WifiManager();
@@ -77,11 +97,12 @@ module.exports = class Firebase {
                 const sensors = modules[moduleID]["IN"];
                 for (const sensorID in sensors) {
                     sensors[sensorID]["IP"] = modules[moduleID]["IP"];
+                    sensors[sensorID]["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${roomID}/devices/${moduleID}/IN/${sensorID}/value`;
                     this._sensors.push(sensors[sensorID]);
                 }
             }
         }
-        this._sensorValueInterval = setInterval(this._updateSensorsValues, this._sensorValueIntervalTime);
+        this._sensorValueTimeout = setTimeout(this._updateSensorsValues, this._sensorValueTimeoutTime);
     }
     saveDbChange(data) {
         const newRooms = data["rooms"];
