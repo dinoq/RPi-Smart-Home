@@ -8,23 +8,33 @@ module.exports = class Firebase {
         this._dbInited = false;
         this._loggedIn = false;
         this._sensors = new Array();
-        this._sensorValueTimeoutTime = 20000;
+        this._sensorValueTimeoutTime = 2000;
         this.changes = new Array();
         this._updateSensorsValues = async () => {
             const updates = {};
-            for (let i = 0; i < this._sensors.length; i++) {
-                const sensor = this._sensors[i];
-                if (sensor.IP) {
-                    //console.log('sensor: ', sensor);
+            let getAllValPromisesChain = Promise.resolve();
+            const sensorsById = {};
+            this._sensors.forEach((sensor, index, array) => {
+                if (!sensor.IP)
+                    return;
+                if (!sensorsById[sensor.IP])
+                    sensorsById[sensor.IP] = new Array();
+                sensorsById[sensor.IP].push(sensor);
+            });
+            let getValuesFromSensorsGroup = async (sensors) => {
+                for (let i = 0; i < sensors.length; i++) {
+                    const sensor = sensors[i];
                     let newVal;
                     try {
+                        console.log("getting val " + Math.round(Date.now() / 1));
+                        let valPromise = this._communicationManager.getVal(sensor.IP, sensor.input);
                         if (sensor.type == "bus") { // BMP returns float
-                            newVal = Number.parseFloat(await this._communicationManager.getVal(sensor.IP, sensor.input));
+                            newVal = Number.parseFloat(await valPromise);
                         }
                         else {
-                            newVal = Number.parseInt(await this._communicationManager.getVal(sensor.IP, sensor.input));
+                            newVal = Number.parseInt(await valPromise);
                         }
-                        //console.log('newVal: ', newVal);
+                        console.log('newVal: ', newVal + " " + Math.round(Date.now() / 1));
                         if (newVal != sensor.value) {
                             sensor.value = newVal;
                             updates[sensor.pathToValue] = newVal;
@@ -34,10 +44,19 @@ module.exports = class Firebase {
                     catch (error) {
                     }
                 }
+            };
+            for (const sensorGroup in sensorsById) {
+                console.log("S" + Math.round(Date.now() / 1));
+                getAllValPromisesChain = getAllValPromisesChain.then((value) => {
+                    getValuesFromSensorsGroup(sensorsById[sensorGroup]);
+                });
+                console.log("E" + Math.round(Date.now() / 1));
             }
-            console.log("___________________");
+            console.log("čekání" + Math.round(Date.now() / 1));
+            await getAllValPromisesChain;
+            console.log("___________________" + Math.round(Date.now() / 1));
             //update in Database
-            await firebase.database().ref().update(updates);
+            //await firebase.database().ref().update(updates);
             this._sensorValueTimeout = setTimeout(this._updateSensorsValues, this._sensorValueTimeoutTime);
         };
         this.initFirebase();
@@ -51,6 +70,8 @@ module.exports = class Firebase {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
             console.log("Succesfully logged in");
+            this._communicationManager.resetRPiServer("192.168.1.8");
+            setInterval(this._communicationManager.initCommunicationWithESP, 5000);
             this._loggedIn = true;
             this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -68,6 +89,7 @@ module.exports = class Firebase {
             console.log(this.saveDbChange(data));
             this._processDbChanges();
         }
+        this.getSensors(data);
     }
     initFirebase() {
         this._fb = firebase.initializeApp({
@@ -90,6 +112,9 @@ module.exports = class Firebase {
         this.getSensors(data);
     }
     getSensors(data) {
+        this._sensors = new Array();
+        if (this._sensorValueTimeout)
+            clearTimeout(this._sensorValueTimeout);
         const rooms = data["rooms"];
         for (const roomID in rooms) {
             const modules = rooms[roomID]["devices"];
@@ -156,9 +181,9 @@ module.exports = class Firebase {
             let index = this.changes.indexOf(change);
             this.changes.splice(index, 1); // Remove change
             if (change.type == ChangeMessageTypes.ADDED && change.level == DevicesTypes.MODULE) { // Module was added => init communication
-                this._communicationManager.initCommunicationWithESP().then((espIP) => {
+                this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
                     console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
-                    this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP });
+                    this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
                     this._communicationManager.sendESPItsID(change.data.id);
                     console.log('change.data.id: ', change.data.id);
                 });

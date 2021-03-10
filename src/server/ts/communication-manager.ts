@@ -51,7 +51,7 @@ module.exports = class CommunicationManager{
                 if(espIP)
                     return;
                 espIP = rinfo.address;
-                setTimeout(() => {resolve(espIP);}, 0)
+                setTimeout(() => {resolve({IP: espIP, boardType: message.toString()});}, 0)
             });
 
         })
@@ -79,12 +79,12 @@ module.exports = class CommunicationManager{
         console.log("req end");
     }
 
-    public getVal(ip: string, pin: string){        
+    public getVal(ip: string, input: string){        
         return new Promise( (resolve, reject) => {
             let req = coap.request({
                 host: ip,
                 pathname: '/get-io',
-                query: "pin=" + pin,
+                query: "input=" + input,
                 method: "GET",
                 confirmable: true
             });
@@ -101,5 +101,21 @@ module.exports = class CommunicationManager{
             })
             req.end();
         })
+    }
+
+    public async resetRPiServer(ip: string){        
+        let req = coap.request({
+            host: ip,
+            pathname: '/reset-RPi-server',
+            method: "DELETE",
+            confirmable: false
+        });
+
+        req.on('error', function(err) { 
+            console.log('e: ', err);
+
+        })
+        req.end();
+        console.log("req end");
     }
 }

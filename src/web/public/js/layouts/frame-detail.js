@@ -146,7 +146,7 @@ export class FrameDetailRow extends AbstractComponent {
                 <select id="${id}" name="${id}">
                 <option value="digital">Digitální pin</option>
                 <option value="analog">Analogový pin</option>
-                <option value="bus">Sběrnice</option>
+                <option value="bus">Sběrnice I2C</option>
                 </select>
             `;
         }
@@ -187,7 +187,7 @@ export class FrameDetailRow extends AbstractComponent {
             let options = [
                 ["switch", "Spínač", "-", "Bez ikony"],
                 ["temp", "Teploměr", "-", "Bez ikony"],
-                ["temp", "Teploměr", "bme", "Teploměr BME", "-", "Bez ikony"] // Bus
+                ["temp", "Teploměr", "bmp-temp", "Senzor BMP (teplota)", "bmp-press", "Senzor BMP (tlak)", "-", "Bez ikony"] // Bus
             ];
             this.initOptionsFromADSelect(options, inputType);
         }
