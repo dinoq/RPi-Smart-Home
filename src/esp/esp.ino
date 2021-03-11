@@ -46,7 +46,6 @@ unsigned int CoAPPort = 5683;
 /**
  * Others variables
  * */
-bool connectedToRPi = false;
 String multicastMsgPrefix = "RPi-server-IP:";
 int multicastMsgPrefixLen = 14; // Length of string "RPi-server-IP:", which is send via multicast to newly added modules
 String inputPrefix = "input=";
@@ -111,7 +110,7 @@ void loop()
 
 void checkMulticast()
 {
-    if (connectedToRPi) // If module is already connected to RPi then skip check of multicast...
+    if (RpiIP.isSet()) // If module is already connected to RPi then skip check of multicast...
         return;
         
     int packetSize = Udp.parsePacket();
@@ -133,7 +132,6 @@ void checkMulticast()
                 {
                     String RPiIPStr = String(incomingPacket).substring(multicastMsgPrefixLen);
                     //Serial.println("Zbytek:" + RPiIPStr);
-                    connectedToRPi = true;
                     RpiIP.fromString(RPiIPStr);
                     int EEPROMAddr = 0;
                     int IpIndex = 0;  
@@ -160,7 +158,7 @@ void checkMulticast()
 void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
 {
     Serial.println("Set IO");
-    if(!connectedToRPi)
+    if(!RpiIP.isSet())
       return;
 
     // send response
@@ -224,7 +222,7 @@ void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
 void callback_get_io(CoapPacket &packet, IPAddress ip, int port)
 {
     Serial.println("Get IO");
-    if(!connectedToRPi)
+    if(!RpiIP.isSet())
       return;
       
 
@@ -307,7 +305,9 @@ void callback_reset_RPi_server(CoapPacket &packet, IPAddress ip, int port)
       EEPROM.write(adr, 0);  
     }      
     EEPROM.commit();
-    connectedToRPi = false;
+      Serial.println("ip pred set func:"+String(RpiIP.isSet()));
+    RpiIP = IPAddress();
+      Serial.println("ip po set func:"+String(RpiIP.isSet()));
 }
 void setRPiIP(){
     char prefix[] = "IP:";
@@ -321,7 +321,6 @@ void setRPiIP(){
     }
     if(IpIsSaved){
       RpiIP = IPAddress(EEPROM.read(adr++),EEPROM.read(adr++),EEPROM.read(adr++),EEPROM.read(adr++));
-      connectedToRPi = true;
       Serial.println("ip IS set:"+RpiIP.toString());
     } else{      
       Serial.println("ip not set:"+RpiIP.toString());
