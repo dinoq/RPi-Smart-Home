@@ -213,7 +213,7 @@ module.exports = class Firebase {
                 this._communicationManager.initCommunicationWithESP().then(({espIP, boardType}) => {
                     console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
                     this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
-                    this._communicationManager.sendESPItsID(change.data.id);
+                    this._communicationManager.sendESPItsID(espIP, change.data.id);
                     console.log('change.data.id: ', change.data.id);
                 })
             } else if (change.type == ChangeMessageTypes.VALUE_CHANGED && change.level == DevicesTypes.DEVICE) {
