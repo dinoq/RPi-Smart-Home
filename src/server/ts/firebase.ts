@@ -2,7 +2,6 @@
 var firebase = require('firebase');
 const fs = require("fs");
 const conf = require("../config.json");
-const WifiManager = require('./wifi-manager.js');
 const CommunicationManager = require('./communication-manager.js');
 
 module.exports = class Firebase {
@@ -10,7 +9,6 @@ module.exports = class Firebase {
     private _dbCopy;
     private _dbInited: boolean = false;
     private _loggedIn: boolean = false;
-    private _wifiManager: typeof WifiManager;
     private _communicationManager: typeof CommunicationManager;
     private _sensors: Array<any> = new Array();
     private _sensorValueTimeout: any;
@@ -24,7 +22,6 @@ module.exports = class Firebase {
 
     constructor() {
         this.initFirebase();
-        this._wifiManager = new WifiManager();
         this._communicationManager = new CommunicationManager();
     }
 
@@ -32,8 +29,12 @@ module.exports = class Firebase {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
                 console.log("Succesfully logged in");
-                this._communicationManager.resetRPiServer("192.168.1.8"); 
-                setInterval(this._communicationManager.initCommunicationWithESP, 5000);
+                this._communicationManager.initCoapServer(); 
+
+                this._communicationManager.resetRPiServer("192.168.1.8", "A17"); 
+
+                //this._communicationManager.resetRPiServer("192.168.1.8"); //TODO: delete
+                //setInterval(this._communicationManager.initCommunicationWithESP, 5000);
                 this._loggedIn = true;
                 this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
                     const data = snapshot.val();
@@ -101,6 +102,8 @@ module.exports = class Firebase {
 
     private _updateSensorsValues = async () => {
         const updates = {};
+
+        return;
 
         let getAllValPromisesChain = Promise.resolve();
         const sensorsById = {};

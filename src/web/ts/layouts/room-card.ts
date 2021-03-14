@@ -323,7 +323,7 @@ export class RoomSensor extends AbstractComponent {
             unitText = "";
         } else if (sensor.unit == "c") {
             unitText = "°C";
-            valueText = (sensor.value)? sensor.value : "0";
+            valueText = (sensor.value) ? sensor.value : "0";
         } else if (sensor.unit == "percentages") {
             unitText = "%";
             valueText = (Math.round(sensor.value / 1023) * 100).toString();
@@ -421,7 +421,11 @@ export class RoomDevice extends AbstractComponent {
     }
 
     initialize(index, object, onClickCallback) {
-        this.type = object[index].type;
+        let output = object[index].output;
+        if (output.charAt(0) == "A")
+            this.type = "analog";
+        else
+            this.type = "digital";
         this.icon = object[index].icon;
         this.devicePath = object[index].path;
         this.dbID = object[index].id;
@@ -494,9 +498,5 @@ export class RoomDevice extends AbstractComponent {
 
     updateSlider(value) {
         //this.slider.value=value;
-    }
-
-    static convertToNumVal(val: string, type: string) {
-
     }
 }

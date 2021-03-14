@@ -1,7 +1,6 @@
 var firebase = require('firebase');
 const fs = require("fs");
 const conf = require("../config.json");
-const WifiManager = require('./wifi-manager.js');
 const CommunicationManager = require('./communication-manager.js');
 module.exports = class Firebase {
     constructor() {
@@ -12,6 +11,7 @@ module.exports = class Firebase {
         this.changes = new Array();
         this._updateSensorsValues = async () => {
             const updates = {};
+            return;
             let getAllValPromisesChain = Promise.resolve();
             const sensorsById = {};
             this._sensors.forEach((sensor, index, array) => {
@@ -60,7 +60,6 @@ module.exports = class Firebase {
             this._sensorValueTimeout = setTimeout(this._updateSensorsValues, this._sensorValueTimeoutTime);
         };
         this.initFirebase();
-        this._wifiManager = new WifiManager();
         this._communicationManager = new CommunicationManager();
     }
     get loggedIn() {
@@ -70,8 +69,10 @@ module.exports = class Firebase {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
             console.log("Succesfully logged in");
-            this._communicationManager.resetRPiServer("192.168.1.8");
-            setInterval(this._communicationManager.initCommunicationWithESP, 5000);
+            this._communicationManager.initCoapServer();
+            this._communicationManager.resetRPiServer("192.168.1.8", "A17");
+            //this._communicationManager.resetRPiServer("192.168.1.8"); //TODO: delete
+            //setInterval(this._communicationManager.initCommunicationWithESP, 5000);
             this._loggedIn = true;
             this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -184,7 +185,7 @@ module.exports = class Firebase {
                 this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
                     console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
                     this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
-                    this._communicationManager.sendESPItsID(change.data.id);
+                    this._communicationManager.sendESPItsID(espIP, change.data.id);
                     console.log('change.data.id: ', change.data.id);
                 });
             }

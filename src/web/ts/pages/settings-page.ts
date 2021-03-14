@@ -122,22 +122,18 @@ export class SettingsPage extends BasePage {
         } else if (listType == FrameListTypes.MODULES) {
             path = this.itemInDetail.item.dbCopy.path;
         } else if (listType == FrameListTypes.SENSORS) {
-            let inputType = (<HTMLInputElement>document.getElementById("input-type")).value;
             let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
             let input = (<HTMLInputElement>document.getElementById("input")).value;
             let unit = (<HTMLInputElement>document.getElementById("unit")).value;
 
-            update.type = inputType;
             update.icon = iconType;
             update.input = input;
             update.unit = unit;
             path = this.itemInDetail.item.dbCopy.path;
         } else if (listType == FrameListTypes.DEVICES) {
-            let outputType = (<HTMLInputElement>document.getElementById("output-type")).value;
             let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
             let output = (<HTMLInputElement>document.getElementById("output")).value;
 
-            update.type = outputType;
             update.icon = iconType;
             update.output = output;
             path = this.itemInDetail.item.dbCopy.path;
@@ -572,9 +568,23 @@ export class SettingsPage extends BasePage {
         } else if (parenListType == FrameListTypes.MODULES) {
             values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];
         } else if (parenListType == FrameListTypes.SENSORS) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
+            let type;
+            if (item.dbCopy.input.charAt(0) == "A")
+                type = "analog";
+            else if (item.dbCopy.input.charAt(0) == "D")
+                type = "digital";
+            else
+                type = "bus";
+            values = [item.dbCopy.name, type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
         } else if (parenListType == FrameListTypes.DEVICES) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
+            let type;
+            if (item.dbCopy.output.charAt(0) == "A")
+                type = "analog";
+            else if (item.dbCopy.output.charAt(0) == "D")
+                type = "digital";
+            else
+                type = "bus";
+            values = [item.dbCopy.name, type, item.dbCopy.output, item.dbCopy.icon];
         }
         this.detail.updateDetail(title, parenListType, values);
 

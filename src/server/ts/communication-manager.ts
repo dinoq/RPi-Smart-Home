@@ -7,6 +7,7 @@ const Process = require("process");
 const COnfig = require("../config.json");
 
 module.exports = class CommunicationManager {
+    private _server: any;
     constructor() {
 
         var coapTiming = {
@@ -29,7 +30,22 @@ module.exports = class CommunicationManager {
             }
         }
     }
-    public async connectToESP() {
+
+    public initCoapServer(){
+        this._server = coap.createServer()
+ 
+        this._server.on('request', function(req, res) {
+            console.log('request');
+            console.log('Hello ', req.url.split('/')[1], req.url.split('/'));
+            let input = req.payload.toString("in:".length);
+            if(true){
+
+            }
+        })
+        
+        this._server.listen(function() {
+            console.log("listen");
+        });
 
     }
 
@@ -106,8 +122,23 @@ module.exports = class CommunicationManager {
         })
     }
 
+    public listenTo(ip: string, input: string) {
+        return new Promise((resolve, reject) => {
+            this.coapRequest(ip, "/listen-to", "input=" + input, "GET", null, (res) =>{
+                /*const prefixLen = "ESP-get-val:".length;
+                const val = res.payload.toString().substring(prefixLen);
+                */
+                console.log("res"+res.payload.toString());
+                resolve(res.payload.toString());
+            }, (err)=> {
+                console.log('No reply in 5s from ' + ip);
+                reject(err);
+            });
+        })
+    }
+
     public async resetRPiServer(ip: string) {
-        this.coapRequest(ip, "/reset-RPi-server", "", "DELETE", null, null, null, false);
+        this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, false);
     }
 
     

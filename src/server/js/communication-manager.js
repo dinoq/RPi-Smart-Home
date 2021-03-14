@@ -26,7 +26,18 @@ module.exports = class CommunicationManager {
             }
         }
     }
-    async connectToESP() {
+    initCoapServer() {
+        this._server = coap.createServer();
+        this._server.on('request', function (req, res) {
+            console.log('request');
+            console.log('Hello ', req.url.split('/')[1], req.url.split('/'));
+            let input = req.payload.toString("in:".length);
+            if (true) {
+            }
+        });
+        this._server.listen(function () {
+            console.log("listen");
+        });
     }
     initCommunicationWithESP() {
         return new Promise((resolve, reject) => {
@@ -47,56 +58,60 @@ module.exports = class CommunicationManager {
             });
         });
     }
-    async sendESPItsID(id) {
-        //TODO
-    }
-    async putVal(ip, pin, val) {
+    coapRequest(ip, pathname, query, method, valToWrite, onResponse, onError, confirmable = true) {
         let req = coap.request({
             host: ip,
-            pathname: '/set-io',
-            query: "pin=" + pin,
-            method: "PUT",
+            pathname: pathname,
+            query: query,
+            method: method,
             confirmable: true
         });
-        req.write(val);
-        req.on('error', function (err) {
-            console.log('e: ', err);
+        if (valToWrite != null)
+            req.write(valToWrite);
+        req.on('error', (err) => {
+            if (onError)
+                onError(err);
+        });
+        req.on('response', (res) => {
+            if (onResponse)
+                onResponse(res);
         });
         req.end();
         console.log("req end");
+    }
+    async sendESPItsID(ip, id) {
+        this.coapRequest(ip, "/set-id", "", "PUT", id, null, null, false);
+    }
+    async putVal(ip, pin, val) {
+        this.coapRequest(ip, "/set-io", "pin=" + pin, "PUT", val, null, null);
     }
     getVal(ip, input) {
         return new Promise((resolve, reject) => {
-            let req = coap.request({
-                host: ip,
-                pathname: '/get-io',
-                query: "input=" + input,
-                method: "GET",
-                confirmable: true
-            });
-            req.on('error', function (err) {
-                console.log('No reply in 5s from ' + ip);
-                reject(err);
-            });
-            req.on('response', function (res) {
+            this.coapRequest(ip, "/get-io", "input=" + input, "GET", null, (res) => {
                 const prefixLen = "ESP-get-val:".length;
                 const val = res.payload.toString().substring(prefixLen);
                 resolve(val);
+            }, (err) => {
+                console.log('No reply in 5s from ' + ip);
+                reject(err);
             });
-            req.end();
+        });
+    }
+    listenTo(ip, input) {
+        return new Promise((resolve, reject) => {
+            this.coapRequest(ip, "/listen-to", "input=" + input, "GET", null, (res) => {
+                /*const prefixLen = "ESP-get-val:".length;
+                const val = res.payload.toString().substring(prefixLen);
+                */
+                console.log("res" + res.payload.toString());
+                resolve(res.payload.toString());
+            }, (err) => {
+                console.log('No reply in 5s from ' + ip);
+                reject(err);
+            });
         });
     }
     async resetRPiServer(ip) {
-        let req = coap.request({
-            host: ip,
-            pathname: '/reset-RPi-server',
-            method: "DELETE",
-            confirmable: false
-        });
-        req.on('error', function (err) {
-            console.log('e: ', err);
-        });
-        req.end();
-        console.log("req end");
+        this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, false);
     }
 };
