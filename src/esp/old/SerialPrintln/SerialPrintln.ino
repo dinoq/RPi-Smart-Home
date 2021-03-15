@@ -1,4 +1,7 @@
 
+#include "SerialPrintln.h"
+#include "memory.h"
+
 
 float watchedIO[20];
 
@@ -96,8 +99,113 @@ void setup() {
   input[1] = '3'; 
   i2c = strncmp(input, "I2C", 3); 
   Serial.println(i2c);
+
+  byte typ = ANALOG;
+  int typ2 = ANALOG;
+  byte typ3 = DIGITAL;
+  Serial.println("sizeof(IO_TYPES)");
+  Serial.println(sizeof(IO_TYPES));
+  Serial.println(sizeof(ANALOG));
+  Serial.println(sizeof(DIGITAL));
+  Serial.println(sizeof(typ));
+  Serial.println(sizeof(typ2));
+  Serial.println(sizeof(typ3));
+  Serial.println(sizeof((byte)DIGITAL));
+
+
+  
+  Serial.println("values from shifted_enum");
+  Serial.println(ITEM0);
+  Serial.println(ITEM1);
+  Serial.println(ITEM2);
+  Serial.println(ITEM3);
+  Serial.println(ITEM4);
+  
+  Serial.println("val declaration");
+  float val;
+  Serial.println(val);
+  
+  Serial.println("memcmp a strncmp");
+  char input2[] = "1teplota";
+  char buffer2[] = "teplota";
+  int n;
+  Serial.println(memcmp( input2+1, buffer2, sizeof(buffer2)));
+  Serial.println(memcmp( input2, buffer2, sizeof(buffer2) ));
+  Serial.println(strncmp( input2+1, buffer2, sizeof(buffer2) ));
+  Serial.println(strncmp( input2, buffer2, sizeof(buffer2) ));
+  Serial.println("dynamic strncmp");
+  Serial.println(strncmp( input2+1, "teplota", strlen("teplota")));
+  Serial.println(strncmp( input2+1, "teploty", strlen("teploty")));
+  Serial.println(strncmp( input2+1, "teplot", strlen("teplot")));
+  
+  Serial.println("bool");
+  Serial.println(1);
+  Serial.println(0);
+  Serial.println(100);
+  Serial.println((bool)1);
+  Serial.println((bool)0);
+  Serial.println((bool)100);
+  Serial.println(!1);
+  Serial.println(!0);
+  Serial.println(!100);
+  Serial.println(!(bool)1);
+  Serial.println(!(bool)0);
+  Serial.println(!(bool)100);
+
+  Serial.println("atoi");
+  char pinStr[3];
+  char input3[]="A12";
+  Serial.println(strlen(input)-1);
+  Serial.println((byte)atoi(strncpy(pinStr, input3+1, strlen(input3)-1)));
+
+
+  /*
+  Serial.println("EEPROM put");
+  EEPROM.put(0, 97);
+  EEPROM.put(1, 1.1);
+  Serial.println(EEPROM.read(0));
+  Serial.println(EEPROM.read(1));
+  Serial.println(EEPROM.read(2));
+  Serial.println(EEPROM.read(3));
+  Serial.println(EEPROM.read(4));
+  Serial.println(EEPROM.read(5)); */
+  
+  Serial.println("EEPROM custom class");
+  /*int address = 0;
+  float vall = 1.1;
+        char *bytes;
+        bytes = (char*) & vall;
+        
+  EEPROM.begin(512);  
+  Serial.println((int)bytes[0]);
+  Serial.println((int)bytes[1]);
+  Serial.println((int)bytes[2]);
+  Serial.println((int)bytes[3]);
+        EEPROM.write(address++, bytes[0]);
+        EEPROM.write(address++, bytes[1]);
+        EEPROM.write(address++, bytes[2]);
+        EEPROM.write(address++, bytes[3]);
+        EEPROM.commit();
+  int ch = (int)EEPROM.read(0);
+  Serial.println(ch);
+  Serial.println(char (ch));*/
+  EEPROM.begin(512);  
+  Serial.println(Memory::writeAddr);
+  Memory::writeFloat(2.1);
+  Serial.println(Memory::readAddr);
+  Memory::writeFloat(7.3);
+  Serial.println(Memory::readFloat());
+  Serial.println(Memory::readFloat());
+  Serial.println(Memory::writeAddr);
+
 }
 
 void loop() {
   delay(1000);
+}
+
+
+SensorInfo getSensorInfo(char input[]){
+  SensorInfo i;
+  return i;
 }

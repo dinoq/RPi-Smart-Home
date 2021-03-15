@@ -10,6 +10,7 @@
         "bitset": "cpp",
         "cstdlib": "cpp",
         "regex": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "xmemory0": "cpp"
     }
 }
