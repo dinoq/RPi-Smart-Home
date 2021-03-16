@@ -4,14 +4,15 @@
 
 class Memory{
   public:  
-    static short readAddr;   
-    static short writeAddr;         
-    static float readFloat();
-    static float readFloat(short address);
-    static void writeFloat(float val);
-    static void writeFloat(char address, float val);
+    Memory();
+    short readAddr;   
+    short writeAddr;      
+    float readFloat();
+    float readFloat(short address);
+    void writeFloat(float val);
+    void writeFloat(char address, float val);
+    /*void writeSensorInfo(float val);
+    void writeSensorInfo(char address, float val);*/
 
 };
-//short Memory::addr = 0;
-
 #endif

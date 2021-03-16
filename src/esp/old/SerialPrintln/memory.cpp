@@ -2,12 +2,19 @@
 #include <EEPROM.h>
 #include "memory.h"
 
+Memory::Memory(){
+  EEPROM.begin(512);   
+  readAddr = 0;
+  writeAddr = 0;
+}
+
 float Memory::readFloat() {         
-    Memory::readFloat(readAddr);
-    readAddr = 4;
+    float val = Memory::readFloat(readAddr);
+    readAddr += 4;
+    return val;
 }      
 
-float Memory::readFloat(short address) {   
+float Memory::readFloat(short address) {
         char bytes[] = {EEPROM.read(address), EEPROM.read(address+1), EEPROM.read(address+2), EEPROM.read(address+3)};
         float val;
         memcpy(&val, &bytes, sizeof(val));
@@ -15,9 +22,8 @@ float Memory::readFloat(short address) {
 }      
 
 void Memory::writeFloat(float val){   
-  EEPROM.begin(512);     
-    Memory::writeFloat(Memory::writeAddr, val);
-    Memory::writeAddr += 4;
+    Memory::writeFloat(writeAddr, val);
+    writeAddr += 4;
 }      
 
 
@@ -31,6 +37,3 @@ void Memory::writeFloat(char address, float val){
         EEPROM.write(address++, bytes[3]);
         EEPROM.commit();
 }      
-
-short Memory::writeAddr = 0;
-short Memory::readAddr = 0;

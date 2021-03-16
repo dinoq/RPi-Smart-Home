@@ -3,6 +3,7 @@
 #include "memory.h"
 
 
+Memory mem;
 float watchedIO[20];
 
 void setup() {
@@ -189,14 +190,19 @@ void setup() {
   int ch = (int)EEPROM.read(0);
   Serial.println(ch);
   Serial.println(char (ch));*/
-  EEPROM.begin(512);  
-  Serial.println(Memory::writeAddr);
-  Memory::writeFloat(2.1);
+  mem.writeFloat(33.3);
+  /*Serial.println(Memory::readAddr);
+  Memory::writeFloat(4.3);
+  Serial.println(Memory::readFloat());
   Serial.println(Memory::readAddr);
-  Memory::writeFloat(7.3);
   Serial.println(Memory::readFloat());
-  Serial.println(Memory::readFloat());
-  Serial.println(Memory::writeAddr);
+  Serial.println(Memory::readAddr);*/
+  Serial.println("first 10 bytes:");
+  for(int i = 0; i < 10; i++){
+    Serial.println((int)EEPROM.read(i));
+    EEPROM.write(i, 0); //clear it for next run
+  }
+  EEPROM.commit();
 
 }
 

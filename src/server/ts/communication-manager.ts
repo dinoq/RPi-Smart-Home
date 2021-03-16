@@ -67,7 +67,7 @@ module.exports = class CommunicationManager {
                 if (espIP)
                     return;
                 espIP = rinfo.address;
-                setTimeout(() => { resolve({ IP: espIP, boardType: message.toString() }); }, 0)
+                setTimeout(() => { resolve({ espIP: espIP, boardType: message.toString().substring("TYPE:".length) }); }, 0)
             });
 
         })
@@ -102,7 +102,10 @@ module.exports = class CommunicationManager {
     }
 
     public async sendESPItsID(ip:string, id: string) {
-        this.coapRequest(ip, "/set-id", "", "PUT", id, null, null, false);
+        this.coapRequest(ip, "/set-id", "", "PUT", id, null, (err) => {
+            // module didnt recieve its new ID
+            console.log("Module didnt recieve its new ID");
+        }, false);
     }
 
     public async putVal(ip: string, pin: string, val: string) {

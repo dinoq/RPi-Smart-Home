@@ -70,7 +70,14 @@ module.exports = class Firebase {
             .then((user) => {
             console.log("Succesfully logged in");
             this._communicationManager.initCoapServer();
-            this._communicationManager.resetRPiServer("192.168.1.8", "A17");
+            let change = JSON.parse("{\"type\":1,\"level\":1,\"data\":{\"id\":\"-MVwvZHnfCbecnYYOtEf\",\"path\":\"rooms/-MVwvYAL2RM_XyOKV4lH/devices/-MVwvZHnfCbecnYYOtEf\"}}");
+            this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
+                console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
+                this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
+                this._communicationManager.sendESPItsID(espIP, change.data.id);
+                console.log('change.data.id: ', change.data.id);
+                setTimeout(() => { this._communicationManager.listenTo("192.168.1.8", "A17"); }, 2000);
+            });
             //this._communicationManager.resetRPiServer("192.168.1.8"); //TODO: delete
             //setInterval(this._communicationManager.initCommunicationWithESP, 5000);
             this._loggedIn = true;

@@ -19,6 +19,7 @@ int lastConnectedToRPi = 0; // Number of seconds from last connection
 bool bmpHasBegun = false;
 int watchedINIndex = 0;
 SensorInfo watched[WATCHED_IN_LIMIT];
+Memory mem;
 /**
  * BMP280
  */
@@ -37,8 +38,8 @@ void setup()
     Serial.begin(115200);
     Serial.println();
     randomSeed(micros());
-    EEPROM.begin(512); //Initialize EEPROM
-    resetFromEEPROM();
+
+    resetFromMemory();
     Serial.println();
 
     WiFi.begin(ssid, password);
@@ -53,9 +54,8 @@ void setup()
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
 
-    Serial.println("Setup Callback Light ver 4");
+    Serial.println("Setup CoAP callbacks");
     coap.server(callback_set_io, "set-io");
-    coap.server(callback_get_io, "get-io");
     coap.server(callback_listen_to, "listen-to");
     coap.server(callback_reset_module, "reset-module");
     coap.server(callback_set_id, "set-id");
@@ -67,13 +67,8 @@ void setup()
 
     coap.start();
 
-    int msgid = coap.get(IPAddress(192, 168, 1, 4), 5683, "time");
-    Serial.println("msgid");
-    Serial.println(msgid);
-    char payload[] = "in:";
-    msgid = coap.send(IPAddress(192, 168, 1, 4), 5683, "time2", COAP_CON, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
-    Serial.println("msgid");
-    Serial.println(msgid);
+    reset_module();
+
 }
 // CoAP client response callback
 void callback_response(CoapPacket &packet, IPAddress ip, int port)
@@ -104,10 +99,14 @@ void checkInValues()
         if (watched[i].IN != UNSET)
         {
             float newVal = getSensorVal(watched[i]);
-            if(newVal != watched[i].val){
+            if (newVal != watched[i].val)
+            {
                 char payload[] = "in:";
                 int msgid = coap.send(IPAddress(192, 168, 1, 4), 5683, "new-value", COAP_NONCON, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
-                Serial.println("msgid: " + msgid);
+                Serial.println("msgid:");
+                Serial.println(msgid);
+                Serial.print("newVal: |");
+                Serial.println(newVal);
                 watched[i].val = newVal;
             }
         }
@@ -127,8 +126,17 @@ SensorInfo getSensorInfo(char input[])
     {
         char pinStr[3]; // eg. 11\0
 
-        byte pinNumber = (byte) atoi(strncpy(pinStr, input+1, strlen(input)-1)); //Here we use pin number directly (without constants like A0, D5 etc...)
+        byte pinNumber = (byte)atoi(strncpy(pinStr, input + 1, strlen(input) - 1)); //Here we use pin number directly (without constants like A0, D5 etc...)
+        Serial.println("pinNumber");
+        Serial.println(pinNumber);
+        Serial.println(pinStr);
+        Serial.println(input);
+        Serial.println(String(analog));
         info.val = (float)(analog) ? analogRead(pinNumber) : digitalRead(pinNumber);
+        Serial.println("info.val");
+        Serial.println(info.val);
+        Serial.println(analogRead(pinNumber));
+        Serial.println(analogRead(17));
         info.val_type = (byte)(analog) ? ANALOG : DIGITAL;
         info.IN = pinNumber;
     }
@@ -148,15 +156,15 @@ SensorInfo getSensorInfo(char input[])
 
         float val;
         byte IN;
-                                                                             
-        char t[] = "teplota";             
-        if (!strncmp(input+4, "BMP280", strlen("BMP280")))//eg. "I2C-BMP280-teplota"
-        {                            
-            IN = (strlen(input) >= 18 && !strncmp(input+11, t, strlen(t))) ? BMP280_TEMP : BMP280_PRESS; //temp or press (temperature/pressure)
+
+        char t[] = "teplota";
+        if (!strncmp(input + 4, "BMP280", strlen("BMP280"))) //eg. "I2C-BMP280-teplota"
+        {
+            IN = (strlen(input) >= 18 && !strncmp(input + 11, t, strlen(t))) ? BMP280_TEMP : BMP280_PRESS; //temp or press (temperature/pressure)
         }
-        else if (!strncmp(input+4, "SHT21", strlen("SHT21")))//eg. "I2C-SHT21-teplota"
-        {                                                                                                       
-            IN = (strlen(input) >= 18 && !strncmp(input+10, t, strlen(t))) ? SHT21_TEMP : SHT21_HUM; //temp or press (temperature/pressure)
+        else if (!strncmp(input + 4, "SHT21", strlen("SHT21"))) //eg. "I2C-SHT21-teplota"
+        {
+            IN = (strlen(input) >= 18 && !strncmp(input + 10, t, strlen(t))) ? SHT21_TEMP : SHT21_HUM; //temp or press (temperature/pressure)
         }
 
         info.IN = IN;
@@ -192,72 +200,6 @@ float getI2CVal(byte IN)
     val = (IN == UNKNOWN) ? INVALID_SENSOR_VALUE : val;
     return val;
 }
-/*
-float readSensorVal(char input[])
-{
-
-    bool digital = input[0] == 'D';      // If first char is D => digital pin.
-    bool analog = input[0] == 'A';       // If first char is A => analog pin.
-    bool i2c = strncmp(input, "I2C", 3); // If
-    int pinNumber;
-    float sensorVal;
-    //dál zkontrolovat správnost a doplnit
-    String responseStr = "";
-    if (digital)
-    {
-        pinNumber = input.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
-        sensorVal = (float)digitalRead(pinNumber);
-    }
-    else if (analog)
-    {
-        pinNumber = input.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
-        sensorVal = (float)analogRead(pinNumber);
-    }
-    else if (i2c)
-    {
-        if (!bmpHasBegun)
-        {
-            if (!bmp.begin(BMP280_ADRESS))
-            {
-                //Serial.println("BMP280 senzor nenalezen");
-            }
-            else
-            {
-                bmpHasBegun = true;
-            }
-        }
-        if (input.substring(4, 10).equals("BMP280"))
-        {                                                                                                         //eg. "I2C-BMP280-teplota"
-            String type = (input.length() >= 18 && input.substring(11, 18).equals("teplota")) ? "temp" : "press"; //temp or press (temperature/pressure)
-            if (type.equals("temp"))
-            {
-                sensorVal = bmp.readTemperature();
-                i2cIndex = BMP280_TEMP;
-            }
-            else if (type.equals("press"))
-            {
-                sensorVal = bmp.readPressure();
-                i2cIndex = BMP280_PRESS;
-            }
-        }
-        else if (input.substring(4, 9).equals("SHT21"))
-        {                                                                                                       //eg. "I2C-SHT21-teplota"
-            String type = (input.length() >= 18 && input.substring(10, 17).equals("teplota")) ? "temp" : "hum"; //temp or hum (temperature/humidity)
-            if (type.equals("temp"))
-            {
-                sensorVal = SHT2x.GetTemperature();
-                i2cIndex = SHT21_TEMP;
-            }
-            else if (type.equals("hum"))
-            {
-                sensorVal = SHT2x.GetHumidity();
-                i2cIndex = SHT21_HUM;
-            }
-        }
-    }
-
-    return sensorVal;
-}*/
 
 void checkRPiConn()
 {
@@ -290,7 +232,6 @@ void checkMulticast()
         {
             incomingPacket[len] = 0;
             Serial.printf("UDP packet contents: %s\n", incomingPacket);
-            bool initialConnection = false; //Determines whether it is first connection or Raspberry Pi tries to reconnect
 
             String multicastMsgPrefix = "RPi-server-IP:";
             if (len > multicastMsgPrefix.length())
@@ -301,17 +242,15 @@ void checkMulticast()
                     String RPiIPStr = String(incomingPacket).substring(multicastMsgPrefix.length());
                     //Serial.println("Zbytek:" + RPiIPStr);
                     RpiIP.fromString(RPiIPStr);
-                    int EEPROMAddr = 0;
-                    int IpIndex = 0;
                     lastConnectedToRPi = 0;
-                    EEPROM.write(EEPROMAddr++, 'I');
-                    EEPROM.write(EEPROMAddr++, 'P');
-                    EEPROM.write(EEPROMAddr++, ':');
-                    EEPROM.write(EEPROMAddr++, RpiIP[IpIndex++]);
-                    EEPROM.write(EEPROMAddr++, RpiIP[IpIndex++]);
-                    EEPROM.write(EEPROMAddr++, RpiIP[IpIndex++]);
-                    EEPROM.write(EEPROMAddr++, RpiIP[IpIndex++]);
-                    EEPROM.commit();
+                    mem.writeByte('I');
+                    mem.writeByte('P');
+                    mem.writeByte(':');
+                    mem.writeByte(RpiIP[0]);
+                    mem.writeByte(RpiIP[1]);
+                    mem.writeByte(RpiIP[2]);
+                    mem.writeByte(RpiIP[3]);
+                    mem.commit();
                 }
                 if (lastConnectedToRPi >= withoutConnTimeLimit && moduleID.length() > 0)
                 { // Case, when IP address was changed (either of Raspberry Pi or of module). Module send back its ID to update in database in case of change
@@ -320,6 +259,7 @@ void checkMulticast()
                 else
                 { // Case of initial communication with Raspberry Pi
                     ("TYPE:" + boardType).toCharArray(replyPacket, sizeof(replyPacket));
+                    mem.setAllSensorsInfos(SENSOR_INFO_MEM_ADDR, WATCHED_IN_LIMIT, UNSET, UNSET, UNINITIALIZED_SENSOR_VALUE); // Clear Sensors Infos part of memory
                 }
                 Serial.println("replyPacket:" + String(replyPacket));
                 Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
@@ -392,109 +332,14 @@ void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
         Serial.println("ANALOG:" + String(valueToSet));
     }
 
-    String responseStr = "set A/D: " + pin.substring(0, 1) + ", val: " + valueToSet + ", pin: " + pinNumber;
+    /*String responseStr = "set A/D: " + pin.substring(0, 1) + ", val: " + valueToSet + ", pin: " + pinNumber;
     char response[responseStr.length()];
     strncpy(response, responseStr.c_str(), responseStr.length());
     response[sizeof(response) - 1] = 0;
 
-    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
-}
+    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);*/
 
-// CoAP server endpoint URL
-void callback_get_io(CoapPacket &packet, IPAddress ip, int port)
-{
-    if (!RpiIP.isSet())
-        return;
-
-    Serial.println("Get IO");
-    lastConnectedToRPi = 0;
-
-    CoapOption option;
-    for (int i = 0; i < COAP_MAX_OPTION_NUM; i++)
-    {
-        option = packet.options[i];
-        if (!option.length)
-            continue;
-        if (option.number == COAP_URI_QUERY)
-        {
-            break;
-        }
-    }
-    if (option.number != COAP_URI_QUERY && !option.length)
-    {
-        return;
-        //TODO :coap.sendResponse ??
-    }
-    char queryOpt[option.length];
-    memcpy(queryOpt, option.buffer, option.length);
-    queryOpt[option.length] = NULL;
-
-    String input = String(queryOpt).substring(inputPrefixLen);
-    bool digital = input.substring(0, 1).equals("D"); // If first char is D => digital pin.
-    bool analog = input.substring(0, 1).equals("A");  // If first char is D => digital pin.
-    bool i2c = input.substring(0, 3).equals("I2C");   // If first char is D => digital pin.
-    int pinNumber;
-
-    String responseStr = "";
-    if (digital)
-    {
-        pinNumber = input.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
-    }
-    else if (analog)
-    {
-        pinNumber = input.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
-        responseStr = String("ESP-get-val:" + String(analogRead(pinNumber)) /*+ String(analogRead(pinNumber))*/);
-    }
-    else if (i2c)
-    {
-        float sensorVal;
-        if (!bmpHasBegun)
-        {
-            if (!bmp.begin(BMP280_ADRESS))
-            {
-                //Serial.println("BMP280 senzor nenalezen");
-            }
-            else
-            {
-                bmpHasBegun = true;
-            }
-        }
-        if (input.substring(4, 10).equals("BMP280"))
-        {                                                                                                         //eg. "I2C-BMP280-teplota"
-            String type = (input.length() >= 18 && input.substring(11, 18).equals("teplota")) ? "temp" : "press"; //temp or press (temperature/pressure)
-            if (type.equals("temp"))
-            {
-                sensorVal = bmp.readTemperature();
-            }
-            else if (type.equals("press"))
-            {
-                sensorVal = bmp.readPressure();
-            }
-        }
-        else if (input.substring(4, 9).equals("SHT21"))
-        {                                                                                                       //eg. "I2C-SHT21-teplota"
-            String type = (input.length() >= 18 && input.substring(10, 17).equals("teplota")) ? "temp" : "hum"; //temp or hum (temperature/humidity)
-            if (type.equals("temp"))
-            {
-                sensorVal = SHT2x.GetTemperature();
-            }
-            else if (type.equals("hum"))
-            {
-                sensorVal = SHT2x.GetHumidity();
-            }
-        }
-        responseStr = String("ESP-get-val:" + String(sensorVal) /*+ String(analogRead(pinNumber))*/);
-    }
-    //Serial.println("pin:" + String(pinNumber));
-    //Serial.println("read:" + String(analogRead(pinNumber)));
-    /*
-    Serial.println("len:" + String(sizeof(responseStr)));
-    Serial.println("len2:" + String(responseStr.length()));*/
-    char response[responseStr.length()];
-    strncpy(response, responseStr.c_str(), sizeof(response));
-    //response[responseStr.length()] = 0;
-    //Serial.println("responseStr to return:" + responseStr);
-    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+    coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }
 
 // CoAP server endpoint URL
@@ -527,92 +372,31 @@ void callback_listen_to(CoapPacket &packet, IPAddress ip, int port)
     queryOpt[option.length] = NULL;
 
     String input = String(queryOpt).substring(inputPrefixLen);
-    bool digital = input.substring(0, 1).equals("D"); // If first char is D => digital pin.
-    bool analog = input.substring(0, 1).equals("A");  // If first char is D => digital pin.
-    bool i2c = input.substring(0, 3).equals("I2C");   // If first char is D => digital pin.
-    int pinNumber;
-    float sensorVal;
+    const byte len = input.length()+1;
+    char inputCh[len];
+    input.toCharArray(inputCh, len); 
+    if(inputCh[0] == 'D')
+        pinMode(17, INPUT);  
+    SensorInfo info = getSensorInfo(inputCh);
+    watched[watchedINIndex++] = info;
+    /*Serial.println("str conversion");
+    Serial.println(input.length());
+    Serial.println(input);
+    Serial.println(inputCh);
+    Serial.println(strlen(inputCh));
+    Serial.println(len);*/
+    Serial.println("watched");
+    Serial.println(watched[0].IN);
+    Serial.println(watched[0].val);
+    Serial.println(watched[0].val_type);
+    
 
-    String responseStr = "";
-    if (digital)
-    {
-        pinNumber = input.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
-    }
-    else if (analog)
-    {
-        pinNumber = input.substring(1).toInt(); //Here we use pin number directly (without constants like A0, D5 etc...)
-        responseStr = String("ESP-get-val:" + String(analogRead(pinNumber)) /*+ String(analogRead(pinNumber))*/);
-    }
-    else if (i2c)
-    {
-        byte i2cIndex;
-        if (!bmpHasBegun)
-        {
-            if (!bmp.begin(BMP280_ADRESS))
-            {
-                //Serial.println("BMP280 senzor nenalezen");
-            }
-            else
-            {
-                bmpHasBegun = true;
-            }
-        }
-        if (input.substring(4, 10).equals("BMP280"))
-        {                                                                                                         //eg. "I2C-BMP280-teplota"
-            String type = (input.length() >= 18 && input.substring(11, 18).equals("teplota")) ? "temp" : "press"; //temp or press (temperature/pressure)
-            if (type.equals("temp"))
-            {
-                sensorVal = bmp.readTemperature();
-                i2cIndex = BMP280_TEMP;
-            }
-            else if (type.equals("press"))
-            {
-                sensorVal = bmp.readPressure();
-                i2cIndex = BMP280_PRESS;
-            }
-        }
-        else if (input.substring(4, 9).equals("SHT21"))
-        {                                                                                                       //eg. "I2C-SHT21-teplota"
-            String type = (input.length() >= 18 && input.substring(10, 17).equals("teplota")) ? "temp" : "hum"; //temp or hum (temperature/humidity)
-            if (type.equals("temp"))
-            {
-                sensorVal = SHT2x.GetTemperature();
-                i2cIndex = SHT21_TEMP;
-            }
-            else if (type.equals("hum"))
-            {
-                sensorVal = SHT2x.GetHumidity();
-                i2cIndex = SHT21_HUM;
-            }
-        }
-        responseStr = String("ESP-get-val:" + String(sensorVal) /*+ String(analogRead(pinNumber))*/);
-    }
-
-    //Set listening
-    /*if (analog || digital)
-    {
-        watched[watchedINIndex].IN[0] = input[0];
-        watched[watchedINIndex].IN[1] = 0;
-        watched[watchedINIndex].val = sensorVal;
-        Serial.println("watched[watchedINIndex].IN:");
-        Serial.println(watched[watchedINIndex].IN);
-    }
-    else if (i2c)
-    { // else I2C
-        char str[] = "I2C";
-        memcpy(watched[watchedINIndex].IN, str, 3);
-        watched[watchedINIndex].IN[3] = 0;
-        watched[watchedINIndex].val = sensorVal;
-        Serial.println("watched[watchedINIndex].IN:");
-        Serial.println(watched[watchedINIndex].IN);
-    }
-
-    updateEEPROM(); // Update watched in EEPROM*/
-
-    char response[responseStr.length()];
+    /*char response[responseStr.length()];
     strncpy(response, responseStr.c_str(), sizeof(response));
 
-    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);*/
+
+    coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }
 
 // CoAP server endpoint URL for setting module ID (from database)
@@ -629,9 +413,9 @@ void callback_set_id(CoapPacket &packet, IPAddress ip, int port)
     memcpy(p, packet.payload, packet.payloadlen);
     p[packet.payloadlen] = NULL;
     String payload(p);
-    Serial.println("payload" + payload);
+    Serial.println("Nastavené ID: " + payload);
     moduleID = payload;
-    Serial.println("ID:" + String(moduleID));
+    coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }
 
 // CoAP server endpoint URL for complet reset of module
@@ -642,108 +426,94 @@ void callback_reset_module(CoapPacket &packet, IPAddress ip, int port)
 
 void reset_module()
 {
-    if (!RpiIP.isSet())
-        return;
+    //if (!RpiIP.isSet())
+    //    return;
 
-    Serial.println("callback_reset_module");
-    char prefix[] = "IP:????";
-    int adr = 0;
-    for (; adr < USED_MEM_END; adr++)
-    {
-        EEPROM.write(adr, 0);
-    }
-    float fl = 1.1;
-    EEPROM.put(adr, fl);
+    Serial.println("reset_module");
+
+    // Clear memory
+    mem.clear(0, SENSOR_INFO_MEM_ADDR - 1);
+    mem.setAllSensorsInfos(SENSOR_INFO_MEM_ADDR, WATCHED_IN_LIMIT, UNSET, UNSET, UNINITIALIZED_SENSOR_VALUE);
+    mem.clear(SENSOR_INFO_MEM_ADDR + 20 * WATCHED_IN_LIMIT, USED_MEM_END);
+
     //TODO: Smazat i ID
-    EEPROM.commit();
     lastConnectedToRPi = withoutConnTimeLimit; // We know here, that there will be no connection from Raspberry Pi
     RpiIP = IPAddress();
-    Serial.println("ip po set func:" + String(RpiIP.isSet()));
-
 }
 
-void updateEEPROM()
+void updateMemory()
 {
 }
 
 //Flash structure: IP:????SInfo:(byte+byte+float)*20ID:(byte)*20 [ID is 20 chars in firebase]
-void resetFromEEPROM()
+void resetFromMemory()
 {
     char prefix[] = "IP:";
-    bool IpIsSaved = true;
+    bool inMemory = true;
     int adr = 0;
     for (; adr < sizeof(prefix) - 1; adr++)
     {
-        if (EEPROM.read(adr) != prefix[adr])
+        if (mem.readByte() != prefix[adr])
         {
-            IpIsSaved = false;
+            inMemory = false;
             break;
         }
     }
-    if (IpIsSaved)
+    if (inMemory)
     {
-        RpiIP = IPAddress(EEPROM.read(adr++), EEPROM.read(adr++), EEPROM.read(adr++), EEPROM.read(adr++));
+        RpiIP = IPAddress(mem.readByte(), mem.readByte(), mem.readByte(), mem.readByte());
         Serial.println("ip IS set:" + RpiIP.toString());
     }
     else
     {
         Serial.println("ip not set:" + RpiIP.toString());
-        Serial.print(char(EEPROM.read(0)));
-        Serial.print(char(EEPROM.read(1)));
-        Serial.print(char(EEPROM.read(2)));
-        Serial.print(char(EEPROM.read(3)));
-        Serial.print(char(EEPROM.read(4)));
-        Serial.print(char(EEPROM.read(5)));
-        Serial.print(char(EEPROM.read(6)));
-        Serial.print(char(EEPROM.read(7)));
         Serial.println();
-
-        reset_module(); //clear memory
-        return; // Nothing other will be loaded from memory if there is not server IP
     }
 
-    Serial.println("Watched:::");
-    //TODO: Následující cyklus rozdělit podle toho, zda je již v EEPROM něco...
     for (; adr < WATCHED_IN_LIMIT; adr++)
     {
-        watched[i].IN = EEPROM.read(addr++);
-        watched[i].val_type = EEPROM.read(addr++);
-        watched[i].val = Memory;
+        if (inMemory)
+        {
+            watched[adr].IN = mem.readByte();
+            watched[adr].val_type = mem.readByte();
+            watched[adr].val = mem.readFloat();
+            if(watched[adr].IN != UNSET)
+                watchedINIndex++;
+        }
+        else
+        {
+            watched[adr].IN = UNSET;
+            watched[adr].val_type = UNSET;
+            watched[adr].val = UNINITIALIZED_SENSOR_VALUE;
+        }
+    }
+
+    if (inMemory)
+    {
+        prefix[1] = 'D'; // reuse variable, change "IP:" => "ID:"
+        for (int i = 0; i < sizeof(prefix) - 1; i++)
+        {
+            if (mem.readByte() != prefix[i])
+            {
+                inMemory = false;
+                break;
+            }
+        }
+        if (inMemory)
+        {
+            char ch;
+            while ((ch = mem.readByte()) != 0)
+            {
+                moduleID += ch;
+            }
+            moduleID += (char)0;
+        }
+        else
+        {
+            moduleID = "";
+        }
     }
 }
-
-class Memory{
-  public:  
-    static short addr;         
-    static float readFloat() {         
-        readFloat(addr);
-        addr += 4;
-    }      
-    static float readFloat(short address) { 
-        byte bytes[] = {EEPROM.read(address++), EEPROM.read(address++), EEPROM.read(address++), EEPROM.read(address++)};
-        float val;
-        memcpy(&val, &bytes, sizeof(val));
-        return val;
-    }
-
-    static void writeFloat(float val){
-        writeFloat(addr, val);
-        addr += 4;
-    }
-
-    static void writeFloat(byte address, float val){            
-        byte *bytes;
-        bytes = (byte*) & val;
-        
-        EEPROM.write(address++, bytes[0]);
-        EEPROM.write(address++, bytes[1]);
-        EEPROM.write(address++, bytes[2]);
-        EEPROM.write(address++, bytes[3]);
-        EEPROM.commit();
-    }
-
-};
-short Memory::addr = 0;
 
 //netsh interface ip show joins
 
