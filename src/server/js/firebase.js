@@ -2,6 +2,8 @@ var firebase = require('firebase');
 const fs = require("fs");
 const conf = require("../config.json");
 const CommunicationManager = require('./communication-manager.js');
+const ESP = require("./ESP");
+const SensorInfo = ESP.SInfo;
 module.exports = class Firebase {
     constructor() {
         this._dbInited = false;
@@ -9,6 +11,22 @@ module.exports = class Firebase {
         this._sensors = new Array();
         this._sensorValueTimeoutTime = 2000;
         this.changes = new Array();
+        this._updateSensor = async (sensorInfo, moduleIP) => {
+            console.log("INFOOO:");
+            console.log(sensorInfo);
+            console.log(moduleIP);
+            const updates = {};
+            this._sensors.forEach((sensor, index, array) => {
+                if (moduleIP == sensor.IP) {
+                    if (sensorInfo.val != sensor.value
+                        && sensorInfo.getInput() == sensor.input) { // If value changed and sensor input record exists in this_sensors, save change to DB
+                        updates[sensor.pathToValue] = sensorInfo.val;
+                    }
+                }
+            });
+            console.log('updates: ', updates);
+            await firebase.database().ref().update(updates);
+        };
         this._updateSensorsValues = async () => {
             const updates = {};
             return;
@@ -69,14 +87,15 @@ module.exports = class Firebase {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
             console.log("Succesfully logged in");
-            this._communicationManager.initCoapServer();
+            this._communicationManager.initCoapServer(this._updateSensor);
             let change = JSON.parse("{\"type\":1,\"level\":1,\"data\":{\"id\":\"-MVwvZHnfCbecnYYOtEf\",\"path\":\"rooms/-MVwvYAL2RM_XyOKV4lH/devices/-MVwvZHnfCbecnYYOtEf\"}}");
             this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
                 console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
                 this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
                 this._communicationManager.sendESPItsID(espIP, change.data.id);
                 console.log('change.data.id: ', change.data.id);
-                setTimeout(() => { this._communicationManager.listenTo("192.168.1.8", "A17"); }, 2000);
+                setTimeout(() => { this._communicationManager.listenTo("192.168.1.2", "A17"); }, 2000);
+                setTimeout(() => { this._communicationManager.listenTo("192.168.1.2", "I2C-BMP280-teplota"); }, 2000);
             });
             //this._communicationManager.resetRPiServer("192.168.1.8"); //TODO: delete
             //setInterval(this._communicationManager.initCommunicationWithESP, 5000);

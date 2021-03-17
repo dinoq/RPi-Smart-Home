@@ -92,8 +92,11 @@ void loop()
     checkInValues();
 }
 
+int run = 10;
 void checkInValues()
 {
+    if(run > 0 || true)
+    
     for (int i = 0; i < WATCHED_IN_LIMIT; i++)
     {
         if (watched[i].IN != UNSET)
@@ -101,13 +104,30 @@ void checkInValues()
             float newVal = getSensorVal(watched[i]);
             if (newVal != watched[i].val)
             {
-                char payload[] = "in:";
+                Serial.println("watched[i].val_type");
+                Serial.println((byte)watched[i].val_type);
+                Serial.println(watched[i].val_type);
+                Serial.println("watched[i].IN");
+                Serial.println((byte)watched[i].IN);
+                Serial.println(watched[i].IN);
+                
+                char payload[15];
+                sprintf(payload, "in:%f%c%c", newVal, watched[i].val_type, (watched[i].IN+1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
+                Serial.print("valLen: |");
+                Serial.println(strlen(payload));
+                /*payload[strlen(payload)] = watched[i].val_type;
+                Serial.println(strlen(payload));
+                payload[strlen(payload)] = watched[i].IN;
+                Serial.println(strlen(payload));
+                payload[strlen(payload)] = 0;
+                Serial.println(strlen(payload));*/
                 int msgid = coap.send(IPAddress(192, 168, 1, 4), 5683, "new-value", COAP_NONCON, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
                 Serial.println("msgid:");
                 Serial.println(msgid);
                 Serial.print("newVal: |");
                 Serial.println(newVal);
                 watched[i].val = newVal;
+                run--;
             }
         }
     }
@@ -116,11 +136,23 @@ void checkInValues()
 SensorInfo getSensorInfo(char input[])
 {
 
+    Serial.print("begin getSensorInfoInput::");
+    Serial.println(input);
     SensorInfo info;
     bool digital = input[0] == 'D';      // If first char is D => digital pin.
     bool analog = input[0] == 'A';       // If first char is A => analog pin.
-    bool i2c = strncmp(input, "I2C", 3); // If
+    bool i2c = !strncmp(input, "I2C", 3); // If
 
+    Serial.println("A D I2C::");
+    Serial.println(String(digital));
+    Serial.println(String(analog));
+    Serial.println(String(i2c));
+
+    
+    Serial.println(String(strncmp(input, "I2C", 3)));
+    Serial.println(String(strncmp(input, "I2C", 1)));
+    Serial.println(String(strncmp("I2C", "I2C", 3)));
+    
     String responseStr = "";
     if (analog || digital)
     {
@@ -142,18 +174,6 @@ SensorInfo getSensorInfo(char input[])
     }
     else if (i2c)
     {
-        if (!bmpHasBegun)
-        {
-            if (!bmp.begin(BMP280_ADRESS))
-            {
-                //Serial.println("BMP280 senzor nenalezen");
-            }
-            else
-            {
-                bmpHasBegun = true;
-            }
-        }
-
         float val;
         byte IN;
 
@@ -166,6 +186,10 @@ SensorInfo getSensorInfo(char input[])
         {
             IN = (strlen(input) >= 18 && !strncmp(input + 10, t, strlen(t))) ? SHT21_TEMP : SHT21_HUM; //temp or press (temperature/pressure)
         }
+        Serial.print("getSensorInfoInput::");
+        Serial.println(input);
+        Serial.println(strlen("BMP280"));
+        Serial.println(String(!strncmp(input + 4, "BMP280", strlen("BMP280"))));
 
         info.IN = IN;
         info.val_type = (byte)I2C;
@@ -378,7 +402,20 @@ void callback_listen_to(CoapPacket &packet, IPAddress ip, int port)
     if(inputCh[0] == 'D')
         pinMode(17, INPUT);  
     SensorInfo info = getSensorInfo(inputCh);
-    watched[watchedINIndex++] = info;
+    if((info.IN == BMP280_TEMP || info.IN == BMP280_PRESS)){      
+      if (!bmp.begin(BMP280_ADRESS))
+      {
+          Serial.println("BMP280 senzor nenalezen");
+      }else{
+          Serial.println("BMP280 inited");
+      }
+    }
+    if(!alreadyWatched(info)){
+      Serial.println("unikátni listem");
+      watched[watchedINIndex++] = info;
+    }else{
+      Serial.println("NEEEEEunikátni listem");
+    }
     /*Serial.println("str conversion");
     Serial.println(input.length());
     Serial.println(input);
@@ -386,9 +423,10 @@ void callback_listen_to(CoapPacket &packet, IPAddress ip, int port)
     Serial.println(strlen(inputCh));
     Serial.println(len);*/
     Serial.println("watched");
-    Serial.println(watched[0].IN);
-    Serial.println(watched[0].val);
-    Serial.println(watched[0].val_type);
+    Serial.println(watchedINIndex-1);
+    Serial.println(watched[watchedINIndex-1].IN);
+    Serial.println(watched[watchedINIndex-1].val);
+    Serial.println(watched[watchedINIndex-1].val_type);
     
 
     /*char response[responseStr.length()];
@@ -397,6 +435,16 @@ void callback_listen_to(CoapPacket &packet, IPAddress ip, int port)
     coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);*/
 
     coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+}
+
+bool alreadyWatched(SensorInfo sInfo){
+  for(int i = 0; i < watchedINIndex/*WATCHED_IN_LIMIT*/; i++){
+    if(watched[i].IN == sInfo.IN 
+      && watched[i].val_type == sInfo.val_type){
+      return true;
+    }
+  }
+  return false;
 }
 
 // CoAP server endpoint URL for setting module ID (from database)

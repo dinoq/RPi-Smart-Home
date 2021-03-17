@@ -5,6 +5,9 @@ const coap = require('coap');
 const dgram = require("dgram");
 const Process = require("process");
 const COnfig = require("../config.json");
+const ESP = require("./ESP");
+const VALUE_TYPE = ESP.VALUE_TYPE;
+const SensorInfo = ESP.SInfo;
 
 module.exports = class CommunicationManager {
     private _server: any;
@@ -31,16 +34,24 @@ module.exports = class CommunicationManager {
         }
     }
 
-    public initCoapServer(){
+    public initCoapServer(updateSensorCallback){
         this._server = coap.createServer()
  
         this._server.on('request', function(req, res) {
             console.log('request');
             console.log('Hello ', req.url.split('/')[1], req.url.split('/'));
-            let input = req.payload.toString("in:".length);
-            if(true){
-
+            let val_type = req.payload[req.payload.length-2];
+            let valStr = req.payload.toString().substring("in:".length, req.payload.length-2);
+            let val;
+            console.log("VALUE_TYPE.I2C");
+            console.log(VALUE_TYPE.I2C);
+            if(val_type == VALUE_TYPE.I2C){
+                val = Number.parseFloat(valStr);
+            } else{
+                val = Number.parseInt(valStr);
             }
+            let IN = Number.parseInt(req.payload[req.payload.length-1]) - 1; // We must substract 1, because we add it before sending in ESP8266 module (we want start from 1 due to problems with null terminator)
+            updateSensorCallback(new SensorInfo(IN, val_type, val), req.rsinfo.address);
         })
         
         this._server.listen(function() {
@@ -144,5 +155,64 @@ module.exports = class CommunicationManager {
         this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, false);
     }
 
-    
 }
+/*
+class SensorInfo
+{
+    IN; //Pin number or I2C_IN_TYPE
+    val_type; // ANALOG/DIGITAL/I2C
+    val;
+
+    SensorInfo(IN: IN_TYPE, val_type: VALUE_TYPE, val: number){
+        this.IN = IN;
+        this.val_type = val_type;
+        this.val = val;
+    }
+
+    //returns input in database format
+    public getInput(){
+        let analog = this.val_type == VALUE_TYPE.ANALOG;
+        let digital = this.val_type == VALUE_TYPE.DIGITAL;
+        let i2c = this.val_type == VALUE_TYPE.I2C;
+
+        let str = "";
+        if(analog || digital){
+            str = (analog)? "A" : "D";
+            str += this.IN;
+        }else if(i2c){
+            if(this.IN < IN_TYPE.BMP280_TEMP){
+
+            }else{ // I2C
+                let type = SensorInfo.IN_TYPE_TO_STR[this.IN];
+                if(type != undefined)
+                    str = "I2C-" + type;
+            }
+
+        }
+        return str;
+    }
+
+    static IN_TYPE_TO_STR = {}; // definition at end of page
+
+};
+
+/*
+// From esp.h:
+enum VALUE_TYPE
+{
+    ANALOG = 1, // Start from 1, because we add it to string and we don't want to consider it as null terminator
+    DIGITAL,
+    I2C
+};
+enum IN_TYPE
+{
+
+    //I2C
+    BMP280_TEMP = 20, //from 0 are pin numbers...
+    BMP280_PRESS,
+    SHT21_TEMP,
+    SHT21_HUM,
+
+};
+*/
+

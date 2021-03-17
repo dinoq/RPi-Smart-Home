@@ -3,6 +3,8 @@ var firebase = require('firebase');
 const fs = require("fs");
 const conf = require("../config.json");
 const CommunicationManager = require('./communication-manager.js');
+const ESP = require("./ESP");
+const SensorInfo = ESP.SInfo;
 
 module.exports = class Firebase {
     private _fb;
@@ -29,7 +31,7 @@ module.exports = class Firebase {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
                 console.log("Succesfully logged in");
-                this._communicationManager.initCoapServer(); 
+                this._communicationManager.initCoapServer(this._updateSensor); 
 
                 
                 let change = JSON.parse("{\"type\":1,\"level\":1,\"data\":{\"id\":\"-MVwvZHnfCbecnYYOtEf\",\"path\":\"rooms/-MVwvYAL2RM_XyOKV4lH/devices/-MVwvZHnfCbecnYYOtEf\"}}");
@@ -39,7 +41,8 @@ module.exports = class Firebase {
                     this._communicationManager.sendESPItsID(espIP, change.data.id);
                     console.log('change.data.id: ', change.data.id);
 
-                    setTimeout(() => {this._communicationManager.listenTo("192.168.1.8", "A17");}, 2000);
+                    setTimeout(() => {this._communicationManager.listenTo("192.168.1.2", "A17");}, 2000);
+                    setTimeout(() => {this._communicationManager.listenTo("192.168.1.2", "I2C-BMP280-teplota");}, 2000);
                 })
 
                 //this._communicationManager.resetRPiServer("192.168.1.8"); //TODO: delete
@@ -52,6 +55,25 @@ module.exports = class Firebase {
             }).catch((error) => {
                 console.log('error user: ', error);
             });
+    }
+
+    private _updateSensor = async (sensorInfo: typeof SensorInfo, moduleIP)=>{
+        console.log("INFOOO:");
+        console.log(sensorInfo);
+        console.log(moduleIP);
+
+        const updates = {};
+        
+        this._sensors.forEach((sensor, index, array) => {
+            if(moduleIP == sensor.IP){
+                if(sensorInfo.val != sensor.value
+                    && sensorInfo.getInput() == sensor.input){ // If value changed and sensor input record exists in this_sensors, save change to DB
+                    updates[sensor.pathToValue] = sensorInfo.val;
+                }                
+            }        
+        })
+        console.log('updates: ', updates);
+        await firebase.database().ref().update(updates);
     }
 
     private _databaseUpdatedHandler(data: any) {

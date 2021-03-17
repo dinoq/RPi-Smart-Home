@@ -88,11 +88,11 @@ typedef enum
     SHT21_TEMP,
     SHT21_HUM,
 
-} I2C_IN_TYPE;
+} IN_TYPE;
 
 typedef enum
 {
-    ANALOG,
+    ANALOG = 1, // Start from 1, because we add it to string and we don't want to consider it as null terminator
     DIGITAL,
     I2C
 } VALUE_TYPE;
@@ -100,9 +100,8 @@ typedef enum
 struct SInfo
 {
     byte IN; //Pin number or I2C_IN_TYPE
-    byte val_type;
+    byte val_type; // ANALOG/DIGITAL/I2C
     float val;
 };
 
 #endif // Put this line at the end of your file.
-
