@@ -9,73 +9,30 @@ module.exports = class Firebase {
         this._dbInited = false;
         this._loggedIn = false;
         this._sensors = new Array();
-        this._sensorValueTimeoutTime = 2000;
+        this._sensorsUpdates = {};
+        this._updateSensorsInDBTimeout = undefined;
         this.changes = new Array();
         this._updateSensor = async (sensorInfo, moduleIP) => {
-            console.log("INFOOO:");
-            console.log(sensorInfo);
-            console.log(moduleIP);
-            const updates = {};
+            console.log("Updating to:", sensorInfo.val);
             this._sensors.forEach((sensor, index, array) => {
                 if (moduleIP == sensor.IP) {
                     if (sensorInfo.val != sensor.value
                         && sensorInfo.getInput() == sensor.input) { // If value changed and sensor input record exists in this_sensors, save change to DB
-                        updates[sensor.pathToValue] = sensorInfo.val;
+                        this._sensorsUpdates[sensor.pathToValue] = sensorInfo.val;
                     }
                 }
             });
-            console.log('updates: ', updates);
-            await firebase.database().ref().update(updates);
-        };
-        this._updateSensorsValues = async () => {
-            const updates = {};
-            return;
-            let getAllValPromisesChain = Promise.resolve();
-            const sensorsById = {};
-            this._sensors.forEach((sensor, index, array) => {
-                if (!sensor.IP)
-                    return;
-                if (!sensorsById[sensor.IP])
-                    sensorsById[sensor.IP] = new Array();
-                sensorsById[sensor.IP].push(sensor);
-            });
-            let getValuesFromSensorsGroup = async (sensors) => {
-                for (let i = 0; i < sensors.length; i++) {
-                    const sensor = sensors[i];
-                    let newVal;
-                    try {
-                        console.log("getting val " + Math.round(Date.now() / 1));
-                        let valPromise = this._communicationManager.getVal(sensor.IP, sensor.input);
-                        if (sensor.type == "bus") { // BMP returns float
-                            newVal = Number.parseFloat(await valPromise);
-                        }
-                        else {
-                            newVal = Number.parseInt(await valPromise);
-                        }
-                        console.log('newVal: ', newVal + " " + Math.round(Date.now() / 1));
-                        if (newVal != sensor.value) {
-                            sensor.value = newVal;
-                            updates[sensor.pathToValue] = newVal;
-                            updates[sensor.pathToValue] = newVal;
-                        }
-                    }
-                    catch (error) {
-                    }
-                }
-            };
-            for (const sensorGroup in sensorsById) {
-                console.log("S" + Math.round(Date.now() / 1));
-                getAllValPromisesChain = getAllValPromisesChain.then((value) => {
-                    getValuesFromSensorsGroup(sensorsById[sensorGroup]);
-                });
-                console.log("E" + Math.round(Date.now() / 1));
+            if (!this._updateSensorsInDBTimeout) {
+                this._updateSensorsInDBTimeout = setTimeout(this._updateSensorsInDB, 1000);
             }
-            console.log("čekání" + Math.round(Date.now() / 1));
-            await getAllValPromisesChain;
-            console.log("___________________" + Math.round(Date.now() / 1));
-            //update in Database
-            //await firebase.database().ref().update(updates);
-            this._sensorValueTimeout = setTimeout(this._updateSensorsValues, this._sensorValueTimeoutTime);
+        };
+        this._updateSensorsInDB = async () => {
+            this._updateSensorsInDBTimeout = undefined;
+            if (this._sensorsUpdates && Object.keys(this._sensorsUpdates).length != 0 && this._sensorsUpdates.constructor === Object) {
+                console.log((Math.floor(Date.now() / 1000) - 1616084626) + '| updates: ', this._sensorsUpdates);
+                await firebase.database().ref().update(this._sensorsUpdates);
+                this._sensorsUpdates = {};
+            }
         };
         this.initFirebase();
         this._communicationManager = new CommunicationManager();
@@ -136,12 +93,9 @@ module.exports = class Firebase {
         fs.writeFileSync(conf.db_file_path, JSON.stringify(data));
         this._dbCopy = data;
         this._dbInited = true;
-        this.getSensors(data);
     }
     getSensors(data) {
         this._sensors = new Array();
-        if (this._sensorValueTimeout)
-            clearTimeout(this._sensorValueTimeout);
         const rooms = data["rooms"];
         for (const roomID in rooms) {
             const modules = rooms[roomID]["devices"];
@@ -154,8 +108,13 @@ module.exports = class Firebase {
                 }
             }
         }
-        this._sensorValueTimeout = setTimeout(this._updateSensorsValues, this._sensorValueTimeoutTime);
     }
+    /*45, 77, 86, 119, 118, 90, 72, 110, 102, 67
+    , 98, 101, 99, 110, 89, 89, 79, 116, 69, 102,
+     88, 32, 64, 63,
+       -, M, V, w, v, Z, H, n, f, C,
+        b, e, c, n, Y, Y, O, t, E, f,
+         X,  , @, ?*/
     saveDbChange(data) {
         const newRooms = data["rooms"];
         console.log('__________________________________');
@@ -198,7 +157,7 @@ module.exports = class Firebase {
             this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, data: { path: roomID } });
             newRoomsIDs.splice(newRoomsIDs.indexOf(roomID), 1);
         }
-        console.log('zustalo: ', newRoomsIDs);
+        //console.log('zustalo: ', newRoomsIDs);
         this._dbCopy = data;
         return this.changes;
     }

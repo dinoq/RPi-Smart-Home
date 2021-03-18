@@ -46,20 +46,20 @@ module.exports = class ServerApp {
         });*/
         this._firebase.login(config.username, config.password);
         this._app.use(express.static(p), (req, res, next) => {
-            console.log("ooo");
+            //console.log("ooo");
             //console.log("client IP:", req.ip);
             next();
         });
         this._app.use('/*', express.static(p), (req, res, next) => {
-            console.log("c");
+            //console.log("c");
             next();
         });
         this._app.use((req, res, next) => {
-            console.log("XXX");
+            //console.log("XXX");
             next();
         });
         this._app.use((req, res, next) => {
-            console.log("VVV");
+            //console.log("VVV");
             next();
         });
         /*this.app.use('/*',express.static(p));

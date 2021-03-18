@@ -204,11 +204,61 @@ void setup() {
   }
   EEPROM.commit();
 
+  float newVal = 1.2345;
+  char sprintfpokus[15];
+  sprintf(sprintfpokus, "in:%.1f", newVal);
+  Serial.println(sprintfpokus);
+  sprintf(sprintfpokus, "in:%.0f", newVal);
+  Serial.println(sprintfpokus);
+  sprintf(sprintfpokus, "in:%.3f", newVal);
+  Serial.println(sprintfpokus);
+  sprintf(sprintfpokus, "in:%.4f", newVal);
+  Serial.println(sprintfpokus);
+  sprintf(sprintfpokus, "in:%.5f", newVal);
+  Serial.println(sprintfpokus);
+  sprintf(sprintfpokus, "in:%.8f", newVal);
+  Serial.println(sprintfpokus);
+  sprintf(sprintfpokus, "in:%.10f", newVal);
 
+  byte IN = 100; // ITEM0
+  byte bArr[] = {ITEM0, ITEM1, ITEM2};
+  if(valueIsIn(IN, bArr)){
+    Serial.println("IS in");
+  }else{
+    Serial.println("NOT in");
+  }
+  
+  byte IN2 = 121; // ITEM3
+  if(valueIsIn(IN2, bArr)){
+    Serial.println("IS in");
+  }else{
+    Serial.println("NOT in");
+  }
+
+  Serial.println("sizeof");
+  char s[3];
+  s[0]='A';
+  s[1]='B';
+  s[2]='C';
+  Serial.println(((int)s[1]));
+  Serial.println(((int)s[2]));
+  Serial.println(((int)s[3]));
+  Serial.println(sizeof(s));
+  Serial.println(strlen(s));
 }
 
 void loop() {
   delay(1000);
+}
+
+bool valueIsIn(byte val, byte arr[])
+{
+    for(int i = 0; i < (sizeof(arr) / sizeof(arr[0])); i++)
+    {
+        if(arr[i] == val)
+            return true;
+    }
+    return false;
 }
 
 

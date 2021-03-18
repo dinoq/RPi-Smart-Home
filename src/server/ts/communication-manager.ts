@@ -38,13 +38,10 @@ module.exports = class CommunicationManager {
         this._server = coap.createServer()
  
         this._server.on('request', function(req, res) {
-            console.log('request');
-            console.log('Hello ', req.url.split('/')[1], req.url.split('/'));
+            //console.log('coap request');
             let val_type = req.payload[req.payload.length-2];
             let valStr = req.payload.toString().substring("in:".length, req.payload.length-2);
             let val;
-            console.log("VALUE_TYPE.I2C");
-            console.log(VALUE_TYPE.I2C);
             if(val_type == VALUE_TYPE.I2C){
                 val = Number.parseFloat(valStr);
             } else{
@@ -55,7 +52,7 @@ module.exports = class CommunicationManager {
         })
         
         this._server.listen(function() {
-            console.log("listen");
+            console.log("listening on default port");
         });
 
     }
@@ -109,7 +106,6 @@ module.exports = class CommunicationManager {
         })
 
         req.end();
-        console.log("req end");
     }
 
     public async sendESPItsID(ip:string, id: string) {

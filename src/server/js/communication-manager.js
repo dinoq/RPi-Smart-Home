@@ -32,13 +32,10 @@ module.exports = class CommunicationManager {
     initCoapServer(updateSensorCallback) {
         this._server = coap.createServer();
         this._server.on('request', function (req, res) {
-            console.log('request');
-            console.log('Hello ', req.url.split('/')[1], req.url.split('/'));
+            //console.log('coap request');
             let val_type = req.payload[req.payload.length - 2];
             let valStr = req.payload.toString().substring("in:".length, req.payload.length - 2);
             let val;
-            console.log("VALUE_TYPE.I2C");
-            console.log(VALUE_TYPE.I2C);
             if (val_type == VALUE_TYPE.I2C) {
                 val = Number.parseFloat(valStr);
             }
@@ -49,7 +46,7 @@ module.exports = class CommunicationManager {
             updateSensorCallback(new SensorInfo(IN, val_type, val), req.rsinfo.address);
         });
         this._server.listen(function () {
-            console.log("listen");
+            console.log("listening on default port");
         });
     }
     initCommunicationWithESP() {
@@ -90,7 +87,6 @@ module.exports = class CommunicationManager {
                 onResponse(res);
         });
         req.end();
-        console.log("req end");
     }
     async sendESPItsID(ip, id) {
         this.coapRequest(ip, "/set-id", "", "PUT", id, null, (err) => {

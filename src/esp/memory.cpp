@@ -1,11 +1,10 @@
 
-#include <EEPROM.h>
+//#include "esp.h"
 #include "memory.h"
 
 Memory::Memory(){
   EEPROM.begin(512);   
-  readAddr = 0;
-  writeAddr = 0;
+  addr = 0;
 }
 
 void Memory::clear(short fromAddr, short toAddr){
@@ -15,11 +14,14 @@ void Memory::clear(short fromAddr, short toAddr){
     EEPROM.commit();
 }
 
-void Memory::setAllSensorsInfos(short fromAddr, char count, char IN, char val_type, float value){
+void Memory::setAllSensorsInfos(short from, char count, char IN, char val_type){
+    char prefix[] = "SInfo:";
+    addr = from;
+    writeString(prefix);
+  
     for(int i = 0; i < count; i++){
-        writeByte(fromAddr + 6*i, IN);
-        writeByte(fromAddr + 6*i, val_type);
-        writeFloat(fromAddr + 6*i, value);
+        writeByte(IN);
+        writeByte(val_type);
     }
     EEPROM.commit();
 }
@@ -30,8 +32,8 @@ void Memory::commit(){
 
 //Float operations
 float Memory::readFloat() {         
-    float val = readFloat(readAddr);
-    readAddr += 4;
+    float val = readFloat(addr);
+    addr += 4;
     return val;
 }      
 
@@ -43,8 +45,8 @@ float Memory::readFloat(short address) {
 }      
 
 void Memory::writeFloat(float val){   
-    Memory::writeFloat(writeAddr, val);
-    writeAddr += 4;
+    writeFloat(addr, val);
+    addr += 4;
 }      
 
 
@@ -60,30 +62,36 @@ void Memory::writeFloat(short address, float val){
 
 //Byte operations
 char Memory::readByte() {         
-    char val = Memory::readByte(readAddr);
-    readAddr++;
+    char val = readByte(addr);
+    addr++;
     return val;
 }      
 
 char Memory::readByte(short address) {
-        char bytes[] = {EEPROM.read(address), EEPROM.read(address+1), EEPROM.read(address+2), EEPROM.read(address+3)};
-        float val;
-        memcpy(&val, &bytes, sizeof(val));
-        return val;
+        return EEPROM.read(address);
 }      
 
 void Memory::writeByte(char val){   
-    Memory::writeByte(writeAddr, val);
-    writeAddr++;
+    writeByte(addr, val);
+    addr++;
 }      
 
 
-void Memory::writeByte(short address, char val){ 
-        char *bytes;
-        bytes = (char*) & val;
-        
-        EEPROM.write(address++, bytes[0]);
-        EEPROM.write(address++, bytes[1]);
-        EEPROM.write(address++, bytes[2]);
-        EEPROM.write(address++, bytes[3]);
+void Memory::writeByte(short address, char val){         
+        EEPROM.write(address, val);
 }      
+
+
+
+void Memory::writeString(char str[]){   
+    writeString(addr, str);
+    addr += sizeof(str);
+}      
+
+
+void Memory::writeString(short address, char str[]){ 
+    for(int i = 0; i < sizeof(str); i++){
+        writeByte(address+i, str[i]);
+    }
+    EEPROM.commit();
+}   
