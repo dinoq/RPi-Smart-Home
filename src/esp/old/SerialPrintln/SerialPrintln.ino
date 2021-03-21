@@ -12,6 +12,7 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  delay(200); // Sleep little bit after reset to wait for Serial init...
 
   String moduleID = "ABC";
   Serial.println("\n\nString  length():");
@@ -239,12 +240,22 @@ void setup() {
   char s[3];
   s[0]='A';
   s[1]='B';
-  s[2]='C';
+  s[2]=0;
   Serial.println(((int)s[1]));
   Serial.println(((int)s[2]));
-  Serial.println(((int)s[3]));
   Serial.println(sizeof(s));
   Serial.println(strlen(s));
+
+  
+  char prefix[] = "SInfo:";
+  Serial.println("sizeof");
+  Serial.println(sizeof(prefix));
+  Serial.println(sizeof(prefix[0]));
+  sizeofString(prefix);
+  for(int i = 0; i < sizeof(prefix); i++){
+    Serial.print(prefix[i]);
+  }
+  Serial.println();
 }
 
 void loop() {
@@ -261,6 +272,14 @@ bool valueIsIn(byte val, byte arr[])
     return false;
 }
 
+void sizeofString(char *str){ 
+  Serial.println("start of sizeofString");
+  Serial.println(strlen(str));
+    for(int i = 0; i < strlen(str); i++){
+      Serial.print(str[i]);
+    }
+  Serial.println("\nend of sizeofString");
+}   
 
 SensorInfo getSensorInfo(char input[]){
   SensorInfo i;

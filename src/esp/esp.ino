@@ -5,7 +5,6 @@ IPAddress multicastIP(224, 0, 1, 187);
 IPAddress RpiIP;
 String moduleID;
 char incomingPacket[255]; // buffer for incoming packets
-char replyPacket[32];     // a reply string to send back
 
 Coap coap(Udp);
 unsigned int CoAPPort = 5683;
@@ -16,7 +15,7 @@ unsigned int CoAPPort = 5683;
 String inputPrefix = "input=";
 int inputPrefixLen = 6;
 int lastConnectedToRPi = 0; // Number of seconds from last connection
-bool bmpHasBegun = false;
+bool BMP280Begun = false;
 int watchedINIndex = 0;
 SensorInfo watched[WATCHED_IN_LIMIT];
 Memory mem;
@@ -38,10 +37,11 @@ void setup()
     Serial.begin(115200);
     Serial.println();
     randomSeed(micros());
+    delay(200); // Sleep little bit after reset to wait for Serial init...
 
     resetFromMemory();
     Serial.println("Memory after resetFromMemory()");
-    printMemory();
+    printMemory("Memory on init");
     
     Serial.println();
 
@@ -58,8 +58,9 @@ void setup()
     Serial.println(WiFi.localIP());
 
     Serial.println("Setup CoAP callbacks");
-    coap.server(callback_set_io, "set-io");
-    coap.server(callback_listen_to, "listen-to");
+    coap.server(callback_set_output, "set-output");
+    coap.server(callback_observe_input, "observe-input");
+    coap.server(callback_change_observed_input, "change-observed-input");
     coap.server(callback_reset_module, "reset-module");
     coap.server(callback_set_id, "set-id");
 
@@ -71,7 +72,7 @@ void setup()
     coap.start();
 
     //reset_module();
-
+    
 }
 // CoAP client response callback
 void callback_response(CoapPacket &packet, IPAddress ip, int port)
@@ -98,22 +99,33 @@ void loop()
 int run = 10000;
 void checkInValues()
 {
+    if(!RpiIP.isSet()){
+      return;
+    }
     if(run > 0 || true)
     
     for (int i = 0; i < WATCHED_IN_LIMIT; i++)
     {
         if (watched[i].IN != UNSET)
         {
+            initIfBMP280AndNotInited(watched[i].IN); //If sensor was not connected until now, init communication with it
             float newVal = getSensorVal(watched[i]);
-            Serial.println("watched[i].IN");
+            if(watched[i].IN == BMP280_TEMP || watched[i].IN == BMP280_PRESS){ // If sensor is BMP280 and received value is 0.00, there is chance, that sensor was removed (and maybe connected again), so initialize and if succed get value again...             
+              if (!bmp.begin(BMP280_ADRESS))
+              {
+                  Serial.println("BMP280 senzor nenalezen");
+              }else{
+                newVal = getSensorVal(watched[i]);
+              }              
+            }
+            /*Serial.println("watched[i].IN");
             Serial.println((byte)watched[i].IN);
-            Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));
+            Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));*/
             if (isDifferentEnough(newVal, watched[i].val, watched[i].IN))
             {
-                /*Serial.println("watched[i].val_type");
-                Serial.println((byte)watched[i].val_type);
-                Serial.println(watched[i].val_type);
-                Serial.println(watched[i].IN);*/
+                Serial.println("watched[i].IN a val");
+                Serial.println((byte)watched[i].IN);
+                Serial.println(watched[i].val);
                 
                 char payload[15];
                 if(watched[i].IN >= BMP280_TEMP && watched[i].IN <= SHT21_HUM){ // sprintf %.1f in order to display only 1 digit after decimal point for specified inputs
@@ -127,7 +139,7 @@ void checkInValues()
                 Serial.println(strlen(payload));
                 payload[strlen(payload)] = 0;
                 Serial.println(strlen(payload));*/
-                int msgid = coap.send(IPAddress(192, 168, 1, 4), 5683, "new-value", COAP_NONCON, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
+                int msgid = coap.send(RpiIP, CoAPPort, "new-value", COAP_NONCON, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
                 /*Serial.println("msgid:");
                 Serial.println(msgid);
                 Serial.print("newVal: |");
@@ -152,7 +164,7 @@ bool isDifferentEnough(float newVal, float oldVal, byte IN){
   {    
     return (diff >= 3); // For pins consider 3 as enough difference
   }else{
-    Serial.printf("Unknown value (%i) in func isDifferentEnough(). Add constant into IN_TYPE enum and edit function.", IN );
+    Serial.printf("-CHYBA: Neznámá hodnota (%i) ve funkci isDifferentEnough(). Přidejte konstantu do výčtu IN_TYPE a upravte funkci.", IN );
   }
   
   return false;
@@ -178,15 +190,14 @@ SensorInfo getSensorInfo(char input[])
     bool analog = input[0] == 'A';       // If first char is A => analog pin.
     bool i2c = !strncmp(input, "I2C", 3); // If
 
-    Serial.println("A D I2C::");
+    /*Serial.println("A D I2C::");
     Serial.println(String(digital));
     Serial.println(String(analog));
-    Serial.println(String(i2c));
-
-    
+    Serial.println(String(i2c));    
     Serial.println(String(strncmp(input, "I2C", 3)));
     Serial.println(String(strncmp(input, "I2C", 1)));
     Serial.println(String(strncmp("I2C", "I2C", 3)));
+    */
     
     String responseStr = "";
     if (analog || digital)
@@ -221,18 +232,18 @@ SensorInfo getSensorInfo(char input[])
         {
             IN = (strlen(input) >= 18 && !strncmp(input + 10, t, strlen(t))) ? SHT21_TEMP : SHT21_HUM; //temp or press (temperature/pressure)
         }else{
-          Serial.println("Unknown i2c input in function getSensorInfo(char input[]). Add constant into IN_TYPE enum and edit function.");
+          Serial.println("-CHYBA: Neznámý vstup sběrnice I2C ve funkci getSensorInfo(char input[]). Přidejte konstatu do výčtu IN_TYPE a upravte funkci!");
         }
-        Serial.print("getSensorInfoInput::");
+        /*Serial.print("getSensorInfoInput::");
         Serial.println(input);
         Serial.println(strlen("BMP280"));
-        Serial.println(String(!strncmp(input + 4, "BMP280", strlen("BMP280"))));
+        Serial.println(String(!strncmp(input + 4, "BMP280", strlen("BMP280"))));*/
 
         info.IN = IN;
         info.val_type = (byte)I2C;
         info.val = getI2CVal(IN);
     }else{      
-      Serial.println("Unknown input in function getSensorInfo(char input[]). Possible values are A/D/I2C, or add new");
+      Serial.println("-Chyba: neznámý vstup ve funkci getSensorInfo(char input[])! Možné hodnoty jsou A/D/I2C. Případně přidejte nové.");
     }
 
     return info;
@@ -267,7 +278,7 @@ float getI2CVal(byte IN)
     val = (IN == SHT21_HUM) ? SHT2x.GetHumidity() : val;
         
     if(val == INVALID_SENSOR_VALUE){
-      Serial.println("Unknown input in function getI2CVal(byte IN). Add constant into IN_TYPE enum and edit function.");
+      Serial.println("-CHYBA: Neznámý vstup sběrnice I2C ve funkci getI2CVal(byte IN). Přidejte konstatu do výčtu IN_TYPE a upravte funkci!");
     }
     
     return val;
@@ -290,6 +301,8 @@ void checkMulticast()
     if (RpiIP.isSet()) // If module is already connected to RPi then skip check of multicast...
         return;
 
+    char replyPacket[40]; // a reply string to send back
+    
     int packetSize = Udp.parsePacket();
     if (packetSize)
     {
@@ -303,49 +316,29 @@ void checkMulticast()
         if (len > 0)
         {
             incomingPacket[len] = 0;
-            Serial.printf("UDP packet contents: %s\n", incomingPacket);
+            //Serial.printf("UDP packet contents: |%s|\n", incomingPacket);
 
-            String multicastMsgPrefix = "RPi-server-IP:";
-            if (len > multicastMsgPrefix.length())
+            String helloClientMsg = "HELLO-CLIENT";
+            String getIDMsg = "GET-ID";
+            if (String(incomingPacket).equals(helloClientMsg))
             {
-                String prefix = String(incomingPacket).substring(0, multicastMsgPrefix.length());
-                if (prefix.equals(multicastMsgPrefix))
-                {
-                    String RPiIPStr = String(incomingPacket).substring(multicastMsgPrefix.length());
-                    //Serial.println("Zbytek:" + RPiIPStr);
-                    RpiIP.fromString(RPiIPStr);
-                    lastConnectedToRPi = 0;
-                    mem.addr = 0; // set address pointer to begining
-                    mem.writeByte('I');
-                    mem.writeByte('P');
-                    mem.writeByte(':');
-                    mem.writeByte(RpiIP[0]);
-                    mem.writeByte(RpiIP[1]);
-                    mem.writeByte(RpiIP[2]);
-                    mem.writeByte(RpiIP[3]);
-                    mem.commit();
-                    
-                    printMemory();
-                }
-                if (lastConnectedToRPi >= withoutConnTimeLimit && moduleID.length() > 0)
-                { // Case, when IP address was changed (either of Raspberry Pi or of module). Module send back its ID to update in database in case of change
-                    ("ID:" + moduleID).toCharArray(replyPacket, sizeof(replyPacket));
-                }
-                else
-                { // Case of initial communication with Raspberry Pi
-                    ("TYPE:" + boardType).toCharArray(replyPacket, sizeof(replyPacket));
-                }
-                Serial.println("replyPacket:" + String(replyPacket));
-                Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-                Udp.write(replyPacket);
-                Udp.endPacket();
+                ("TYPE:" + boardType).toCharArray(replyPacket, sizeof(replyPacket));
+            }else if (lastConnectedToRPi >= withoutConnTimeLimit && moduleID.length() > 0) // Case, when IP address was changed (either of Raspberry Pi or of module). Module send back its ID to update IP in database in case of change
+            {
+                ("reply-ID:" + moduleID).toCharArray(replyPacket, sizeof(replyPacket));            
+            }else{
+                Serial.println("-CHYBA: Neznámá zpráva v příchozím UDP paketu ve funkci checkMulticast()!");           
             }
+            Serial.println("replyPacket:" + String(replyPacket));
+            Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+            Udp.write(replyPacket);
+            Udp.endPacket();
         }
     }
 }
 
 // CoAP server endpoint URL
-void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
+void callback_set_output(CoapPacket &packet, IPAddress ip, int port)
 {
     if (!RpiIP.isSet())
         return;
@@ -375,10 +368,14 @@ void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
     memcpy(queryOpt, option.buffer, option.length);
     queryOpt[option.length] = NULL;
 
-    String pin = String(queryOpt).substring(inputPrefixLen);
+    byte pinPrefixLen = 4;
+    String pin = String(queryOpt).substring(pinPrefixLen);
     bool digital = pin.substring(0, 1).equals("D"); // If first char is D => digital pin. Analog otherwise.
     int pinNumber = pin.substring(1).toInt();       //Here we use pin number directly (without constants like A0, D5 etc...)
-
+    Serial.println("queryOpt:" + String(queryOpt));
+    Serial.println("pin:" + pin);
+    Serial.println("digital:" + String(digital));
+    
     char p[packet.payloadlen + 1];
     memcpy(p, packet.payload, packet.payloadlen);
     p[packet.payloadlen] = NULL;
@@ -417,12 +414,12 @@ void callback_set_io(CoapPacket &packet, IPAddress ip, int port)
 }
 
 // CoAP server endpoint URL
-void callback_listen_to(CoapPacket &packet, IPAddress ip, int port)
+void callback_observe_input(CoapPacket &packet, IPAddress ip, int port)
 {
     if (!RpiIP.isSet())
         return;
 
-    Serial.println("listen to");
+    Serial.println("observe input");
     lastConnectedToRPi = 0;
 
     CoapOption option;
@@ -456,42 +453,69 @@ void callback_listen_to(CoapPacket &packet, IPAddress ip, int port)
       Serial.println("unikátni listem");
       mem.writeByte(SENSOR_INFO_DATA_MEM_ADDR + watchedINIndex*2, info.IN);
       mem.writeByte(SENSOR_INFO_DATA_MEM_ADDR + watchedINIndex*2 + 1, info.val_type);
+      mem.commit();
       watched[watchedINIndex++] = info;
-      Serial.println("Memory after listen cbf");
-      printMemory();
+      printMemory("Memory after listen cbf");
+      initIfBMP280AndNotInited(info.IN);
       
-      if((info.IN == BMP280_TEMP || info.IN == BMP280_PRESS)){// If BMP280, init...  
-        if (!bmp.begin(BMP280_ADRESS))
-        {
-            Serial.println("BMP280 senzor nenalezen");
-        }else{
-            Serial.println("BMP280 inited");
-        }
-      }
       Serial.println("watched");
       Serial.println(watchedINIndex-1);
       Serial.println(watched[watchedINIndex-1].IN);
       Serial.println(watched[watchedINIndex-1].val);
       Serial.println(watched[watchedINIndex-1].val_type);
     }else{
-      Serial.println("NEEEEEunikátni listem");
+      //Serial.println("NEEEEEunikátni listem");
     }
-    /*Serial.println("str conversion");
-    Serial.println(input.length());
-    Serial.println(input);
-    Serial.println(inputCh);
-    Serial.println(strlen(inputCh));
-    Serial.println(len);*/
-    
 
-    /*char response[responseStr.length()];
-    strncpy(response, responseStr.c_str(), sizeof(response));
+    coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+}
+// CoAP server endpoint URL
+void callback_change_observed_input(CoapPacket &packet, IPAddress ip, int port)
+{
+    if (!RpiIP.isSet())
+        return;
 
-    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);*/
+    Serial.println("observe input");
+    lastConnectedToRPi = 0;
+
+    CoapOption option;
+    for (int i = 0; i < COAP_MAX_OPTION_NUM; i++)
+    {
+        option = packet.options[i];
+        if (!option.length)
+            continue;
+        if (option.number == COAP_URI_QUERY)
+        {
+            break;
+        }
+    }
+    if (option.number != COAP_URI_QUERY && !option.length)
+    {
+        return;
+        //TODO :coap.sendResponse ??
+    }
+    char queryOpt[option.length];
+    memcpy(queryOpt, option.buffer, option.length);
+    queryOpt[option.length] = NULL;
+
+  TODO
 
     coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }
 
+void initIfBMP280AndNotInited(byte IN){  
+    if((IN == BMP280_TEMP || IN == BMP280_PRESS)){// If BMP280, init...  
+      if(!BMP280Begun){
+        if (!bmp.begin(BMP280_ADRESS))
+        {
+            Serial.println("BMP280 senzor nenalezen");
+        }else{
+            Serial.println("BMP280 inited");
+            BMP280Begun = true;
+        }
+      }
+    }
+}
 bool alreadyWatched(SensorInfo sInfo){
   for(int i = 0; i < watchedINIndex/*WATCHED_IN_LIMIT*/; i++){
     if(watched[i].IN == sInfo.IN 
@@ -502,12 +526,48 @@ bool alreadyWatched(SensorInfo sInfo){
   return false;
 }
 
+void setRPiIP(IPAddress ip){
+    RpiIP = ip; 
+
+    //Also write to memory
+    mem.addr = 0; // set address pointer to begining
+    mem.writeByte('I');
+    mem.writeByte('P');
+    mem.writeByte(':');
+    mem.writeByte(RpiIP[0]);
+    mem.writeByte(RpiIP[1]);
+    mem.writeByte(RpiIP[2]);
+    mem.writeByte(RpiIP[3]);
+    mem.commit();
+    
+    printMemory("mem po nastaveni RPiPI:");  
+}
+
+void setModuleID(char ID[], byte idLen){  
+    //save to flash memory...
+    mem.addr = ID_MEM_ADDR;
+    mem.writeByte('I');
+    mem.writeByte('D');
+    mem.writeByte(':');
+    for(int i = 0; i < idLen; i++){ // packet.payloadlen + 1 bacause of NULL terminator
+      mem.writeByte(ID[i]);
+    }
+    mem.commit();
+    
+    moduleID = String(ID);
+    Serial.println("Nastavené ID: " + moduleID);
+    
+    printMemory("mem po nastaveni module ID:");
+}
+
 // CoAP server endpoint URL for setting module ID (from database)
 void callback_set_id(CoapPacket &packet, IPAddress ip, int port)
 {
-    if (!RpiIP.isSet())
+    if (moduleID.length() > 0)
         return;
-
+    
+    setRPiIP(ip);
+    
     Serial.println("callback_set_id");
 
     lastConnectedToRPi = 0;
@@ -516,20 +576,7 @@ void callback_set_id(CoapPacket &packet, IPAddress ip, int port)
     memcpy(p, packet.payload, packet.payloadlen);
     p[packet.payloadlen] = NULL;
 
-    //save to flash memory...
-    mem.addr = ID_MEM_ADDR;
-    mem.writeByte('I');
-    mem.writeByte('D');
-    mem.writeByte(':');
-    for(int i = 0; i < packet.payloadlen + 1; i++){ // packet.payloadlen + 1 bacause of NULL terminator
-      mem.writeByte(p[i]);
-    }
-    mem.commit();
-    printMemory();
-    
-    String payload(p);
-    Serial.println("Nastavené ID: " + payload);
-    moduleID = payload;
+    setModuleID(p, packet.payloadlen + 1);
     
     mem.setAllSensorsInfos(SENSOR_INFO_MEM_ADDR, WATCHED_IN_LIMIT, UNSET, UNSET); // Clear Sensors Infos part of memory
     
@@ -539,13 +586,13 @@ void callback_set_id(CoapPacket &packet, IPAddress ip, int port)
 // CoAP server endpoint URL for complet reset of module
 void callback_reset_module(CoapPacket &packet, IPAddress ip, int port)
 {
+    if (!RpiIP.isSet())
+        return;
     reset_module(); // Parameters are not need when reseting module
 }
 
 void reset_module()
 {
-    //if (!RpiIP.isSet())
-    //    return;
 
     Serial.println("reset_module");
 
@@ -555,14 +602,23 @@ void reset_module()
     lastConnectedToRPi = withoutConnTimeLimit; // We know here, that there will be no connection from Raspberry Pi
     RpiIP = IPAddress();
     moduleID = "";
+    
+    //Also reset all sensors info...
+    for (int i = 0; i < WATCHED_IN_LIMIT; i++)
+    {
+        watched[i].IN = UNSET;
+        watched[i].val_type = UNSET;
+        watched[i].val = UNINITIALIZED_SENSOR_VALUE;
+        
+    }
 }
 
 
-void printMemory()
+void printMemory(String msg)
 {
   
     mem.addr = 0;
-    Serial.println("Memory:");
+    Serial.println(msg);
     for(int i = 0; i < USED_MEM_END; i++){
       
       Serial.print((int)mem.readByte());
@@ -601,42 +657,55 @@ void resetFromMemory()
     if (ipInMemory)
     {
         RpiIP = IPAddress(mem.readByte(), mem.readByte(), mem.readByte(), mem.readByte());
-        Serial.println("ip IS set:" + RpiIP.toString());
+        Serial.println("RpiIP IS set:" + RpiIP.toString());
     }
     else
     {
-        Serial.println("ip not set:" + RpiIP.toString());
-        Serial.println();
+        Serial.println("RpiIP not set!");
     }
 
     bool inMemory = true;
     //Is "SInfo:" in memory?
-    for (i = 0; i < sizeof(prefixID) - 1; i++)
+    for (i = 0; i < sizeof(prefixSInfo) - 1; i++)
     {
-        if (mem.readByte() != prefixID[i])
+        byte b = mem.readByte();
+        if (b != prefixSInfo[i])
         {
+            Serial.println("SInfo in memory! fails at: "+ String(i)+", is:"+String(b)+"(at addr: " +String((byte)(mem.addr-1))+"), should be"+String(prefixSInfo[i]));
             inMemory = false;
             break;
         }
     }
-    if (inMemory){      
-      for (; i < WATCHED_IN_LIMIT; i++)
-      {
-          if (inMemory)
-          {
-              watched[i].IN = mem.readByte();
-              watched[i].val_type = mem.readByte();
-              watched[i].val = getSensorVal(watched[i].val_type, watched[i].IN);
-              if(watched[i].IN != UNSET)
-                  watchedINIndex++;
-          }
-          else
-          {
-              watched[i].IN = UNSET;
-              watched[i].val_type = UNSET;
-              watched[i].val = UNINITIALIZED_SENSOR_VALUE;
-          }
-      }
+  
+    for (i = 0; i < WATCHED_IN_LIMIT; i++)
+    {
+        if (inMemory)
+        {
+            watched[i].IN = mem.readByte();
+            watched[i].val_type = mem.readByte();
+            initIfBMP280AndNotInited(watched[i].IN);
+            watched[i].val = getSensorVal(watched[i].val_type, watched[i].IN);
+            if(watched[i].IN != UNSET)
+                watchedINIndex++;
+        }
+        else
+        {
+            watched[i].IN = UNSET;
+            watched[i].val_type = UNSET;
+            watched[i].val = UNINITIALIZED_SENSOR_VALUE;
+        }
+        //Serial.println(String(i)+", "+String(WATCHED_IN_LIMIT)+", "+String(mem.addr));  
+    }
+    
+
+    //if SInfo is not in memory (thus mem.addr was not changed to ID position), set it to ID position...
+    if (!inMemory){
+        Serial.println("SInfo: NOT in memory");  
+        mem.addr = ID_MEM_ADDR;
+    }
+    else
+    {
+        Serial.println("SInfo: in memory");  
     }
 
     if (ipInMemory) // If IP is not in memory, ID is also not there...
@@ -645,14 +714,17 @@ void resetFromMemory()
         //Is "ID:" in memory?
         for (i = 0; i < sizeof(prefixID) - 1; i++)
         {
-            if (mem.readByte() != prefixID[i])
+            byte b = mem.readByte();
+            if (b != prefixID[i])
             {
+                Serial.println("moduleID in memory! fails at: "+ String(i)+", is:"+String(b)+"(at addr: " +String((byte)(mem.addr-1))+"), should be"+String(prefixID[i]));
                 inMemory = false;
                 break;
             }
         }
         if (inMemory) // If "ID:" had been found in memory, get ID, which follows
         {
+        Serial.println("moduleID in memory!");
             char ch;
             while ((ch = mem.readByte()) != 0)
             {
@@ -664,6 +736,7 @@ void resetFromMemory()
     if (!ipInMemory || !inMemory) // If ip or ID is not in memory, clear it!
     {
         moduleID = "";
+        Serial.println("moduleID NOT in memory!");
     }
 }
 

@@ -31,9 +31,9 @@ export class Utils {
     }
 
     public static getWindowHeight(withPixelUnit: boolean = false): number | string {
-        let height = window.innerHeight
-            || document.documentElement.clientHeight
-            || document.body.clientHeight;
+        let height = document.documentElement.scrollHeight
+            || document.body.scrollHeight
+            || window.innerHeight;
 
         if (withPixelUnit) {
             return (height + "px");

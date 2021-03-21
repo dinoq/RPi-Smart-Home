@@ -1,7 +1,7 @@
 
 var firebase = require('firebase');
 const fs = require("fs");
-const conf = require("../config.json");
+const conf = require("../config.js");
 const CommunicationManager = require('./communication-manager.js');
 const ESP = require("./ESP");
 const SensorInfo = ESP.SInfo;
@@ -32,34 +32,59 @@ module.exports = class Firebase {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
                 console.log("Succesfully logged in");
-                this._communicationManager.initCoapServer(this._updateSensor);
 
+                this.debugApp();
 
-                let change = JSON.parse("{\"type\":1,\"level\":1,\"data\":{\"id\":\"-MVwvZHnfCbecnYYOtEf\",\"path\":\"rooms/-MVwvYAL2RM_XyOKV4lH/devices/-MVwvZHnfCbecnYYOtEf\"}}");
-                this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
-                    console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
-                    this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
-                    this._communicationManager.sendESPItsID(espIP, change.data.id);
-                    console.log('change.data.id: ', change.data.id);
-
-                    setTimeout(() => { this._communicationManager.listenTo("192.168.1.2", "A17"); }, 2000);
-                    setTimeout(() => { this._communicationManager.listenTo("192.168.1.2", "I2C-BMP280-teplota"); }, 2000);
-                })
-
-                //this._communicationManager.resetRPiServer("192.168.1.8"); //TODO: delete
-                //setInterval(this._communicationManager.initCommunicationWithESP, 5000);
                 this._loggedIn = true;
                 this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
                     const data = snapshot.val();
                     this._databaseUpdatedHandler(data);
                 });
+                this._communicationManager.initCoapServer(this._updateSensor);
+
+
             }).catch((error) => {
                 console.log('error user: ', error);
             });
     }
 
+    private debugApp(){
+        let debugIP = "192.168.1.8";
+        this._communicationManager.resetRPiServer(debugIP); //TODO: delete
+        setTimeout(()=>{ 
+            let change = JSON.parse("{\"type\":1,\"level\":1,\"data\":{\"id\":\"-MVwvZHnfCbecnYYOtEf\",\"path\":\"rooms/-MVwvYAL2RM_XyOKV4lH/devices/-MVwvZHnfCbecnYYOtEf\"}}");
+            this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
+                console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
+                this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
+                this._communicationManager.sendESPItsID(espIP, change.data.id);
+                console.log('change.data.id: ', change.data.id);
+
+                setTimeout(() => { this._communicationManager.ObserveInput(debugIP, "A17").catch((value) => {
+                    console.log('err1 value: ', value.message);
+                    
+                }); }, 2000);
+                setTimeout(() => { this._communicationManager.ObserveInput(debugIP, "I2C-SHT21-teplota").catch((value) => {
+                    console.log('err2 value: ', value.message);
+                    
+                }); }, 2000);
+
+                setTimeout(() => { 
+                    this._communicationManager.putVal(debugIP, "D2", 700);
+                    setTimeout(() => { 
+                        this._communicationManager.putVal(debugIP, "D2", 100);
+                    }, 7000);
+                }, 3000);
+                
+            }).catch((err) => {
+                console.log('initCommunicationWithESP err: ', err);
+                
+            })
+
+
+        }, 5000);
+    }
+
     private _updateSensor = async (sensorInfo: SensorInfo, moduleIP) => {
-        console.log("Updating to:", sensorInfo.val);
         this._sensors.forEach((sensor, index, array) => {
             if (moduleIP == sensor.IP) {
                 if (sensorInfo.val != sensor.value
@@ -75,7 +100,7 @@ module.exports = class Firebase {
 
     private _updateSensorsInDB = async () => {
         this._updateSensorsInDBTimeout = undefined;
-        if (this._sensorsUpdates && Object.keys(this._sensorsUpdates).length != 0 && this._sensorsUpdates.constructor === Object) {
+        if (this._sensorsUpdates && Object.keys(this._sensorsUpdates).length != 0) {
             console.log((Math.floor(Date.now() / 1000)-1616084626)+'| updates: ', this._sensorsUpdates);
             await firebase.database().ref().update(this._sensorsUpdates);
             this._sensorsUpdates = {};
@@ -86,7 +111,7 @@ module.exports = class Firebase {
         if (!this._dbInited) {
             this.initLocalDB(data);
         } else {
-            console.log(this.saveDbChange(data));
+            this.saveDbChange(data);
             this._processDbChanges();
         }
         this.getSensors(data);
@@ -132,16 +157,10 @@ module.exports = class Firebase {
 
         }
     }
- /*45, 77, 86, 119, 118, 90, 72, 110, 102, 67
- , 98, 101, 99, 110, 89, 89, 79, 116, 69, 102,
-  88, 32, 64, 63,
-    -, M, V, w, v, Z, H, n, f, C,
-     b, e, c, n, Y, Y, O, t, E, f,
-      X,  , @, ?*/
+    
     saveDbChange(data) {
         const newRooms = data["rooms"];
 
-        console.log('__________________________________');
         let newRoomsIDs = new Array();
         for (const newRoomID in newRooms) {
             newRoomsIDs.push(newRoomID);
@@ -158,6 +177,29 @@ module.exports = class Firebase {
                 const sensors = modules[moduleID]["IN"];
                 const localSensors = (localmodules && localmodules[moduleID]) ? localmodules[moduleID]["IN"] : undefined;
                 for (const sensorID in sensors) {
+                    if(!(localSensors && localSensors[sensorID])){ // Sensor added
+                        this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: modules[moduleID]["IP"], input: sensors[sensorID].input.toString() } });
+                        
+                        //Add also to sensors in order to update in DB
+                        sensors[sensorID]["IP"] = modules[moduleID]["IP"];
+                        sensors[sensorID]["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${moduleID}/IN/${sensorID}/value`;
+                        this._sensors.push(sensors[sensorID]);
+                    }else{
+                        if((sensors[sensorID].input != localSensors[sensorID].input)
+                            ||(sensors[sensorID].type != localSensors[sensorID].type)){ // sensor changed => just "delete" (stop listening to) old sensor and add new...
+                            //find old sensor in this._sensors
+                            let sensorsPaths = this._sensors.map((s, index, array) => {return s["pathToValue"];})
+                            let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${moduleID}/IN/${sensorID}/value`);
+                            if(sIdx != -1){
+                                sensors[sensorID]["IP"] = modules[moduleID]["IP"];
+                                sensors[sensorID]["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${moduleID}/IN/${sensorID}/value`;
+                                this._sensors[sIdx] = sensors[sensorID];
+                            }
+                            this.changes.push({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: modules[moduleID]["IP"], input: sensors[sensorID].input.toString(), type: sensors[sensorID].type.toString() } });
+                        
+                        }
+                    }
+
                 }
                 const devices = modules[moduleID]["OUT"];
                 const localDevices = (localmodules && localmodules[moduleID]) ? localmodules[moduleID]["OUT"] : undefined;
@@ -186,7 +228,6 @@ module.exports = class Firebase {
 
 
         this._dbCopy = data;
-        return this.changes;
     }
 
     private _processDbChanges(): void {
@@ -195,18 +236,35 @@ module.exports = class Firebase {
 
             let index = this.changes.indexOf(change);
             this.changes.splice(index, 1); // Remove change
-            if (change.type == ChangeMessageTypes.ADDED && change.level == DevicesTypes.MODULE) {// Module was added => init communication
-                this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
-                    console.log("ADD " + espIP + "to" + firebase.auth().currentUser.uid);
-                    this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
-                    this._communicationManager.sendESPItsID(espIP, change.data.id);
-                    console.log('change.data.id: ', change.data.id);
-                })
-            } else if (change.type == ChangeMessageTypes.VALUE_CHANGED && change.level == DevicesTypes.DEVICE) {
-                console.log("change val!!!");
-                if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
-                    this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
+
+            if(change.level == DevicesTypes.MODULE){ // MODULE LEVEL CHANGES
+                if (change.type == ChangeMessageTypes.ADDED) {// Module was added => init communication
+                    this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
+                        this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
+                        this._communicationManager.sendESPItsID(espIP, change.data.id);
+                        console.log('change.data.id: ', change.data.id);
+                    }).catch((err) => {
+                        console.log('err: ', err.message, "deleting: " + change.data.path);    
+                        this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).remove();                
+                    })
+                }
+            }else if(change.level == DevicesTypes.SENSOR){ // SENSOR LEVEL CHANGES
+                if (change.type == ChangeMessageTypes.ADDED) {// Sensor was added => listen to new values
+                    this._communicationManager.ObserveInput(change.data.ip, change.data.input)
+                    .catch((err) => {
+                        console.log('listenTo err', err.message);
+                    });
+                } else if (change.type == ChangeMessageTypes.REPLACED) {// Sensor was added => listen to new values
+                    this._communicationManager.changeObservedInput(change.data.ip, change.data.input);
+                }
+            }else if(change.level == DevicesTypes.DEVICE){ // DEVICE LEVEL CHANGES
+                if (change.type == ChangeMessageTypes.VALUE_CHANGED) {
+                    console.log("change val");
+                    if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
+                        this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
+                }
             }
+            
         }
     }
 }
@@ -220,6 +278,7 @@ interface IChangeMessage {
 enum ChangeMessageTypes {
     DELETED,
     ADDED,
+    REPLACED,
     VALUE_CHANGED
 }
 

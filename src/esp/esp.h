@@ -54,8 +54,8 @@ typedef struct SInfo SensorInfo;
 void checkRPiConn();
 void checkMulticast();
 void callback_set_io(CoapPacket &packet, IPAddress ip, int port); //??
-//void callback_get_io(CoapPacket &packet, IPAddress ip, int port); //??
-void callback_listen_to(CoapPacket &packet, IPAddress ip, int port);
+void callback_observe_input(CoapPacket &packet, IPAddress ip, int port);
+void callback_change_observed_input(CoapPacket &packet, IPAddress ip, int port);
 void callback_set_id(CoapPacket &packet, IPAddress ip, int port);
 void callback_reset_module(CoapPacket &packet, IPAddress ip, int port);
 void reset_module();
@@ -73,21 +73,33 @@ bool valueIsIn(byte val, byte arr[]);
 
 SensorInfo getSensorInfo(char input[]);
 
-void printMemory();
+void printMemory(String msg);
+
+void setRPiIP(IPAddress ip);
+void setModuleID(char ID[], byte idLen);
+
 
 float getSensorVal(byte val_type, byte IN);
 float getSensorVal(SensorInfo sInfo);
 
 
+void initIfBMP280AndNotInited(byte IN);
+
+/**
+ * Function prototypes PART BEGIN
+ * */
+
 
 const byte WATCHED_IN_LIMIT = 20;
+
 const float INVALID_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
 const float UNINITIALIZED_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
-const int SENSOR_CHECK_TIME = 3000; // How often check for sensors values (in ms)
+const int SENSOR_CHECK_TIME = 5000; // How often check for sensors values (in ms)
 
 const byte SENSOR_INFO_MEM_ADDR = 7; // Address of beginning of SensorInfos in flash memory. It is saved after string "IP:????" => 7
 const byte SENSOR_INFO_DATA_MEM_ADDR = 13; // "IP:????SInfo:" => 13
 const byte ID_MEM_ADDR = 53; // Address of beginning of module ID in flash memory. It is saved after string "IP:????SInfo:(byte+byte)*20" => 13+(1+1)*20 => 53
+const byte ID_MEM_DATA_ADDR = 56; // "IP:????SInfo:(byte+byte)*20ID:" => 13+(1+1)*20+3 => 56
 const byte USED_MEM_END = 77; // Address of end of flash memory. "IP:????SInfo:(byte+byte)*20ID:(byte)*21 [ID is 20 chars in firebase + null terminator] => 13+(1+1)*20+3+21 => 156
 
 const byte UNSET = 254;

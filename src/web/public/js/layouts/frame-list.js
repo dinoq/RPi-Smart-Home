@@ -15,6 +15,7 @@ export class FrameList extends AbstractComponent {
                 classList: "frame-list",
             }
         });
+        this.FLItems = new Array();
         this.type = type;
         this.initialize();
     }
@@ -83,6 +84,19 @@ export class FrameList extends AbstractComponent {
     addItems(item, index = -1) {
         this.appendComponents(item, index);
         this.updatedOrderHandler();
+        let addToFLItems = (itm) => {
+            if (Utils.itemIsAnyFromEnum(itm.type, FrameListTypes, CLASSIC_FRAME_LIST_TYPES)) {
+                this.FLItems.push(itm);
+            }
+        };
+        if (Array.isArray(item)) {
+            item.forEach((itm) => {
+                addToFLItems(itm);
+            });
+        }
+        else {
+            addToFLItems(item);
+        }
     }
 }
 FrameList.tagName = "frame-list";
@@ -202,6 +216,7 @@ export class FrameListItem extends AbstractComponent {
 }
 FrameListItem.tagName = "frame-list-item";
 export const ARROWABLE_LISTS = ["ROOMS", "MODULES", "SENSORS", "DEVICES"];
+export const CLASSIC_FRAME_LIST_TYPES = ["ROOMS", "MODULES", "SENSORS", "DEVICES"];
 export var FrameListTypes;
 (function (FrameListTypes) {
     FrameListTypes[FrameListTypes["BASE"] = 0] = "BASE";
@@ -229,7 +244,8 @@ export const DBTemplates = {
             in: {},
             out: {},
             name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "wemosD1"
+            type: "wemosD1",
+            IP: ""
         };
     },
     get SENSORS() {

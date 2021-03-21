@@ -4,7 +4,7 @@ const net = require('net');
 const coap = require('coap');
 const dgram = require("dgram");
 const Process = require("process");
-const COnfig = require("../config.json");
+const COnfig = require("../config.js");
 const ESP = require("./ESP");
 const VALUE_TYPE = ESP.VALUE_TYPE;
 const SensorInfo = ESP.SInfo;
@@ -21,7 +21,7 @@ module.exports = class CommunicationManager {
     }
     static getServerIP() {
         let networkInterfaces = os.networkInterfaces();
-        let addressesInfo = networkInterfaces["Wi-Fi"];
+        let addressesInfo = networkInterfaces["Wi-Fi"]; // Wi-Fi on Windows, wlan0 on Ubuntu/Raspbian
         for (let i = 0; i < addressesInfo.length; i++) {
             let addrInfo = addressesInfo[i];
             if (!addrInfo.internal && addrInfo.family == "IPv4" && addrInfo.address) {
@@ -55,7 +55,7 @@ module.exports = class CommunicationManager {
             const localIP = CommunicationManager.getServerIP();
             const socket = dgram.createSocket({ type: "udp4" });
             socket.addMembership(COnfig.COAP_MULTICAST_ADDR, localIP);
-            const message = "RPi-server-IP:" + localIP;
+            const message = "HELLO-CLIENT";
             socket.send(message, 0, message.length, COnfig.COAP_PORT, COnfig.COAP_MULTICAST_ADDR, function () {
                 console.info(`Sending message "${message}"`);
             });
@@ -66,6 +66,9 @@ module.exports = class CommunicationManager {
                 espIP = rinfo.address;
                 setTimeout(() => { resolve({ espIP: espIP, boardType: message.toString().substring("TYPE:".length) }); }, 0);
             });
+            setTimeout(() => {
+                reject("No module founded!");
+            }, COnfig.NEW_MODULE_FIND_TIMEOUT);
         });
     }
     coapRequest(ip, pathname, query, method, valToWrite, onResponse, onError, confirmable = true) {
@@ -74,7 +77,7 @@ module.exports = class CommunicationManager {
             pathname: pathname,
             query: query,
             method: method,
-            confirmable: true
+            confirmable: confirmable
         });
         if (valToWrite != null)
             req.write(valToWrite);
@@ -88,6 +91,26 @@ module.exports = class CommunicationManager {
         });
         req.end();
     }
+    coapRequestAsync(ip, pathname, query, method, valToWrite, confirmable = true) {
+        return new Promise((resolve, reject) => {
+            let req = coap.request({
+                host: ip,
+                pathname: pathname,
+                query: query,
+                method: method,
+                confirmable: confirmable
+            });
+            if (valToWrite != null)
+                req.write(valToWrite);
+            req.on('error', (err) => {
+                reject(err.message);
+            });
+            req.on('response', (res) => {
+                resolve(res);
+            });
+            req.end();
+        });
+    }
     async sendESPItsID(ip, id) {
         this.coapRequest(ip, "/set-id", "", "PUT", id, null, (err) => {
             // module didnt recieve its new ID
@@ -95,94 +118,31 @@ module.exports = class CommunicationManager {
         }, false);
     }
     async putVal(ip, pin, val) {
-        this.coapRequest(ip, "/set-io", "pin=" + pin, "PUT", val, null, null);
+        this.coapRequest(ip, "/set-output", "pin=" + pin, "PUT", val.toString(), null, null);
     }
-    getVal(ip, input) {
+    ObserveInput(ip, input) {
         return new Promise((resolve, reject) => {
-            this.coapRequest(ip, "/get-io", "input=" + input, "GET", null, (res) => {
-                const prefixLen = "ESP-get-val:".length;
-                const val = res.payload.toString().substring(prefixLen);
-                resolve(val);
-            }, (err) => {
-                console.log('No reply in 5s from ' + ip);
-                reject(err);
-            });
-        });
-    }
-    listenTo(ip, input) {
-        return new Promise((resolve, reject) => {
-            this.coapRequest(ip, "/listen-to", "input=" + input, "GET", null, (res) => {
+            this.coapRequest(ip, "/observe-input", "input=" + input, "PUT", null, (res) => {
                 /*const prefixLen = "ESP-get-val:".length;
                 const val = res.payload.toString().substring(prefixLen);
                 */
-                console.log("res" + res.payload.toString());
+                console.log("listen-to res" + res.payload.toString());
                 resolve(res.payload.toString());
             }, (err) => {
                 console.log('No reply in 5s from ' + ip);
                 reject(err);
-            });
+            }, true);
         });
+    }
+    async changeObservedInput(ip, oldInput, newInput) {
+        try {
+            await this.coapRequestAsync(ip, "/change-observed-input", "old=" + oldInput + "&new=" + newInput, "PUT", null, true);
+        }
+        catch (err) {
+            console.log('changeObservedInput err: ', err);
+        }
     }
     async resetRPiServer(ip) {
         this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, false);
     }
 };
-/*
-class SensorInfo
-{
-    IN; //Pin number or I2C_IN_TYPE
-    val_type; // ANALOG/DIGITAL/I2C
-    val;
-
-    SensorInfo(IN: IN_TYPE, val_type: VALUE_TYPE, val: number){
-        this.IN = IN;
-        this.val_type = val_type;
-        this.val = val;
-    }
-
-    //returns input in database format
-    public getInput(){
-        let analog = this.val_type == VALUE_TYPE.ANALOG;
-        let digital = this.val_type == VALUE_TYPE.DIGITAL;
-        let i2c = this.val_type == VALUE_TYPE.I2C;
-
-        let str = "";
-        if(analog || digital){
-            str = (analog)? "A" : "D";
-            str += this.IN;
-        }else if(i2c){
-            if(this.IN < IN_TYPE.BMP280_TEMP){
-
-            }else{ // I2C
-                let type = SensorInfo.IN_TYPE_TO_STR[this.IN];
-                if(type != undefined)
-                    str = "I2C-" + type;
-            }
-
-        }
-        return str;
-    }
-
-    static IN_TYPE_TO_STR = {}; // definition at end of page
-
-};
-
-/*
-// From esp.h:
-enum VALUE_TYPE
-{
-    ANALOG = 1, // Start from 1, because we add it to string and we don't want to consider it as null terminator
-    DIGITAL,
-    I2C
-};
-enum IN_TYPE
-{
-
-    //I2C
-    BMP280_TEMP = 20, //from 0 are pin numbers...
-    BMP280_PRESS,
-    SHT21_TEMP,
-    SHT21_HUM,
-
-};
-*/

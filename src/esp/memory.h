@@ -25,8 +25,9 @@ class Memory{
     void writeByte(short address, char val);
 
     
-    void writeString(char str[]);
-    void writeString(short address, char str[]);
+    void writeString(char *str, char len);
+    void writeString(short address, char *str, char len);
+    char writeString2(short address, char *str, char len);
     /*void writeSensorInfo(float val);
     void writeSensorInfo(char address, float val);*/
 

@@ -17,7 +17,7 @@ void Memory::clear(short fromAddr, short toAddr){
 void Memory::setAllSensorsInfos(short from, char count, char IN, char val_type){
     char prefix[] = "SInfo:";
     addr = from;
-    writeString(prefix);
+    writeString(prefix, strlen(prefix));
   
     for(int i = 0; i < count; i++){
         writeByte(IN);
@@ -83,15 +83,19 @@ void Memory::writeByte(short address, char val){
 
 
 
-void Memory::writeString(char str[]){   
-    writeString(addr, str);
-    addr += sizeof(str);
+void Memory::writeString(char *str, char len){   
+    writeString(addr, str, len);
+    addr += len;
 }      
 
 
-void Memory::writeString(short address, char str[]){ 
-    for(int i = 0; i < sizeof(str); i++){
+void Memory::writeString(short address, char *str, char len){ 
+    for(int i = 0; i < len; i++){
         writeByte(address+i, str[i]);
     }
     EEPROM.commit();
+}   
+
+char Memory::writeString2(short address, char *str, char len){ 
+    return len;
 }   

@@ -351,7 +351,11 @@ export class RoomDevice extends AbstractComponent {
         }
     }
     initialize(index, object, onClickCallback) {
-        this.type = object[index].type;
+        let output = object[index].output;
+        if (output.charAt(0) == "A")
+            this.type = "analog";
+        else
+            this.type = "digital";
         this.icon = object[index].icon;
         this.devicePath = object[index].path;
         this.dbID = object[index].id;
@@ -411,8 +415,6 @@ export class RoomDevice extends AbstractComponent {
     }
     updateSlider(value) {
         //this.slider.value=value;
-    }
-    static convertToNumVal(val, type) {
     }
 }
 RoomDevice.tagName = "room-device";

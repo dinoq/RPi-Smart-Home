@@ -9,9 +9,11 @@ import { DialogResponses } from "../components/dialogs/base-dialog.js";
 import { EventManager } from "../app/event-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
 import { Loader } from "../components/others/loader.js";
+import { OneOptionDialog } from "../components/dialogs/cancel-dialog.js";
 export class SettingsPage extends BasePage {
     constructor(componentProps) {
         super(componentProps);
+        this._focusDetail = true;
         this.selectedItemsIDHierarchy = new Array(3);
         this.defaultItemsStrings = {
             noItem: [
@@ -43,21 +45,17 @@ export class SettingsPage extends BasePage {
                 path = this.itemInDetail.item.dbCopy.path;
             }
             else if (listType == FrameListTypes.SENSORS) {
-                let inputType = document.getElementById("input-type").value;
                 let iconType = document.getElementById("icon-type").value;
                 let input = document.getElementById("input").value;
                 let unit = document.getElementById("unit").value;
-                update.type = inputType;
                 update.icon = iconType;
                 update.input = input;
                 update.unit = unit;
                 path = this.itemInDetail.item.dbCopy.path;
             }
             else if (listType == FrameListTypes.DEVICES) {
-                let outputType = document.getElementById("output-type").value;
                 let iconType = document.getElementById("icon-type").value;
                 let output = document.getElementById("output").value;
-                update.type = outputType;
                 update.icon = iconType;
                 update.output = output;
                 path = this.itemInDetail.item.dbCopy.path;
@@ -138,8 +136,10 @@ export class SettingsPage extends BasePage {
                 }
                 this.itemInDetail = { item: item, parentListType: parentList.type };
                 this.initDetail();
-                this.detail.scrollIntoView();
-                this.detail.blink(1);
+                if (this._focusDetail) {
+                    this.detail.scrollIntoView();
+                    this.detail.blink(1);
+                }
             }
             else {
                 let itemIndex = Array.from(parentList.childNodes).indexOf(item);
@@ -174,6 +174,9 @@ export class SettingsPage extends BasePage {
                 else if (clickedElem == "add") { // Add item to database
                     if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"]))
                         return;
+                    if (parentList.type == FrameListTypes.MODULES) { // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
+                        this._focusDetail = false;
+                    }
                     let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
                     let DBitems = await Firebase.getDBData(item.dbCopy.parentPath); // Get actual state of DB
                     if (DBitems) {
@@ -190,9 +193,59 @@ export class SettingsPage extends BasePage {
                     let newItem = parentList.children[0];
                     newItem = ((Utils.itemIsAnyFromEnum(parentList.children[0].type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
                     await this.itemClicked(null, newItem, "edit");
-                    //Scroll to bottom and blink detail
-                    this.detail.scrollIntoView();
-                    this.detail.blink();
+                    if (parentList.type == FrameListTypes.MODULES) { // Show dialog about connecting to ESP module
+                        let waitingDialog = new OneOptionDialog("Čekání na propojení serveru s modulem", DialogResponses.CANCEL);
+                        let noModuleDialog = new OneOptionDialog("Nepodařilo se najít nový modul.<br>Zkontrolujte, zda je modul zapnutý.", DialogResponses.OK);
+                        let moduleAddedDialog = new OneOptionDialog("Modul byl úspěšně přidán!", DialogResponses.OK);
+                        let noModuleFoundErrorResponse = "NO-MODULE-FOUND";
+                        let moduleHasBeenFoundResponse = "MODULE-HAS-BEEN-FOUND";
+                        let moduleAdditionCanceled = false;
+                        let waitingForModuleResponsePromise = waitingDialog.show();
+                        let IDs = this.selectedItemsIDHierarchy;
+                        if (IDs.length >= 2) {
+                            Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
+                                console.log('data: ', data);
+                                console.log('waitingDialog: ', waitingDialog);
+                                if (!moduleAdditionCanceled) {
+                                    if (!data || (data.IP && data.IP.length > "1.1.1.1".length)) {
+                                        if (!data) { // Module was not found, thus record was deleted in database. Hide dialog and reinit settings page...
+                                            this.selectedItemsIDHierarchy.splice(1);
+                                            waitingDialog.resolveShow(noModuleFoundErrorResponse);
+                                        }
+                                        else { // Module IP exists, thus module has been founded
+                                            waitingDialog.resolveShow(moduleHasBeenFoundResponse);
+                                        }
+                                        waitingDialog.remove();
+                                        this.pageReinicialize();
+                                    }
+                                }
+                            });
+                        }
+                        let moduleFoundResponse = await waitingForModuleResponsePromise;
+                        if (typeof moduleFoundResponse == "string") {
+                            console.log(moduleFoundResponse);
+                            if (moduleFoundResponse == noModuleFoundErrorResponse) { // No module found => display info dialog
+                                await noModuleDialog.show();
+                            }
+                            else if (moduleFoundResponse == moduleHasBeenFoundResponse) { // Module has been found!
+                                await moduleAddedDialog.show();
+                                //Scroll to bottom and blink detail
+                                this._focusDetail = true;
+                            }
+                            this._focusDetail = true;
+                            console.log("SSS");
+                        }
+                        else /*if(typeof moduleFoundResponse == DialogResponses)*/ { // canceled waitingDialog
+                            //Remove module from database
+                            if (IDs.length >= 2) {
+                                //this.selectedItemsIDHierarchy.splice(1);
+                                moduleAdditionCanceled = true;
+                                console.log("cancel=>delete at: /rooms/" + IDs[0] + "/devices/" + IDs[1]);
+                                Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]);
+                            }
+                        }
+                    }
+                    this._focusDetail = true;
                 }
                 else if (clickedElem == "delete") {
                     await Firebase.deleteDBData(item.dbCopy.path);
@@ -500,10 +553,24 @@ export class SettingsPage extends BasePage {
             values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];
         }
         else if (parenListType == FrameListTypes.SENSORS) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
+            let type;
+            if (item.dbCopy.input.charAt(0) == "A")
+                type = "analog";
+            else if (item.dbCopy.input.charAt(0) == "D")
+                type = "digital";
+            else
+                type = "bus";
+            values = [item.dbCopy.name, type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
         }
         else if (parenListType == FrameListTypes.DEVICES) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
+            let type;
+            if (item.dbCopy.output.charAt(0) == "A")
+                type = "analog";
+            else if (item.dbCopy.output.charAt(0) == "D")
+                type = "digital";
+            else
+                type = "bus";
+            values = [item.dbCopy.name, type, item.dbCopy.output, item.dbCopy.icon];
         }
         this.detail.updateDetail(title, parenListType, values);
     }

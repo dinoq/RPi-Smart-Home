@@ -20,6 +20,7 @@ import { TabLayout } from "./layouts/tab-layout.js";
 import { FrameDetail, FrameDetailRow, SlidableImg } from "./layouts/frame-detail.js";
 import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
 import { LoaderComponent } from "./components/others/loader.js";
+import { OneOptionDialog } from "./components/dialogs/cancel-dialog.js";
 export var app = null;
 class AutoHomeApp {
     constructor() {
@@ -42,6 +43,7 @@ class AutoHomeApp {
             BaseComponent,
             ErrorDialog,
             YesNoCancelDialog,
+            OneOptionDialog,
             LoginComponent,
             LoginPage,
             BaseLayout,

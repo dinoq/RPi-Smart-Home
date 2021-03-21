@@ -24,6 +24,7 @@ import { TabLayout } from "./layouts/tab-layout.js";
 import { FrameDetail, FrameDetailRow, SlidableImg } from "./layouts/frame-detail.js";
 import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
 import { Loader, LoaderComponent } from "./components/others/loader.js";
+import { OneOptionDialog } from "./components/dialogs/cancel-dialog.js";
 
 export declare var firebase: any;
 
@@ -42,7 +43,8 @@ class AutoHomeApp {
             BaseComponent,
 
             ErrorDialog,            
-            YesNoCancelDialog,
+            YesNoCancelDialog,  
+            OneOptionDialog,
             
             LoginComponent,
             LoginPage,

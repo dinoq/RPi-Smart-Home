@@ -25,9 +25,9 @@ export class Utils {
         }
     }
     static getWindowHeight(withPixelUnit = false) {
-        let height = window.innerHeight
-            || document.documentElement.clientHeight
-            || document.body.clientHeight;
+        let height = document.documentElement.scrollHeight
+            || document.body.scrollHeight
+            || window.innerHeight;
         if (withPixelUnit) {
             return (height + "px");
         }

@@ -16,6 +16,7 @@ import { URLManager } from "../app/url-manager.js";
 import { PageManager } from "../app/page-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
 import { Loader } from "../components/others/loader.js";
+import { OneOptionDialog } from "../components/dialogs/cancel-dialog.js";
 export class SettingsPage extends BasePage {
     static tagName = "settings-page";
 
@@ -30,6 +31,7 @@ export class SettingsPage extends BasePage {
 
     private saveBtnContainer: HorizontalStack;
     private detail: FrameDetail;
+    private _focusDetail: boolean = true;
     private itemInDetail: { item: FrameListItem, parentListType: FrameListTypes };
     private selectedItemsIDHierarchy: string[] = new Array(3);
     rooms: any[];
@@ -336,8 +338,11 @@ export class SettingsPage extends BasePage {
             }
             this.itemInDetail = { item: item, parentListType: parentList.type };
             this.initDetail();
-            this.detail.scrollIntoView();
-            this.detail.blink(1);
+
+            if(this._focusDetail){
+                this.detail.scrollIntoView();
+                this.detail.blink(1);
+            }
 
         } else {
 
@@ -375,6 +380,9 @@ export class SettingsPage extends BasePage {
                 if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"]))
                     return;
 
+                if(parentList.type == FrameListTypes.MODULES){ // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
+                    this._focusDetail = false;
+                }
                 let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
                 let DBitems = await Firebase.getDBData(item.dbCopy.parentPath); // Get actual state of DB
                 if (DBitems) {
@@ -395,9 +403,58 @@ export class SettingsPage extends BasePage {
                 newItem = <FrameListItem>((Utils.itemIsAnyFromEnum((<FrameListItem>parentList.children[0]).type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
                 await this.itemClicked(null, newItem, "edit");
 
-                //Scroll to bottom and blink detail
-                this.detail.scrollIntoView();
-                this.detail.blink();
+                if(parentList.type == FrameListTypes.MODULES){ // Show dialog about connecting to ESP module
+                    let waitingDialog = new OneOptionDialog("Čekání na propojení serveru s modulem", DialogResponses.CANCEL);
+                    let noModuleDialog =  new OneOptionDialog("Nepodařilo se najít nový modul.<br>Zkontrolujte, zda je modul zapnutý.", DialogResponses.OK);
+                    let moduleAddedDialog =  new OneOptionDialog("Modul byl úspěšně přidán!", DialogResponses.OK);
+                    let noModuleFoundErrorResponse = "NO-MODULE-FOUND";
+                    let moduleHasBeenFoundResponse = "MODULE-HAS-BEEN-FOUND";
+                    let moduleAdditionCanceled = false;
+                    let waitingForModuleResponsePromise: Promise<any> = waitingDialog.show();
+                    let IDs = this.selectedItemsIDHierarchy;
+
+                    if (IDs.length >= 2) {
+                        Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
+                            console.log('data: ', data);  
+                            console.log('waitingDialog: ', waitingDialog);
+                            if(!moduleAdditionCanceled){
+                                if(!data || (data.IP&&data.IP.length> "1.1.1.1".length)){       
+                                    if(!data){ // Module was not found, thus record was deleted in database. Hide dialog and reinit settings page...
+                                        this.selectedItemsIDHierarchy.splice(1);
+                                        waitingDialog.resolveShow(noModuleFoundErrorResponse);       
+                                    }else{ // Module IP exists, thus module has been founded
+                                        waitingDialog.resolveShow(moduleHasBeenFoundResponse);         
+                                    }                    
+                                    waitingDialog.remove();
+                                    this.pageReinicialize();
+                                }
+                            }
+                        });
+                    }
+                    let moduleFoundResponse: any = await waitingForModuleResponsePromise;
+                    if(typeof moduleFoundResponse == "string"){ 
+                        console.log(moduleFoundResponse);
+                        if(moduleFoundResponse == noModuleFoundErrorResponse){// No module found => display info dialog
+                            await noModuleDialog.show();
+
+                        }else if(moduleFoundResponse == moduleHasBeenFoundResponse){// Module has been found!
+                            await moduleAddedDialog.show();
+                            //Scroll to bottom and blink detail
+                            this._focusDetail = true;
+                        }
+                        this._focusDetail = true;
+                        console.log("SSS");
+                    }else /*if(typeof moduleFoundResponse == DialogResponses)*/{ // canceled waitingDialog
+                        //Remove module from database
+                        if (IDs.length >= 2) {
+                            //this.selectedItemsIDHierarchy.splice(1);
+                            moduleAdditionCanceled = true;
+                            console.log("cancel=>delete at: /rooms/" + IDs[0] + "/devices/" + IDs[1]);
+                            Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]);
+                        }
+                    }
+                }
+                this._focusDetail = true;
 
 
             } else if (clickedElem == "delete") {

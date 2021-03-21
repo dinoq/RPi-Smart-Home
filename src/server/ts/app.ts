@@ -1,7 +1,7 @@
 
 var express = require('express');
 var path = require('path');
-const config = require("../config.json");
+const config = require("../config.js");
 const bodyParser = require('body-parser')
 const Firebase = require('./firebase.js');
 const CommunicationMngr = require('./communication-manager.js');

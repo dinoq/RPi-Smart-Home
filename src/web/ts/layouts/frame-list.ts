@@ -12,6 +12,7 @@ export class FrameList extends AbstractComponent {
     defaultItem: FrameListItem;
     addItemBtn: FrameListItem;
     type: FrameListTypes;
+    FLItems: FrameListItem[] = new Array();
 
     constructor(type: FrameListTypes, layoutProps?: IComponentProperties) {
         super({
@@ -100,6 +101,19 @@ export class FrameList extends AbstractComponent {
     addItems(item: FrameListItem | FrameListItem[], index: number = -1) {
         this.appendComponents(item, index);
         this.updatedOrderHandler();
+
+        let addToFLItems = (itm: FrameListItem) =>{
+            if(Utils.itemIsAnyFromEnum(itm.type, FrameListTypes, CLASSIC_FRAME_LIST_TYPES)){
+                this.FLItems.push(itm);
+            }
+        };
+        if(Array.isArray(item)){
+            item.forEach((itm) =>{
+                addToFLItems(itm);
+            })
+        }else{
+            addToFLItems(item);
+        }
     }
 
 }
@@ -249,6 +263,7 @@ export class FrameListItem extends AbstractComponent {
 }
 
 export const ARROWABLE_LISTS: string[] = ["ROOMS", "MODULES", "SENSORS", "DEVICES"];
+export const CLASSIC_FRAME_LIST_TYPES: string[] = ["ROOMS", "MODULES", "SENSORS", "DEVICES"];
 export enum FrameListTypes {
     BASE,
     SENSORS,
@@ -279,7 +294,8 @@ export const DBTemplates = {
             out: {
             },
             name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "wemosD1"
+            type: "wemosD1",
+            IP: ""
         }
     },
     get SENSORS() {
