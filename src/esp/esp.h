@@ -12,8 +12,6 @@
 
 #include "memory.h"
 
-
-
 /**
  * Function prototypes PART END
  * */
@@ -51,56 +49,54 @@ typedef struct SInfo SensorInfo;
 /**
  * Function prototypes PART BEGIN
  * */
+
+void setup();
+
+void loop();
+
 void checkRPiConn();
 void checkMulticast();
-void callback_set_io(CoapPacket &packet, IPAddress ip, int port); //??
-void callback_observe_input(CoapPacket &packet, IPAddress ip, int port);
-void callback_change_observed_input(CoapPacket &packet, IPAddress ip, int port);
-void callback_set_id(CoapPacket &packet, IPAddress ip, int port);
-void callback_reset_module(CoapPacket &packet, IPAddress ip, int port);
-void reset_module();
-void resetFromMemory();
-
-void callback_response(CoapPacket &packet, IPAddress ip, int port);
-
 void checkInValues();
-
+void initIfBMP280AndNotInited(byte IN);
+float getSensorVal(SensorInfo sInfo);
+float getSensorVal(byte val_type, byte IN);
+float getI2CVal(byte IN);
 bool isDifferentEnough(float oldVal, float newVal, byte IN);
-
 bool valueIsIn(byte val, byte arr[]);
 
-//float readSensorVal(char input[]);
+void callbackResponse(CoapPacket &packet, IPAddress ip, int port);
 
-SensorInfo getSensorInfo(char input[]);
-
-void printMemory(String msg);
-
+void callbackSetId(CoapPacket &packet, IPAddress ip, int port);
 void setRPiIP(IPAddress ip);
 void setModuleID(char ID[], byte idLen);
+void callbackResetModule(CoapPacket &packet, IPAddress ip, int port);
+void resetModule();
+void callbackSetOutput(CoapPacket &packet, IPAddress ip, int port);
+void callbackObserveInput(CoapPacket &packet, IPAddress ip, int port);
+void callbackStopInputObservation(CoapPacket &packet, IPAddress ip, int port);
+SensorInfo getSensorInfo(char input[]);
+bool alreadyWatched(SensorInfo sInfo);
+void callbackChangeObservedInput(CoapPacket &packet, IPAddress ip, int port);
 
+void resetFromMemory();
+void printMemory(String msg);
 
-float getSensorVal(byte val_type, byte IN);
-float getSensorVal(SensorInfo sInfo);
-
-
-void initIfBMP280AndNotInited(byte IN);
 
 /**
  * Function prototypes PART BEGIN
  * */
 
-
 const byte WATCHED_IN_LIMIT = 20;
 
-const float INVALID_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
+const float INVALID_SENSOR_VALUE = -1000000000.0;       // "Random" value, which will probably not be used in any sensor as valid value
 const float UNINITIALIZED_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
-const int SENSOR_CHECK_TIME = 5000; // How often check for sensors values (in ms)
+const int SENSOR_CHECK_TIME = 5000;                     // How often check for sensors values (in ms)
 
-const byte SENSOR_INFO_MEM_ADDR = 7; // Address of beginning of SensorInfos in flash memory. It is saved after string "IP:????" => 7
+const byte SENSOR_INFO_MEM_ADDR = 7;       // Address of beginning of SensorInfos in flash memory. It is saved after string "IP:????" => 7
 const byte SENSOR_INFO_DATA_MEM_ADDR = 13; // "IP:????SInfo:" => 13
-const byte ID_MEM_ADDR = 53; // Address of beginning of module ID in flash memory. It is saved after string "IP:????SInfo:(byte+byte)*20" => 13+(1+1)*20 => 53
-const byte ID_MEM_DATA_ADDR = 56; // "IP:????SInfo:(byte+byte)*20ID:" => 13+(1+1)*20+3 => 56
-const byte USED_MEM_END = 77; // Address of end of flash memory. "IP:????SInfo:(byte+byte)*20ID:(byte)*21 [ID is 20 chars in firebase + null terminator] => 13+(1+1)*20+3+21 => 156
+const byte ID_MEM_ADDR = 53;               // Address of beginning of module ID in flash memory. It is saved after string "IP:????SInfo:(byte+byte)*20" => 13+(1+1)*20 => 53
+const byte ID_MEM_DATA_ADDR = 56;          // "IP:????SInfo:(byte+byte)*20ID:" => 13+(1+1)*20+3 => 56
+const byte USED_MEM_END = 77;              // Address of end of flash memory. "IP:????SInfo:(byte+byte)*20ID:(byte)*21 [ID is 20 chars in firebase + null terminator] => 13+(1+1)*20+3+21 => 156
 
 const byte UNSET = 254;
 const byte UNKNOWN = 255;
@@ -125,7 +121,7 @@ typedef enum
 
 struct SInfo
 {
-    byte IN; //Pin number or I2C_IN_TYPE
+    byte IN;       //Pin number or I2C_IN_TYPE
     byte val_type; // ANALOG/DIGITAL/I2C
     float val;
 };

@@ -21,14 +21,15 @@ DOTAZY KE ZDROJŮM
 -u  web článků bez autora kde je jasné že to psal někdo za organizaci -napsat tu organizaci? (např. arduino nebo když oracle má definici databáze https://www.oracle.com/cz/database/what-is-database/)
 -Mám se u online zdrojů zabývat jejich proměnnou? Např. když se změní datum revize/cesta k článku apod...(jako jestli je mám průběžně aktualizovat když si toho všimnu)?
 
-dotazy ke kódu:
+dotazy k realizační části:
 Jsou komentáře v kódu nezbytné?
 Zkouší komise kód? Co když nepujde spustit?
-Mohu popisovat že nějakou část bude možné rozšířit? (Např menu o položky správy místností apod)
+Mohu intenzivně v realizační části popisovat že nějakou část bude možné rozšířit? (Např menu o položky správy místností apod)
 mohu nechat uživatele vpisovat informace do kodu (SSID wifi, či IP RPi) aby si sám program zkompiloval a poslal do esp?
-
+Mohou být v BP fotky nepajívého pole?
+Počítá se s tím, že zařízení nějak "donesu" ukázat na obhajobu?
+Musí být kód bez bugů?
 
 
 Dotazy na později:
-Počítá se s tím, že zařízení nějak "donesu" ukázat na obhajobu?
 Jak přesně citovat obrázky?

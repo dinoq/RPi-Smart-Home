@@ -115,7 +115,7 @@ module.exports = class CommunicationManager {
         this.coapRequest(ip, "/set-id", "", "PUT", id, null, (err) => {
             // module didnt recieve its new ID
             console.log("Module didnt recieve its new ID");
-        }, false);
+        }, true);
     }
     async putVal(ip, pin, val) {
         this.coapRequest(ip, "/set-output", "pin=" + pin, "PUT", val.toString(), null, null);
@@ -123,13 +123,19 @@ module.exports = class CommunicationManager {
     ObserveInput(ip, input) {
         return new Promise((resolve, reject) => {
             this.coapRequest(ip, "/observe-input", "input=" + input, "PUT", null, (res) => {
-                /*const prefixLen = "ESP-get-val:".length;
-                const val = res.payload.toString().substring(prefixLen);
-                */
-                console.log("listen-to res" + res.payload.toString());
                 resolve(res.payload.toString());
             }, (err) => {
-                console.log('No reply in 5s from ' + ip);
+                console.log("ObserveInput err: " + err.message + " from " + ip);
+                reject(err);
+            }, true);
+        });
+    }
+    stopInputObservation(ip, input) {
+        return new Promise((resolve, reject) => {
+            this.coapRequest(ip, "/stop-input-observation", "input=" + input, "PUT", null, (res) => {
+                resolve(res.payload.toString());
+            }, (err) => {
+                console.log("stopInputObservation err: " + err.message + " from " + ip);
                 reject(err);
             }, true);
         });
@@ -142,7 +148,7 @@ module.exports = class CommunicationManager {
             console.log('changeObservedInput err: ', err);
         }
     }
-    async resetRPiServer(ip) {
-        this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, false);
+    async resetModule(ip) {
+        this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, true);
     }
 };
