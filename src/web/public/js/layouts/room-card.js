@@ -271,7 +271,7 @@ export class RoomSensor extends AbstractComponent {
         }
         else if (sensor.unit == "percentages") {
             unitText = "%";
-            valueText = (Math.round(sensor.value / 1023) * 100).toString();
+            valueText = (Math.round((sensor.value * 100) / 1023)).toString();
         }
         else if (sensor.unit == "number") {
             unitText = "";

@@ -17,7 +17,7 @@ module.exports = class CommunicationManager {
             ackTimeout: 0.25,
             ackRandomFactor: 1.0,
             maxRetransmit: 2,
-            maxLatency: 2,
+            maxLatency: 3,
             piggybackReplyMs: 10
         };
         coap.updateTiming(coapTiming);
@@ -65,6 +65,15 @@ module.exports = class CommunicationManager {
             const socket = dgram.createSocket({ type: "udp4" });
             socket.addMembership(COnfig.COAP_MULTICAST_ADDR, localIP);
 
+            this.coapRequest(COnfig.COAP_MULTICAST_ADDR, "/hello-client", "", "GET", null, (response)=>{
+                resolve({ espIP: response.rsinfo.address, boardType: response.payload.toString().substring("TYPE:".length)});
+            }, (err)=>{
+                reject(err.message);
+            });
+            /*
+            const socket = dgram.createSocket({ type: "udp4" });
+            socket.addMembership(COnfig.COAP_MULTICAST_ADDR, localIP);
+
             const message = "HELLO-CLIENT";
             socket.send(message, 0, message.length, COnfig.COAP_PORT, COnfig.COAP_MULTICAST_ADDR, function () {
                 console.info(`Sending message "${message}"`);
@@ -72,6 +81,7 @@ module.exports = class CommunicationManager {
 
             let espIP = null;
             socket.on("message", function (message, rinfo) {
+                console.log('message: ', message);
                 if (espIP)
                     return;
                 espIP = rinfo.address;
@@ -79,20 +89,25 @@ module.exports = class CommunicationManager {
             });
             setTimeout(() => { // time limit for any ESP to respond... If no ESP has been founded, it should be removed from DB
                 reject("No module founded!");
-            }, COnfig.NEW_MODULE_FIND_TIMEOUT);
+            }, COnfig.NEW_MODULE_FIND_TIMEOUT);*/
 
         })
     }
 
     private coapRequest(ip: string, pathname: string, query: string, method: string, 
-        valToWrite: null | string, onResponse: any, onError: any, confirmable: boolean = true) {
-        let req = coap.request({
+        valToWrite: null | string, onResponse: any, onError: any, confirmable: boolean = true, multicast: boolean = false) {
+        let params: any = {
             host: ip,
             pathname: pathname,
             query: query,
             method: method,
-            confirmable: confirmable
-        });
+            confirmable: confirmable,
+            multicast: multicast
+        };
+        if(multicast)
+            params.multicastTimeout = 5000;
+            
+        let req = coap.request(params);
 
         if (valToWrite != null)
             req.write(valToWrite);
@@ -144,8 +159,11 @@ module.exports = class CommunicationManager {
         }, true);
     }
 
-    public async putVal(ip: string, pin: string, val: string) {
-        this.coapRequest(ip, "/set-output", "pin=" + pin, "PUT", val.toString(), null, null);
+
+    public async putVal(ip: string, output: string, val: string) {
+        console.log("T putVal1: " + Math.round(Date.now() / 100));
+        this.coapRequest(ip, "/set-output", "pin=" + output, "PUT", val.toString(), null, null);
+        console.log("T putVal 2: " + Math.round(Date.now() / 100));
     }
 
     public ObserveInput(ip: string, input: string) {
@@ -154,7 +172,7 @@ module.exports = class CommunicationManager {
                 resolve(res.payload.toString());
             }, (err)=> {
                 console.log("ObserveInput err: "+err.message+ " from " + ip);
-                reject(err);
+                reject(err.message);
             }, true);
         });
     }
@@ -165,7 +183,7 @@ module.exports = class CommunicationManager {
                 resolve(res.payload.toString());
             }, (err)=> {
                 console.log("stopInputObservation err: "+err.message+ " from " + ip);
-                reject(err);
+                reject(err.message);
             }, true);
         });
     }
@@ -174,7 +192,7 @@ module.exports = class CommunicationManager {
         try {
             await this.coapRequestAsync(ip, "/change-observed-input", "old=" + oldInput + "&new=" + newInput, "PUT", null, true);        
         } catch (err) {
-            console.log('changeObservedInput err: ', err);            
+            console.log('changeObservedInput err: ', err.message);            
         }
     }
 

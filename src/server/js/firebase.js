@@ -67,12 +67,12 @@ module.exports = class Firebase {
                 console.log('change.data.id: ', change.data.id);
                 setTimeout(() => {
                     this._communicationManager.ObserveInput(debugIP, "A17").catch((value) => {
-                        console.log('err1 value: ', value.message);
+                        console.log('err1 value: ', value);
                     });
                 }, 2000);
                 setTimeout(() => {
                     this._communicationManager.ObserveInput(debugIP, "I2C-SHT21-teplota").catch((value) => {
-                        console.log('err2 value: ', value.message);
+                        console.log('err2 value: ', value);
                     });
                 }, 2000);
                 setTimeout(() => {
@@ -192,11 +192,12 @@ module.exports = class Firebase {
                 const localDevices = (localModules && localModules[moduleID]) ? localModules[moduleID]["OUT"] : undefined;
                 for (const deviceID in devices) {
                     const device = (devices) ? devices[deviceID] : undefined;
-                    const localDevice = (devices) ? localDevices[deviceID] : undefined;
+                    const localDevice = (localDevices) ? localDevices[deviceID] : undefined;
                     if (!localDevice) { // Device was added (send "new" value to ESP)
                         this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: devices[deviceID].output.toString(), value: devices[deviceID].value.toString() } });
                     }
                     else if (device.value != localDevice.value) { // Device value changed
+                        console.log("T changed: " + Math.round(Date.now() / 100));
                         this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: devices[deviceID].output.toString(), value: devices[deviceID].value.toString() } });
                     }
                 }
@@ -204,11 +205,8 @@ module.exports = class Firebase {
         }
         //Compare local saved DB with received in order to detect removed things
         for (const localRoomID in localRooms) {
-            if (!this._dbCopy || !this._dbCopy["rooms"]) { // first room added...
-                break;
-            }
             const room = (newRooms) ? newRooms[localRoomID] : undefined;
-            if (!room) { // room was removed
+            if (!room) { // ROOM was removed
                 this.changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.ROOM, data: { path: localRoomID } });
             }
             const localRoom = (localRooms) ? localRooms[localRoomID] : undefined;
@@ -216,7 +214,7 @@ module.exports = class Firebase {
             const localModules = (localRoom) ? localRoom["devices"] : undefined;
             for (const localModuleID in localModules) {
                 const module = (modules) ? modules[localModuleID] : undefined;
-                if (!module) { // module was removed
+                if (!module) { // MODULE was removed
                     this.changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.MODULE, data: { ip: localModules[localModuleID].IP } });
                 }
                 const localModule = (localModules) ? localModules[localModuleID] : undefined;
@@ -224,22 +222,20 @@ module.exports = class Firebase {
                 const localSensors = (localModule && localModule["IN"]) ? localModule["IN"] : undefined;
                 for (const localSensorID in localSensors) {
                     const sensor = (sensors) ? sensors[localSensorID] : undefined;
-                    if (!sensor) { // Sensor was removed
+                    if (!sensor) { // SENSOR was removed
                         this.changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: localModule.IP, input: localSensors[localSensorID].input.toString() } });
                     }
                 }
+                const devices = (module && module["OUT"]) ? module["OUT"] : undefined;
+                const localDevices = (localModule && localModule["OUT"]) ? localModule["OUT"] : undefined;
+                for (const localDeviceID in localDevices) {
+                    const device = (devices) ? devices[localDeviceID] : undefined;
+                    if (!device) { // DEVICE was removed
+                        this.changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: localModule.IP, output: localDevices[localDeviceID].output.toString() } });
+                    }
+                }
             }
-            /*if (newRoomsIDs.includes(localRoomID)) { // New rooms doesn't contain localRoomID from local saved rooms => room was deleted
-                newRoomsIDs.splice(newRoomsIDs.indexOf(localRoomID), 1);
-            } else {
-                this.changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.ROOM, data: { path: localRoomID } });
-            }*/
         }
-        /*for (const roomID of newRoomsIDs) {
-            this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, data: { path: roomID } });
-            newRoomsIDs.splice(newRoomsIDs.indexOf(roomID), 1);
-        }*/
-        //console.log('zustalo: ', newRoomsIDs);
         this._dbCopy = data;
     }
     _processDbChanges() {
@@ -248,7 +244,9 @@ module.exports = class Firebase {
             let index = this.changes.indexOf(change);
             this.changes.splice(index, 1); // Remove change
             if (change.level == DevicesTypes.ROOM) { // ROOM LEVEL CHANGES
-                //TODO: remove all modules on removing non-empty room
+                if (change.type == ChangeMessageTypes.REMOVED) { // ROOM was removed => reset all modules from that room...
+                    //TODO: remove all modules on removing non-empty room
+                }
             }
             else if (change.level == DevicesTypes.MODULE) { // MODULE LEVEL CHANGES
                 if (change.type == ChangeMessageTypes.ADDED) { // Module was added => init communication
@@ -257,7 +255,7 @@ module.exports = class Firebase {
                         this._communicationManager.sendESPItsID(espIP, change.data.id);
                         console.log('change.data.id: ', change.data.id);
                     }).catch((err) => {
-                        console.log('err: ', err.message, "deleting: " + change.data.path);
+                        console.log('initCommunicationWithESP err: ', err, "deleting: " + change.data.path);
                         this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).remove();
                     });
                 }
@@ -270,14 +268,16 @@ module.exports = class Firebase {
                 if (change.type == ChangeMessageTypes.ADDED) { // Sensor was added => listen to new values
                     this._communicationManager.ObserveInput(change.data.ip, change.data.input)
                         .catch((err) => {
-                        console.log('listenTo err', err.message);
+                        console.log('listenTo err', err);
                     });
                 }
                 else if (change.type == ChangeMessageTypes.REPLACED) { // Sensor was added => listen to new values
                     this._communicationManager.changeObservedInput(change.data.ip, change.data.input);
                 }
                 else if (change.type == ChangeMessageTypes.REMOVED) {
-                    this._communicationManager.stopInputObservation(change.data.ip, change.data.input);
+                    this._communicationManager.stopInputObservation(change.data.ip, change.data.input).catch((err) => {
+                        console.log('stopInputObservation err: ', err);
+                    });
                 }
             }
             else if (change.level == DevicesTypes.DEVICE) { // DEVICE LEVEL CHANGES
@@ -285,6 +285,9 @@ module.exports = class Firebase {
                     console.log("change val");
                     if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
                         this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
+                }
+                else if (change.type == ChangeMessageTypes.REMOVED) {
+                    //nothing needs to be done.
                 }
             }
         }

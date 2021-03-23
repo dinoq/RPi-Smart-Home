@@ -134,8 +134,11 @@ export abstract class AbstractComponent extends Component {
     }
 
     disconnectComponent() {
-        this.parent.removeChild(this);
-        this.componentConnected = false;
+        try{
+            this.parent.removeChild(this);
+        }finally{
+            this.componentConnected = false;
+        }
     }
 
     // Appends one or more custom element (successor of AbstractComponent) to this. For appending pre-defined DOM elements (like div, table etc.) use method appendDOMComponents()

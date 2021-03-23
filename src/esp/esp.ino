@@ -1,7 +1,7 @@
 #include "esp.h"
 
 WiFiUDP Udp;
-IPAddress multicastIP(224, 0, 1, 187);
+IPAddress multicastIP(224, 0, 1, 180);//187
 IPAddress RpiIP;
 String moduleID;
 char incomingPacket[255]; // buffer for incoming packets
@@ -63,11 +63,12 @@ void setup()
     coap.server(callbackStopInputObservation, "stop-input-observation");
     coap.server(callbackChangeObservedInput, "change-observed-input");
     coap.server(callbackResetModule, "reset-module");
+    coap.server(callbackHelloClient, "hello-client");
     coap.server(callbackSetId, "set-id");
 
     coap.response(callbackResponse);
 
-    Udp.beginMulticast(WiFi.localIP(), multicastIP, CoAPPort);
+    Udp.beginMulticast(WiFi.localIP(), multicastIP, CoAPPort); // In order to enable listening on multicast
     Serial.printf("Now listening at IP %s IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), multicastIP.toString().c_str(), CoAPPort);
 
     coap.start();
@@ -79,8 +80,8 @@ void setup()
 void loop()
 {
     delay(SENSOR_CHECK_TIME);
-    checkRPiConn();
-    checkMulticast();
+    //checkRPiConn();
+    //checkMulticast();
     coap.loop();
     checkInValues();
 }
@@ -121,13 +122,16 @@ void checkMulticast()
 
             String helloClientMsg = "HELLO-CLIENT";
             String getIDMsg = "GET-ID";
+            bool reply = false;
             if (String(incomingPacket).equals(helloClientMsg) && !RpiIP.isSet())
             {
                 ("TYPE:" + boardType).toCharArray(replyPacket, sizeof(replyPacket));
+                reply = true;
             }
             else if (lastConnectedToRPi >= withoutConnTimeLimit && moduleID.length() > 0) // Case, when IP address was changed (either of Raspberry Pi or of module). Module send back its ID to update IP in database in case of change
             {
                 ("reply-ID:" + moduleID).toCharArray(replyPacket, sizeof(replyPacket));
+                reply = true;
             }
             else if (RpiIP.isSet())
             { // don't send anything back, but also don't fall into else (error)
@@ -136,10 +140,12 @@ void checkMulticast()
             {
                 Serial.println("-CHYBA: Neznámá zpráva v příchozím UDP paketu ve funkci checkMulticast()!");
             }
-            Serial.println("replyPacket:" + String(replyPacket));
-            Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-            Udp.write(replyPacket);
-            Udp.endPacket();
+            if(reply){
+              Serial.println("replyPacket:" + String(replyPacket));
+              Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+              Udp.write(replyPacket);
+              Udp.endPacket();
+            }
         }
     }
 }
@@ -245,6 +251,9 @@ float getSensorVal(byte val_type, byte IN)
     return val;
 }
 
+/**
+ * Function reads and returns sensor value (specified by IN)
+ */
 float getI2CVal(byte IN)
 {
     float val = INVALID_SENSOR_VALUE;
@@ -261,6 +270,9 @@ float getI2CVal(byte IN)
     return val;
 }
 
+/**
+ * Function determine and returns if new value is different enough from old value to send it to server (we don't want to send to server for example when temperature changes by 0.001 °C)
+ */
 bool isDifferentEnough(float newVal, float oldVal, byte IN)
 {
     float diff = fabs(oldVal - newVal);
@@ -277,7 +289,7 @@ bool isDifferentEnough(float newVal, float oldVal, byte IN)
     }
     else if (IN >= 0 && IN < BMP280_TEMP)
     {
-        return (diff >= 3); // For pins consider 3 as enough difference
+        return (diff >= 5); // For pins consider 5 as enough difference
     }
     else
     {
@@ -287,6 +299,9 @@ bool isDifferentEnough(float newVal, float oldVal, byte IN)
     return false;
 }
 
+/**
+ * Function check if array arr contains value val
+ */
 bool valueIsIn(byte val, byte arr[])
 {
     for (int i = 0; i < (sizeof(arr) / sizeof(arr[0])); i++)
@@ -309,15 +324,37 @@ void callbackResponse(CoapPacket &packet, IPAddress ip, int port)
     Serial.println(p);
 }
 
-// CoAP server endpoint URL for setting module ID (from database)
-void callbackSetId(CoapPacket &packet, IPAddress ip, int port)
+/** 
+ * Called when Raspberry Pi server is looking for new module. 
+ * It can't save Raspberry Pi IP address. It is saved after Server accept response and send module new ID. 
+ * So IP is saved in function callbackSetId()
+ */
+void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port)
 {
-    if (moduleID.length() > 0)
+    if (RpiIP.isSet())
         return;
 
-    setRPiIP(ip);
+    Serial.println("callbackHelloClient");
+    Serial.println(RpiIP.toString());
+    Serial.println(RpiIP.isSet());
+    lastConnectedToRPi = 0;
+
+    char replyPacket[40]; // a reply string to send back
+    ("TYPE:" + boardType).toCharArray(replyPacket, sizeof(replyPacket));
+    coap.sendResponse(ip, port, packet.messageid, replyPacket, strlen(replyPacket), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+}
+
+/**
+ * Called when server choosed module as new module and send to it its new ID. Now module can save server IP.
+ */
+void callbackSetId(CoapPacket &packet, IPAddress ip, int port)
+{
+    if (moduleID.length() > 0 || RpiIP.isSet())
+        return;
 
     Serial.println("callbackSetId");
+
+    setRPiIP(ip);
 
     lastConnectedToRPi = 0;
 
@@ -405,24 +442,24 @@ void callbackSetOutput(CoapPacket &packet, IPAddress ip, int port)
 {
     if (!RpiIP.isSet())
         return;
+        
+    coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+    Serial.println("callbackSetOutput");
 
-    Serial.println("Set IO");
     lastConnectedToRPi = 0;
-
+    
     CoapOption option;
-    for (int i = 0; i < COAP_MAX_OPTION_NUM; i++)
+    for (int i = 0; i < packet.optionnum; i++)
     {
         option = packet.options[i];
         if (!option.length)
             continue;
         if (option.number == COAP_URI_QUERY)
         {
-            Serial.print("query at i:");
-            Serial.println(i);
             break;
         }
     }
-    if (option.number != COAP_URI_QUERY && !option.length)
+    if (packet.optionnum == 0 || option.number != COAP_URI_QUERY)
     {
         return;
         //TODO :coap.sendResponse ??
@@ -435,20 +472,15 @@ void callbackSetOutput(CoapPacket &packet, IPAddress ip, int port)
     String pin = String(queryOpt).substring(pinPrefixLen);
     bool digital = pin.substring(0, 1).equals("D"); // If first char is D => digital pin. Analog otherwise.
     int pinNumber = pin.substring(1).toInt();       //Here we use pin number directly (without constants like A0, D5 etc...)
-    Serial.println("queryOpt:" + String(queryOpt));
-    Serial.println("pin:" + pin);
-    Serial.println("digital:" + String(digital));
 
     char p[packet.payloadlen + 1];
     memcpy(p, packet.payload, packet.payloadlen);
     p[packet.payloadlen] = NULL;
-    String payload(p);
 
-    int valueToSet = payload.toInt();
+    int valueToSet = atoi(p);
     pinMode(pinNumber, OUTPUT);
     if (digital)
     { // Digital pin
-        Serial.println(valueToSet);
         if (valueToSet > 512)
         {
             digitalWrite(pinNumber, LOW);
@@ -465,15 +497,8 @@ void callbackSetOutput(CoapPacket &packet, IPAddress ip, int port)
         analogWrite(pinNumber, valueToSet);
         Serial.println("ANALOG:" + String(valueToSet));
     }
-
-    /*String responseStr = "set A/D: " + pin.substring(0, 1) + ", val: " + valueToSet + ", pin: " + pinNumber;
-    char response[responseStr.length()];
-    strncpy(response, responseStr.c_str(), responseStr.length());
-    response[sizeof(response) - 1] = 0;
-
-    coap.sendResponse(ip, port, packet.messageid, response, sizeof(response), COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);*/
-
-    coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+    
+    return;
 }
 
 // CoAP server endpoint URL
@@ -486,7 +511,7 @@ void callbackObserveInput(CoapPacket &packet, IPAddress ip, int port)
     lastConnectedToRPi = 0;
 
     CoapOption option;
-    for (int i = 0; i < COAP_MAX_OPTION_NUM; i++)
+    for (int i = 0; i < packet.optionnum; i++)
     {
         option = packet.options[i];
         if (!option.length)
@@ -512,7 +537,7 @@ void callbackObserveInput(CoapPacket &packet, IPAddress ip, int port)
     SensorInfo info = getSensorInfo(inputCh);
     if (!alreadyWatched(info))
     {
-        Serial.println("unikátni listem");
+        Serial.println("unikátni listen");
         mem.writeByte(SENSOR_INFO_DATA_MEM_ADDR + watchedINIndex * 2, info.IN);
         mem.writeByte(SENSOR_INFO_DATA_MEM_ADDR + watchedINIndex * 2 + 1, info.val_type);
         mem.commit();
@@ -529,12 +554,9 @@ void callbackObserveInput(CoapPacket &packet, IPAddress ip, int port)
         Serial.println(watched[watchedINIndex - 1].val);
         Serial.println(watched[watchedINIndex - 1].val_type);
     }
-    else
-    {
-        //Serial.println("NEEEEEunikátni listem");
-    }
 
     coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+    return;
 }
 
 // CoAP server endpoint URL
@@ -547,7 +569,7 @@ void callbackStopInputObservation(CoapPacket &packet, IPAddress ip, int port){
     lastConnectedToRPi = 0;
 
     CoapOption option;
-    for (int i = 0; i < COAP_MAX_OPTION_NUM; i++)
+    for (int i = 0; i < packet.optionnum; i++)
     {
         option = packet.options[i];
         if (!option.length)
@@ -590,6 +612,7 @@ void callbackStopInputObservation(CoapPacket &packet, IPAddress ip, int port){
     }
     
     coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
+    return;
 }
 SensorInfo getSensorInfo(char input[])
 {
@@ -686,7 +709,7 @@ void callbackChangeObservedInput(CoapPacket &packet, IPAddress ip, int port)
     lastConnectedToRPi = 0;
 
     CoapOption option;
-    for (int i = 0; i < COAP_MAX_OPTION_NUM; i++)
+    for (int i = 0; i < packet.optionnum; i++)
     {
         option = packet.options[i];
         if (!option.length)

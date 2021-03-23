@@ -61,6 +61,7 @@ export class Firebase extends Singleton {
             const data = snapshot.val();
             callback(data);
         });
+        return dbReference;
 
     }
 

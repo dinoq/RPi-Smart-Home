@@ -68,6 +68,7 @@ void callbackResponse(CoapPacket &packet, IPAddress ip, int port);
 
 void callbackSetId(CoapPacket &packet, IPAddress ip, int port);
 void setRPiIP(IPAddress ip);
+void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port);
 void setModuleID(char ID[], byte idLen);
 void callbackResetModule(CoapPacket &packet, IPAddress ip, int port);
 void resetModule();
@@ -80,6 +81,8 @@ void callbackChangeObservedInput(CoapPacket &packet, IPAddress ip, int port);
 
 void resetFromMemory();
 void printMemory(String msg);
+
+
 
 
 /**

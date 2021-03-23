@@ -256,6 +256,21 @@ void setup() {
     Serial.print(prefix[i]);
   }
   Serial.println();
+
+  Serial.println("toCharArray");
+  String boardType = "wemosD1"; // Any from [wemosD1, NodeMCU]  
+  char replyPacket[40]; // a reply string to send back
+  ("TYPE:" + boardType).toCharArray(replyPacket, sizeof(replyPacket));
+  for(int i = 0; i < sizeof(replyPacket); i++){
+    Serial.print((char)replyPacket[i]);
+        Serial.print(", ");
+  }
+  Serial.println();
+  for(int i = 0; i < sizeof(replyPacket); i++){
+    Serial.print((int)replyPacket[i]);
+        Serial.print(", ");
+  }
+  Serial.println();
 }
 
 void loop() {

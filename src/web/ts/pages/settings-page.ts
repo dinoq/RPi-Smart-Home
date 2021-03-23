@@ -135,9 +135,11 @@ export class SettingsPage extends BasePage {
         } else if (listType == FrameListTypes.DEVICES) {
             let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
             let output = (<HTMLInputElement>document.getElementById("output")).value;
+            let outputType = (<HTMLInputElement>document.getElementById("output-type")).value;
 
             update.icon = iconType;
             update.output = output;
+            update.type = outputType;
             path = this.itemInDetail.item.dbCopy.path;
         }
         if (Object.keys(update).length != 0) { // If is there something to update...
@@ -412,9 +414,9 @@ export class SettingsPage extends BasePage {
                     let moduleAdditionCanceled = false;
                     let waitingForModuleResponsePromise: Promise<any> = waitingDialog.show();
                     let IDs = this.selectedItemsIDHierarchy;
-
+                    let fbReference = null;
                     if (IDs.length >= 2) {
-                        Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
+                        fbReference = Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
                             console.log('data: ', data);  
                             console.log('waitingDialog: ', waitingDialog);
                             if(!moduleAdditionCanceled){
@@ -425,8 +427,6 @@ export class SettingsPage extends BasePage {
                                     }else{ // Module IP exists, thus module has been founded
                                         waitingDialog.resolveShow(moduleHasBeenFoundResponse);         
                                     }                    
-                                    waitingDialog.remove();
-                                    this.pageReinicialize();
                                 }
                             }
                         });
@@ -443,14 +443,18 @@ export class SettingsPage extends BasePage {
                             this._focusDetail = true;
                         }
                         this._focusDetail = true;
-                        console.log("SSS");
-                    }else /*if(typeof moduleFoundResponse == DialogResponses)*/{ // canceled waitingDialog
-                        //Remove module from database
+                        waitingDialog.remove();
+                        this.pageReinicialize();
+                        fbReference.off(); // remove firebase listener
+                    }else if (typeof moduleFoundResponse == "number") { // waitingDialog canceled
+                        if(fbReference)
+                            fbReference.off(); // remove firebase listener
                         if (IDs.length >= 2) {
-                            //this.selectedItemsIDHierarchy.splice(1);
                             moduleAdditionCanceled = true;
                             console.log("cancel=>delete at: /rooms/" + IDs[0] + "/devices/" + IDs[1]);
-                            Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]);
+                            Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
+                            this.selectedItemsIDHierarchy.splice(1);
+                            this.pageReinicialize();
                         }
                     }
                 }
