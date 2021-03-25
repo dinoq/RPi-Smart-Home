@@ -20,7 +20,7 @@
  * CONFIG PART BEGIN (recommended to change)
  */
 
-String boardType = "NodeMCU"; // Any from [wemosD1, NodeMCU]
+String boardType = "wemosD1"; // Any from [wemosD1, NodeMCU]
 const char *ssid = "sprintel_antlova";
 const char *password = "netis111";
 /**
@@ -96,9 +96,11 @@ const float INVALID_SENSOR_VALUE = -1000000000.0;       // "Random" value, which
 const float UNINITIALIZED_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
 const int SENSOR_CHECK_TIME = 500;                     // How often check for sensors values (in ms)
 
-const byte ID_MEM_ADDR = 7;       // Address of beginning of SensorInfos in flash memory. It is saved after string "IP:????" => 7
-const byte ID_MEM_DATA_ADDR = 10;          // "IP:????ID:" => 7+3
-const byte USED_MEM_END = 31;              // Address of end of used flash memory. "IP:????ID:(byte)*21 [ID is 20 chars in firebase + null terminator] => 10+21 => 31
+const byte SENSOR_INFO_MEM_ADDR = 7;       // Address of beginning of SensorInfos in flash memory. It is saved after string "IP:????" => 7
+const byte SENSOR_INFO_DATA_MEM_ADDR = 13; // "IP:????SInfo:" => 13
+const byte ID_MEM_ADDR = 53;               // Address of beginning of module ID in flash memory. It is saved after string "IP:????SInfo:(byte+byte)*20" => 13+(1+1)*20 => 53
+const byte ID_MEM_DATA_ADDR = 56;          // "IP:????SInfo:(byte+byte)*20ID:" => 13+(1+1)*20+3 => 56
+const byte USED_MEM_END = 77;              // Address of end of flash memory. "IP:????SInfo:(byte+byte)*20ID:(byte)*21 [ID is 20 chars in firebase + null terminator] => 13+(1+1)*20+3+21 => 156
 
 const byte UNSET = 254;
 const byte UNKNOWN = 255;

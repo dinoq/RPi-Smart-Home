@@ -14,18 +14,6 @@ void Memory::clear(short fromAddr, short toAddr){
     EEPROM.commit();
 }
 
-void Memory::setAllSensorsInfos(short from, char count, char IN, char val_type){
-    char prefix[] = "SInfo:";
-    addr = from;
-    writeString(prefix, strlen(prefix));
-  
-    for(int i = 0; i < count; i++){
-        writeByte(IN);
-        writeByte(val_type);
-    }
-    EEPROM.commit();
-}
-
 void Memory::commit(){
     EEPROM.commit();
 }

@@ -18,6 +18,10 @@ export class RoomCard extends AbstractComponent {
     sensorsStack: VerticalStack;
     rightStack: VerticalStack;
     slider: Slider;
+    _sliderDbUpdateTimeout: any = undefined; // Timeout of sending values from slider to DB. We don't want to send every single value, but in time intervals (if value changes)...
+    _sliderDbUpdateTimeoutTime: number = 1000; // Number of ms between sending values from slider to DB. See _sliderDbUpdateTimeout for more info.
+    private _sliderBbUpdateInfo: {path: string, val: string} = undefined; // path to update in database on slider value changed and actual val
+
     idOfSelectedDevices: string = "";
 
     constructor(layoutProps?: RoomCardProps) {
@@ -232,7 +236,14 @@ export class RoomCard extends AbstractComponent {
         if (this.idOfSelectedDevices) {
             //this.sliderActiveFor.updateVal(value); NOT SET VALUE DIRECTLY, BUT CALL FIREBASE TO UPDATE VALUE, AND FIREBASE (BECAUSE OF VALUE LISTENER) WILL NOTICE DEVICE WHICH CHANGED
             let dev = this.getDeviceByDBID(this.idOfSelectedDevices);
-            Firebase.updateDBData(dev.devicePath, { value: value });
+            this._sliderBbUpdateInfo = {path: dev.devicePath, val: value};
+
+            if(!this._sliderDbUpdateTimeout){
+                this._sliderDbUpdateTimeout= setTimeout(() => {
+                    this._sliderDbUpdateTimeout = undefined;
+                    Firebase.updateDBData(this._sliderBbUpdateInfo.path, { value: this._sliderBbUpdateInfo.val });
+                }, this._sliderDbUpdateTimeoutTime)
+            }
         }
     }
 
@@ -421,11 +432,7 @@ export class RoomDevice extends AbstractComponent {
     }
 
     initialize(index, object, onClickCallback) {
-        let output = object[index].output;
-        if (output.charAt(0) == "A")
-            this.type = "analog";
-        else
-            this.type = "digital";
+        this.type = object[index].type;
         this.icon = object[index].icon;
         this.devicePath = object[index].path;
         this.dbID = object[index].id;

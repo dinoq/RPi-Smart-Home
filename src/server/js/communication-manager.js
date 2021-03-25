@@ -29,21 +29,21 @@ module.exports = class CommunicationManager {
             }
         }
     }
-    initCoapServer(updateSensorCallback) {
+    initCoapServer(CoAPIncomingMsgCallback /*updateSensorCallback*/) {
         this._server = coap.createServer();
         this._server.on('request', function (req, res) {
             //console.log('coap request');
-            let val_type = req.payload[req.payload.length - 2];
-            let valStr = req.payload.toString().substring("in:".length, req.payload.length - 2);
+            /*let val_type = req.payload[req.payload.length-2];
+            let valStr = req.payload.toString().substring("in:".length, req.payload.length-2);
             let val;
-            if (val_type == VALUE_TYPE.I2C) {
+            if(val_type == VALUE_TYPE.I2C){
                 val = Number.parseFloat(valStr);
-            }
-            else {
+            } else{
                 val = Number.parseInt(valStr);
             }
-            let IN = Number.parseInt(req.payload[req.payload.length - 1]) - 1; // We must substract 1, because we add it before sending in ESP8266 module (we want start from 1 due to problems with null terminator)
-            updateSensorCallback(new SensorInfo(IN, val_type, val), req.rsinfo.address);
+            let IN = Number.parseInt(req.payload[req.payload.length-1]) - 1; // We must substract 1, because we add it before sending in ESP8266 module (we want start from 1 due to problems with null terminator)
+            updateSensorCallback(new SensorInfo(IN, val_type, val), req.rsinfo.address);*/
+            CoAPIncomingMsgCallback(req);
         });
         this._server.listen(function () {
             console.log("listening on default port");
@@ -137,6 +137,12 @@ module.exports = class CommunicationManager {
         this.coapRequest(ip, "/set-output", "pin=" + output, "PUT", val.toString(), null, null);
         console.log("T putVal 2: " + Math.round(Date.now() / 100));
     }
+    /**
+     * Function send to module rquisition for observation of specified input.
+     * @param ip IP address of module
+     * @param input Input which server want to observe. Eg. A17, D13, I2C-BMP280-teplota...
+     * @returns Promise, which resolve when CoAP response received (or reject on error)
+     */
     ObserveInput(ip, input) {
         return new Promise((resolve, reject) => {
             this.coapRequest(ip, "/observe-input", "input=" + input, "PUT", null, (res) => {
@@ -165,7 +171,19 @@ module.exports = class CommunicationManager {
             console.log('changeObservedInput err: ', err.message);
         }
     }
-    async resetModule(ip) {
+    resetModule(ip) {
         this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, true);
+    }
+    /**
+     * Function send configuration of all inputs and outputs (from database). CoAP message query is in format something like "IN:A17|D13|I2C-BMP280-teplota&OUT:D3=1024|A8=250"
+     * @param ip
+     * @param IN
+     * @param OUT
+     */
+    setAllIO(ip, InOut) {
+        console.log('setAllIO: ', InOut);
+        this.coapRequest(ip, "/set-all-IO-state", InOut, "PUT", null, null, (err) => {
+            console.log('setAllIO err: ', err.message);
+        }, true);
     }
 };

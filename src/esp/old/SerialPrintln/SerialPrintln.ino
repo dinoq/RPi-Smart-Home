@@ -271,6 +271,18 @@ void setup() {
         Serial.print(", ");
   }
   Serial.println();
+
+  
+  Serial.println("pinmode");
+  Serial.println("pinmode");
+  Serial.println("pinmode");
+  Serial.println("pinmode");
+            pinMode(13, OUTPUT);
+ /* for(int i = 0; i < 2; i++){
+            pinMode(i*12+1, OUTPUT);
+  Serial.println("pinmode set");
+  }*/
+  Serial.println("pinmode END");
 }
 
 void loop() {

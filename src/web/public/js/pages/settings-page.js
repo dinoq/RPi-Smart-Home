@@ -559,6 +559,7 @@ export class SettingsPage extends BasePage {
         }
         else if (parenListType == FrameListTypes.SENSORS) {
             let type;
+            console.log("zřejmě se zde bude nutné ptát na item.dbCopy.type a ne input");
             if (item.dbCopy.input.charAt(0) == "A")
                 type = "analog";
             else if (item.dbCopy.input.charAt(0) == "D")
@@ -568,14 +569,7 @@ export class SettingsPage extends BasePage {
             values = [item.dbCopy.name, type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
         }
         else if (parenListType == FrameListTypes.DEVICES) {
-            let type;
-            if (item.dbCopy.output.charAt(0) == "A")
-                type = "analog";
-            else if (item.dbCopy.output.charAt(0) == "D")
-                type = "digital";
-            else
-                type = "bus";
-            values = [item.dbCopy.name, type, item.dbCopy.output, item.dbCopy.icon];
+            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
         }
         this.detail.updateDetail(title, parenListType, values);
     }

@@ -3,6 +3,7 @@ const fs = require("fs");
 const conf = require("../config.js");
 const CommunicationManager = require('./communication-manager.js');
 const ESP = require("./ESP");
+const VALUE_TYPE = ESP.VALUE_TYPE;
 const SensorInfo = ESP.SInfo;
 module.exports = class Firebase {
     constructor() {
@@ -12,6 +13,52 @@ module.exports = class Firebase {
         this._sensorsUpdates = {};
         this._updateSensorsInDBTimeout = undefined;
         this.changes = new Array();
+        this._CoAPIncomingMsgCallback = (req) => {
+            console.log('coap request');
+            if (req.url == "/new-value") { // New value from sensor arrived
+                let val_type = req.payload[req.payload.length - 2];
+                let valStr = req.payload.toString().substring("in:".length, req.payload.length - 2);
+                let val;
+                if (val_type == VALUE_TYPE.I2C) {
+                    val = Number.parseFloat(valStr);
+                }
+                else {
+                    val = Number.parseInt(valStr);
+                }
+                let IN = Number.parseInt(req.payload[req.payload.length - 1]) - 1;
+                this._updateSensor(new SensorInfo(IN, val_type, val), req.rsinfo.address);
+            }
+            else if (req.url == "/get-all-IO-state") { // module needs init its inputs and outputs
+                const moduleIP = req.rsinfo.address;
+                let IN = "";
+                let OUT = "";
+                const rooms = (this._dbCopy && this._dbCopy["rooms"]) ? this._dbCopy["rooms"] : undefined;
+                for (const roomID in rooms) {
+                    const room = (rooms) ? rooms[roomID] : undefined;
+                    const modules = (room) ? room["devices"] : undefined;
+                    for (const moduleID in modules) {
+                        const module = (modules) ? modules[moduleID] : undefined;
+                        if (module && module.IP == moduleIP) { // If this module IP matches IP of modules from which message came, init IN and OUT.
+                            const sensors = module["IN"];
+                            for (const sensorID in sensors) {
+                                IN = (IN) ? IN + "|" : "IN:";
+                                IN += sensors[sensorID].input;
+                            }
+                            const devices = module["OUT"];
+                            for (const deviceID in devices) {
+                                let output = (devices[deviceID].type == "analog") ? "A" : "D"; //First convert val to rigt type (ANALOG/DIGITAL)
+                                output += devices[deviceID].output.substring(1);
+                                OUT = (OUT) ? OUT + "|" : "&OUT:";
+                                OUT += output + "=" + devices[deviceID].value;
+                            }
+                        }
+                    }
+                }
+                IN = (IN) ? IN : "IN:";
+                OUT = (OUT) ? OUT : "&OUT:";
+                this._communicationManager.setAllIO(moduleIP, IN + OUT);
+            }
+        };
         this._updateSensor = async (sensorInfo, moduleIP) => {
             //TODO: resetovat modul kdyz přijde něco z ip modulu, který není v DB (to pravdepodobne bude znamenat, že mu byla poslána žádost o reset z důvodu odstranění z databáze ve chvíli, kdy byl offline)
             this._sensors.forEach((sensor, index, array) => {
@@ -50,7 +97,7 @@ module.exports = class Firebase {
                 const data = snapshot.val();
                 this._databaseUpdatedHandler(data);
             });
-            this._communicationManager.initCoapServer(this._updateSensor);
+            this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback /*this._updateSensor*/);
         }).catch((error) => {
             console.log('error user: ', error);
         });
@@ -184,7 +231,7 @@ module.exports = class Firebase {
                             sensor["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${moduleID}/IN/${sensorID}/value`;
                             this._sensors[sIdx] = sensor;
                         }
-                        this.changes.push({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: modules[moduleID]["IP"], input: sensor.input.toString(), type: sensors[sensorID].type.toString() } });
+                        this.changes.push({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: modules[moduleID]["IP"], oldInput: localSensor.input.toString(), newInput: sensor.input.toString(), type: sensors[sensorID].type.toString() } });
                     }
                 }
                 // check devices
@@ -193,12 +240,12 @@ module.exports = class Firebase {
                 for (const deviceID in devices) {
                     const device = (devices) ? devices[deviceID] : undefined;
                     const localDevice = (localDevices) ? localDevices[deviceID] : undefined;
-                    if (!localDevice) { // Device was added (send "new" value to ESP)
-                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: devices[deviceID].output.toString(), value: devices[deviceID].value.toString() } });
-                    }
-                    else if (device.value != localDevice.value) { // Device value changed
-                        console.log("T changed: " + Math.round(Date.now() / 100));
-                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: devices[deviceID].output.toString(), value: devices[deviceID].value.toString() } });
+                    if (!localDevice || (device.value != localDevice.value)
+                        || (device.output != localDevice.output)
+                        || (device.type != localDevice.type)) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
+                        let output = (device.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
+                        output += device.output.toString().substring(1);
+                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: output, value: devices[deviceID].value.toString() } });
                     }
                 }
             }
@@ -251,8 +298,8 @@ module.exports = class Firebase {
             else if (change.level == DevicesTypes.MODULE) { // MODULE LEVEL CHANGES
                 if (change.type == ChangeMessageTypes.ADDED) { // Module was added => init communication
                     this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
-                        this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
                         this._communicationManager.sendESPItsID(espIP, change.data.id);
+                        this._fb.database().ref(firebase.auth().currentUser.uid + "/" + change.data.path).update({ IP: espIP, type: boardType });
                         console.log('change.data.id: ', change.data.id);
                     }).catch((err) => {
                         console.log('initCommunicationWithESP err: ', err, "deleting: " + change.data.path);
@@ -272,7 +319,7 @@ module.exports = class Firebase {
                     });
                 }
                 else if (change.type == ChangeMessageTypes.REPLACED) { // Sensor was added => listen to new values
-                    this._communicationManager.changeObservedInput(change.data.ip, change.data.input);
+                    this._communicationManager.changeObservedInput(change.data.ip, change.data.oldInput, change.data.newInput);
                 }
                 else if (change.type == ChangeMessageTypes.REMOVED) {
                     this._communicationManager.stopInputObservation(change.data.ip, change.data.input).catch((err) => {

@@ -11,7 +11,6 @@ class Memory{
     short addr;   
     
     void clear(short from, short to);
-    void setAllSensorsInfos(short from, char count, char IN, char val_type);
     void commit();    
     
     float readFloat();

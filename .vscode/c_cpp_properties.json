@@ -7,7 +7,8 @@
                 "C:\\Users\\dinok\\Documents\\Arduino\\libraries\\**",
                 "C:\\Program Files (x86)\\Arduino\\libraries\\**",
                 "C:\\Users\\dinok\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.6.3\\**",
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "C:\\Users\\dinok\\Documents\\GitHub\\RPi-Smart-Home\\src\\esp"
             ],
             "defines": [
                 "_DEBUG",
