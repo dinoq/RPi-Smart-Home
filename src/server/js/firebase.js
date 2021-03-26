@@ -66,6 +66,7 @@ module.exports = class Firebase {
                     if (sensorInfo.val != sensor.value
                         && sensorInfo.getInput() == sensor.input) { // If value changed and sensor input record exists in this_sensors, save change to DB
                         this._sensorsUpdates[sensor.pathToValue] = sensorInfo.val;
+                        sensor.value = sensorInfo.val;
                     }
                 }
             });
@@ -346,6 +347,7 @@ var ChangeMessageTypes;
     ChangeMessageTypes[ChangeMessageTypes["ADDED"] = 1] = "ADDED";
     ChangeMessageTypes[ChangeMessageTypes["REPLACED"] = 2] = "REPLACED";
     ChangeMessageTypes[ChangeMessageTypes["VALUE_CHANGED"] = 3] = "VALUE_CHANGED";
+    ChangeMessageTypes[ChangeMessageTypes["CHANGED"] = 4] = "CHANGED";
 })(ChangeMessageTypes || (ChangeMessageTypes = {}));
 var DevicesTypes;
 (function (DevicesTypes) {

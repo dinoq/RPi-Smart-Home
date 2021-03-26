@@ -17,6 +17,7 @@ import { PageManager } from "../app/page-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
 import { Loader } from "../components/others/loader.js";
 import { OneOptionDialog } from "../components/dialogs/cancel-dialog.js";
+import { Board, BoardsManager } from "../app/boards-manager.js";
 export class SettingsPage extends BasePage {
     static tagName = "settings-page";
 
@@ -386,6 +387,12 @@ export class SettingsPage extends BasePage {
                     this._focusDetail = false;
                 }
                 let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
+                if(parentList.type == FrameListTypes.DEVICES){
+                    const activeModuleType = (<FrameListItem>document.querySelectorAll("frame-list")[1].querySelector(".active")).dbCopy.type;
+                    if(Board[activeModuleType] && Board[activeModuleType].digitalPins && Board[activeModuleType].digitalPins["D0"]){ // If D0 GPIO pin is specified for that board...
+                        data.output = "D" + Board[activeModuleType].digitalPins["D0"];
+                    }
+                }
                 let DBitems = await Firebase.getDBData(item.dbCopy.parentPath); // Get actual state of DB
                 if (DBitems) {
                     Utils.forEachLoop(DBitems, (item) => item.index = (item.index) ? item.index + 1 : 1) // Increment every child's index

@@ -46,7 +46,7 @@ export class BoardsManager {
     }
 }
 
-class Board {
+export class Board {
     static wemosD1 = {
         analogPins: {
             A0: 17

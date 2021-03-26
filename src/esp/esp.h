@@ -103,6 +103,9 @@ const byte USED_MEM_END = 31;              // Address of end of used flash memor
 const byte UNSET = 254;
 const byte UNKNOWN = 255;
 
+const byte L = LOW;
+const byte H = HIGH;
+
 typedef enum
 {
 

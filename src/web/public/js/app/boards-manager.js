@@ -41,7 +41,7 @@ export class BoardsManager {
         return optionArr;
     }
 }
-class Board {
+export class Board {
 }
 Board.wemosD1 = {
     analogPins: {

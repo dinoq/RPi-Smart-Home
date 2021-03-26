@@ -143,6 +143,7 @@ module.exports = class Firebase {
                 if (sensorInfo.val != sensor.value
                     && sensorInfo.getInput() == sensor.input) { // If value changed and sensor input record exists in this_sensors, save change to DB
                     this._sensorsUpdates[sensor.pathToValue] = sensorInfo.val;
+                    sensor.value = sensorInfo.val;
                 }
             }
         })
@@ -389,7 +390,8 @@ enum ChangeMessageTypes {
     REMOVED,
     ADDED,
     REPLACED,
-    VALUE_CHANGED
+    VALUE_CHANGED,
+    CHANGED
 }
 
 enum DevicesTypes {

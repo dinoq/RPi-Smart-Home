@@ -181,21 +181,24 @@ void checkInValues()
                 /*Serial.println("watched[i].IN");
             Serial.println((byte)watched[i].IN);
             Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));*/
-                if (isDifferentEnough(newVal, watched[i].val, watched[i].IN))
+                if (isDifferentEnough(newVal, watched[i].val, watched[i]))
                 {
                     Serial.println("watched[i].IN a val");
                     Serial.println((byte)watched[i].IN);
                     Serial.println(watched[i].val);
 
                     char payload[15];
+                    float valToSend = (watched[i].val_type == DIGITAL && (newVal > 0))? 1023 : newVal; // if digital, map value from 0/1 to 0/1023 (because client interpret digital values this way). Else send newVal
+                    
                     if (watched[i].IN >= BMP280_TEMP && watched[i].IN <= SHT21_HUM)
                     {                                                                                      // sprintf %.1f in order to display only 1 digit after decimal point for specified inputs
-                        sprintf(payload, "in:%.1f%c%c", newVal, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
+                        sprintf(payload, "in:%.1f%c%c", valToSend, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
                     }
                     else
                     {
-                        sprintf(payload, "in:%f%c%c", newVal, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
+                        sprintf(payload, "in:%f%c%c", valToSend, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
                     }
+
                     /*payload[strlen(payload)] = watched[i].val_type;
                 Serial.println(strlen(payload));
                 payload[strlen(payload)] = watched[i].IN;
@@ -275,27 +278,32 @@ float getI2CVal(byte IN)
 /**
  * Function determine and returns if new value is different enough from old value to send it to server (we don't want to send to server for example when temperature changes by 0.001 °C)
  */
-bool isDifferentEnough(float newVal, float oldVal, byte IN)
+bool isDifferentEnough(float newVal, float oldVal, SensorInfo sInfo)
 {
     float diff = fabs(oldVal - newVal);
     byte oneDecimalPoint[] = {BMP280_TEMP, SHT21_TEMP, SHT21_HUM};
     byte noDecimal[] = {BMP280_PRESS};
 
-    if (valueIsIn(IN, oneDecimalPoint))
+    if (valueIsIn(sInfo.IN, oneDecimalPoint))
     {
         return (diff >= 0.1);
     }
-    else if (valueIsIn(IN, noDecimal))
+    else if (valueIsIn(sInfo.IN, noDecimal))
     {
         return (diff >= 1);
     }
-    else if (IN >= 0 && IN < BMP280_TEMP)
+    else if (sInfo.IN >= 0 && sInfo.IN < BMP280_TEMP)
     {
-        return (diff >= 5); // For pins consider 5 as enough difference
+        if(sInfo.val_type == ANALOG)
+            return (diff >= 20); // For pins consider 20 as enough difference
+        else if(sInfo.val_type == DIGITAL)
+            return (diff >= 1); // For pins consider 1 as enough difference
+        else
+            Serial.printf("-CHYBA: SensorInfo se vstupem %d neni typu ANALOG(=1)/DIGITAL(=2), ale %d!\n", sInfo.IN, sInfo.val_type);         
     }
     else
     {
-        Serial.printf("-CHYBA: Neznámá hodnota (%i) ve funkci isDifferentEnough(). Přidejte konstantu do výčtu IN_TYPE a upravte funkci.", IN);
+        Serial.printf("-CHYBA: Neznámá hodnota (%i) ve funkci isDifferentEnough(). Přidejte konstantu do výčtu IN_TYPE a upravte funkci.", sInfo.IN);
     }
 
     return false;
@@ -477,7 +485,6 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
     memcpy(strOUT, optionOUT.buffer, optionOUT.length);
     strOUT[optionOUT.length] = NULL;
 
-    //TODO
     Serial.println("strOUT:" + String(strOUT));
  
     //parse and init sensors...  
@@ -488,7 +495,8 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
         Serial.print("inputinput");
         Serial.println(input);
         if(strncmp(input, "IN",2)){
-            SensorInfo info = getSensorInfo(input);     
+            SensorInfo info = getSensorInfo(input);    
+            info.val = UNINITIALIZED_SENSOR_VALUE; // Uninitialize value in order to get (send) value at next calling of checkInValues() in loop() 
             if (!alreadyWatched(info))
             {
                 watched[watchedINIndex++] = info;
@@ -516,14 +524,8 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
             int pinNumber = atoi(pinNumStr);
             
             output = strtok (NULL,"|");//get value
-            Serial.println("pn");
-            Serial.println(pinNumber);
             int valueToSet = atoi(output);
             output = strtok (NULL,"=");//get next output
-            Serial.println("valueToSet");
-            Serial.println(valueToSet);
-            Serial.println("output");
-            Serial.println(output);
 
             //delay(100);
             pinMode(pinNumber, OUTPUT);
@@ -531,13 +533,13 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
             { // Digital pin
                 if (valueToSet > 512)
                 {
-                    digitalWrite(pinNumber, LOW);
-                    Serial.println("LOW" + String(pinNumber));
+                    digitalWrite(pinNumber, H);
+                    Serial.println("HIGH" + String(pinNumber));
                 }
                 else
                 {
-                    digitalWrite(pinNumber, HIGH);
-                    Serial.println("" + String(pinNumber));
+                    digitalWrite(pinNumber, L);
+                    Serial.println("LOW" + String(pinNumber));
                 }
             }
             else
@@ -582,6 +584,7 @@ void callbackSetOutput(CoapPacket &packet, IPAddress ip, int port)
     char queryOpt[option.length];
     memcpy(queryOpt, option.buffer, option.length);
     queryOpt[option.length] = NULL;
+    Serial.println("queryOpt: "+String(queryOpt));
 
     byte pinPrefixLen = 4;
     String pin = String(queryOpt).substring(pinPrefixLen);
@@ -598,13 +601,13 @@ void callbackSetOutput(CoapPacket &packet, IPAddress ip, int port)
     { // Digital pin
         if (valueToSet > 512)
         {
-            digitalWrite(pinNumber, LOW);
-            Serial.println("LOW" + String(pinNumber));
+            digitalWrite(pinNumber, H);
+            Serial.println("HIGH" + String(pinNumber));
         }
         else
         {
-            digitalWrite(pinNumber, HIGH);
-            Serial.println("" + String(pinNumber));
+            digitalWrite(pinNumber, L);
+            Serial.println("LOW" + String(pinNumber));
         }
     }
     else
@@ -820,8 +823,8 @@ void callbackChangeObservedInput(CoapPacket &packet, IPAddress ip, int port)
     Serial.println("callbackChangeObservedInput");
     lastConnectedToRPi = 0;
 
-    CoapOption oldValOption;
-    CoapOption newValOption;
+    CoapOption oldInOption;
+    CoapOption newInOption;
     CoapOption option;
     byte optionNum = 0;
     for (int i = 0; i < packet.optionnum; i++)
@@ -832,24 +835,36 @@ void callbackChangeObservedInput(CoapPacket &packet, IPAddress ip, int port)
         if (option.number == COAP_URI_QUERY)
         {
             if(optionNum==0){
-              oldValOption = option;
+              oldInOption = option;
               optionNum++;
             }else{
-              newValOption = option;
+              newInOption = option;
             }
         }
     }
-    char oldVal[oldValOption.length];
-    memcpy(oldVal, oldValOption.buffer, oldValOption.length);
-    oldVal[oldValOption.length] = NULL;
+    char oldIN[oldInOption.length];
+    memcpy(oldIN, oldInOption.buffer, oldInOption.length);
+    oldIN[oldInOption.length] = NULL;
     
-    char newVal[newValOption.length];
-    memcpy(newVal, newValOption.buffer, newValOption.length);
-    newVal[newValOption.length] = NULL;
-
-    //TODO
-    Serial.println("oldValion:" + String(oldVal));
-    Serial.println("newVal:" + String(newVal));
+    char newIN[newInOption.length];
+    memcpy(newIN, newInOption.buffer, newInOption.length);
+    newIN[newInOption.length] = NULL;
+    
+    Serial.println("oldIN:" + String(oldIN));
+    Serial.println("newIN:" + String(newIN));
+    
+    SensorInfo oldInfo = getSensorInfo(oldIN);
+    SensorInfo newInfo = getSensorInfo(newIN);
+    for (int i = 0; i < WATCHED_IN_LIMIT; i++)
+    {
+        if (watched[i].IN == oldInfo.IN && watched[i].val_type == oldInfo.val_type)
+        {
+            watched[i].IN = newInfo.IN;
+            watched[i].val_type = newInfo.val_type;
+            Serial.println(String(oldInfo.IN) + " nahrazuji za: " + String(newInfo.IN ));
+            Serial.println(String(oldInfo.val_type) + " (typ)nahrazuji za: " + String(newInfo.val_type ));
+        }
+    }
 
     coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 }

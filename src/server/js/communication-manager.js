@@ -132,6 +132,12 @@ module.exports = class CommunicationManager {
             console.log("Module didnt recieve its new ID");
         }, true);
     }
+    /**
+     *
+     * @param ip IP address of module
+     * @param output Output, eg. A2, D5... (first analog/digital, then GPIO number)
+     * @param val Value to set
+     */
     async putVal(ip, output, val) {
         console.log("T putVal1: " + Math.round(Date.now() / 100));
         this.coapRequest(ip, "/set-output", "pin=" + output, "PUT", val.toString(), null, null);
