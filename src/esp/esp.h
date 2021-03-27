@@ -20,7 +20,7 @@
  * CONFIG PART BEGIN (recommended to change)
  */
 
-String boardType = "NodeMCU"; // Any from [wemosD1, NodeMCU]
+String boardType = "NodeMCU"; // Any from [wemosD1R1, NodeMCU]
 const char *ssid = "sprintel_antlova";
 const char *password = "netis111";
 /**
@@ -66,10 +66,11 @@ bool valueIsIn(byte val, byte arr[]);
 
 void callbackResponse(CoapPacket &packet, IPAddress ip, int port);
 
-void callbackSetId(CoapPacket &packet, IPAddress ip, int port);
+void callbackSetID(CoapPacket &packet, IPAddress ip, int port);
 void setRPiIP(IPAddress ip);
 void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port);
 void setModuleID(char ID[], byte idLen);
+void resetSensorInfos();
 void callbackResetModule(CoapPacket &packet, IPAddress ip, int port);
 void resetModule();
 void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port);
@@ -83,6 +84,7 @@ void callbackChangeObservedInput(CoapPacket &packet, IPAddress ip, int port);
 void resetFromMemory();
 void printMemory(String msg);
 
+bool checkIO_Inited();
 
 
 

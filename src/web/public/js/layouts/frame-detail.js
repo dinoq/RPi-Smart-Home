@@ -7,21 +7,25 @@ import { FrameListTypes } from "./frame-list.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 export class FrameDetail extends AbstractComponent {
     //blinkable: string[] = new Array(); // String array of blinkable elements (for query)
-    constructor(saveCallback, layoutProps) {
+    constructor(saveCallback, cancelCallback, layoutProps) {
         super(Utils.mergeObjects(layoutProps, {}));
         this._readyToSave = false;
-        this.initialize(saveCallback);
+        this.initialize(saveCallback, cancelCallback);
     }
     set readyToSave(val) {
         if (val) {
-            this.saveBtnContainer.classList.add("blink");
-            this.saveBtnContainer.children[0].style.fontWeight = "bold";
-            this.saveBtnContainer.children[0].removeAttribute("disabled");
+            this._saveBtn.classList.add("blink");
+            this._saveBtn.style.fontWeight = "bold";
+            this._saveBtn.removeAttribute("disabled");
+            this._cancelBtn.style.fontWeight = "bold";
+            this._cancelBtn.removeAttribute("disabled");
         }
         else {
-            this.saveBtnContainer.classList.remove("blink");
-            this.saveBtnContainer.children[0].style.fontWeight = "normal";
-            this.saveBtnContainer.children[0].setAttribute("disabled", "true");
+            this._saveBtn.classList.remove("blink");
+            this._saveBtn.style.fontWeight = "normal";
+            this._saveBtn.setAttribute("disabled", "true");
+            this._cancelBtn.style.fontWeight = "normal";
+            this._cancelBtn.setAttribute("disabled", "true");
         }
         this._readyToSave = val;
         EventManager.blockedByUnsavedChanges = val;
@@ -29,7 +33,7 @@ export class FrameDetail extends AbstractComponent {
     get readyToSave() {
         return this._readyToSave;
     }
-    initialize(saveCallback) {
+    initialize(saveCallback, cancelCallback) {
         this.innerHTML = `        
             <div class="form-wrapper">
                 <div class="form">
@@ -40,16 +44,23 @@ export class FrameDetail extends AbstractComponent {
         `;
         this.rows = this.querySelector(".detail-frame-rows");
         this.actualFrameListType = -1;
-        this.saveBtnContainer = new HorizontalStack({
+        this.btnsContainer = new HorizontalStack({
             innerHTML: `
-            <button class="save-btn">Uložit</button>
+            <button class="btn cancel-btn">Zrušit změny</button>
+            <button class="btn save-btn">Uložit</button>
             `,
             classList: "settings-btns-stack"
         });
-        this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", saveCallback);
+        this._cancelBtn = this.btnsContainer.querySelector(".cancel-btn");
+        this._cancelBtn.addEventListener("click", () => {
+            cancelCallback();
+            this.readyToSave = false;
+        });
+        this._saveBtn = this.btnsContainer.querySelector(".save-btn");
+        this._saveBtn.addEventListener("click", saveCallback);
         this.readyToSave = false;
         let form = this.querySelector(".form");
-        AbstractComponent.appendComponentsToDOMElements(form, [this.saveBtnContainer]);
+        AbstractComponent.appendComponentsToDOMElements(form, [this.btnsContainer]);
     }
     updateTitle(title) {
         this.querySelector(".editing-name").innerText = title;

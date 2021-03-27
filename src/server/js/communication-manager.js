@@ -29,21 +29,10 @@ module.exports = class CommunicationManager {
             }
         }
     }
-    initCoapServer(CoAPIncomingMsgCallback /*updateSensorCallback*/) {
+    initCoapServer(CoAPIncomingMsgCallback) {
         this._server = coap.createServer();
         this._server.on('request', function (req, res) {
-            //console.log('coap request');
-            /*let val_type = req.payload[req.payload.length-2];
-            let valStr = req.payload.toString().substring("in:".length, req.payload.length-2);
-            let val;
-            if(val_type == VALUE_TYPE.I2C){
-                val = Number.parseFloat(valStr);
-            } else{
-                val = Number.parseInt(valStr);
-            }
-            let IN = Number.parseInt(req.payload[req.payload.length-1]) - 1; // We must substract 1, because we add it before sending in ESP8266 module (we want start from 1 due to problems with null terminator)
-            updateSensorCallback(new SensorInfo(IN, val_type, val), req.rsinfo.address);*/
-            CoAPIncomingMsgCallback(req);
+            CoAPIncomingMsgCallback(req, res);
         });
         this._server.listen(function () {
             console.log("listening on default port");
@@ -61,22 +50,6 @@ module.exports = class CommunicationManager {
                 reject(err.message);
             });
             /*
-            const socket = dgram.createSocket({ type: "udp4" });
-            socket.addMembership(COnfig.COAP_MULTICAST_ADDR, localIP);
-
-            const message = "HELLO-CLIENT";
-            socket.send(message, 0, message.length, COnfig.COAP_PORT, COnfig.COAP_MULTICAST_ADDR, function () {
-                console.info(`Sending message "${message}"`);
-            });
-
-            let espIP = null;
-            socket.on("message", function (message, rinfo) {
-                console.log('message: ', message);
-                if (espIP)
-                    return;
-                espIP = rinfo.address;
-                setTimeout(() => { resolve({ espIP: espIP, boardType: message.toString().substring("TYPE:".length) }); }, 0)
-            });
             setTimeout(() => { // time limit for any ESP to respond... If no ESP has been founded, it should be removed from DB
                 reject("No module founded!");
             }, COnfig.NEW_MODULE_FIND_TIMEOUT);*/
@@ -96,6 +69,7 @@ module.exports = class CommunicationManager {
         let req = coap.request(params);
         if (valToWrite != null)
             req.write(valToWrite);
+        const errStack = new Error().stack;
         req.on('error', (err) => {
             if (onError)
                 onError(err);
@@ -129,7 +103,7 @@ module.exports = class CommunicationManager {
     async sendESPItsID(ip, id) {
         this.coapRequest(ip, "/set-id", "", "PUT", id, null, (err) => {
             // module didnt recieve its new ID
-            console.log("Module didnt recieve its new ID");
+            console.error("Module didnt recieve its new ID");
         }, true);
     }
     /**
@@ -154,7 +128,7 @@ module.exports = class CommunicationManager {
             this.coapRequest(ip, "/observe-input", "input=" + input, "PUT", null, (res) => {
                 resolve(res.payload.toString());
             }, (err) => {
-                console.log("ObserveInput err: " + err.message + " from " + ip);
+                console.error("ObserveInput err: " + err.message + " from " + ip);
                 reject(err.message);
             }, true);
         });
@@ -164,7 +138,7 @@ module.exports = class CommunicationManager {
             this.coapRequest(ip, "/stop-input-observation", "input=" + input, "PUT", null, (res) => {
                 resolve(res.payload.toString());
             }, (err) => {
-                console.log("stopInputObservation err: " + err.message + " from " + ip);
+                console.error("stopInputObservation err: " + err.message + " from " + ip);
                 reject(err.message);
             }, true);
         });
@@ -174,7 +148,7 @@ module.exports = class CommunicationManager {
             await this.coapRequestAsync(ip, "/change-observed-input", "old=" + oldInput + "&new=" + newInput, "PUT", null, true);
         }
         catch (err) {
-            console.log('changeObservedInput err: ', err.message);
+            console.error('changeObservedInput err: ', err.message);
         }
     }
     resetModule(ip) {
@@ -189,7 +163,7 @@ module.exports = class CommunicationManager {
     setAllIO(ip, InOut) {
         console.log('setAllIO: ', InOut);
         this.coapRequest(ip, "/set-all-IO-state", InOut, "PUT", null, null, (err) => {
-            console.log('setAllIO err: ', err.message);
+            console.error('setAllIO err: ', err.message);
         }, true);
     }
 };

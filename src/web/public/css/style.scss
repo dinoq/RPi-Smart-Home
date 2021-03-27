@@ -414,7 +414,7 @@ frame-detail {
     }
 }
 
-.blink button {
+button.blink {
     -webkit-animation: blink $anim-duration linear infinite;
     -moz-animation: blink $anim-duration linear infinite;
     animation: blink $anim-duration linear infinite;
@@ -466,13 +466,14 @@ page-manager {
             width: 100%;
             justify-content: center;
 
-            .save-btn {
+            .btn {
                 border: 1px solid var(--default-blue-color);
                 height: 36px;
                 border-radius: 15px;
                 padding: 0 20px;
+                margin: 0 10px;
 
-                &:hover {
+                &:enabled:hover {
                     background-color: #d5d5d5;
                 }
             }

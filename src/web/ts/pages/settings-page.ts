@@ -56,7 +56,7 @@ export class SettingsPage extends BasePage {
 
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
-        this.detail = new FrameDetail(this.saveChanges);
+        this.detail = new FrameDetail(this.saveChanges, this.initDetail);
 
         this.mainTabPanel = new TabLayout(null);
         this.modulesTabPanel = new TabLayout(null);
@@ -272,7 +272,7 @@ export class SettingsPage extends BasePage {
 
     async pageReinicialize() {
         await this.initPageFromDB();
-        this.detail.initialize(this.saveChanges);
+        this.detail.initialize(this.saveChanges, this.initDetail);
         this.modulesList.initialize();
         this.sensorsList.initialize();
         this.devicesList.initialize();
@@ -342,7 +342,7 @@ export class SettingsPage extends BasePage {
             this.itemInDetail = { item: item, parentListType: parentList.type };
             this.initDetail();
 
-            if(this._focusDetail){
+            if (this._focusDetail) {
                 this.detail.scrollIntoView();
                 this.detail.blink(1);
             }
@@ -383,14 +383,19 @@ export class SettingsPage extends BasePage {
                 if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"]))
                     return;
 
-                if(parentList.type == FrameListTypes.MODULES){ // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
+                if (parentList.type == FrameListTypes.MODULES) { // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
                     this._focusDetail = false;
                 }
                 let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
-                if(parentList.type == FrameListTypes.DEVICES){
+                if (parentList.type == FrameListTypes.DEVICES) {
                     const activeModuleType = (<FrameListItem>document.querySelectorAll("frame-list")[1].querySelector(".active")).dbCopy.type;
-                    if(Board[activeModuleType] && Board[activeModuleType].digitalPins && Board[activeModuleType].digitalPins["D0"]){ // If D0 GPIO pin is specified for that board...
-                        data.output = "D" + Board[activeModuleType].digitalPins["D0"];
+                    if (Board[activeModuleType] && Board[activeModuleType].digitalPins) { 
+                        let dPins = Board[activeModuleType].digitalPins;
+                        for (let i = 0; i < 5; i++) { //Try to set one of first 5 GPIO, BUT WHICH IS FOR GIVEN MODULE ACCESSIBLE as first option in select.
+                            if (dPins["D" + i]) {
+                                data.output = "D" + dPins["D" + i];
+                            }
+                        }
                     }
                 }
                 let DBitems = await Firebase.getDBData(item.dbCopy.parentPath); // Get actual state of DB
@@ -412,39 +417,52 @@ export class SettingsPage extends BasePage {
                 newItem = <FrameListItem>((Utils.itemIsAnyFromEnum((<FrameListItem>parentList.children[0]).type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
                 await this.itemClicked(null, newItem, "edit");
 
-                if(parentList.type == FrameListTypes.MODULES){ // Show dialog about connecting to ESP module
+                if (parentList.type == FrameListTypes.MODULES) { // Show dialog about connecting to ESP module
                     let waitingDialog = new OneOptionDialog("Čekání na propojení serveru s modulem", DialogResponses.CANCEL);
-                    let noModuleDialog =  new OneOptionDialog("Nepodařilo se najít nový modul.<br>Zkontrolujte, zda je modul zapnutý.", DialogResponses.OK);
-                    let moduleAddedDialog =  new OneOptionDialog("Modul byl úspěšně přidán!", DialogResponses.OK);
+                    let noModuleDialog = new OneOptionDialog("Nepodařilo se najít nový modul.<br>Zkontrolujte, zda je modul zapnutý.", DialogResponses.OK);
+                    let moduleAddedDialog = new OneOptionDialog("Modul byl úspěšně přidán!", DialogResponses.OK);
                     let noModuleFoundErrorResponse = "NO-MODULE-FOUND";
                     let moduleHasBeenFoundResponse = "MODULE-HAS-BEEN-FOUND";
                     let moduleAdditionCanceled = false;
                     let waitingForModuleResponsePromise: Promise<any> = waitingDialog.show();
-                    let IDs = this.selectedItemsIDHierarchy;
+                    let IDs = [...this.selectedItemsIDHierarchy];
                     let fbReference = null;
                     if (IDs.length >= 2) {
+                        let firstIteration = true;
                         fbReference = Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
-                            console.log('data: ', data);  
+                            if(firstIteration){ // Firebase.addDBListener gets data for first time without "event" emitted...
+                                firstIteration = false;
+                                return;
+                            }
+                            console.log('data: ', data);
                             console.log('waitingDialog: ', waitingDialog);
-                            if(!moduleAdditionCanceled){
-                                if(!data || (data.IP&&data.IP.length> "1.1.1.1".length)){       
-                                    if(!data){ // Module was not found, thus record was deleted in database. Hide dialog and reinit settings page...
-                                        this.selectedItemsIDHierarchy.splice(1);
-                                        waitingDialog.resolveShow(noModuleFoundErrorResponse);       
-                                    }else{ // Module IP exists, thus module has been founded
-                                        waitingDialog.resolveShow(moduleHasBeenFoundResponse);         
-                                    }                    
+                            if (moduleAdditionCanceled) { //User canceled module addition in web client
+                                if(!data){
+                                    
+                                }else if(data.IP && data.IP.length > "?.?.?.?".length){ // Module IP exists, thus module maybe has been founded
+                                    if(data.index == undefined){ // Module was deleted by web client, but RPi has founded module and update module record in DB with IP and type (so basically) created new module, but with only IP and type fields)
+                                        fbReference.off(); // remove firebase listener
+                                        Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
+                                    }
+                                }
+                            }else{                                
+                                if (!data) { // Module was not found, thus record was deleted in database. Hide dialog and reinit settings page...
+                                    this.selectedItemsIDHierarchy.splice(1);
+                                    waitingDialog.resolveShow(noModuleFoundErrorResponse);
+                                } else if(data.IP != undefined && data.IP.length >= "?.?.?.?".length){ // Module IP exists, thus module has been founded
+                                    fbReference.off(); // remove firebase listener
+                                    waitingDialog.resolveShow(moduleHasBeenFoundResponse);
                                 }
                             }
                         });
                     }
                     let moduleFoundResponse: any = await waitingForModuleResponsePromise;
-                    if(typeof moduleFoundResponse == "string"){ 
+                    if (typeof moduleFoundResponse == "string") {
                         console.log(moduleFoundResponse);
-                        if(moduleFoundResponse == noModuleFoundErrorResponse){// No module found => display info dialog
+                        if (moduleFoundResponse == noModuleFoundErrorResponse) {// No module found => display info dialog
                             await noModuleDialog.show();
 
-                        }else if(moduleFoundResponse == moduleHasBeenFoundResponse){// Module has been found!
+                        } else if (moduleFoundResponse == moduleHasBeenFoundResponse) {// Module has been found!
                             await moduleAddedDialog.show();
                             //Scroll to bottom and blink detail
                             this._focusDetail = true;
@@ -452,10 +470,7 @@ export class SettingsPage extends BasePage {
                         this._focusDetail = true;
                         waitingDialog.remove();
                         this.pageReinicialize();
-                        fbReference.off(); // remove firebase listener
-                    }else if (typeof moduleFoundResponse == "number") { // waitingDialog canceled
-                        if(fbReference)
-                            fbReference.off(); // remove firebase listener
+                    } else if (typeof moduleFoundResponse == "number") { // waitingDialog canceled
                         if (IDs.length >= 2) {
                             moduleAdditionCanceled = true;
                             console.log("cancel=>delete at: /rooms/" + IDs[0] + "/devices/" + IDs[1]);
@@ -626,16 +641,16 @@ export class SettingsPage extends BasePage {
         list.updatedOrderHandler();
     }
 
-    initDetail() {
+    initDetail = () => {
         let item = this.itemInDetail.item;
-        let parenListType = this.itemInDetail.parentListType;
+        let parentListType = this.itemInDetail.parentListType;
         let title = this.getTitleForEditingFromItem(item, item.dbCopy.name);
         let values;
-        if (parenListType == FrameListTypes.ROOMS) {
+        if (parentListType == FrameListTypes.ROOMS) {
             values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset, null]; // Last element is slidable image, which doesn't need init val directly (it asks slider for value)
-        } else if (parenListType == FrameListTypes.MODULES) {
+        } else if (parentListType == FrameListTypes.MODULES) {
             values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];
-        } else if (parenListType == FrameListTypes.SENSORS) {
+        } else if (parentListType == FrameListTypes.SENSORS) {
             let type;
             console.log("zřejmě se zde bude nutné ptát na item.dbCopy.type a ne input");
             if (item.dbCopy.input.charAt(0) == "A")
@@ -645,10 +660,10 @@ export class SettingsPage extends BasePage {
             else
                 type = "bus";
             values = [item.dbCopy.name, type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
-        } else if (parenListType == FrameListTypes.DEVICES) {
+        } else if (parentListType == FrameListTypes.DEVICES) {
             values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
         }
-        this.detail.updateDetail(title, parenListType, values);
+        this.detail.updateDetail(title, parentListType, values);
 
     }
 

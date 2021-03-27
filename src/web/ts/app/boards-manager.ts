@@ -47,7 +47,7 @@ export class BoardsManager {
 }
 
 export class Board {
-    static wemosD1 = {
+    static wemosD1R1 = {
         analogPins: {
             A0: 17
         },
@@ -58,17 +58,17 @@ export class Board {
             D2: 16,
             D3: 5,
             D4: 4,
-            D5: 14,
+            //D5: 14,// Board LED
             D6: 12,
             D7: 13,
             D8: 0,
-            D9: 2,
+            //D9: 2, // ESP8266 LED
             D10: 15,
-            D11: 13,
-            D12: 12,
-            D13: 14,
-            D14: 4,
-            D15: 5,
+            //D11: 13, // Connected to D7
+            //D12: 12, // Connected to D6
+            //D13: 14, // Connected to D5, Board LED
+            //D14: 4, // Connected to D4
+            //D15: 5, // Connected to D3
         },
 
         bus: ["SPI", "I2C"]
@@ -80,18 +80,19 @@ export class Board {
         },
 
         digitalPins: {
-            D0: 16,
+            //D0: 16, // Board LED
             D1: 5,
             D2: 4,
             D3: 0,
-            D4: 2,
+            //D4: 2, // ESP8266 LED
             D5: 14,
             D6: 12,
             D7: 13,
             D8: 15,
-            RX: 1,
-            SD2: 9,
-            SD3: 10
+            //RX: 3,
+            //TX: 1,
+            //SD2: 9,
+            //SD3: 10
         },
 
         bus: ["SPI", "I2C"]

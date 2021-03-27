@@ -283,6 +283,9 @@ void setup() {
   Serial.println("pinmode set");
   }*/
   Serial.println("pinmode END");
+  
+  Serial.println("builtin led:");
+  Serial.println(LED_BUILTIN);
 }
 
 void loop() {

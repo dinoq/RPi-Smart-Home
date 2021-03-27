@@ -414,7 +414,7 @@ frame-detail input:disabled {
   background-color: #d7d7d7;
 }
 
-.blink button {
+button.blink {
   -webkit-animation: blink 1s linear infinite;
   animation: blink 1s linear infinite;
 }
@@ -470,14 +470,15 @@ page-manager settings-page .settings-btns-stack {
           justify-content: center;
 }
 
-page-manager settings-page .settings-btns-stack .save-btn {
+page-manager settings-page .settings-btns-stack .btn {
   border: 1px solid var(--default-blue-color);
   height: 36px;
   border-radius: 15px;
   padding: 0 20px;
+  margin: 0 10px;
 }
 
-page-manager settings-page .settings-btns-stack .save-btn:hover {
+page-manager settings-page .settings-btns-stack .btn:enabled:hover {
   background-color: #d5d5d5;
 }
 

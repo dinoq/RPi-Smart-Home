@@ -43,7 +43,7 @@ export class BoardsManager {
 }
 export class Board {
 }
-Board.wemosD1 = {
+Board.wemosD1R1 = {
     analogPins: {
         A0: 17
     },
@@ -53,17 +53,12 @@ Board.wemosD1 = {
         D2: 16,
         D3: 5,
         D4: 4,
-        D5: 14,
+        //D5: 14,// Board LED
         D6: 12,
         D7: 13,
         D8: 0,
-        D9: 2,
+        //D9: 2, // ESP8266 LED
         D10: 15,
-        D11: 13,
-        D12: 12,
-        D13: 14,
-        D14: 4,
-        D15: 5,
     },
     bus: ["SPI", "I2C"]
 };
@@ -72,18 +67,15 @@ Board.NodeMCU = {
         A0: 17
     },
     digitalPins: {
-        D0: 16,
+        //D0: 16, // Board LED
         D1: 5,
         D2: 4,
         D3: 0,
-        D4: 2,
+        //D4: 2, // ESP8266 LED
         D5: 14,
         D6: 12,
         D7: 13,
         D8: 15,
-        RX: 1,
-        SD2: 9,
-        SD3: 10
     },
     bus: ["SPI", "I2C"]
 };

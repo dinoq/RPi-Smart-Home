@@ -42,7 +42,7 @@ module.exports = class Firebase {
                     const data = snapshot.val();
                     this._databaseUpdatedHandler(data);
                 });
-                this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback/*this._updateSensor*/);
+                this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
 
 
             }).catch((error) => {
@@ -89,7 +89,7 @@ module.exports = class Firebase {
         }, 5000);
     }
 
-    private _CoAPIncomingMsgCallback = (req: any) => {
+    private _CoAPIncomingMsgCallback = (req: any, res: any) => {
         console.log('coap request');
         if (req.url == "/new-value") { // New value from sensor arrived
             let val_type = req.payload[req.payload.length - 2];
@@ -107,39 +107,62 @@ module.exports = class Firebase {
             const moduleIP = req.rsinfo.address;
             let IN: string = "";
             let OUT: string = "";
+            let moduleFoundedInDB: boolean = false;
             const rooms = (this._dbCopy && this._dbCopy["rooms"]) ? this._dbCopy["rooms"] : undefined;
             for (const roomID in rooms) {
-                const room = (rooms) ? rooms[roomID] : undefined;
-                const modules = (room) ? room["devices"] : undefined;
+                const room = rooms[roomID];
+                const modules = room["devices"];
                 for (const moduleID in modules) {
-                    const module = (modules) ? modules[moduleID] : undefined;
-                    if (module && module.IP == moduleIP) { // If this module IP matches IP of modules from which message came, init IN and OUT.
+                    const module = modules[moduleID];
+                    if (module.IP == moduleIP) { // If this module IP matches IP of modules from which message came, init IN and OUT.
+                        moduleFoundedInDB = true;
                         const sensors: any = module["IN"];
                         for (const sensorID in sensors) {
-                            IN = (IN)? IN + "|": "IN:";
+                            IN = (IN) ? IN + "|" : "IN:";
                             IN += sensors[sensorID].input;
                         }
                         const devices = module["OUT"];
                         for (const deviceID in devices) {
                             let output = (devices[deviceID].type == "analog") ? "A" : "D"; //First convert val to rigt type (ANALOG/DIGITAL)
                             output += devices[deviceID].output.substring(1);
-                            OUT = (OUT)? OUT + "|": "&OUT:";
+                            OUT = (OUT) ? OUT + "|" : "OUT:";
                             OUT += output + "=" + devices[deviceID].value;
                         }
 
                     }
                 }
             }
-            IN = (IN)? IN : "IN:";
-            OUT = (OUT)? OUT : "&OUT:";
-            this._communicationManager.setAllIO(moduleIP, IN + OUT);
+            IN = (IN) ? IN : "IN:";
+            OUT = (OUT) ? OUT : "&OUT:";
+
+            if(moduleFoundedInDB){
+                /*
+                let addToOptions = (name, val) => {
+                    res._packet.options.push({
+                        name: name,
+                        value: Buffer.from(val)
+                    });
+                }
+                addToOptions("Uri-Host", moduleIP);
+                addToOptions("Uri-Path", "set-all-IO-state");
+                addToOptions("Uri-Query", IN);
+                addToOptions("Uri-Query", OUT);
+                res._packet.ack = false; // Send it not as response, but new request
+                res.end();*/
+                this._communicationManager.setAllIO(moduleIP, IN + "&" + OUT);
+            }else{ // Module was probably deleted from database, when module was OFF => reset that module
+                this._communicationManager.resetModule(moduleIP);
+            }
         }
     }
 
     private _updateSensor = async (sensorInfo: SensorInfo, moduleIP) => {
-        //TODO: resetovat modul kdyz přijde něco z ip modulu, který není v DB (to pravdepodobne bude znamenat, že mu byla poslána žádost o reset z důvodu odstranění z databáze ve chvíli, kdy byl offline)
+        
+        let moduleFoundedInDB: boolean = false;
+
         this._sensors.forEach((sensor, index, array) => {
             if (moduleIP == sensor.IP) {
+                moduleFoundedInDB = true;
                 if (sensorInfo.val != sensor.value
                     && sensorInfo.getInput() == sensor.input) { // If value changed and sensor input record exists in this_sensors, save change to DB
                     this._sensorsUpdates[sensor.pathToValue] = sensorInfo.val;
@@ -147,8 +170,12 @@ module.exports = class Firebase {
                 }
             }
         })
-        if (!this._updateSensorsInDBTimeout) {
-            this._updateSensorsInDBTimeout = setTimeout(this._updateSensorsInDB, 1000);
+        if(moduleFoundedInDB){
+            if (!this._updateSensorsInDBTimeout) {
+                this._updateSensorsInDBTimeout = setTimeout(this._updateSensorsInDB, 1000);
+            }            
+        }else{ // Module was probably deleted from database, when module was OFF => reset that module
+            this._communicationManager.resetModule(moduleIP);
         }
     }
 
@@ -242,10 +269,12 @@ module.exports = class Firebase {
             for (const moduleID in modules) {
                 const module = (modules) ? modules[moduleID] : undefined;
                 const localModule = (localModules) ? localModules[moduleID] : undefined;
-                if (!localModule) {// Module added
-                    let path = "rooms/" + newRoomID + "/devices/" + moduleID;
-                    console.log('new module path: ', path);
-                    this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: moduleID, path: path } });
+                if (!localModule) {// Module added                    
+                    if(module.index != undefined){ // If module.index is undefined => module was actually deleted from db and only updated by server with ip and type
+                        let path = "rooms/" + newRoomID + "/devices/" + moduleID;
+                        console.log('new module path: ', path);
+                        this.changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: moduleID, path: path } });
+                    }                    
                 }
 
                 // check sensors

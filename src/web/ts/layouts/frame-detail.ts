@@ -12,18 +12,26 @@ export class FrameDetail extends AbstractComponent {
 
     rows: any;
     actualFrameListType: FrameListTypes;
-    private saveBtnContainer: HorizontalStack;
+    private btnsContainer: HorizontalStack;
+    private _saveBtn: HTMLButtonElement;
+    private _cancelBtn: HTMLButtonElement;
     
     private _readyToSave: boolean = false;
     set readyToSave(val) {
         if (val) {
-            this.saveBtnContainer.classList.add("blink");
-            (<HTMLButtonElement>(<HorizontalStack>this.saveBtnContainer).children[0]).style.fontWeight = "bold";
-            this.saveBtnContainer.children[0].removeAttribute("disabled");
+            this._saveBtn.classList.add("blink");
+            this._saveBtn.style.fontWeight = "bold";
+            this._saveBtn.removeAttribute("disabled");
+            
+            this._cancelBtn.style.fontWeight = "bold";
+            this._cancelBtn.removeAttribute("disabled");
         } else {
-            this.saveBtnContainer.classList.remove("blink");
-            (<HTMLButtonElement>(<HorizontalStack>this.saveBtnContainer).children[0]).style.fontWeight = "normal";
-            this.saveBtnContainer.children[0].setAttribute("disabled", "true");
+            this._saveBtn.classList.remove("blink");
+            this._saveBtn.style.fontWeight = "normal";
+            this._saveBtn.setAttribute("disabled", "true");
+            
+            this._cancelBtn.style.fontWeight = "normal";
+            this._cancelBtn.setAttribute("disabled", "true");
         }
         this._readyToSave = val;
         EventManager.blockedByUnsavedChanges = val;
@@ -33,13 +41,13 @@ export class FrameDetail extends AbstractComponent {
     }
 
     //blinkable: string[] = new Array(); // String array of blinkable elements (for query)
-    constructor(saveCallback, layoutProps?: IComponentProperties) {
+    constructor(saveCallback, cancelCallback, layoutProps?: IComponentProperties) {
         super(Utils.mergeObjects(layoutProps, {
         }));
-        this.initialize(saveCallback);
+        this.initialize(saveCallback, cancelCallback);
     }
 
-    initialize(saveCallback) {
+    initialize(saveCallback, cancelCallback) {
         this.innerHTML = `        
             <div class="form-wrapper">
                 <div class="form">
@@ -51,17 +59,25 @@ export class FrameDetail extends AbstractComponent {
         this.rows = this.querySelector(".detail-frame-rows");
         this.actualFrameListType = -1;
         
-        this.saveBtnContainer = new HorizontalStack({
+        this.btnsContainer = new HorizontalStack({
             innerHTML: `
-            <button class="save-btn">Uložit</button>
+            <button class="btn cancel-btn">Zrušit změny</button>
+            <button class="btn save-btn">Uložit</button>
             `,
             classList: "settings-btns-stack"
         });
-        this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", saveCallback);
+        this._cancelBtn = this.btnsContainer.querySelector(".cancel-btn");
+        this._cancelBtn.addEventListener("click", ()=>{
+            cancelCallback();
+            this.readyToSave = false;
+        });
+        this._saveBtn = this.btnsContainer.querySelector(".save-btn");
+        this._saveBtn.addEventListener("click", saveCallback);
+
         this.readyToSave = false;
         
         let form = <HTMLElement>this.querySelector(".form");
-        AbstractComponent.appendComponentsToDOMElements(form, [this.saveBtnContainer]);
+        AbstractComponent.appendComponentsToDOMElements(form, [this.btnsContainer]);
     }
 
     updateTitle(title: string) {
