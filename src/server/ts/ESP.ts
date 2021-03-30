@@ -60,8 +60,8 @@ class SensorInfo
 
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_TEMP] = "BMP280-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_PRESS] = "BMP280-tlak";
-SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_TEMP] = "BMP280-teplota";
-SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_HUM] = "BMP280-vlhkost";
+SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_TEMP] = "SHT21-teplota";
+SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_HUM] = "SHT21-vlhkost";
 
 
 module.exports = {

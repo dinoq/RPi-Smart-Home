@@ -29,6 +29,7 @@
 
 #include <Wire.h>
 
+#include <Sodaq_SHT2x.h>
 
 void setup()
 {

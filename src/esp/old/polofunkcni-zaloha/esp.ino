@@ -12,10 +12,7 @@ unsigned int CoAPPort = 5683;
 String inputPrefix = "input=";
 int inputPrefixLen = 6;
 int lastConnectedToRPi = 0; // Number of seconds from last connection
-
 bool BMP280Begun = false;
-bool wireBegun = false;
-
 int watchedINIndex = 0;
 SensorInfo watched[WATCHED_IN_LIMIT];
 Memory mem;
@@ -51,15 +48,13 @@ void setup()
 
     Serial.println("Setup CoAP callbacks");
     coap.server(callbackSetAllIO, "set-all-IO-state");
-    coap.server(callbackSetOutput, "set-output");
+    /*coap.server(callbackSetOutput, "set-output");
     coap.server(callbackObserveInput, "observe-input");
     coap.server(callbackStopInputObservation, "stop-input-observation");
     coap.server(callbackChangeObservedInput, "change-observed-input");
     coap.server(callbackResetModule, "reset-module");
     coap.server(callbackHelloClient, "hello-client");
-    coap.server(callbackSetID, "set-id");
-    
-    coap.response(callback_response);
+    coap.server(callbackSetID, "set-id");*/
 
 
     Udp.beginMulticast(WiFi.localIP(), multicastIP, CoAPPort); // In order to enable listening on multicast
@@ -82,10 +77,12 @@ void loop()
     delay(SENSOR_CHECK_TIME);
     //checkRPiConn();
     //checkMulticast();
+    Serial.println("Pre");
     coap.loop();
-    if(checkIO_Inited()){
+    Serial.println("POST");
+    /*if(checkIO_Inited()){
         checkInValues();
-    }
+    }*/
 }
 
 void checkRPiConn()
@@ -112,7 +109,7 @@ bool checkIO_Inited(){
 
         
     Serial.println("Init IO (send coap msg to server)");
-    int msgid = coap.send(RpiIP, CoAPPort, "get-all-IO-state", COAP_CON, COAP_GET, NULL, 0, NULL, 0, COAP_TEXT_PLAIN);
+    //int msgid = coap.send(RpiIP, CoAPPort, "get-all-IO-state", COAP_CON, COAP_GET, NULL, 0, NULL, 0, COAP_TEXT_PLAIN);
     return false;  
 }
 
@@ -194,15 +191,14 @@ void checkInValues()
                         newVal = getSensorVal(watched[i]);
                     }
                 }
-                Serial.println("watched[i].IN");
-                Serial.println((byte)watched[i].IN);
-                Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));
+                /*Serial.println("watched[i].IN");
+          Serial.println((byte)watched[i].IN);
+          Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));*/
                 if (isDifferentEnough(newVal, watched[i].val, watched[i]))
                 {
-                    /*Serial.println("watched[i].IN,val a newVal");
+                    Serial.println("watched[i].IN a val");
                     Serial.println((byte)watched[i].IN);
                     Serial.println(watched[i].val);
-                    Serial.println(newVal);*/
 
                     char payload[15];
                     float valToSend = (watched[i].val_type == DIGITAL && (newVal > 0)) ? 1023 : newVal; // if digital, map value from 0/1 to 0/1023 (because client interpret digital values this way). Else send newVal
@@ -464,8 +460,11 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
         return;
 
     Serial.println("callbackSetAllIO");
+    Serial.println("callbackSetAllIO");
+    Serial.println(RpiIP);
 
-    lastConnectedToRPi = 0;
+    return;
+    /*lastConnectedToRPi = 0;
 
     resetSensorInfos();
 
@@ -496,7 +495,6 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
     memcpy(strIN, optionIN.buffer, optionIN.length);
     strIN[optionIN.length] = NULL;
     Serial.println("strIN:" + String(strIN));
-
     char strOUT[optionOUT.length];
     memcpy(strOUT, optionOUT.buffer, optionOUT.length);
     strOUT[optionOUT.length] = NULL;
@@ -511,8 +509,6 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
         if (strncmp(input, "IN", 2))
         {
             SensorInfo info = getSensorInfo(input);
-            Serial.println("infoinfoinfoinfo");
-            Serial.println(info.IN);
             info.val = UNINITIALIZED_SENSOR_VALUE; // Uninitialize value in order to get (send) value at next calling of checkInValues() in loop()
             if (!alreadyWatched(info))
             {
@@ -572,7 +568,7 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
     //This msg from server is non comfirmable => don't send response...
     //coap.sendResponse(RpiIP, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen);
 
-    return;
+    return;*/
 }
 
 // CoAP server endpoint URL
@@ -798,19 +794,10 @@ SensorInfo getSensorInfo(char input[])
         if (!strncmp(input + 4, "BMP280", strlen("BMP280"))) //eg. "I2C-BMP280-teplota"
         {
             IN = (strlen(input) >= 18 && !strncmp(input + 11, t, strlen(t))) ? BMP280_TEMP : BMP280_PRESS; //temp or press (temperature/pressure)
-            if(!BMP280Begun){
-                bmp.begin(BMP280_ADRESS);
-                BMP280Begun = true;
-            }
-            
         }
         else if (!strncmp(input + 4, "SHT21", strlen("SHT21"))) //eg. "I2C-SHT21-teplota"
         {
-            IN = (strlen(input) >= 17 && !strncmp(input + 10, t, strlen(t))) ? SHT21_TEMP : SHT21_HUM; //temp or press (temperature/pressure)
-            if(!wireBegun){
-                Wire.begin();
-                wireBegun = true;
-            }
+            IN = (strlen(input) >= 18 && !strncmp(input + 10, t, strlen(t))) ? SHT21_TEMP : SHT21_HUM; //temp or press (temperature/pressure)
         }
         else
         {
@@ -884,11 +871,11 @@ void callbackChangeObservedInput(CoapPacket &packet, IPAddress ip, int port)
     memcpy(newIN, newInOption.buffer, newInOption.length);
     newIN[newInOption.length] = NULL;
 
-    Serial.println("oldIN:" + String(oldIN)); 
+    Serial.println("oldIN:" + String(oldIN));
     Serial.println("newIN:" + String(newIN));
 
-    SensorInfo oldInfo = getSensorInfo(oldIN+4);// +4 because we want to "remove" beginning of the string ("old=")
-    SensorInfo newInfo = getSensorInfo(newIN+4);// +4 because we want to "remove" beginning of the string ("new=")
+    SensorInfo oldInfo = getSensorInfo(oldIN);
+    SensorInfo newInfo = getSensorInfo(newIN);
     for (int i = 0; i < WATCHED_IN_LIMIT; i++)
     {
         if (watched[i].IN == oldInfo.IN && watched[i].val_type == oldInfo.val_type)
@@ -994,10 +981,4 @@ void printMemory(String msg)
     Serial.println();
 }
 
-
-// CoAP client response callback
-void callback_response(CoapPacket &packet, IPAddress ip, int port) {
-  Serial.println("[Coap Response got]");
-  //This function must be here in order to send CoAP messages to CoAP server
-}
 //netsh interface ip show joins

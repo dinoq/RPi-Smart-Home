@@ -57,7 +57,7 @@ module.exports = class Firebase {
                     }
                 }
                 IN = (IN) ? IN : "IN:";
-                OUT = (OUT) ? OUT : "&OUT:";
+                OUT = (OUT) ? OUT : "OUT:";
                 if (moduleFoundedInDB) {
                     /*
                     let addToOptions = (name, val) => {
@@ -274,7 +274,18 @@ module.exports = class Firebase {
                         || (device.type != localDevice.type)) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
                         let output = (device.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
                         output += device.output.toString().substring(1);
-                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: output, value: devices[deviceID].value.toString() } });
+                        let val = Number.parseInt(devices[deviceID].value);
+                        if (device.type == "analog") {
+                            if (val < 50) {
+                                val = 0;
+                                output = "D" + output.substring(1);
+                            }
+                            if (val > 950) {
+                                val = 1023;
+                                output = "D" + output.substring(1);
+                            }
+                        }
+                        this.changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: output, value: val.toString() } });
                     }
                 }
             }
