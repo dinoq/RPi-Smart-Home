@@ -172,7 +172,7 @@ module.exports = class Firebase {
         })
         if(moduleFoundedInDB){
             if (!this._updateSensorsInDBTimeout) {
-                this._updateSensorsInDBTimeout = setTimeout(this._updateSensorsInDB, 1000);
+                this._updateSensorsInDBTimeout = setTimeout(this._updateSensorsInDB, 200);
             }            
         }else{ // Module was probably deleted from database, when module was OFF => reset that module
             this._communicationManager.resetModule(moduleIP);
@@ -350,7 +350,15 @@ module.exports = class Firebase {
                 for (const localSensorID in localSensors) {
                     const sensor = (sensors) ? sensors[localSensorID] : undefined;
                     if (!sensor) {// SENSOR was removed
+                        //find old sensor in this._sensors and remove it
+                        let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; })
+                        let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${localRoomID}/devices/${localModuleID}/IN/${localSensorID}/value`);
+                        if (sIdx != -1) {
+                            this._sensors.splice(sIdx, 1);
+                        }
+
                         this.changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: localModule.IP, input: localSensors[localSensorID].input.toString() } });
+                        
                     }
                 }
 

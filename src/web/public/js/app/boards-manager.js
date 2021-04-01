@@ -60,6 +60,11 @@ Board.wemosD1R1 = {
         //D9: 2, // ESP8266 LED
         D10: 15,
     },
+    builtInLedPin: 2,
+    i2cPins: {
+        SCL: "D3",
+        SDA: "D4"
+    },
     bus: ["SPI", "I2C"]
 };
 Board.NodeMCU = {
@@ -77,7 +82,22 @@ Board.NodeMCU = {
         D7: 13,
         D8: 15,
     },
+    builtInLedPin: 2,
+    i2cPins: {
+        SCL: "D1",
+        SDA: "D2"
+    },
     bus: ["SPI", "I2C"]
+};
+Board.esp01 = {
+    analogPins: {},
+    digitalPins: {
+        D0: 0,
+        D1: 1,
+        D2: 2,
+        D3: 3,
+    },
+    builtInLedPin: 1,
 };
 class BusDevices {
 }

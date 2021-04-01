@@ -164,6 +164,6 @@ module.exports = class CommunicationManager {
         console.log('setAllIO: ', InOut);
         this.coapRequest(ip, "/set-all-IO-state", InOut, "PUT", null, null, (err) => {
             console.error('setAllIO err: ', err.message);
-        }, true);
+        }, false);
     }
 };

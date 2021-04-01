@@ -20,7 +20,7 @@
  * CONFIG PART BEGIN (recommended to change)
  */
 
-String boardType = "NodeMCU"; // Any from [wemosD1R1, NodeMCU]
+String boardType = "esp01"; // Any from [wemosD1R1, NodeMCU, esp01]
 const char *ssid = "sprintel_antlova";
 const char *password = "netis111";
 /**
@@ -86,6 +86,7 @@ void printMemory(String msg);
 
 bool checkIO_Inited();
 
+void blinkIfNotConnectedAndDelay();
 
 
 /**
@@ -107,6 +108,9 @@ const byte UNKNOWN = 255;
 
 const byte L = LOW;
 const byte H = HIGH;
+
+const byte LED_BUILTIN_HIGH = LOW; // Built in LED has "inverted" logic
+const byte LED_BUILTIN_LOW = HIGH;
 
 typedef enum
 {

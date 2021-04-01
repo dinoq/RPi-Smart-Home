@@ -20,7 +20,7 @@ export class RoomCard extends AbstractComponent {
     slider: Slider;
     _sliderDbUpdateTimeout: any = undefined; // Timeout of sending values from slider to DB. We don't want to send every single value, but in time intervals (if value changes)...
     _sliderDbUpdateTimeoutTime: number = 1000; // Number of ms between sending values from slider to DB. See _sliderDbUpdateTimeout for more info.
-    private _sliderBbUpdateInfo: {path: string, val: string} = undefined; // path to update in database on slider value changed and actual val
+    private _sliderBbUpdateInfo: { path: string, val: string } = undefined; // path to update in database on slider value changed and actual val
 
     idOfSelectedDevices: string = "";
 
@@ -236,10 +236,10 @@ export class RoomCard extends AbstractComponent {
         if (this.idOfSelectedDevices) {
             //this.sliderActiveFor.updateVal(value); NOT SET VALUE DIRECTLY, BUT CALL FIREBASE TO UPDATE VALUE, AND FIREBASE (BECAUSE OF VALUE LISTENER) WILL NOTICE DEVICE WHICH CHANGED
             let dev = this.getDeviceByDBID(this.idOfSelectedDevices);
-            this._sliderBbUpdateInfo = {path: dev.devicePath, val: value};
+            this._sliderBbUpdateInfo = { path: dev.devicePath, val: value };
 
-            if(!this._sliderDbUpdateTimeout){
-                this._sliderDbUpdateTimeout= setTimeout(() => {
+            if (!this._sliderDbUpdateTimeout) {
+                this._sliderDbUpdateTimeout = setTimeout(() => {
                     this._sliderDbUpdateTimeout = undefined;
                     Firebase.updateDBData(this._sliderBbUpdateInfo.path, { value: this._sliderBbUpdateInfo.val });
                 }, this._sliderDbUpdateTimeoutTime)
@@ -304,9 +304,9 @@ export class RoomSensor extends AbstractComponent {
                 break;
             case "switch":
                 if (sensor.value > 512)
-                    icon = new Icon("switch-closed-90")
+                    icon = new Icon("switch-on-90")
                 else
-                    icon = new Icon("switch-opened-90")
+                    icon = new Icon("switch-off-90")
                 break;
             case "-":
                 icon = new Icon("no-icon");
@@ -328,7 +328,7 @@ export class RoomSensor extends AbstractComponent {
         }
 
         if (sensor.unit.includes("on-off")) {
-            let values = ["On", "Off", "Zapnuto", "Vypnuto", "Sepnuto", "Rozepnuto", "Otevřeno", "Zavřeno"];
+            let values = ["On", "Off", "Zapnuto", "Vypnuto", "Sepnuto", "Rozepnuto", "Zavřeno", "Otevřeno"];
             let valueIdx = Number.parseInt(sensor.unit.substring("on-off".length));
             valueText = (sensor.value > 512) ? values[valueIdx * 2] : values[valueIdx * 2 + 1];
             unitText = "";
@@ -337,7 +337,10 @@ export class RoomSensor extends AbstractComponent {
             valueText = (sensor.value) ? sensor.value : "0";
         } else if (sensor.unit == "percentages") {
             unitText = "%";
-            valueText = (Math.round((sensor.value  * 100)/ 1023)).toString();
+            if (sensor.input.startsWith("I2C"))
+                valueText = sensor.value;
+            else // If value was not gained from I2C sensor, recalculate value to percentages
+                valueText = (Math.round((sensor.value * 100) / 1023)).toString();
         } else if (sensor.unit == "number") {
             unitText = "";
             valueText = sensor.value;
@@ -384,12 +387,6 @@ export class RoomDevice extends AbstractComponent {
     }
 
     initIcon() {
-
-        /*
-        
-                ["light", "Světlo", "switch", "Spínač", "motor", "Motor"],  // digital
-                ["dimmable-light", "Stmívatelné světlo", "servo-motor", "Servo motor"]  //analog
-        */
         switch (this.icon) {
             case "light":
                 this.iconWrapper.innerHTML = `        
@@ -407,18 +404,16 @@ export class RoomDevice extends AbstractComponent {
                         <img src="img/icons/bulb2.png">
                     </div> 
                     <div style="position:relative;display: flex;justify-content: center;">
-                        <img src="img/icons/bulb-dimmable2.png">
-                    </div>
-                `;
-                break;
-            case "switch":
-                this.iconWrapper.innerHTML = `        
-                    <div style="position:relative;display: flex;justify-content: center;">
-                        <img src="img/icons/switch-closed.png">
+                        <img src="img/icons/bulb-dim.png">
                     </div>
                 `;
                 break;
             default:
+                this.iconWrapper.innerHTML = `        
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/${this.icon}-off.png">
+                    </div>
+                `;
                 break;
         }
         let img = this.iconWrapper?.querySelector("img");
@@ -471,25 +466,20 @@ export class RoomDevice extends AbstractComponent {
             case "light":
                 bgImage = <HTMLElement>this.querySelector(".bg-image");
                 bgImage.style.height = Math.round((val / 1023) * RoomDevice.IMG_HEIGHT) + "px";
-
                 break;
 
             case "dimmable-light":
-
                 bgImage = <HTMLElement>this.querySelector(".bg-image");
                 bgImage.style.height = Math.round((val / 1023) * RoomDevice.IMG_HEIGHT) + "px";
                 break;
-            case "switch":
-                let iconName = (val) ? "switch-closed" : "switch-opened";
+
+            default:
+                let state = (val) ? "on" : "off";
                 this.iconWrapper.innerHTML = `        
                     <div style="position:relative;display: flex;justify-content: center;">
-                        <img src="img/icons/${iconName}.png">
+                        <img src="img/icons/${this.icon}-${state}.png">
                     </div>
                 `;
-                break;
-            default:
-
-
                 break;
         }
         this.value = val;

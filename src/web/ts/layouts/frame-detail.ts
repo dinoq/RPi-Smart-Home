@@ -1,4 +1,4 @@
-import { BoardsManager } from "../app/boards-manager.js";
+import { Board, BoardsManager } from "../app/boards-manager.js";
 import { EventManager } from "../app/event-manager.js";
 import { Utils } from "../app/utils.js";
 import { AbstractComponent, IComponentProperties } from "../components/component.js";
@@ -15,21 +15,21 @@ export class FrameDetail extends AbstractComponent {
     private btnsContainer: HorizontalStack;
     private _saveBtn: HTMLButtonElement;
     private _cancelBtn: HTMLButtonElement;
-    
+
     private _readyToSave: boolean = false;
     set readyToSave(val) {
         if (val) {
             this._saveBtn.classList.add("blink");
             this._saveBtn.style.fontWeight = "bold";
             this._saveBtn.removeAttribute("disabled");
-            
+
             this._cancelBtn.style.fontWeight = "bold";
             this._cancelBtn.removeAttribute("disabled");
         } else {
             this._saveBtn.classList.remove("blink");
             this._saveBtn.style.fontWeight = "normal";
             this._saveBtn.setAttribute("disabled", "true");
-            
+
             this._cancelBtn.style.fontWeight = "normal";
             this._cancelBtn.setAttribute("disabled", "true");
         }
@@ -58,7 +58,7 @@ export class FrameDetail extends AbstractComponent {
         `;
         this.rows = this.querySelector(".detail-frame-rows");
         this.actualFrameListType = -1;
-        
+
         this.btnsContainer = new HorizontalStack({
             innerHTML: `
             <button class="btn cancel-btn">Zrušit změny</button>
@@ -67,7 +67,7 @@ export class FrameDetail extends AbstractComponent {
             classList: "settings-btns-stack"
         });
         this._cancelBtn = this.btnsContainer.querySelector(".cancel-btn");
-        this._cancelBtn.addEventListener("click", ()=>{
+        this._cancelBtn.addEventListener("click", () => {
             cancelCallback();
             this.readyToSave = false;
         });
@@ -75,7 +75,7 @@ export class FrameDetail extends AbstractComponent {
         this._saveBtn.addEventListener("click", saveCallback);
 
         this.readyToSave = false;
-        
+
         let form = <HTMLElement>this.querySelector(".form");
         AbstractComponent.appendComponentsToDOMElements(form, [this.btnsContainer]);
     }
@@ -130,7 +130,7 @@ export class FrameDetail extends AbstractComponent {
 
         Array.from(this.rows.children).forEach((row, index) => {
             let val = ((typeof values[index] == "string")) ? values[index] : (values[index])?.toString();
-            (<FrameDetailRow>row).initialize(val,  (event) => { this.readyToSave = true });
+            (<FrameDetailRow>row).initialize(val, (event) => { this.readyToSave = true });
         });
     }
 
@@ -182,11 +182,15 @@ export class FrameDetailRow extends AbstractComponent {
                 <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value="" disabled/> 
             `;
         } else if (type == DETAIL_FIELD_TYPES.SELECT_SENSOR_TYPE) {
+            let selectedModule = <FrameListItem>document.querySelectorAll("frame-list")[1].querySelector(".active");
+            let boardType = selectedModule.dbCopy.type;            
+            let i2cPins = (Board[boardType])? Board[boardType].i2cPins : undefined;
+            let i2cOption = (i2cPins)? `<option value="bus">Sběrnice I2C (SCL = pin ${i2cPins.SCL}, SDA = pin ${i2cPins.SDA})</option>` : "";
             input.innerHTML = `                            
                 <select id="${id}" name="${id}">
                 <option value="digital">Digitální pin</option>
                 <option value="analog">Analogový pin</option>
-                <option value="bus">Sběrnice I2C</option>
+                ${i2cOption}
                 </select>
             `;
         } else if (type == DETAIL_FIELD_TYPES.SELECT_SENSOR_INPUT) {
@@ -198,7 +202,7 @@ export class FrameDetailRow extends AbstractComponent {
                 </select>
             `;
 
-            let inputType = <HTMLInputElement>document.getElementById("input-type");
+            let inputType = <HTMLInputElement>document.getElementById("input-type");            
 
             let options = [
                 BoardsManager.mapToArrayForSelect("digital", boardType),  // digital
@@ -216,7 +220,7 @@ export class FrameDetailRow extends AbstractComponent {
             let inputType = <HTMLInputElement>document.getElementById("input-type");
 
             let options = [
-                ["on-off0", "On / Off", "on-off1", "Zapnuto / Vypnuto", "on-off2", "Sepnuto / Rozepnuto", "on-off3", "Otevřeno / Zavřeno"],  // digital
+                ["on-off0", "On / Off", "on-off1", "Zapnuto / Vypnuto", "on-off2", "Sepnuto / Rozepnuto", "on-off3", "Zavřeno / Otevřeno"],  // digital
                 ["c", "°C", "percentages", "%", "number", "číslo 0-1023 (Bez jednotky)"],  //analog                
                 ["c", "°C", "percentages", "%", "number", "číslo 0-1023 (Bez jednotky)"]  //bus
             ];
@@ -232,8 +236,8 @@ export class FrameDetailRow extends AbstractComponent {
 
             let options = [
                 ["switch", "Spínač", "-", "Bez ikony"],  // Digital
-                ["temp", "Teploměr", "-", "Bez ikony"],  // Analog
-                ["temp", "Teploměr", "bmp-temp", "Senzor BMP (teplota)", "bmp-press", "Senzor BMP (tlak)", "-", "Bez ikony"]  // Bus
+                ["temp", "Teploměr", "press", "Tlakoměr", "hum", "Vlhkost", "-", "Bez ikony"],  // Analog
+                ["temp", "Teploměr", "bmp-temp", "Senzor BMP (teplota)", "sht-temp", "Senzor SHT (teplota)", "press", "Tlakoměr", "hum", "Vlhkost", "-", "Bez ikony"]  // Bus
             ];
 
             this.initOptionsFromADSelect(options, inputType);
@@ -271,8 +275,8 @@ export class FrameDetailRow extends AbstractComponent {
             let outputType = <HTMLInputElement>document.getElementById("output-type");
 
             let options = [
-                ["light", "Světlo", "switch", "Spínač", "motor", "Motor", "-", "Bez ikony"],  // digital
-                ["dimmable-light", "Stmívatelné světlo", "servo-motor", "Servo motor", "-", "Bez ikony"]  //analog
+                ["light", "Světlo", "switch", "Spínač", "motor", "Motor"],  // digital
+                ["dimmable-light", "Stmívatelné světlo"]  //analog
             ];
 
             this.initOptionsFromADSelect(options, outputType);

@@ -1,4 +1,4 @@
-import { BoardsManager } from "../app/boards-manager.js";
+import { Board, BoardsManager } from "../app/boards-manager.js";
 import { EventManager } from "../app/event-manager.js";
 import { Utils } from "../app/utils.js";
 import { AbstractComponent } from "../components/component.js";
@@ -153,11 +153,15 @@ export class FrameDetailRow extends AbstractComponent {
             `;
         }
         else if (type == DETAIL_FIELD_TYPES.SELECT_SENSOR_TYPE) {
+            let selectedModule = document.querySelectorAll("frame-list")[1].querySelector(".active");
+            let boardType = selectedModule.dbCopy.type;
+            let i2cPins = (Board[boardType]) ? Board[boardType].i2cPins : undefined;
+            let i2cOption = (i2cPins) ? `<option value="bus">Sběrnice I2C (SCL = pin ${i2cPins.SCL}, SDA = pin ${i2cPins.SDA})</option>` : "";
             input.innerHTML = `                            
                 <select id="${id}" name="${id}">
                 <option value="digital">Digitální pin</option>
                 <option value="analog">Analogový pin</option>
-                <option value="bus">Sběrnice I2C</option>
+                ${i2cOption}
                 </select>
             `;
         }
@@ -183,7 +187,7 @@ export class FrameDetailRow extends AbstractComponent {
             `;
             let inputType = document.getElementById("input-type");
             let options = [
-                ["on-off0", "On / Off", "on-off1", "Zapnuto / Vypnuto", "on-off2", "Sepnuto / Rozepnuto", "on-off3", "Otevřeno / Zavřeno"],
+                ["on-off0", "On / Off", "on-off1", "Zapnuto / Vypnuto", "on-off2", "Sepnuto / Rozepnuto", "on-off3", "Zavřeno / Otevřeno"],
                 ["c", "°C", "percentages", "%", "number", "číslo 0-1023 (Bez jednotky)"],
                 ["c", "°C", "percentages", "%", "number", "číslo 0-1023 (Bez jednotky)"] //bus
             ];
@@ -197,8 +201,8 @@ export class FrameDetailRow extends AbstractComponent {
             let inputType = document.getElementById("input-type");
             let options = [
                 ["switch", "Spínač", "-", "Bez ikony"],
-                ["temp", "Teploměr", "-", "Bez ikony"],
-                ["temp", "Teploměr", "bmp-temp", "Senzor BMP (teplota)", "bmp-press", "Senzor BMP (tlak)", "-", "Bez ikony"] // Bus
+                ["temp", "Teploměr", "press", "Tlakoměr", "hum", "Vlhkost", "-", "Bez ikony"],
+                ["temp", "Teploměr", "bmp-temp", "Senzor BMP (teplota)", "sht-temp", "Senzor SHT (teplota)", "press", "Tlakoměr", "hum", "Vlhkost", "-", "Bez ikony"] // Bus
             ];
             this.initOptionsFromADSelect(options, inputType);
         }
@@ -233,8 +237,8 @@ export class FrameDetailRow extends AbstractComponent {
             `;
             let outputType = document.getElementById("output-type");
             let options = [
-                ["light", "Světlo", "switch", "Spínač", "motor", "Motor", "-", "Bez ikony"],
-                ["dimmable-light", "Stmívatelné světlo", "servo-motor", "Servo motor", "-", "Bez ikony"] //analog
+                ["light", "Světlo", "switch", "Spínač", "motor", "Motor"],
+                ["dimmable-light", "Stmívatelné světlo"] //analog
             ];
             this.initOptionsFromADSelect(options, outputType);
         }
