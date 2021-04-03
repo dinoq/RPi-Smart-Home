@@ -1,5 +1,4 @@
 import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
-import { BlankPage } from "../pages/blank-page.js";
 import { Effects, PageManager } from "./page-manager.js";
 import { AppRouter, Pages, PagesKeys, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
@@ -7,6 +6,7 @@ import { LoginPage } from "../pages/login-page.js";
 import { HomePage } from "../pages/home-page.js";
 import { Firebase } from "./firebase.js";
 import { SettingsPage } from "../pages/settings-page.js";
+import { RegistrationPage } from "../pages/registration-page.js";
 export class PageCreator {
     constructor() {
         this.renderPage = () => {
@@ -25,9 +25,6 @@ export class PageCreator {
                 this.renderNotLoggedIn(route);
             }
         };
-        this.createDashboard = () => {
-            //this.header.mountComponent("header");
-        };
         this.pageManager = PageManager.getInstance();
         this.hamburgerMenu = new HamburgerMenu();
         this.router = new AppRouter();
@@ -37,19 +34,17 @@ export class PageCreator {
     renderLoggedIn(route) {
         let page;
         switch (route.page) {
-            case Pages.HOME:
-                page = PagesKeys.HOME;
-                this.pageManager.addPage(new HomePage(), PagesKeys.HOME);
-                break;
-            case Pages.CONDITIONS:
-                page = PagesKeys.CONDITIONS;
-                this.pageManager.addPage(new BlankPage(), PagesKeys.CONDITIONS);
-                break;
             case Pages.SETTINGS:
                 page = PagesKeys.SETTINGS;
                 this.pageManager.addPage(new SettingsPage(), PagesKeys.SETTINGS);
                 break;
-            default:
+            case Pages.HOME:
+                page = PagesKeys.HOME;
+                this.pageManager.addPage(new HomePage(), PagesKeys.HOME);
+                break;
+            default: // similar to home, but replace URL!
+                page = PagesKeys.HOME;
+                this.pageManager.addPage(new HomePage(), PagesKeys.HOME);
                 URLManager.replaceURL(Paths.HOME, PagesKeys.HOME);
                 break;
         }
@@ -58,27 +53,23 @@ export class PageCreator {
     renderNotLoggedIn(route) {
         switch (route.page) {
             case Pages.LOGIN:
-                if (!this.pageManager.containsPageKey("login")) {
-                    let login = this.createLogin(route.afterLoginPath);
-                    this.pageManager.addPage(login, "login");
+                if (!this.pageManager.containsPageKey(PagesKeys.LOGIN)) {
+                    let login = new LoginPage();
+                    login.loginForm.redirectAfterLogin(route.afterLoginPath);
+                    this.pageManager.addPage(login, PagesKeys.LOGIN);
                 }
-                this.pageManager.setActive("login");
+                this.pageManager.setActive(PagesKeys.LOGIN);
+                break;
+            case Pages.REGISTER:
+                if (!this.pageManager.containsPageKey(PagesKeys.REGISTER)) {
+                    let register = new RegistrationPage();
+                    this.pageManager.addPage(register, PagesKeys.REGISTER);
+                }
+                this.pageManager.setActive(PagesKeys.REGISTER);
                 break;
             default:
                 break;
         }
-        switch (route.afterLoginPage) {
-            case Pages.LOGIN:
-                break;
-            default:
-                URLManager.replaceURL(Paths.LOGIN, "login", true);
-                break;
-        }
-    }
-    createLogin(redirectAfterLogin) {
-        let login = new LoginPage();
-        login.loginForm.redirectAfterLogin(redirectAfterLogin);
-        return login;
     }
 }
 export var PageElements;

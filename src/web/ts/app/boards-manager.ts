@@ -30,15 +30,16 @@ export class BoardsManager {
             }
         } else if (type == "bus") {
             let buses: Array<string> = Board[boardType].bus;
-
-            for (const bus of buses) {
-                for (const busDevice of BusDevices[bus]) {
-                    //let sensorName = busDevice.substring(0, busDevice.indexOf(""))
-                    let sensorName = busDevice.replace(" ", "-");
-                    sensorName = sensorName.replace("(", "");
-                    sensorName = sensorName.replace(")", "");
-                    optionArr.push(`${bus}-${sensorName}`);
-                    optionArr.push(`${busDevice}`);
+            if(buses){
+                for (const bus of buses) {
+                    for (const busDevice of BusDevices[bus]) {
+                        //let sensorName = busDevice.substring(0, busDevice.indexOf(""))
+                        let sensorName = busDevice.replace(" ", "-");
+                        sensorName = sensorName.replace("(", "");
+                        sensorName = sensorName.replace(")", "");
+                        optionArr.push(`${bus}-${sensorName}`);
+                        optionArr.push(`${busDevice}`);
+                    }
                 }
             }
         }

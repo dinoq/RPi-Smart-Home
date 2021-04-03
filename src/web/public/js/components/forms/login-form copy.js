@@ -1,6 +1,4 @@
-import { Paths } from "../../app/app-router.js";
 import { Firebase } from "../../app/firebase.js";
-import { URLManager } from "../../app/url-manager.js";
 import { AbstractComponent } from "../component.js";
 export class LoginComponent extends AbstractComponent {
     constructor(componentProps) {
@@ -12,10 +10,6 @@ export class LoginComponent extends AbstractComponent {
             lf.addEventListener('submit', this.login);
             l.addEventListener('input', this.inputChange);
             p.addEventListener('input', this.inputChange);
-            let register = this.querySelector("#registration-link button");
-            register.addEventListener('click', () => {
-                URLManager.setURL(Paths.REGISTER);
-            });
         };
         this.login = async (event) => {
             event.preventDefault();
@@ -63,9 +57,6 @@ export class LoginComponent extends AbstractComponent {
                 </div>
                 <input type="submit" id="submit-login" class="btn btn-primary" value="Přihlásit"/>
             </form>
-            <div id="registration-link">
-                Nemáte účet? <button href="">Zaregistrovat!</button>
-            </div>
         </div>
         `;
     }

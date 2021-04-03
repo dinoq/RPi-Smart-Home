@@ -7,14 +7,13 @@
 //#include "user_interface.h"
 #include <Wire.h>
 //#include <Adafruit_Sensor.h>
-#include <Adafruit_BMP280.h>
-#include <Sodaq_SHT2x.h>
+
+#include <Adafruit_BMP280.h> // BMP280 sensor library
+#include <Sodaq_SHT2x.h> // SHT21 sensor library
+#include <BH1750.h> // BH1750 sensor library
 
 #include "memory.h"
 
-/**
- * Function prototypes PART END
- * */
 
 /**
  * CONFIG PART BEGIN (recommended to change)
@@ -57,7 +56,6 @@ void loop();
 void checkRPiConn();
 void checkMulticast();
 void checkInValues();
-void initIfBMP280AndNotInited(byte IN);
 float getSensorVal(SensorInfo sInfo);
 float getSensorVal(byte val_type, byte IN);
 float getI2CVal(byte IN);
@@ -88,16 +86,19 @@ bool checkIO_Inited();
 
 void blinkIfNotConnectedAndDelay();
 
+void beginWireIfNotBegun();
+boolean beginBMP(boolean forceBegin);
+boolean beginBMP();
 
 /**
- * Function prototypes PART BEGIN
+ * Function prototypes PART END
  * */
 
 const byte WATCHED_IN_LIMIT = 20;
 
-const float INVALID_SENSOR_VALUE = -1000000000.0;       // "Random" value, which will probably not be used in any sensor as valid value
+const float INVALID_SENSOR_VALUE = -2000000000.0;       // "Random" value, which will probably not be used in any sensor as valid value
 const float UNINITIALIZED_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
-const int SENSOR_CHECK_TIME = 500;                     // How often check for sensors values (in ms)
+const int SENSOR_CHECK_TIME = 500;                     // How often check for sensors values (in ms). Must be > 180 if sensor BH1750 is used.
 
 const byte ID_MEM_ADDR = 7;       // Address of beginning of SensorInfos in flash memory. It is saved after string "IP:????" => 7
 const byte ID_MEM_DATA_ADDR = 10;          // "IP:????ID:" => 7+3

@@ -16,17 +16,20 @@ module.exports = class Firebase {
         this._CoAPIncomingMsgCallback = (req, res) => {
             console.log('coap request');
             if (req.url == "/new-value") { // New value from sensor arrived
-                let val_type = req.payload[req.payload.length - 2];
+                /*let val_type = req.payload[req.payload.length - 2];
+                let IN = Number.parseInt(req.payload[req.payload.length - 1]) - 1;
                 let valStr = req.payload.toString().substring("in:".length, req.payload.length - 2);
                 let val;
-                if (val_type == VALUE_TYPE.I2C) {
-                    val = Number.parseFloat(valStr);
-                }
-                else {
-                    val = Number.parseInt(valStr);
-                }
-                let IN = Number.parseInt(req.payload[req.payload.length - 1]) - 1;
-                this._updateSensor(new SensorInfo(IN, val_type, val), req.rsinfo.address);
+                if(valStr == "??"){
+                    this._updateSensor(new SensorInfo(IN, val_type, valStr), req.rsinfo.address);
+                }else{
+                    if (val_type == VALUE_TYPE.I2C) {
+                        val = Number.parseFloat(valStr).toFixed(1);
+                    } else {
+                        val = Number.parseInt(valStr);
+                    }
+                    this._updateSensor(new SensorInfo(IN, val_type, val), req.rsinfo.address);
+                }*/
             }
             else if (req.url == "/get-all-IO-state") { // module needs init its inputs and outputs
                 const moduleIP = req.rsinfo.address;
@@ -74,8 +77,11 @@ module.exports = class Firebase {
                     res.end();*/
                     this._communicationManager.setAllIO(moduleIP, IN + "&" + OUT);
                 }
-                else { // Module was probably deleted from database, when module was OFF => reset that module
+                else if (this._dbInited) { // Module was probably deleted from database, when module was OFF => reset that module
                     this._communicationManager.resetModule(moduleIP);
+                }
+                else { // db was still not inited in server...
+                    console.log("DB was not still inited in server");
                 }
             }
         };

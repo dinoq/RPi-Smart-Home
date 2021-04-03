@@ -11,6 +11,7 @@ import { HomePage } from "../pages/home-page.js";
 import { Firebase } from "./firebase.js";
 import { SettingsPage } from "../pages/settings-page.js";
 import { BasePage } from "../pages/base-page.js";
+import { RegistrationPage } from "../pages/registration-page.js";
 
 
 export class PageCreator {
@@ -49,56 +50,46 @@ export class PageCreator {
     renderLoggedIn(route: IRoute) {
         let page: PagesKeys;
         switch (route.page) {
-            case Pages.HOME:
-                page = PagesKeys.HOME;
-                this.pageManager.addPage(new HomePage(), PagesKeys.HOME);
-                break;
-            case Pages.CONDITIONS:
-                page = PagesKeys.CONDITIONS;
-                this.pageManager.addPage(new BlankPage(), PagesKeys.CONDITIONS);
-                break;
             case Pages.SETTINGS:
                 page = PagesKeys.SETTINGS;
                 this.pageManager.addPage(new SettingsPage(), PagesKeys.SETTINGS);
                 break;
-            default:
+                
+            case Pages.HOME: 
+                page = PagesKeys.HOME;
+                this.pageManager.addPage(new HomePage(), PagesKeys.HOME);
+                break;
+
+            default: // similar to home, but replace URL!
+                page = PagesKeys.HOME;
+                this.pageManager.addPage(new HomePage(), PagesKeys.HOME);
                 URLManager.replaceURL(Paths.HOME, PagesKeys.HOME);
                 break;
         }
-        
+
         this.pageManager.setActive(page, Effects.SWIPE_TO_RIGHT);
     }
 
     renderNotLoggedIn(route: IRoute) {
         switch (route.page) {
             case Pages.LOGIN:
-                if(!this.pageManager.containsPageKey("login")){
-                    let login = this.createLogin(route.afterLoginPath);
-                    this.pageManager.addPage(login, "login");
+                if (!this.pageManager.containsPageKey(PagesKeys.LOGIN)) {
+                    let login = new LoginPage();
+                    login.loginForm.redirectAfterLogin(route.afterLoginPath);
+                    this.pageManager.addPage(login, PagesKeys.LOGIN);
                 }
-                this.pageManager.setActive("login");
+                this.pageManager.setActive(PagesKeys.LOGIN);
+                break;
+            case Pages.REGISTER:
+                if (!this.pageManager.containsPageKey(PagesKeys.REGISTER)) {
+                    let register = new RegistrationPage();
+                    this.pageManager.addPage(register, PagesKeys.REGISTER);
+                }
+                this.pageManager.setActive(PagesKeys.REGISTER);
                 break;
             default:
                 break;
         }
-        switch (route.afterLoginPage) {
-            case Pages.LOGIN:
-
-                break;
-            default:
-                URLManager.replaceURL(Paths.LOGIN, "login", true);
-                break;
-        }
-    }
-
-    createDashboard = () => {
-        //this.header.mountComponent("header");
-    }
-
-    createLogin(redirectAfterLogin: string) {
-        let login = new LoginPage();
-        login.loginForm.redirectAfterLogin(redirectAfterLogin);
-        return login;
     }
 }
 

@@ -75,9 +75,9 @@ export class HamburgerMenu {
         let links = Array.from(this.itemsContainer.childNodes);
         for (let i = 0; i < links.length; i++) {
             const link = links[i];
-            link.addEventListener("click", () => {
+            link.addEventListener("click", async () => {
                 if (i == (links.length - 1)) {
-                    Firebase.logout();
+                    await Firebase.logout();
                 }
                 if (i == (links.length - 2)) { // Requested fullscreen
                     if (links[i].innerText.toUpperCase().includes("MAX")) {

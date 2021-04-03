@@ -159,6 +159,18 @@ login-form {
         justify-content: center;
         margin-top: 25px;
     }
+
+    #registration-link{
+        margin-top: 15px;
+
+        button{
+            font-weight: 500;
+            color: #007bff;
+            text-decoration: none;
+            background-color: transparent;      
+            border: none;
+        }
+    }
 }
 
 .dialog-wrapper {

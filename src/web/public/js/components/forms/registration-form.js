@@ -1,8 +1,6 @@
-import { Paths } from "../../app/app-router.js";
 import { Firebase } from "../../app/firebase.js";
-import { URLManager } from "../../app/url-manager.js";
 import { AbstractComponent } from "../component.js";
-export class LoginComponent extends AbstractComponent {
+export class RegistrationComponent extends AbstractComponent {
     constructor(componentProps) {
         super(componentProps);
         this.addListeners = () => {
@@ -12,10 +10,6 @@ export class LoginComponent extends AbstractComponent {
             lf.addEventListener('submit', this.login);
             l.addEventListener('input', this.inputChange);
             p.addEventListener('input', this.inputChange);
-            let register = this.querySelector("#registration-link button");
-            register.addEventListener('click', () => {
-                URLManager.setURL(Paths.REGISTER);
-            });
         };
         this.login = async (event) => {
             event.preventDefault();
@@ -57,15 +51,8 @@ export class LoginComponent extends AbstractComponent {
                     <label for="password" class="active-label">Heslo</label>
                     <input type="password" id="password"  name="password" onfocusin=${fin} onfocusout=${fout} required />
                 </div>
-                <div class="chekbox-wrapper">
-                    <input type="checkbox" id="remember" name="remember" />                    
-                    <label for="remember">Zapamatovat účet</label>
-                </div>
-                <input type="submit" id="submit-login" class="btn btn-primary" value="Přihlásit"/>
+                <input type="submit" id="submit-login" class="btn btn-primary" value="Registrovat"/>
             </form>
-            <div id="registration-link">
-                Nemáte účet? <button href="">Zaregistrovat!</button>
-            </div>
         </div>
         `;
     }
@@ -83,4 +70,4 @@ export class LoginComponent extends AbstractComponent {
         }
     }
 }
-LoginComponent.tagName = "login-form";
+RegistrationComponent.tagName = "registration-form";

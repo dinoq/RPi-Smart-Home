@@ -9,7 +9,7 @@ export class CustomComponentNotDefinedError extends BaseError{
         this.errMsg = "Error: Component created by '" + componentClassName  + 
         "' class not defined (not registered as custom HTML element).\n" + 
         "See 'registerAllComponents()' method of main app class (probably class '" + errorStackClasses[errorStackClasses.length-1] + "').\n" +
-        "Maybe only is not specified static property tagName in component's class'" + 
+        "Maybe only is not specified static property tagName in component's class.\n" + 
         "At class: " + errorStackClasses[0];
         this.showImmediately = true;
         if(this.showImmediately){

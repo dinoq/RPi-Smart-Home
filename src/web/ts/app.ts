@@ -25,6 +25,8 @@ import { FrameDetail, FrameDetailRow, SlidableImg } from "./layouts/frame-detail
 import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
 import { Loader, LoaderComponent } from "./components/others/loader.js";
 import { OneOptionDialog } from "./components/dialogs/cancel-dialog.js";
+import { RegistrationComponent } from "./components/forms/registration-form.js";
+import { RegistrationPage } from "./pages/registration-page.js";
 
 export declare var firebase: any;
 
@@ -48,6 +50,8 @@ class AutoHomeApp {
             
             LoginComponent,
             LoginPage,
+            RegistrationPage,
+            RegistrationComponent,
             BaseLayout,
             PageManagerComponent,
             BlankPage,

@@ -1,14 +1,14 @@
 Důležité Todo
 -registrace
 -trvalé x dočasné Přihlášení
+-callbackResetModule
+
 -Ikona přítomnosti osoby (senzor pohybu)
 -uživatel si může dopsat sám hodnoty pro on/off v detailu digitálního senzoru
 -IP modulu v detailu (disabled, podobně jako id modulu)
 -zobrazovat offline moduly červeně
 -zobrazovat, zda server běží (bude potřeba rozumně vymyslet)
 -přidat podporu pro zvláštní snímače (deště a vlkosti půdy - je u nich vhodné zapínat napětí jen při čtení hodnoty kvůli oxidace povrchu snímače)
-
-
 
 
 

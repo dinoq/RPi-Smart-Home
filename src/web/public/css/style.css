@@ -146,6 +146,18 @@ login-form .form-wrapper {
   margin-top: 25px;
 }
 
+login-form #registration-link {
+  margin-top: 15px;
+}
+
+login-form #registration-link button {
+  font-weight: 500;
+  color: #007bff;
+  text-decoration: none;
+  background-color: transparent;
+  border: none;
+}
+
 .dialog-wrapper .dialog {
   display: block;
   position: absolute;

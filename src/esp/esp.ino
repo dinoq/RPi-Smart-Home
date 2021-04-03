@@ -156,32 +156,16 @@ void checkInValues()
     {
         if (watched[i].IN != UNSET)
         {
-            initIfBMP280AndNotInited(watched[i].IN); //If sensor was not connected until now, init communication with it
             float newVal = getSensorVal(watched[i]);
-            if (watched[i].IN == BMP280_TEMP || watched[i].IN == BMP280_PRESS)
-            { // If sensor is BMP280 and received value is 0.00, there is chance, that sensor was removed (and maybe connected again), so initialize and if succed get value again...
-                if (!bmp.begin(BMP280_ADRESS))
-                {
-                    Serial.println("BMP280 senzor nenalezen");
-                }
-                else
-                {
-                    newVal = getSensorVal(watched[i]);
-                }
-            }
             if (isDifferentEnough(newVal, watched[i].val, watched[i]))
             {
-                /*Serial.println("watched[i].IN,val a newVal");
+                /*Serial.println("watched[i].IN");
                 Serial.println((byte)watched[i].IN);
-                Serial.println(watched[i].val);
-                Serial.println(newVal);*/
-                Serial.println("watched[i].IN");
-                Serial.println((byte)watched[i].IN);
-                Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));
+                Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));*/
 
                 char payload[32];
                 float valToSend = (watched[i].val_type == DIGITAL && (newVal > 0)) ? 1023 : newVal; // if digital, map value from 0/1 to 0/1023 (because client interpret digital values this way). Else send newVal
-
+/*
                 if (watched[i].IN >= BMP280_TEMP && watched[i].IN <= SHT21_HUM)
                 {                                                                                         // sprintf %.1f in order to display only 1 digit after decimal point for specified inputs
                     sprintf(payload, "in:%.1f%c%c", valToSend, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
@@ -189,42 +173,18 @@ void checkInValues()
                 else
                 {
                     sprintf(payload, "in:%f%c%c", valToSend, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
-                    printf("send: in:%f%c%c\n", valToSend, watched[i].val_type, (watched[i].IN + 1));
-                    printf("send: %d\n", (watched[i].IN + 1));
+                }*/
+                if(valToSend == INVALID_SENSOR_VALUE){ // send ?? instead of value
+                    sprintf(payload, "in:??%c%c", watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
+                }else{
+                    sprintf(payload, "in:%f%c%c", valToSend, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
                 }
+                
 
-                /*payload[strlen(payload)] = watched[i].val_type;
-        Serial.println(strlen(payload));
-        payload[strlen(payload)] = watched[i].IN;
-        Serial.println(strlen(payload));
-        payload[strlen(payload)] = 0;
-        Serial.println(strlen(payload));*/
                 COAP_TYPE confirmable = (watched[i].val == UNINITIALIZED_SENSOR_VALUE)? COAP_CON : COAP_NONCON; // If sensor value was uninitialized, send msg as confirmable!
                 int msgid = coap.send(RpiIP, CoAPPort, "new-value", confirmable, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
-                /*Serial.println("msgid:");
-        Serial.println(msgid);
-        Serial.print("newVal: |");
-        Serial.println(newVal);*/
-                watched[i].val = newVal;
-            }
-        }
-    }
-}
 
-void initIfBMP280AndNotInited(byte IN)
-{
-    if ((IN == BMP280_TEMP || IN == BMP280_PRESS))
-    { // If BMP280, init...
-        if (!BMP280Begun)
-        {
-            if (!bmp.begin(BMP280_ADRESS))
-            {
-                Serial.println("BMP280 senzor nenalezen");
-            }
-            else
-            {
-                Serial.println("BMP280 inited");
-                BMP280Begun = true;
+                watched[i].val = newVal;
             }
         }
     }
@@ -256,14 +216,31 @@ float getSensorVal(byte val_type, byte IN)
 float getI2CVal(byte IN)
 {
     float val = INVALID_SENSOR_VALUE;
-    val = (IN == BMP280_TEMP) ? bmp.readTemperature() : val;
-    val = (IN == BMP280_PRESS) ? bmp.readPressure() : val;
-    val = (IN == SHT21_TEMP) ? SHT2x.GetTemperature() : val;
-    val = (IN == SHT21_HUM) ? SHT2x.GetHumidity() : val;
-
-    if (val == INVALID_SENSOR_VALUE)
+    if(IN == BMP280_TEMP){
+        val = bmp.readTemperature();
+        if(val == 0.00){ // sensor BMP280 maybe was not initialized
+            val = (beginBMP(true))? bmp.readTemperature() : INVALID_SENSOR_VALUE;
+        }
+    }else if(IN == BMP280_PRESS){
+        val = (bmp.readPressure()/100.00) + 32;
+        if(val == 32.00){ // sensor BMP280 maybe was not initialized
+            val = (beginBMP(true))? (bmp.readPressure()/100.00) + 32 : INVALID_SENSOR_VALUE;
+        }
+    }else if(IN == SHT21_TEMP){
+        beginWireIfNotBegun();
+        val = SHT2x.GetTemperature();
+        if(val == -273.00){ // sensor is not properly connected
+            val = INVALID_SENSOR_VALUE;
+        }
+    }else if(IN == SHT21_HUM){
+        beginWireIfNotBegun();
+        val = SHT2x.GetHumidity();
+        if(val == 0.00){ // sensor is not properly connected
+            val = INVALID_SENSOR_VALUE;
+        }
+    }else
     {
-        Serial.println("-CHYBA: Neznámý vstup sběrnice I2C ve funkci getI2CVal(byte IN). Přidejte konstatu do výčtu IN_TYPE a upravte funkci!");
+        Serial.printf("-CHYBA: Neznámý vstup sběrnice I2C (%d) ve funkci getI2CVal(byte IN). Přidejte konstatu do výčtu IN_TYPE a upravte funkci!\n", IN);
     }
 
     return val;
@@ -498,7 +475,6 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
             if (!alreadyWatched(info))
             {
                 watched[watchedINIndex++] = info;
-                initIfBMP280AndNotInited(info.IN);
                 if (info.val_type == DIGITAL || info.val_type == ANALOG)
                 {
                     pinMode(info.IN, INPUT);
@@ -659,7 +635,6 @@ void callbackObserveInput(CoapPacket &packet, IPAddress ip, int port)
     {
         Serial.println("unikátni listen");
         watched[watchedINIndex++] = info;
-        initIfBMP280AndNotInited(info.IN);
         if (info.val_type == DIGITAL || info.val_type == ANALOG)
         {
             pinMode(info.IN, INPUT);
@@ -781,28 +756,18 @@ SensorInfo getSensorInfo(char input[])
         if (!strncmp(input + 4, "BMP280", strlen("BMP280"))) //eg. "I2C-BMP280-teplota"
         {
             IN = (strlen(input) >= 18 && !strncmp(input + 11, t, strlen(t))) ? BMP280_TEMP : BMP280_PRESS; //temp or press (temperature/pressure)
-            if(!BMP280Begun){
-                bmp.begin(BMP280_ADRESS);
-                BMP280Begun = true;
-            }
+            beginBMP();
             
         }
         else if (!strncmp(input + 4, "SHT21", strlen("SHT21"))) //eg. "I2C-SHT21-teplota"
         {
             IN = (strlen(input) >= 17 && !strncmp(input + 10, t, strlen(t))) ? SHT21_TEMP : SHT21_HUM; //temp or press (temperature/pressure)
-            if(!wireBegun){
-                Wire.begin();
-                wireBegun = true;
-            }
+            beginWireIfNotBegun();
         }
         else
         {
             Serial.println("-CHYBA: Neznámý vstup sběrnice I2C ve funkci getSensorInfo(char input[]). Přidejte konstatu do výčtu IN_TYPE a upravte funkci!");
         }
-        /*Serial.print("getSensorInfoInput::");
-      Serial.println(input);
-      Serial.println(strlen("BMP280"));
-      Serial.println(String(!strncmp(input + 4, "BMP280", strlen("BMP280"))));*/
 
         info.IN = IN;
         info.val_type = (byte)I2C;
@@ -988,4 +953,38 @@ void callback_response(CoapPacket &packet, IPAddress ip, int port) {
   Serial.println("[Coap Response got]");
   //This function must be here in order to send CoAP messages to CoAP server
 }
+
+void beginWireIfNotBegun(){    
+    if(!wireBegun){
+        Wire.begin();
+        wireBegun = true;
+    }
+}
+
+boolean beginBMP(boolean forceBegin){
+    if(forceBegin || !BMP280Begun){        
+        if (!bmp.begin(BMP280_ADRESS))
+        {
+            Serial.println("BMP280 senzor nenalezen");
+            BMP280Begun = false;
+        }
+        else
+        {
+            Serial.println("BMP280 senzor nalezen");
+            BMP280Begun = true;
+        }
+    }
+    return BMP280Begun;
+}
+
+boolean beginBMP(){   
+    return beginBMP(false);
+}
+
+
+
+
+
+
+
 //netsh interface ip show joins
