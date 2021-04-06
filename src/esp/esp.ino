@@ -157,6 +157,9 @@ void checkInValues()
         if (watched[i].IN != UNSET)
         {
             float newVal = getSensorVal(watched[i]);
+            Serial.println("watched[i].IN");
+                Serial.println((byte)watched[i].IN);
+                Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));
             if (isDifferentEnough(newVal, watched[i].val, watched[i]))
             {
                 /*Serial.println("watched[i].IN");

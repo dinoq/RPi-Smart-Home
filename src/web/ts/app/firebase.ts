@@ -10,15 +10,18 @@ export class Firebase extends Singleton {
         super();
         this.database = firebase.database();
         this.auth = firebase.auth();
-        firebase.auth().onAuthStateChanged((user)=> {
+        firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 this.loggedIn = true;
                 localStorage.setItem("logged", "true");
                 this.uid = user.uid;
             } else {
+                localStorage.removeItem("logged");
                 this.loggedIn = false;
+                this.uid = null;
+                this.auth.signOut();
             }
-          });
+        });
         this.loggedIn = (localStorage.getItem("logged") === "true");
     }
 
@@ -26,22 +29,46 @@ export class Firebase extends Singleton {
         return <Firebase>super.getInstance();
     }
 
-    static async login(username, pwd) {
-        let result = null;
+    static login(username, pwd) {
         let fb = Firebase.getInstance();
-        await firebase.auth().signInWithEmailAndPassword(username, pwd)
+        return new Promise((resolve, reject) => {
+            firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user: any) => {
                 localStorage.setItem("logged", "true");
                 fb.uid = user.uid;
                 fb.loggedIn = true;
-                return Promise.resolve(user);
+                resolve(user);
 
             }).catch((error) => {
                 localStorage.removeItem("logged");
                 fb.uid = undefined;
                 fb.loggedIn = false;
-                return Promise.reject(error);
+                reject(error);
             });
+
+        })
+    }
+
+    static register(username, pwd) {
+        let fb = Firebase.getInstance();
+        return new Promise((resolve, reject) => {
+            firebase.auth().createUserWithEmailAndPassword(username, pwd)
+                .then((userCredential: any) => {
+                    console.log('userCredential: ', userCredential);
+                    localStorage.setItem("logged", "true");
+                    fb.uid = userCredential.user.uid;
+                    fb.loggedIn = true;
+                    resolve(userCredential);
+    
+                }).catch((error) => {
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    localStorage.removeItem("logged");
+                    fb.uid = undefined;
+                    fb.loggedIn = false;
+                    reject(error);
+                });
+        })
     }
     static async logout() {
         localStorage.removeItem("logged");
@@ -55,12 +82,12 @@ export class Firebase extends Singleton {
         return Firebase.getInstance().loggedIn;
     }
 
-    static async getFullPath(dbPath: string){//Adds uid/ at start of dbPath parameter
+    static async getFullPath(dbPath: string) {//Adds uid/ at start of dbPath parameter
         let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;
-        let slash = (path.lastIndexOf("/") == path.length-1)? "": "/";
+        let slash = (path.lastIndexOf("/") == path.length - 1) ? "" : "/";
         let fb = Firebase.getInstance();
-        while (!fb.uid){
-            await (new Promise(resolve =>setTimeout(resolve, 100)));
+        while (!fb.uid) {
+            await (new Promise(resolve => setTimeout(resolve, 100)));
         }
         return fb.uid + path + slash;
     }
@@ -76,17 +103,17 @@ export class Firebase extends Singleton {
     }
 
     static getDBData(dbPath: string): Promise<any> {
-        return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject) => {
             Firebase.getFullPath(dbPath).then((fullPath) => {
                 firebase.database().ref(fullPath).once('value')
-                .then((snapshot) => {
-                    resolve(snapshot.val());
-                })
-                .catch((value) => {
-                    reject(new Error("Error in Firebase.getDBData()"));
-                })
+                    .then((snapshot) => {
+                        resolve(snapshot.val());
+                    })
+                    .catch((value) => {
+                        reject(new Error("Error in Firebase.getDBData()"));
+                    })
             })
-        }) 
+        })
     }
 
     static updateDBData(dbPath: string, updates: object): Promise<any> {

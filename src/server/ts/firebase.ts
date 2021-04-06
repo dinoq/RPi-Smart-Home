@@ -92,7 +92,7 @@ module.exports = class Firebase {
     private _CoAPIncomingMsgCallback = (req: any, res: any) => {
         console.log('coap request');
         if (req.url == "/new-value") { // New value from sensor arrived
-            /*let val_type = req.payload[req.payload.length - 2];
+            let val_type = req.payload[req.payload.length - 2];
             let IN = Number.parseInt(req.payload[req.payload.length - 1]) - 1;
             let valStr = req.payload.toString().substring("in:".length, req.payload.length - 2);
             let val;
@@ -105,8 +105,7 @@ module.exports = class Firebase {
                     val = Number.parseInt(valStr);
                 }
                 this._updateSensor(new SensorInfo(IN, val_type, val), req.rsinfo.address);
-            }*/
-
+            }
         } else if (req.url == "/get-all-IO-state") { // module needs init its inputs and outputs
             const moduleIP = req.rsinfo.address;
             let IN: string = "";

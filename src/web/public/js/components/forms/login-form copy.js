@@ -21,7 +21,7 @@ export class LoginComponent extends AbstractComponent {
                 })
                     .catch((error) => {
                     let errorCode = error.code;
-                    let alertWrapper = document.getElementById("form-alert-wrapper");
+                    let alertWrapper = document.getElementById("form-info");
                     let alert = document.getElementById("form-alert");
                     alertWrapper.style.display = "flex";
                     let prefix = (errorCode.includes("user-not-found")
@@ -33,7 +33,7 @@ export class LoginComponent extends AbstractComponent {
         let fin = "this.parentElement.children[0].classList.add('active-label')";
         let fout = "this.parentElement.children[0].classList.remove('active-label')";
         this.innerHTML = `
-        <div id="form-alert-wrapper">
+        <div id="form-info">
             <div id="form-alert" class="alert alert-danger" role="alert">
             Nesprávné přihlašovací údaje!
             </div>

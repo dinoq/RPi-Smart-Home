@@ -28,14 +28,6 @@ html header #header-wrapper {
   background-color: #5ce1e6;
 }
 
-html #form-alert-wrapper {
-  display: none;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
-  margin-top: 25px;
-}
-
 html .form-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -139,18 +131,26 @@ html .form-wrapper form input[type="button"], html .form-wrapper .form input[typ
   padding: 0 20px;
 }
 
-login-form .form-wrapper {
+login-form #form-info, registration-form #form-info {
+  display: none;
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
   margin-top: 25px;
 }
 
-login-form #registration-link {
+login-form .form-wrapper, registration-form .form-wrapper {
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  margin-top: 25px;
+}
+
+login-form #form-link, registration-form #form-link {
   margin-top: 15px;
 }
 
-login-form #registration-link button {
+login-form #form-link button, registration-form #form-link button {
   font-weight: 500;
   color: #007bff;
   text-decoration: none;
@@ -228,6 +228,7 @@ menu-items-container {
   padding: 10px;
   padding-right: 25px;
   border-right: 1px solid #939393;
+  color: black;
   background-color: white;
 }
 
@@ -236,6 +237,7 @@ menu-items-container menu-item {
   cursor: pointer;
   font-size: 1.75rem;
   border-radius: 5px;
+  padding: 5px 10px;
 }
 
 menu-items-container menu-item:not(:last-child) {
@@ -243,8 +245,8 @@ menu-items-container menu-item:not(:last-child) {
 }
 
 menu-items-container menu-item:hover {
-  background: -webkit-gradient(linear, left top, right top, from(#b7b7b7), to(#f0f0f0));
-  background: linear-gradient(to right, #b7b7b7, #f0f0f0);
+  background-color: var(--default-blue-color);
+  color: white;
 }
 
 vertical-stack {
@@ -267,30 +269,45 @@ horizontal-stack {
           flex-direction: row;
 }
 
-room-card {
+home-page #no-rooms-info-container {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+
+home-page #no-rooms-info-container #no-rooms-info {
+  max-width: 80%;
+  text-align: center;
+  padding-top: 10%;
+}
+
+home-page room-card {
   display: block;
   width: 100%;
   margin-bottom: 5px;
 }
 
-room-card:nth-child(odd) {
+home-page room-card:nth-child(odd) {
   background-color: #a5a5a5;
 }
 
-room-card:nth-child(even) {
+home-page room-card:nth-child(even) {
   background-color: #ebebeb;
 }
 
-room-card > horizontal-stack {
+home-page room-card > horizontal-stack {
   background: rgba(0, 0, 0, 0.7);
 }
 
-room-card .card-container {
+home-page room-card .card-container {
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
 }
 
-room-card .card-container .left-stack {
+home-page room-card .card-container .left-stack {
   width: 40%;
   min-width: -webkit-min-content;
   min-width: -moz-min-content;
@@ -300,36 +317,36 @@ room-card .card-container .left-stack {
           flex-grow: 1;
 }
 
-room-card .card-container .left-stack .room-name {
+home-page room-card .card-container .left-stack .room-name {
   color: white;
   font-size: 2.5rem;
   text-decoration: underline;
   padding-left: 10%;
 }
 
-room-card .card-container .left-stack .sensors-stack {
+home-page room-card .card-container .left-stack .sensors-stack {
   padding-left: 15%;
   padding-right: 10%;
 }
 
-room-card .card-container .left-stack .sensors-stack room-sensor {
+home-page room-card .card-container .left-stack .sensors-stack room-sensor {
   color: white;
   margin: 5px 0;
 }
 
-room-card .card-container .left-stack .sensors-stack room-sensor:first-child {
+home-page room-card .card-container .left-stack .sensors-stack room-sensor:first-child {
   font-size: 1.2rem;
 }
 
-room-card .card-container .left-stack .sensors-stack room-sensor app-icon {
+home-page room-card .card-container .left-stack .sensors-stack room-sensor app-icon {
   margin-right: 10px;
 }
 
-room-card .card-container .left-stack .sensors-stack room-sensor .value {
+home-page room-card .card-container .left-stack .sensors-stack room-sensor .value {
   padding-left: 10px;
 }
 
-room-card .card-container .right-stack {
+home-page room-card .card-container .right-stack {
   width: 60%;
   -webkit-box-flex: 1;
       -ms-flex-positive: 1;
@@ -342,16 +359,16 @@ room-card .card-container .right-stack {
   padding-left: 10px;
 }
 
-room-card .card-container .right-stack slider-component {
+home-page room-card .card-container .right-stack slider-component {
   margin-right: 5px;
 }
 
-room-card .card-container .right-stack slider-component input {
+home-page room-card .card-container .right-stack slider-component input {
   width: 100%;
   margin-bottom: 2rem;
 }
 
-room-card .card-container .right-stack .devices-row {
+home-page room-card .card-container .right-stack .devices-row {
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
           justify-content: space-between;

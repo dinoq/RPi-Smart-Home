@@ -219,7 +219,7 @@ export class SettingsPage extends BasePage {
                         let fbReference = null;
                         if (IDs.length >= 2) {
                             let firstIteration = true;
-                            fbReference = Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
+                            fbReference = await Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
                                 if (firstIteration) { // Firebase.addDBListener gets data for first time without "event" emitted...
                                     firstIteration = false;
                                     return;

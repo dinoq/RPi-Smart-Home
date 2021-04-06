@@ -19,7 +19,7 @@
  * CONFIG PART BEGIN (recommended to change)
  */
 
-String boardType = "esp01"; // Any from [wemosD1R1, NodeMCU, esp01]
+String boardType = "NodeMCU"; // Any from [wemosD1R1, NodeMCU, esp01]
 const char *ssid = "sprintel_antlova";
 const char *password = "netis111";
 /**

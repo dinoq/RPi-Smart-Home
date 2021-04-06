@@ -63,11 +63,6 @@ html {
             background-color: #5ce1e6;
         }
     }
-    #form-alert-wrapper {
-        display: none;
-        justify-content: center;
-        margin-top: 25px;
-    }
 
     .form-wrapper {
         display: flex;
@@ -154,13 +149,17 @@ html {
     }
 }
 
-login-form {
+login-form, registration-form {
+    #form-info {
+        display: none;
+        justify-content: center;
+        margin-top: 25px;
+    }
     .form-wrapper {
         justify-content: center;
         margin-top: 25px;
     }
-
-    #registration-link{
+    #form-link{
         margin-top: 15px;
 
         button{
@@ -172,6 +171,7 @@ login-form {
         }
     }
 }
+
 
 .dialog-wrapper {
     .dialog {
@@ -244,6 +244,7 @@ menu-items-container {
     padding: 10px;
     padding-right: 25px;
     border-right: 1px solid #939393;
+    color: black;
     background-color: white;
 
     menu-item {
@@ -251,13 +252,15 @@ menu-items-container {
         cursor: pointer;
         font-size: 1.75rem;
         border-radius: 5px;
+        padding: 5px 10px;
 
         &:not(:last-child) {
             border-bottom: 1px solid rgb(214, 214, 214);
         }
 
         &:hover {
-            background: linear-gradient(to right, #b7b7b7, #f0f0f0);
+            background-color: var(--default-blue-color);
+            color: white;
         }
     }
 }
@@ -270,82 +273,95 @@ horizontal-stack {
     display: flex;
     flex-direction: row;
 }
-
-room-card {
-    display: block;
-    width: 100%;
-    margin-bottom: 5px;
-
-    &:nth-child(odd) {
-        background-color: rgb(165, 165, 165);
-    }
-    &:nth-child(even) {
-        background-color: rgb(235, 235, 235);
-    }
-
-    > horizontal-stack {
-        background: rgba(0, 0, 0, 0.7);
-    }
-    .card-container {
-        flex-wrap: wrap;
-
-        .left-stack {
-            width: 40%;
-            min-width: min-content;
-            flex-grow: 1;
-
-            .room-name {
-                color: white;
-                font-size: 2.5rem;
-                text-decoration: underline;
-                padding-left: 10%;
-            }
-
-            .sensors-stack {
-                padding-left: 15%;
-                padding-right: 10%;
-
-                room-sensor {
-                    color: white;
-                    margin: 5px 0;
-
-                    &:first-child {
-                        font-size: 1.2rem;
-                    }
-
-                    app-icon {
-                        margin-right: 10px;
-                    }
-
-                    .value {
-                        padding-left: 10px;
-                    }
-                }
-            }
+home-page {
+    #no-rooms-info-container{
+        display: flex;
+        justify-content: center;
+        #no-rooms-info{
+            max-width: 80%;
+            text-align: center;
+            padding-top: 10%;
+            //color: #0079b5;
         }
+    }
 
-        .right-stack {
-            width: 60%;
-            flex-grow: 1;
-            flex-direction: column-reverse;
-            padding: 40px 0;
-            padding-left: 10px;
-
-            slider-component {
-                margin-right: 5px;
-
-                input {
-                    width: 100%;
-                    margin-bottom: 2rem;
+    room-card {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    
+        &:nth-child(odd) {
+            background-color: rgb(165, 165, 165);
+        }
+        &:nth-child(even) {
+            background-color: rgb(235, 235, 235);
+        }
+    
+        > horizontal-stack {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .card-container {
+            flex-wrap: wrap;
+    
+            .left-stack {
+                width: 40%;
+                min-width: min-content;
+                flex-grow: 1;
+    
+                .room-name {
+                    color: white;
+                    font-size: 2.5rem;
+                    text-decoration: underline;
+                    padding-left: 10%;
+                }
+    
+                .sensors-stack {
+                    padding-left: 15%;
+                    padding-right: 10%;
+    
+                    room-sensor {
+                        color: white;
+                        margin: 5px 0;
+    
+                        &:first-child {
+                            font-size: 1.2rem;
+                        }
+    
+                        app-icon {
+                            margin-right: 10px;
+                        }
+    
+                        .value {
+                            padding-left: 10px;
+                        }
+                    }
                 }
             }
-
-            .devices-row {
-                justify-content: space-between;
+    
+            .right-stack {
+                width: 60%;
+                flex-grow: 1;
+                flex-direction: column-reverse;
+                padding: 40px 0;
+                padding-left: 10px;
+    
+                slider-component {
+                    margin-right: 5px;
+    
+                    input {
+                        width: 100%;
+                        margin-bottom: 2rem;
+                    }
+                }
+    
+                .devices-row {
+                    justify-content: space-between;
+                }
             }
         }
     }
 }
+
 
 .frame-list {
     .room-name {

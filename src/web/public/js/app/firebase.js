@@ -13,7 +13,10 @@ export class Firebase extends Singleton {
                 this.uid = user.uid;
             }
             else {
+                localStorage.removeItem("logged");
                 this.loggedIn = false;
+                this.uid = null;
+                this.auth.signOut();
             }
         });
         this.loggedIn = (localStorage.getItem("logged") === "true");
@@ -21,20 +24,41 @@ export class Firebase extends Singleton {
     static getInstance() {
         return super.getInstance();
     }
-    static async login(username, pwd) {
-        let result = null;
+    static login(username, pwd) {
         let fb = Firebase.getInstance();
-        await firebase.auth().signInWithEmailAndPassword(username, pwd)
-            .then((user) => {
-            localStorage.setItem("logged", "true");
-            fb.uid = user.uid;
-            fb.loggedIn = true;
-            return Promise.resolve(user);
-        }).catch((error) => {
-            localStorage.removeItem("logged");
-            fb.uid = undefined;
-            fb.loggedIn = false;
-            return Promise.reject(error);
+        return new Promise((resolve, reject) => {
+            firebase.auth().signInWithEmailAndPassword(username, pwd)
+                .then((user) => {
+                localStorage.setItem("logged", "true");
+                fb.uid = user.uid;
+                fb.loggedIn = true;
+                resolve(user);
+            }).catch((error) => {
+                localStorage.removeItem("logged");
+                fb.uid = undefined;
+                fb.loggedIn = false;
+                reject(error);
+            });
+        });
+    }
+    static register(username, pwd) {
+        let fb = Firebase.getInstance();
+        return new Promise((resolve, reject) => {
+            firebase.auth().createUserWithEmailAndPassword(username, pwd)
+                .then((userCredential) => {
+                console.log('userCredential: ', userCredential);
+                localStorage.setItem("logged", "true");
+                fb.uid = userCredential.user.uid;
+                fb.loggedIn = true;
+                resolve(userCredential);
+            }).catch((error) => {
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                localStorage.removeItem("logged");
+                fb.uid = undefined;
+                fb.loggedIn = false;
+                reject(error);
+            });
         });
     }
     static async logout() {

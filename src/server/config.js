@@ -12,5 +12,5 @@ module.exports = {
 
 
     "username": "marek.petr10@seznam.cz",
-    "password": "Automation123"
+    "password": "qwertz"
 }

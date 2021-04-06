@@ -10,17 +10,17 @@ module.exports = class ServerApp {
         this._firebase = new Firebase();
         //console.log("Pro funkci systému nejprve přihlašte RPi server otevřením adresy http://" + CommunicationMngr.getServerIP() + " ve webovém prohlížeči.");
         var p = path.join(__dirname, '../../web/public');
-        this._app.use("/files", (req, res) => {
-            if (this._firebase.loggedIn)
+        /*this._app.use("/files", (req, res) => {
+            if(this._firebase.loggedIn)
                 res.send("I will be served instead of a files directory");
             else
                 res.send("Musíte se přihlásit!!!");
-        });
+        });*/
         //this.app.use(bodyParser.json())
         this._app.use(bodyParser.urlencoded({
             extended: true
         }));
-        this._app.post('/domu', (req, res) => {
+        this._app.post('/*', (req, res) => {
             /*if(req.get('Referer').includes("uzivatel/login")){ // Logged in
                 let username = req.body.login;
                 let pwd = req.body.password;
@@ -29,7 +29,8 @@ module.exports = class ServerApp {
             }
             console.log(req.body)
             console.log("qqqqq",req.url);*/
-            res.redirect(req.url);
+            res.redirect("http://localhost/domu");
+            //res.redirect(req.url);
         });
         /*let localStorageCleared = false;
         this._app.use((req, res, next) => {// Clear local storage in order to force login if server is not currently logged in. Must be before static serving...
