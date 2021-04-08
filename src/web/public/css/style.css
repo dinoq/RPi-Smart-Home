@@ -16,6 +16,10 @@ body::-webkit-scrollbar-thumb {
     border: 1px solid white;
 }*/
 html {
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
   background-color: var(--default-page-bg-color);
   scroll-behavior: smooth;
   overflow-x: hidden;

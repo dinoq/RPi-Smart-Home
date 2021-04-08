@@ -1,6 +1,5 @@
-
 // From esp.h:
-enum VALUE_TYPE {
+export enum VALUE_TYPE {
     ANALOG = 1, // Start from 1, because we add it to string and we don't want to consider it as null terminator
     DIGITAL,
     I2C
@@ -17,7 +16,7 @@ enum IN_TYPE {
 };
 
 
-class SensorInfo {
+export class SensorInfo {
     IN; //Pin number or I2C_IN_TYPE
     val_type; // ANALOG/DIGITAL/I2C
     val: number | string; // number value or string "??"
@@ -60,9 +59,10 @@ SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_PRESS] = "BMP280-tlak";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_TEMP] = "SHT21-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_HUM] = "SHT21-vlhkost";
 
-
+/*
 module.exports = {
     VALUE_TYPE: VALUE_TYPE,
     IN_TYPE: IN_TYPE,
     SInfo: SensorInfo
 }
+*/

@@ -1,13 +1,7 @@
-var wifi = require('node-wifi');
 const os = require('os');
-const net = require('net');
 const coap = require('coap');
 const dgram = require("dgram");
-const Process = require("process");
-const COnfig = require("../config.js");
-const ESP = require("./ESP");
-const VALUE_TYPE = ESP.VALUE_TYPE;
-const SensorInfo = ESP.SInfo;
+import {config} from "../config.js";
 
 module.exports = class CommunicationManager {
     private _server: any;
@@ -35,6 +29,11 @@ module.exports = class CommunicationManager {
     }
 
     public initCoapServer(CoAPIncomingMsgCallback){
+        //init multicast listening
+        const localIP = CommunicationManager.getServerIP();
+        const socket = dgram.createSocket({ type: "udp4" });
+        socket.addMembership(config.COAP_MULTICAST_ADDR, localIP);
+
         this._server = coap.createServer()
  
         this._server.on('request', function(req, res) {
@@ -50,12 +49,8 @@ module.exports = class CommunicationManager {
     initCommunicationWithESP() {
         return new Promise((resolve, reject) => {
             console.log('initCommunicationWithESP: ');
-            const localIP = CommunicationManager.getServerIP();
 
-            const socket = dgram.createSocket({ type: "udp4" });
-            socket.addMembership(COnfig.COAP_MULTICAST_ADDR, localIP);
-
-            this.coapRequest(COnfig.COAP_MULTICAST_ADDR, "/hello-client", "", "GET", null, (response)=>{
+            this.coapRequest(config.COAP_MULTICAST_ADDR, "/hello-client", "", "GET", null, (response)=>{
                 resolve({ espIP: response.rsinfo.address, boardType: response.payload.toString().substring("TYPE:".length)});
             }, (err)=>{
                 reject(err.message);
@@ -141,9 +136,9 @@ module.exports = class CommunicationManager {
      * @param val Value to set
      */
     public async putVal(ip: string, output: string, val: string) {
-        console.log("T putVal1: " + Math.round(Date.now() / 100));
+        //console.log("T putVal1: " + Math.round(Date.now() / 100));
         this.coapRequest(ip, "/set-output", "pin=" + output, "PUT", val.toString(), null, null);
-        console.log("T putVal 2: " + Math.round(Date.now() / 100));
+        //console.log("T putVal 2: " + Math.round(Date.now() / 100));
     }
 
     /**
@@ -168,7 +163,6 @@ module.exports = class CommunicationManager {
             this.coapRequest(ip, "/stop-input-observation", "input=" + input, "PUT", null, (res) =>{
                 resolve(res.payload.toString());
             }, (err)=> {
-                console.error("stopInputObservation err: "+err.message+ " from " + ip);
                 reject(err.message);
             }, true);
         });

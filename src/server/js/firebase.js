@@ -1,12 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Firebase = void 0;
 var firebase = require('firebase');
 const fs = require("fs");
-const conf = require("../config.js");
 const CommunicationManager = require('./communication-manager.js');
-const ESP = require("./ESP");
-const VALUE_TYPE = ESP.VALUE_TYPE;
-const SensorInfo = ESP.SInfo;
-module.exports = class Firebase {
+const checkInternetConnected = require('check-internet-connected');
+const isOnline = require('is-online');
+const editJsonFile = require("edit-json-file");
+const config_js_1 = require("../config.js");
+const ESP_js_1 = require("./ESP.js");
+class Firebase {
     constructor() {
+        this._online = false;
         this._dbInited = false;
         this._loggedIn = false;
         this._sensors = new Array();
@@ -21,16 +26,16 @@ module.exports = class Firebase {
                 let valStr = req.payload.toString().substring("in:".length, req.payload.length - 2);
                 let val;
                 if (valStr == "??") {
-                    this._updateSensor(new SensorInfo(IN, val_type, valStr), req.rsinfo.address);
+                    this._updateSensor(new ESP_js_1.SensorInfo(IN, val_type, valStr), req.rsinfo.address);
                 }
                 else {
-                    if (val_type == VALUE_TYPE.I2C) {
+                    if (val_type == ESP_js_1.VALUE_TYPE.I2C) {
                         val = Number.parseFloat(valStr).toFixed(1);
                     }
                     else {
                         val = Number.parseInt(valStr);
                     }
-                    this._updateSensor(new SensorInfo(IN, val_type, val), req.rsinfo.address);
+                    this._updateSensor(new ESP_js_1.SensorInfo(IN, val_type, val), req.rsinfo.address);
                 }
             }
             else if (req.url == "/get-all-IO-state") { // module needs init its inputs and outputs
@@ -83,7 +88,7 @@ module.exports = class Firebase {
                     this._communicationManager.resetModule(moduleIP);
                 }
                 else { // db was still not inited in server...
-                    console.log("DB was not still inited in server");
+                    //console.log("DB was not still inited in server");
                 }
             }
         };
@@ -104,20 +109,42 @@ module.exports = class Firebase {
                     this._updateSensorsInDBTimeout = setTimeout(this._updateSensorsInDB, 200);
                 }
             }
-            else { // Module was probably deleted from database, when module was OFF => reset that module
+            else if (this._dbInited) { // Module was probably deleted from database, when module was OFF => reset that module
                 this._communicationManager.resetModule(moduleIP);
+            }
+            else { // Else db is still not inited => try update later...
+                setTimeout(() => { this._updateSensor(sensorInfo, moduleIP); }, 1000);
             }
         };
         this._updateSensorsInDB = async () => {
             this._updateSensorsInDBTimeout = undefined;
             if (this._sensorsUpdates && Object.keys(this._sensorsUpdates).length != 0) {
                 console.log((Math.floor(Date.now() / 1000) - 1616084626) + '| updates: ', this._sensorsUpdates);
-                await firebase.database().ref().update(this._sensorsUpdates);
+                this._online = await this.serverIsOnline();
+                console.log('this._online: ', this._online);
+                if (this._online) {
+                    for (const updatePath in this._sensorsUpdates) {
+                        this._dbFile.set(updatePath.split("/").join("."), this._sensorsUpdates[updatePath]);
+                    }
+                    await firebase.database().ref().update(this._sensorsUpdates);
+                }
                 this._sensorsUpdates = {};
             }
         };
+        //console.log('navigator.onLine: ', navigator.onLine);
+        /*window.addEventListener('online', () => {
+            console.log('Online!');
+            this._online = true;
+        });
+        window.addEventListener('offline', () => {
+            console.log('Offline!');
+            this._online = false;
+        });*/
         this.initFirebase();
         this._communicationManager = new CommunicationManager();
+        this._dbFile = editJsonFile("db2.json", {
+            autosave: true
+        });
     }
     get loggedIn() {
         return this._loggedIn;
@@ -168,6 +195,14 @@ module.exports = class Firebase {
             });
         }, 5000);
     }
+    async serverIsOnline() {
+        try {
+            this._online = await isOnline({ timeout: 2000 });
+        }
+        catch (error) {
+        }
+        return this._online;
+    }
     _databaseUpdatedHandler(data) {
         if (!this._dbInited) {
             this.initLocalDB(data);
@@ -193,7 +228,7 @@ module.exports = class Firebase {
     initLocalDB(data) {
         if (!fs.existsSync('db.json')) { // local database file doesn't exist => create it!
         }
-        fs.writeFileSync(conf.db_file_path, JSON.stringify(data));
+        fs.writeFileSync(config_js_1.config.db_file_path, JSON.stringify(data));
         this._dbCopy = data;
         this._dbInited = true;
     }
@@ -393,7 +428,8 @@ module.exports = class Firebase {
             }
         }
     }
-};
+}
+exports.Firebase = Firebase;
 var ChangeMessageTypes;
 (function (ChangeMessageTypes) {
     ChangeMessageTypes[ChangeMessageTypes["REMOVED"] = 0] = "REMOVED";

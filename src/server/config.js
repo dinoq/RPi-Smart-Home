@@ -1,4 +1,4 @@
-module.exports = {
+exports.config =  {
     "port": 80, // Port on which will web client work
     "db_file_path": "db.json",
 

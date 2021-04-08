@@ -51,6 +51,7 @@ body::-webkit-scrollbar-thumb {
 }*/
 
 html {
+    user-select: none; //switch of text selecting
     background-color: var(--default-page-bg-color);
     scroll-behavior: smooth;
     overflow-x: hidden;

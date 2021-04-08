@@ -1,10 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SensorInfo = exports.VALUE_TYPE = void 0;
 // From esp.h:
 var VALUE_TYPE;
 (function (VALUE_TYPE) {
     VALUE_TYPE[VALUE_TYPE["ANALOG"] = 1] = "ANALOG";
     VALUE_TYPE[VALUE_TYPE["DIGITAL"] = 2] = "DIGITAL";
     VALUE_TYPE[VALUE_TYPE["I2C"] = 3] = "I2C";
-})(VALUE_TYPE || (VALUE_TYPE = {}));
+})(VALUE_TYPE = exports.VALUE_TYPE || (exports.VALUE_TYPE = {}));
 ;
 var IN_TYPE;
 (function (IN_TYPE) {
@@ -43,14 +46,17 @@ class SensorInfo {
         return str;
     }
 }
+exports.SensorInfo = SensorInfo;
 SensorInfo.IN_TYPE_TO_STR = {}; // definition at end of page
 ;
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_TEMP] = "BMP280-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_PRESS] = "BMP280-tlak";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_TEMP] = "SHT21-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_HUM] = "SHT21-vlhkost";
+/*
 module.exports = {
     VALUE_TYPE: VALUE_TYPE,
     IN_TYPE: IN_TYPE,
     SInfo: SensorInfo
-};
+}
+*/ 
