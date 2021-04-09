@@ -21,7 +21,8 @@
     "express": "^4.17.1",
     "firebase": "^8.2.7",
     "is-online": "^9.0.0",
-    "node-wifi": "^2.0.14"
+    "node-wifi": "^2.0.14",
+    "open": "^8.0.5"
   },
   "devDependencies": {
     "coap-cli": "^0.7.1"

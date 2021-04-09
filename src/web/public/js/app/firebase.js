@@ -4,57 +4,67 @@ export class Firebase extends Singleton {
         super();
         this.loggedIn = false;
         this.uid = undefined;
+        this.authInited = new Promise((resolve, reject) => { this.resolveAuthInited = resolve; });
         this.database = firebase.database();
         this.auth = firebase.auth();
-        firebase.auth().onAuthStateChanged((user) => {
+        console.log("firebase|" + (16179879960 - Math.round(new Date().getTime() / 100)));
+        this.auth.onAuthStateChanged((user) => {
+            console.log("Až ted|" + (16179879960 - Math.round(new Date().getTime() / 100)));
+            this.resolveAuthInited(user);
             if (user) {
+                console.log("in|" + (16179879960 - Math.round(new Date().getTime() / 100)));
                 this.loggedIn = true;
-                localStorage.setItem("logged", "true");
                 this.uid = user.uid;
             }
             else {
-                localStorage.removeItem("logged");
+                console.log("out|" + (16179879960 - Math.round(new Date().getTime() / 100)));
                 this.loggedIn = false;
                 this.uid = null;
                 this.auth.signOut();
             }
         });
-        this.loggedIn = (localStorage.getItem("logged") === "true");
     }
     static getInstance() {
         return super.getInstance();
     }
-    static login(username, pwd) {
-        let fb = Firebase.getInstance();
+    static login(username, pwd, persistence = AuthPersistence.LOCAL) {
         return new Promise((resolve, reject) => {
-            firebase.auth().signInWithEmailAndPassword(username, pwd)
-                .then((user) => {
-                localStorage.setItem("logged", "true");
-                fb.uid = user.uid;
-                fb.loggedIn = true;
-                resolve(user);
-            }).catch((error) => {
-                localStorage.removeItem("logged");
+            let fb = Firebase.getInstance();
+            fb.auth.setPersistence(firebase.auth.Auth.Persistence[AuthPersistence[persistence]])
+                .then(() => {
+                fb.auth.signInWithEmailAndPassword(username, pwd)
+                    .then((user) => {
+                    fb.uid = user.uid;
+                    fb.loggedIn = true;
+                    resolve(user);
+                }).catch((error) => {
+                    fb.uid = undefined;
+                    fb.loggedIn = false;
+                    reject(error);
+                });
+            })
+                .catch((error) => {
                 fb.uid = undefined;
                 fb.loggedIn = false;
                 reject(error);
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                console.log("Chyba: " + errorMessage);
             });
         });
     }
     static register(username, pwd) {
         let fb = Firebase.getInstance();
         return new Promise((resolve, reject) => {
-            firebase.auth().createUserWithEmailAndPassword(username, pwd)
+            fb.auth.createUserWithEmailAndPassword(username, pwd)
                 .then((userCredential) => {
                 console.log('userCredential: ', userCredential);
-                localStorage.setItem("logged", "true");
                 fb.uid = userCredential.user.uid;
                 fb.loggedIn = true;
                 resolve(userCredential);
             }).catch((error) => {
                 var errorCode = error.code;
                 var errorMessage = error.message;
-                localStorage.removeItem("logged");
                 fb.uid = undefined;
                 fb.loggedIn = false;
                 reject(error);
@@ -62,14 +72,15 @@ export class Firebase extends Singleton {
         });
     }
     static async logout() {
-        localStorage.removeItem("logged");
         let fb = Firebase.getInstance();
         fb.loggedIn = false;
         fb.uid = null;
         await fb.auth.signOut();
     }
-    static loggedIn() {
-        return Firebase.getInstance().loggedIn;
+    static async loggedIn() {
+        let fb = Firebase.getInstance();
+        await fb.authInited;
+        return fb.loggedIn;
     }
     static async getFullPath(dbPath) {
         let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;
@@ -117,3 +128,9 @@ export class Firebase extends Singleton {
         });
     }
 }
+export var AuthPersistence;
+(function (AuthPersistence) {
+    AuthPersistence[AuthPersistence["LOCAL"] = 0] = "LOCAL";
+    AuthPersistence[AuthPersistence["SESSION"] = 1] = "SESSION";
+    AuthPersistence[AuthPersistence["NONE"] = 2] = "NONE";
+})(AuthPersistence || (AuthPersistence = {}));

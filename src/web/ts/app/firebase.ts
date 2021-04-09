@@ -6,44 +6,60 @@ export class Firebase extends Singleton {
     database: any;
     auth: any;
     uid: any = undefined;
+    authInited: Promise<any>;
+    resolveAuthInited: any;
     constructor() {
         super();
+        this.authInited = new Promise((resolve, reject) => {this.resolveAuthInited = resolve;});
+        
         this.database = firebase.database();
         this.auth = firebase.auth();
-        firebase.auth().onAuthStateChanged((user) => {
+        console.log("firebase|" + (16179879960-Math.round(new Date().getTime()/100)));
+        this.auth.onAuthStateChanged((user) => {
+            console.log("Až ted|" + (16179879960-Math.round(new Date().getTime()/100)));
+            this.resolveAuthInited(user);
             if (user) {
+                console.log("in|" + (16179879960-Math.round(new Date().getTime()/100)));
                 this.loggedIn = true;
-                localStorage.setItem("logged", "true");
                 this.uid = user.uid;
             } else {
-                localStorage.removeItem("logged");
+                console.log("out|" + (16179879960-Math.round(new Date().getTime()/100)));
                 this.loggedIn = false;
                 this.uid = null;
                 this.auth.signOut();
             }
         });
-        this.loggedIn = (localStorage.getItem("logged") === "true");
     }
 
     public static getInstance() {
         return <Firebase>super.getInstance();
     }
 
-    static login(username, pwd) {
-        let fb = Firebase.getInstance();
+    static login(username, pwd, persistence: AuthPersistence = AuthPersistence.LOCAL) {        
         return new Promise((resolve, reject) => {
-            firebase.auth().signInWithEmailAndPassword(username, pwd)
-            .then((user: any) => {
-                localStorage.setItem("logged", "true");
-                fb.uid = user.uid;
-                fb.loggedIn = true;
-                resolve(user);
+            let fb = Firebase.getInstance();
+            fb.auth.setPersistence(firebase.auth.Auth.Persistence[AuthPersistence[persistence]])
+            .then(() => {
+                fb.auth.signInWithEmailAndPassword(username, pwd)
+                .then((user: any) => {
+                    fb.uid = user.uid;
+                    fb.loggedIn = true;
+                    resolve(user);
 
-            }).catch((error) => {
-                localStorage.removeItem("logged");
+                }).catch((error) => {
+                    fb.uid = undefined;
+                    fb.loggedIn = false;
+                    reject(error);
+                });
+                
+            })
+            .catch((error) => {
                 fb.uid = undefined;
                 fb.loggedIn = false;
                 reject(error);
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                console.log("Chyba: " + errorMessage);
             });
 
         })
@@ -52,10 +68,9 @@ export class Firebase extends Singleton {
     static register(username, pwd) {
         let fb = Firebase.getInstance();
         return new Promise((resolve, reject) => {
-            firebase.auth().createUserWithEmailAndPassword(username, pwd)
+            fb.auth.createUserWithEmailAndPassword(username, pwd)
                 .then((userCredential: any) => {
                     console.log('userCredential: ', userCredential);
-                    localStorage.setItem("logged", "true");
                     fb.uid = userCredential.user.uid;
                     fb.loggedIn = true;
                     resolve(userCredential);
@@ -63,7 +78,6 @@ export class Firebase extends Singleton {
                 }).catch((error) => {
                     var errorCode = error.code;
                     var errorMessage = error.message;
-                    localStorage.removeItem("logged");
                     fb.uid = undefined;
                     fb.loggedIn = false;
                     reject(error);
@@ -71,15 +85,16 @@ export class Firebase extends Singleton {
         })
     }
     static async logout() {
-        localStorage.removeItem("logged");
         let fb = Firebase.getInstance();
         fb.loggedIn = false;
         fb.uid = null;
         await fb.auth.signOut();
     }
 
-    static loggedIn() {
-        return Firebase.getInstance().loggedIn;
+    static async loggedIn() {
+        let fb = Firebase.getInstance();
+        await fb.authInited;
+        return fb.loggedIn;
     }
 
     static async getFullPath(dbPath: string) {//Adds uid/ at start of dbPath parameter
@@ -136,3 +151,8 @@ export class Firebase extends Singleton {
 
 }
 
+export enum AuthPersistence {
+    LOCAL,
+    SESSION,
+    NONE
+}

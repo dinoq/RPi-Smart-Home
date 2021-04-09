@@ -62,7 +62,7 @@ export class RegistrationComponent extends AbstractComponent {
             <form action="/home" method="POST">
                 <input autocomplete="off" name="hidden" type="text" style="display:none;">
                 <div class="form-label">
-                    <label class="form-name-label" for="registration-form">Registrace</label>
+                    <label class="form-name-label" for="registration-component">Registrace</label>
                 </div>
                 <div class="form-label">
                     <label for="registration-username" class="active-label">Email</label>
@@ -111,4 +111,4 @@ export class RegistrationComponent extends AbstractComponent {
         }
     }
 }
-RegistrationComponent.tagName = "registration-form";
+RegistrationComponent.tagName = "registration-component";

@@ -7,7 +7,6 @@ const CommunicationManager = require('./communication-manager.js');
 const checkInternetConnected = require('check-internet-connected');
 const isOnline = require('is-online');
 const editJsonFile = require("edit-json-file");
-const config_js_1 = require("../config.js");
 const ESP_js_1 = require("./ESP.js");
 class Firebase {
     constructor() {
@@ -131,6 +130,9 @@ class Firebase {
                 this._sensorsUpdates = {};
             }
         };
+        this._config = editJsonFile("config.json", {
+            autosave: true
+        });
         //console.log('navigator.onLine: ', navigator.onLine);
         /*window.addEventListener('online', () => {
             console.log('Online!');
@@ -152,7 +154,7 @@ class Firebase {
     login(username, pwd) {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
-            console.log("Succesfully logged in");
+            console.log("Uživatel byl úspěšně ověřen, server pracuje.");
             //this.debugApp();
             this._loggedIn = true;
             this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
@@ -161,7 +163,13 @@ class Firebase {
             });
             this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
         }).catch((error) => {
-            console.log('error user: ', error);
+            if (error.code === "auth/network-request-failed") {
+                console.log("Chyba připojení k internetu. Server bude pracovat v lokální síti.");
+            }
+            else {
+                console.log("Neznámá chyba: " + error.message + "\nAplikace se ukončí...");
+                process.exit(5);
+            }
         });
     }
     debugApp() {
@@ -228,7 +236,7 @@ class Firebase {
     initLocalDB(data) {
         if (!fs.existsSync('db.json')) { // local database file doesn't exist => create it!
         }
-        fs.writeFileSync(config_js_1.config.db_file_path, JSON.stringify(data));
+        //fs.writeFileSync(this._config.get("db_file_path") || "db.json", JSON.stringify(data));
         this._dbCopy = data;
         this._dbInited = true;
     }
@@ -427,6 +435,9 @@ class Firebase {
                 }
             }
         }
+    }
+    offlineUpdate(data) {
+        console.log('data to update offline: ', data);
     }
 }
 exports.Firebase = Firebase;

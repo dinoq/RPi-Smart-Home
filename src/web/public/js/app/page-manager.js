@@ -21,7 +21,7 @@ export class PageManager extends Singleton {
                         childStyle.left = Utils.getWindowWidth(true);
                     }
                 });
-            }, 0);
+            }, 1000);
         };
         this.pages = new Array();
         this.pagesKeys = new Array();

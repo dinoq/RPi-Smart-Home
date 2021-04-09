@@ -1,4 +1,4 @@
-import { RegistrationComponent } from "../components/forms/registration-form.js";
+import { RegistrationComponent } from "../components/forms/registration-component.js";
 import { BasePage } from "./base-page.js";
 export class RegistrationPage extends BasePage {
     constructor(componentProps) {

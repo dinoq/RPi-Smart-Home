@@ -11,9 +11,15 @@ export var Pages;
 export class AppRouter {
     constructor() {
     }
-    getRoute() {
+    async getRoute() {
         let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase(); });
         let entirePath = window.location.pathname.toLocaleLowerCase();
+        let getParams = window.location.search.substr(1).split("=");
+        let indexOfLogoutParam = getParams.indexOf("forceLogout");
+        if (indexOfLogoutParam != -1 && getParams[indexOfLogoutParam + 1] == "true") {
+            await Firebase.logout();
+            location.replace(window.location.origin + window.location.pathname); // Go to page, but without forceLogout param!
+        }
         this.route = { page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath };
         let topLevel = pathArr[0];
         if (this.pathsEquals(topLevel, Paths.LOGIN)) {
@@ -33,7 +39,10 @@ export class AppRouter {
         else {
             this.route.page = Pages.UNKNOWN;
         }
-        if (!Firebase.loggedIn() && this.route.page != Pages.REGISTER) {
+        console.log("bef " + (16179879960 - Math.round(new Date().getTime() / 100)));
+        let lin = await Firebase.loggedIn();
+        console.log("af " + (16179879960 - Math.round(new Date().getTime() / 100)));
+        if (!(lin) && this.route.page != Pages.REGISTER) {
             if (this.route.page == Pages.LOGIN) {
                 this.route.afterLoginPage = Pages.HOME;
                 this.route.afterLoginPath = Paths.HOME;

@@ -3,7 +3,7 @@ import { ComponentNameNotDefinedError, CustomComponentNotDefinedError } from "..
 import { MethodNotImplementedError } from "../errors/method-errors.js";
 import { Config } from "../app/config.js";
 import { Utils } from "../app/utils.js";
-import { LoginComponent } from "./forms/login-form.js";
+import { LoginComponent } from "./forms/login-component.js";
 
 
 export class Component extends HTMLElement {

@@ -1,5 +1,5 @@
 import { Paths } from "../../app/app-router.js";
-import { Firebase } from "../../app/firebase.js";
+import { AuthPersistence, Firebase } from "../../app/firebase.js";
 import { URLManager } from "../../app/url-manager.js";
 import { AbstractComponent } from "../component.js";
 export class LoginComponent extends AbstractComponent {
@@ -24,7 +24,9 @@ export class LoginComponent extends AbstractComponent {
             event.preventDefault();
             let username = document.getElementById("username").value;
             let password = document.getElementById("password").value;
-            await Firebase.login(username, password)
+            let remember = document.getElementById("remember").checked;
+            let persistence = (remember === true) ? AuthPersistence.LOCAL : AuthPersistence.SESSION;
+            await Firebase.login(username, password, persistence)
                 .then((user) => {
                 this.querySelector("form").submit();
             })

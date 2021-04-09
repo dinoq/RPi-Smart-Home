@@ -9,10 +9,10 @@ import { SettingsPage } from "../pages/settings-page.js";
 import { RegistrationPage } from "../pages/registration-page.js";
 export class PageCreator {
     constructor() {
-        this.renderPage = () => {
-            let route = this.router.getRoute();
+        this.renderPage = async () => {
+            let route = await this.router.getRoute();
             let page = route.page;
-            if (Firebase.loggedIn()) {
+            if (await Firebase.loggedIn()) {
                 if (!this.hamburgerMenu.componentConnected) {
                     this.hamburgerMenu.connectToBody();
                 }

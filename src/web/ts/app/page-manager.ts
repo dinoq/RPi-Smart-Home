@@ -141,7 +141,7 @@ export class PageManager extends Singleton {
                     childStyle.left = <string>Utils.getWindowWidth(true);
                 }
             })
-        }, 0);
+        }, 1000);
     }
 
 }

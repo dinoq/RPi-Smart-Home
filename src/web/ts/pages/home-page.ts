@@ -2,7 +2,7 @@ import { RoomCard } from "../layouts/room-card.js";
 import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
 import { IComponentProperties } from "../components/component.js";
-import { LoginComponent } from "../components/forms/login-form.js";
+import { LoginComponent } from "../components/forms/login-component.js";
 import { BasePage } from "./base-page.js";
 import { PageManager } from "../app/page-manager.js";
 import { Loader } from "../components/others/loader.js";

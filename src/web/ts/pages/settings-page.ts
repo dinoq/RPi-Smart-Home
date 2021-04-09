@@ -3,7 +3,7 @@ import { RoomCard } from "../layouts/room-card.js";
 import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
 import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
-import { LoginComponent } from "../components/forms/login-form.js";
+import { LoginComponent } from "../components/forms/login-component.js";
 import { BasePage } from "./base-page.js";
 import { Utils } from "../app/utils.js";
 import { HorizontalStack } from "../layouts/horizontal-stack.js";

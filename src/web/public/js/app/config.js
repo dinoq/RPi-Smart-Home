@@ -4,6 +4,8 @@ export class Config {
     }
 }
 // Common configuration
+Config.checkConnectionMaxAttempts = 5;
+Config.checkConnectionMaxTimeout = 2000;
 Config.defaultTransitionTime = 1000;
 // Display errors
 Config.showAllErrorsAndWarnings = false; // Switch to true for debugging all errors

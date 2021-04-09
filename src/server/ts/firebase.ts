@@ -6,10 +6,10 @@ const checkInternetConnected = require('check-internet-connected');
 const isOnline = require('is-online');
 const editJsonFile = require("edit-json-file");
 
-import {config} from "../config.js";
 import {SensorInfo, VALUE_TYPE} from "./ESP.js";
 
 export class Firebase {
+    private _config;
     private _fb;
     private _dbCopy;
     private _dbFile;
@@ -28,7 +28,10 @@ export class Firebase {
 
     changes: IChangeMessage[] = new Array();
 
-    constructor() {
+    constructor() {         
+        this._config = editJsonFile("config.json", {
+            autosave: true
+        });
         //console.log('navigator.onLine: ', navigator.onLine);
         /*window.addEventListener('online', () => {
             console.log('Online!');
@@ -48,7 +51,7 @@ export class Firebase {
     public login(username: string, pwd: string) {
         firebase.auth().signInWithEmailAndPassword(username, pwd)
             .then((user) => {
-                console.log("Succesfully logged in");
+                console.log("Uživatel byl úspěšně ověřen, server pracuje.");
 
                 //this.debugApp();
 
@@ -61,7 +64,12 @@ export class Firebase {
 
 
             }).catch((error) => {
-                console.log('error user: ', error);
+                if(error.code === "auth/network-request-failed"){
+                    console.log("Chyba připojení k internetu. Server bude pracovat v lokální síti.");
+                }else{
+                    console.log("Neznámá chyba: " + error.message + "\nAplikace se ukončí...");
+                    process.exit(5);
+                }
             });
     }
 
@@ -251,7 +259,7 @@ export class Firebase {
         if (!fs.existsSync('db.json')) {// local database file doesn't exist => create it!
 
         }
-        fs.writeFileSync(config.db_file_path, JSON.stringify(data));
+        //fs.writeFileSync(this._config.get("db_file_path") || "db.json", JSON.stringify(data));
         this._dbCopy = data;
         this._dbInited = true;
 
@@ -461,6 +469,10 @@ export class Firebase {
             }
 
         }
+    }
+
+    public offlineUpdate(data){
+        console.log('data to update offline: ', data);
     }
 }
 

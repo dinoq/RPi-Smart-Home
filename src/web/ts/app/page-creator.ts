@@ -1,8 +1,6 @@
-import { LoginComponent } from "../components/forms/login-form.js";
+import { LoginComponent } from "../components/forms/login-component.js";
 import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
 import { AbstractComponent } from "../components/component.js";
-import { BlankPage } from "../pages/blank-page.js";
-import { BaseLayout } from "../layouts/base-layout.js";
 import { Effects, PageManager } from "./page-manager.js";
 import { AppRouter, IRoute, Pages, PagesKeys, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
@@ -30,11 +28,11 @@ export class PageCreator {
         this.renderPage();
     }
 
-    renderPage = () => {
-        let route: IRoute = this.router.getRoute();
+    renderPage = async () => {
+        let route: IRoute = await this.router.getRoute();
         let page: Pages = route.page;
 
-        if (Firebase.loggedIn()) {
+        if (await Firebase.loggedIn()) {
             if (!this.hamburgerMenu.componentConnected) {
                 this.hamburgerMenu.connectToBody();
             }

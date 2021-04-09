@@ -1,31 +1,26 @@
 import { ErrorDialog } from "./components/dialogs/error-dialog.js";
-import { LoginComponent } from "./components/forms/login-form.js";
+import { LoginComponent } from "./components/forms/login-component.js";
 import { HeaderComponent } from "./components/headers/header-component.js";
-import { HamburgerMenu, MenuIcon, MenuItemsContainer } from "./components/menus/hamburger-menu.js";
+import { MenuIcon, MenuItemsContainer } from "./components/menus/hamburger-menu.js";
 import { MenuItem } from "./components/menus/menu-item.js";
-import { BlankPage } from "./pages/blank-page.js";
-import { UnknownPageError } from "./errors/system-errors/uknown-page-error.js";
-import { UndefinedPageError } from "./errors/system-errors/undefined-page-error.js";
 import { BaseLayout } from "./layouts/base-layout.js";
-import { PageCreator, PageElements } from "./app/page-creator.js";
-import { Effects, PageManager, PageManagerComponent } from "./app/page-manager.js";
-import { AppRouter, IRoute, Pages } from "./app/app-router.js";
-import { URLManager } from "./app/url-manager.js";
+import { PageCreator } from "./app/page-creator.js";
+import { PageManagerComponent } from "./app/page-manager.js";
 import { LoginPage } from "./pages/login-page.js";
 import { HomePage } from "./pages/home-page.js";
 import { RoomCard, RoomDevice, RoomSensor, Slider } from "./layouts/room-card.js";
 import { VerticalStack } from "./layouts/vertical-stack.js";
 import { HorizontalStack } from "./layouts/horizontal-stack.js";
-import { AbstractComponent, BaseComponent } from "./components/component.js";
+import { BaseComponent } from "./components/component.js";
 import { SettingsPage } from "./pages/settings-page.js";
 import { FrameList, FrameListItem } from "./layouts/frame-list.js";
 import { Icon } from "./components/others/app-icon.js";
 import { TabLayout } from "./layouts/tab-layout.js";
 import { FrameDetail, FrameDetailRow, SlidableImg } from "./layouts/frame-detail.js";
 import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
-import { Loader, LoaderComponent } from "./components/others/loader.js";
+import { LoaderComponent } from "./components/others/loader.js";
 import { OneOptionDialog } from "./components/dialogs/cancel-dialog.js";
-import { RegistrationComponent } from "./components/forms/registration-form.js";
+import { RegistrationComponent } from "./components/forms/registration-component.js";
 import { RegistrationPage } from "./pages/registration-page.js";
 
 export declare var firebase: any;
@@ -54,7 +49,6 @@ class AutoHomeApp {
             RegistrationComponent,
             BaseLayout,
             PageManagerComponent,
-            BlankPage,
             HeaderComponent,
             MenuItem,
             MenuItemsContainer,
@@ -79,7 +73,7 @@ class AutoHomeApp {
             SlidableImg,
             
         ];
-        if(customElements.get("login-form") == undefined){
+        if(customElements.get("login-component") == undefined){
             for(const component of components){
                 component.defineComponent();
             }

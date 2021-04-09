@@ -1,10 +1,10 @@
 import { Paths } from "../../app/app-router.js";
-import { Firebase } from "../../app/firebase.js";
+import { AuthPersistence, Firebase } from "../../app/firebase.js";
 import { URLManager } from "../../app/url-manager.js";
 import { AbstractComponent, IComponentProperties } from "../component.js";
 
 export class LoginComponent extends AbstractComponent {
-    static tagName = "login-form";
+    static tagName = "login-component";
 
     formInfo: HTMLElement = undefined;
     constructor(componentProps?: IComponentProperties) {
@@ -20,7 +20,7 @@ export class LoginComponent extends AbstractComponent {
         <div class="form-wrapper">
             <form action="/" method="POST">
                 <div class="form-label">
-                    <label class="form-name-label" for="login-form">Přihlášení</label>
+                    <label class="form-name-label" for="login-component">Přihlášení</label>
                 </div>
                 <div class="form-label">
                     <label for="username" class="active-label">Email</label>
@@ -41,7 +41,7 @@ export class LoginComponent extends AbstractComponent {
             </form>
         </div>
         `;
-        
+
         this.formInfo = this.querySelector("#form-info");
     }
 
@@ -54,9 +54,9 @@ export class LoginComponent extends AbstractComponent {
         lf.addEventListener('submit', this.login);
         l.addEventListener('input', this.inputChange);
         p.addEventListener('input', this.inputChange);
-        
+
         let register = this.querySelector("#form-link button");
-        register.addEventListener('click', (event)=>{
+        register.addEventListener('click', (event) => {
             event.preventDefault();
             URLManager.setURL(Paths.REGISTER);
         })
@@ -67,23 +67,25 @@ export class LoginComponent extends AbstractComponent {
         event.preventDefault();
         let username: string = (<HTMLInputElement>document.getElementById("username")).value;
         let password: string = (<HTMLInputElement>document.getElementById("password")).value;
-        await Firebase.login(username, password)
-        .then((user) => {
-            this.querySelector("form").submit();
-        })
-        .catch((error) => {
-            let errorCode = error.code;
-            let alert: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert"));
-            this.formInfo.style.display = "flex";
-            alert.innerText = this.getErrorFromErrCode(errorCode);
-        });        
+        let remember = (<HTMLInputElement>document.getElementById("remember")).checked;
+        let persistence = (remember === true) ? AuthPersistence.LOCAL : AuthPersistence.SESSION;
+        await Firebase.login(username, password, persistence)
+            .then((user) => {
+                this.querySelector("form").submit();
+            })
+            .catch((error) => {
+                let errorCode = error.code;
+                let alert: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert"));
+                this.formInfo.style.display = "flex";
+                alert.innerText = this.getErrorFromErrCode(errorCode);
+            });
     }
 
-    getErrorFromErrCode(errorCode){
-        if(!errorCode){
+    getErrorFromErrCode(errorCode) {
+        if (!errorCode) {
             return "Neznámá chyba!";
         }
-        let prefix = (errorCode.includes("user-not-found")|| errorCode.includes("wrong-password"))? "Nesprávné přihlašovací údaje!" : "Neznámá chyba!";
+        let prefix = (errorCode.includes("user-not-found") || errorCode.includes("wrong-password")) ? "Nesprávné přihlašovací údaje!" : "Neznámá chyba!";
         return prefix + " (chyba: " + errorCode + ")";
     }
 

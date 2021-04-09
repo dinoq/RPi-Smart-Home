@@ -4,7 +4,7 @@ import { URLManager } from "../../app/url-manager.js";
 import { AbstractComponent, IComponentProperties } from "../component.js";
 
 export class RegistrationComponent extends AbstractComponent {
-    static tagName = "registration-form";
+    static tagName = "registration-component";
 
     formInfo: HTMLElement = undefined;
     username: any;
@@ -23,7 +23,7 @@ export class RegistrationComponent extends AbstractComponent {
             <form action="/home" method="POST">
                 <input autocomplete="off" name="hidden" type="text" style="display:none;">
                 <div class="form-label">
-                    <label class="form-name-label" for="registration-form">Registrace</label>
+                    <label class="form-name-label" for="registration-component">Registrace</label>
                 </div>
                 <div class="form-label">
                     <label for="registration-username" class="active-label">Email</label>
@@ -57,7 +57,8 @@ export class RegistrationComponent extends AbstractComponent {
         registerField.addEventListener('submit', this.register);
         this.username.addEventListener('input', this.inputChange);
         this.pwd.addEventListener('input', this.inputChange);
-
+        this.querySelector("#registration-pwd2").addEventListener('input', this.inputChange);
+        
         let login = this.querySelector("#form-link");
         login.addEventListener('click', (event)=>{            
             event.preventDefault();

@@ -207,7 +207,7 @@ export class RoomCard extends AbstractComponent {
         })
     }
 
-    devicesClicked = (val, device: RoomDevice) => {//Called when user click on any device (lamp)
+    devicesClicked = async (val, device: RoomDevice) => {//Called when user click on any device (lamp)
         let inputElem = this.slider.querySelector("input");
         if (this.idOfSelectedDevices == device.dbID) { // Clicked on same device (second time)
             inputElem.style.visibility = "hidden";
@@ -227,7 +227,27 @@ export class RoomCard extends AbstractComponent {
                     this.idOfSelectedDevices = "";
                 }
                 let newVal = (device.value < 512) ? 1023 : 0;
-                Firebase.updateDBData(device.devicePath, { value: newVal });
+                
+                let connected = await Utils.checkConnection();
+                if(connected){
+                    //Firebase.updateDBData(device.devicePath, { value: newVal });
+                    console.log("Offline...");
+                    let resp = await fetch("update", {
+                        method: 'POST',
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({type: "new-value", path: device.devicePath, value: newVal })
+                    });
+                    console.log('this.responseText: ', resp);
+                }else{
+                    console.log("Offline...");
+                    let resp = await fetch("update", {
+                        method: 'POST',
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({type: "new-value", path: device.devicePath, value: newVal })
+                    });
+                    console.log('this.responseText: ', resp);
+                }
+
                 let ajax=()=>{
                     let xhttp = new XMLHttpRequest();
                     xhttp.onreadystatechange = function() {
@@ -238,7 +258,6 @@ export class RoomCard extends AbstractComponent {
                       xhttp.open("GET", "update", true);
                       xhttp.send();
                 }
-                ajax();
             }
         }
     }

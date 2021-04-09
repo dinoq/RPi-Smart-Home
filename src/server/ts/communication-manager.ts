@@ -1,11 +1,15 @@
 const os = require('os');
 const coap = require('coap');
 const dgram = require("dgram");
-import {config} from "../config.js";
+const editJsonFile = require("edit-json-file");
 
 module.exports = class CommunicationManager {
+    private _config;
     private _server: any;
-    constructor() {
+    constructor() { 
+        this._config = editJsonFile("config.json", {
+            autosave: true
+        });
 
         var coapTiming = {
             ackTimeout: 0.25,
@@ -32,7 +36,7 @@ module.exports = class CommunicationManager {
         //init multicast listening
         const localIP = CommunicationManager.getServerIP();
         const socket = dgram.createSocket({ type: "udp4" });
-        socket.addMembership(config.COAP_MULTICAST_ADDR, localIP);
+        socket.addMembership("224.0.1.187", localIP);
 
         this._server = coap.createServer()
  
@@ -41,7 +45,7 @@ module.exports = class CommunicationManager {
         })
         
         this._server.listen(function() {
-            console.log("listening on default port");
+            
         });
 
     }
@@ -50,16 +54,11 @@ module.exports = class CommunicationManager {
         return new Promise((resolve, reject) => {
             console.log('initCommunicationWithESP: ');
 
-            this.coapRequest(config.COAP_MULTICAST_ADDR, "/hello-client", "", "GET", null, (response)=>{
+            this.coapRequest("224.0.1.187", "/hello-client", "", "GET", null, (response)=>{
                 resolve({ espIP: response.rsinfo.address, boardType: response.payload.toString().substring("TYPE:".length)});
             }, (err)=>{
                 reject(err.message);
             });
-            /*
-            setTimeout(() => { // time limit for any ESP to respond... If no ESP has been founded, it should be removed from DB
-                reject("No module founded!");
-            }, COnfig.NEW_MODULE_FIND_TIMEOUT);*/
-
         })
     }
 

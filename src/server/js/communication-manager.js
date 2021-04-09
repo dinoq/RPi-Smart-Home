@@ -1,11 +1,12 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const os = require('os');
 const coap = require('coap');
 const dgram = require("dgram");
-const config_js_1 = require("../config.js");
+const editJsonFile = require("edit-json-file");
 module.exports = class CommunicationManager {
     constructor() {
+        this._config = editJsonFile("config.json", {
+            autosave: true
+        });
         var coapTiming = {
             ackTimeout: 0.25,
             ackRandomFactor: 1.0,
@@ -29,27 +30,22 @@ module.exports = class CommunicationManager {
         //init multicast listening
         const localIP = CommunicationManager.getServerIP();
         const socket = dgram.createSocket({ type: "udp4" });
-        socket.addMembership(config_js_1.config.COAP_MULTICAST_ADDR, localIP);
+        socket.addMembership("224.0.1.187", localIP);
         this._server = coap.createServer();
         this._server.on('request', function (req, res) {
             CoAPIncomingMsgCallback(req, res);
         });
         this._server.listen(function () {
-            console.log("listening on default port");
         });
     }
     initCommunicationWithESP() {
         return new Promise((resolve, reject) => {
             console.log('initCommunicationWithESP: ');
-            this.coapRequest(config_js_1.config.COAP_MULTICAST_ADDR, "/hello-client", "", "GET", null, (response) => {
+            this.coapRequest("224.0.1.187", "/hello-client", "", "GET", null, (response) => {
                 resolve({ espIP: response.rsinfo.address, boardType: response.payload.toString().substring("TYPE:".length) });
             }, (err) => {
                 reject(err.message);
             });
-            /*
-            setTimeout(() => { // time limit for any ESP to respond... If no ESP has been founded, it should be removed from DB
-                reject("No module founded!");
-            }, COnfig.NEW_MODULE_FIND_TIMEOUT);*/
         });
     }
     coapRequest(ip, pathname, query, method, valToWrite, onResponse, onError, confirmable = true, multicast = false) {

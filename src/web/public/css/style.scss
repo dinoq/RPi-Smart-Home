@@ -150,8 +150,9 @@ html {
     }
 }
 
-login-form, registration-form {
+login-component, registration-component {
     #form-info {
+        user-select: text; //switch of text selecting
         display: none;
         justify-content: center;
         margin-top: 25px;
