@@ -3,12 +3,14 @@ import { UndefinedPageError } from "../errors/system-errors/undefined-page-error
 import { Firebase } from "./firebase.js";
 import { URLManager } from "./url-manager.js";
 
+
 export enum Pages {
     UNKNOWN,
     LOGIN,
     REGISTER,
     HOME,
-    SETTINGS
+    SETTINGS,
+    PAIR_WITH_ACCOUNT
 }
 export class AppRouter {
     public desiredPage: Pages;
@@ -29,8 +31,10 @@ export class AppRouter {
 
         this.route = { page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath };
         let topLevel: string = pathArr[0];
-        if (this.pathsEquals(topLevel, Paths.LOGIN)) {
+        if (this.pathsEquals(topLevel, Paths.LOGIN)) {            
             this.route.page = Pages.LOGIN;
+        } else if (this.pathsEquals(topLevel, Paths.PAIR_WITH_ACCOUNT)) {
+            this.route.page = Pages.PAIR_WITH_ACCOUNT;
         } else if (this.pathsEquals(topLevel, Paths.REGISTER)) {
             this.route.page = Pages.REGISTER;
             this.route.afterLoginPage = Pages.LOGIN;
@@ -42,10 +46,7 @@ export class AppRouter {
         } else {
             this.route.page = Pages.UNKNOWN;
         }
-        console.log("bef " + (16179879960-Math.round(new Date().getTime()/100)));
-        let lin = await Firebase.loggedIn();
-        console.log("af " + (16179879960-Math.round(new Date().getTime()/100)));
-        if (!(lin) && this.route.page != Pages.REGISTER) {
+        if (!(await Firebase.loggedIn()) && this.route.page != Pages.REGISTER) {
             if (this.route.page == Pages.LOGIN) {
                 this.route.afterLoginPage = Pages.HOME;
                 this.route.afterLoginPath = Paths.HOME;
@@ -95,16 +96,11 @@ export interface IRoute {
     afterLoginPath?: string,
 }
 
+
 export enum Paths {
     LOGIN = "login",
     REGISTER = "registrace",
     HOME = "domu",
     SETTINGS = "nastaveni",
-}
-
-export enum PagesKeys {
-    LOGIN = "login",
-    REGISTER = "registrovat",
-    HOME = "domu",
-    SETTINGS = "nastaveni",
+    PAIR_WITH_ACCOUNT = "sparovat_ucet"
 }

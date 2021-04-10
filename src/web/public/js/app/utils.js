@@ -1,4 +1,3 @@
-import { Config } from "./config.js";
 export class Utils {
     static mergeObjects(obj1, obj2) {
         let result = {};
@@ -55,20 +54,5 @@ export class Utils {
                 cycleBody(arrayOrObject[propertyName], i++, arrayOrObject);
             }
         }
-    }
-    static checkConnection() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve(false);
-            }, Config.checkConnectionMaxTimeout);
-            for (let i = 0; i < Config.checkConnectionMaxAttempts; i++) {
-                fetch("https://ipv4.icanhazip.com/&time=" + Date.now())
-                    .then(() => {
-                    resolve(true);
-                })
-                    .catch(() => {
-                });
-            }
-        });
     }
 }

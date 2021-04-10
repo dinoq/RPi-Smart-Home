@@ -2,9 +2,10 @@ import { Paths } from "../../app/app-router.js";
 import { AuthPersistence, Firebase } from "../../app/firebase.js";
 import { URLManager } from "../../app/url-manager.js";
 import { AbstractComponent, IComponentProperties } from "../component.js";
+import { ChoiceDialog } from "../dialogs/choice-dialog.js";
 
-export class LoginComponent extends AbstractComponent {
-    static tagName = "login-component";
+export class PairComponent extends AbstractComponent {
+    static tagName = "pair-component";
 
     formInfo: HTMLElement = undefined;
     constructor(componentProps?: IComponentProperties) {
@@ -20,7 +21,7 @@ export class LoginComponent extends AbstractComponent {
         <div class="form-wrapper">
             <form action="/" method="POST">
                 <div class="form-label">
-                    <label class="form-name-label" for="login-component">Přihlášení</label>
+                    <label class="form-name-label" for="login-component">Spárovat server s účtem:</label>
                 </div>
                 <div class="form-label">
                     <label for="username" class="active-label">Email</label>
@@ -29,10 +30,6 @@ export class LoginComponent extends AbstractComponent {
                 <div class="form-label">
                     <label for="password" class="active-label">Heslo</label>
                     <input type="password" id="password"  name="password" onfocusin=${fin} onfocusout=${fout} required />
-                </div>
-                <div class="chekbox-wrapper">
-                    <input type="checkbox" id="remember" name="remember" />                    
-                    <label for="remember">Zapamatovat účet</label>
                 </div>
                 <input type="submit" id="submit-login" class="btn btn-primary" value="Přihlásit"/>
                 <div id="form-link">
@@ -69,11 +66,19 @@ export class LoginComponent extends AbstractComponent {
         event.preventDefault();
         let username: string = (<HTMLInputElement>document.getElementById("username")).value;
         let password: string = (<HTMLInputElement>document.getElementById("password")).value;
-        let remember = (<HTMLInputElement>document.getElementById("remember")).checked;
-        let persistence = (remember === true) ? AuthPersistence.LOCAL : AuthPersistence.SESSION;
         try {
-            let user = await Firebase.login(username, password, persistence);
-            this.querySelector("form").submit();
+            let user = await Firebase.login(username, password, "none");
+            let choiceServer = "Lokální verze (server)";
+            let choiceFirebase = "Verze z internetu";
+            let dialog = new ChoiceDialog("Server byl úspěšně spárován s uživatelským účtem. Zvolte, která databáze má být zachovaná: ", [choiceFirebase, choiceServer]);
+            let resp = await dialog.show();
+            if(resp == choiceServer){
+                await Firebase.serverCall("POST", "CopyDatabaseToFirebase");
+            }else{
+                await Firebase.serverCall("POST", "CopyDatabaseFromFirebase");
+            }
+            
+            //this.querySelector("form").submit();
         } catch (error) {
             let errorCode = error.code;
             let alert: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert"));

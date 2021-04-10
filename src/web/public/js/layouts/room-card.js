@@ -138,36 +138,7 @@ export class RoomCard extends AbstractComponent {
                         this.idOfSelectedDevices = "";
                     }
                     let newVal = (device.value < 512) ? 1023 : 0;
-                    let connected = await Utils.checkConnection();
-                    if (connected) {
-                        //Firebase.updateDBData(device.devicePath, { value: newVal });
-                        console.log("Offline...");
-                        let resp = await fetch("update", {
-                            method: 'POST',
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ type: "new-value", path: device.devicePath, value: newVal })
-                        });
-                        console.log('this.responseText: ', resp);
-                    }
-                    else {
-                        console.log("Offline...");
-                        let resp = await fetch("update", {
-                            method: 'POST',
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ type: "new-value", path: device.devicePath, value: newVal })
-                        });
-                        console.log('this.responseText: ', resp);
-                    }
-                    let ajax = () => {
-                        let xhttp = new XMLHttpRequest();
-                        xhttp.onreadystatechange = function () {
-                            if (this.readyState == 4 && this.status == 200) {
-                                console.log('this.responseText: ', this.responseText);
-                            }
-                        };
-                        xhttp.open("GET", "update", true);
-                        xhttp.send();
-                    };
+                    Firebase.updateDBData(device.devicePath, { value: newVal });
                 }
             }
         };

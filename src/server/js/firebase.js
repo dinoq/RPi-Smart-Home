@@ -10,7 +10,11 @@ const editJsonFile = require("edit-json-file");
 const ESP_js_1 = require("./ESP.js");
 class Firebase {
     constructor() {
+        this._firebaseInited = false; // Slouží pro informaci, zda byly již nainicializovány služby Firebase (v případě, že je server spuštěn bez přístupu k internetu, tak je nutné je po připojení k internetu nainicializovat)
+        this._previousOnline = false;
         this._online = false;
+        this._onlineValidTimeout = 1000;
+        this._lastConnCheck = 0;
         this._dbInited = false;
         this._loggedIn = false;
         this._sensors = new Array();
@@ -119,9 +123,8 @@ class Firebase {
             this._updateSensorsInDBTimeout = undefined;
             if (this._sensorsUpdates && Object.keys(this._sensorsUpdates).length != 0) {
                 console.log((Math.floor(Date.now() / 1000) - 1616084626) + '| updates: ', this._sensorsUpdates);
-                this._online = await this.serverIsOnline();
                 console.log('this._online: ', this._online);
-                if (this._online) {
+                if (await this.online) {
                     for (const updatePath in this._sensorsUpdates) {
                         this._dbFile.set(updatePath.split("/").join("."), this._sensorsUpdates[updatePath]);
                     }
@@ -130,45 +133,128 @@ class Firebase {
                 this._sensorsUpdates = {};
             }
         };
+        this.obj = {
+            "lastTime": 1618061300693,
+            "rooms": {
+                "-MXh9fF2JDmXtkDwyovw": {
+                    "devices": {
+                        "-MXsE0516wQITHvRxiWp": {
+                            "IP": "192.168.1.8",
+                            "OUT": {
+                                "-MXsE1HNRkXZHurxp0QH": {
+                                    "icon": "light",
+                                    "index": 0,
+                                    "name": "Zařízení 7SYK",
+                                    "output": "D4",
+                                    "type": "digital",
+                                    "value": 0
+                                }
+                            },
+                            "index": 0,
+                            "name": "Modul MJQV",
+                            "type": "NodeMCU"
+                        }
+                    },
+                    "img": {
+                        "offset": 0,
+                        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+                    },
+                    "index": 1,
+                    "name": "Pracovna"
+                },
+                "-MXs0hQBRQMVjh3dWWez": {
+                    "img": {
+                        "offset": 0,
+                        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+                    },
+                    "index": 0,
+                    "name": "Místnost UCX6"
+                }
+            }
+        };
+        this.clientDBListeners = new Array();
         this._config = editJsonFile("config.json", {
             autosave: true
         });
-        //console.log('navigator.onLine: ', navigator.onLine);
-        /*window.addEventListener('online', () => {
-            console.log('Online!');
-            this._online = true;
-        });
-        window.addEventListener('offline', () => {
-            console.log('Offline!');
-            this._online = false;
-        });*/
-        this.initFirebase();
         this._communicationManager = new CommunicationManager();
-        this._dbFile = editJsonFile("db2.json", {
+        this._dbFile = editJsonFile("db.json", {
             autosave: true
         });
+        this.online.then((online) => {
+            if (online) {
+                this.initFirebase();
+            }
+            else {
+            }
+        });
+        this.connectionCheckInterval = setInterval(async () => {
+            let online = await this.online;
+            let fbInited = await this.firebaseInited;
+            if (!this.loggedIn && online && this._loginInfo) {
+                this.login(this._loginInfo.username, this._loginInfo.pwd);
+            }
+            if (this.loggedIn) {
+                let uid = this._fb.auth().currentUser.uid;
+                if (!online && this._previousOnline) { // Stav se změnil z online na offline
+                    console.log("Server přechází do režimu offline!");
+                    this._fb.database().ref(uid).off(); // Je potřeba odstranit posluchače na změnu databáze
+                }
+                else if (online && !this._previousOnline) { //Stav se změnil z offline na online
+                    console.log("Server opět v režimu online!");
+                    this._fb.database().ref(uid).on('value', (snapshot) => {
+                        console.log("update z firebase");
+                        const data = snapshot.val();
+                        this._databaseUpdatedHandler(data);
+                    });
+                }
+            }
+            this._previousOnline = online;
+        }, this._onlineValidTimeout);
     }
     get loggedIn() {
         return this._loggedIn;
     }
-    login(username, pwd) {
-        firebase.auth().signInWithEmailAndPassword(username, pwd)
-            .then((user) => {
-            console.log("Uživatel byl úspěšně ověřen, server pracuje.");
-            //this.debugApp();
-            this._loggedIn = true;
-            this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
-                const data = snapshot.val();
-                this._databaseUpdatedHandler(data);
-            });
-            this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
-        }).catch((error) => {
-            if (error.code === "auth/network-request-failed") {
-                console.log("Chyba připojení k internetu. Server bude pracovat v lokální síti.");
+    get firebaseInited() {
+        return this.online.then((online) => {
+            if (online) {
+                if (!this._firebaseInited) {
+                    this.initFirebase();
+                }
+                return true;
             }
             else {
-                console.log("Neznámá chyba: " + error.message + "\nAplikace se ukončí...");
-                process.exit(5);
+                //console.warn("Možná zde bude nutné vracet false a ne this._firebaseInited. Needs work (zamyslet se!)...TODO")
+                return this._firebaseInited;
+            }
+        });
+    }
+    login(username, pwd) {
+        this._loginInfo = { username: username, pwd: pwd };
+        this.firebaseInited.then((inited) => {
+            if (inited) {
+                firebase.auth().signInWithEmailAndPassword(username, pwd)
+                    .then((user) => {
+                    console.log("Uživatel byl úspěšně ověřen, server pracuje.");
+                    //this.debugApp();
+                    this._loggedIn = true;
+                    this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
+                        console.log("update z firebase");
+                        const data = snapshot.val();
+                        this._databaseUpdatedHandler(data);
+                    });
+                    this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
+                }).catch((error) => {
+                    if (error.code === "auth/network-request-failed") {
+                        console.log("Chyba připojení k internetu. Server bude pracovat v lokální síti.");
+                    }
+                    else {
+                        console.log("Neznámá chyba: " + error.message + "\nAplikace se ukončí...");
+                        process.exit(5);
+                    }
+                });
+            }
+            else {
+                console.log("Chyba přihlášení k firebase");
             }
         });
     }
@@ -203,12 +289,22 @@ class Firebase {
             });
         }, 5000);
     }
-    async serverIsOnline() {
+    get online() {
+        return this._checkConnection();
+    }
+    async _checkConnection() {
+        if ((this._lastConnCheck + this._onlineValidTimeout) > Date.now()) { // internet connection state is "cached"
+            return this._online;
+        }
         try {
             this._online = await isOnline({ timeout: 2000 });
+            if (!this._online) { // Pokud je zařízení offline, kontrolovat zda se stav nezměnil...Kontrola se provede po vypršení platnosti údaje o připojení (proměnná this._onlineValidTimeout)
+                setTimeout(() => this._checkConnection(), this._onlineValidTimeout);
+            }
         }
         catch (error) {
         }
+        this._lastConnCheck = Date.now();
         return this._online;
     }
     _databaseUpdatedHandler(data) {
@@ -222,16 +318,19 @@ class Firebase {
         }
     }
     initFirebase() {
-        this._fb = firebase.initializeApp({
-            apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
-            authDomain: "home-automation-80eec.firebaseapp.com",
-            databaseURL: "https://home-automation-80eec.firebaseio.com",
-            projectId: "home-automation-80eec",
-            storageBucket: "home-automation-80eec.appspot.com",
-            messagingSenderId: "970359498290",
-            appId: "1:970359498290:web:a43e83568b9db8eb783e2b",
-            measurementId: "G-YTRZ79TCJJ"
-        });
+        if (!this._firebaseInited) {
+            this._firebaseInited = true;
+            this._fb = firebase.initializeApp({
+                apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
+                authDomain: "home-automation-80eec.firebaseapp.com",
+                databaseURL: "https://home-automation-80eec.firebaseio.com",
+                projectId: "home-automation-80eec",
+                storageBucket: "home-automation-80eec.appspot.com",
+                messagingSenderId: "970359498290",
+                appId: "1:970359498290:web:a43e83568b9db8eb783e2b",
+                measurementId: "G-YTRZ79TCJJ"
+            });
+        }
     }
     initLocalDB(data) {
         if (!fs.existsSync('db.json')) { // local database file doesn't exist => create it!
@@ -436,8 +535,73 @@ class Firebase {
             }
         }
     }
-    offlineUpdate(data) {
+    addClientDBListener(path, res) {
+        path = this.correctPath(path);
+        this.clientDBListeners.push({
+            path: path,
+            res: res
+        });
+        let DBPart = this.getDBPart(path);
+        res.write("data: " + JSON.stringify(DBPart) + "\n\n");
+        /*setInterval(()=>{
+                  
+                res.write("data: " + JSON.stringify(obj) + "\n\n")
+            },2000)*/
+    }
+    correctPath(path) {
+        path = (path.indexOf("/") == 0) ? path.substring(1) : path;
+        path = (path.lastIndexOf("/") == path.length - 1) ? path.substring(0, path.length - 1) : path;
+        return path;
+    }
+    getDBPart(path) {
+        let pathArr = this.correctPath(path).split("/");
+        let part = this._dbFile.get();
+        for (let i = 0; i < pathArr.length; i++) {
+            if (part[pathArr[i]] != undefined) {
+                part = part[pathArr[i]];
+            }
+            else {
+                part = undefined;
+                break;
+            }
+        }
+        return part;
+    }
+    writeToDB(path, updates) {
+        path = this.correctPath(path);
+        let time = Date.now();
+        if (this.online && this.firebaseInited) {
+            this._fb.database().ref(firebase.auth().currentUser.uid + "/" + path).update(updates);
+            this._fb.database().ref(firebase.auth().currentUser.uid + "/").update({ lastWriteTime: time });
+        }
+        else {
+        }
+        console.log("writing local", path, updates);
+        this._dbFile.set(path.split("/").join("."), updates);
+        this._dbFile.set("lastWriteTime", time);
+        for (let i = 0; i < this.clientDBListeners.length; i++) {
+            if (path.includes(this.clientDBListeners[i].path)) { // Aktualizace je v cestě, na které klient naslouchá
+                let DBPart = this.getDBPart(this.clientDBListeners[i].path);
+                this.clientDBListeners[i].res.write("data: " + JSON.stringify(DBPart) + "\n\n");
+            }
+        }
+    }
+    clientUpdateDB(data) {
+        let path = data.path;
+        let updates = data.data;
+        let type = data.type;
+        console.log('type: ', type);
+        this.writeToDB(path, updates);
         console.log('data to update offline: ', data);
+    }
+    async copyDatabase(fromFirebase) {
+        if (fromFirebase) { // Lokální soubor se přepíše verzí databáze z Firebase
+            let snapshot = await this._fb.database().child(this._fb.auth().currentUser.uid).get();
+            let database = snapshot.val();
+            console.log('database: ', JSON.stringify(database));
+        }
+        else { // Firebase databáze se přepíše lokálním souborem
+        }
     }
 }
 exports.Firebase = Firebase;

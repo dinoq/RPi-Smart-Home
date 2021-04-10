@@ -33,6 +33,21 @@ class ServerApp {
         this._app.use(bodyParser.urlencoded({
             extended: true
         }));
+        
+        this._app.use((req, res, next) => {
+            if(req.url.includes("addDBListener")){ 
+                res.writeHead(200, {
+                  'Content-Type': 'text/event-stream',
+                  'Cache-Control': 'no-cache',
+                  'Connection': 'keep-alive'
+                })
+                let path = (req.query && req.query.path)? req.query.path: "";
+                this._firebase.addClientDBListener(path, res);                
+            }else{
+                next();
+            }
+        });
+
         this._app.post('/*', (req, res) => { // '/*' or '/domu'
             /*if(req.get('Referer').includes("uzivatel/login")){ // Logged in
                 let username = req.body.login;
@@ -43,7 +58,17 @@ class ServerApp {
             console.log(req.body)
             console.log("qqqqq",req.url);*/
             if(req.url.includes("/update")){
-                this._firebase.offlineUpdate(req.body);
+                this._firebase.clientUpdateDB(req.body);
+                res.sendStatus(200);
+            }else if(req.url.includes("CopyDatabase")){
+                //CopyDatabaseFromFirebase or CopyDatabaseToFirebase
+                console.log("REQ for copying db: " + req.url);
+                let fromFirebase = (req.url.includes("CopyDatabaseFromFirebase"));
+                this._firebase.copyDatabase(fromFirebase).then((value) => {
+                    res.sendStatus(200);
+                }).catch((value) => {
+                    res.sendStatus(423);
+                })
             }else{
                 let uName;
                 let pwd;
@@ -68,6 +93,15 @@ class ServerApp {
                 //res.redirect(req.url);
             }
         });
+        
+        let devicePairedWithAccount = this.config.get("username") != undefined && this.config.get("password") != undefined;
+        this._app.get('/*', (req, res, next) => {
+            if(req.url.includes("paired")){
+                res.send(devicePairedWithAccount);
+            }else{
+                next();
+            }
+        });
         /*let localStorageCleared = false;
         this._app.use((req, res, next) => {// Clear local storage in order to force login if server is not currently logged in. Must be before static serving...
             console.log('this._firebase.loggedIn: ', this._firebase.loggedIn);
@@ -81,10 +115,10 @@ class ServerApp {
                 res.write("<script>localStorage.clear();location.reload();</script>");
             }
         });*/
-        if (this.config.get("username") != undefined && this.config.get("password") != undefined) {
+        if (devicePairedWithAccount) {
             this._firebase.login(this.config.get("username"), this.config.get("password"));
         } else {
-            console.log("Vypadá to, že server není spárován s žádným uživatelským účtem. Pro spárování je nutné se ze zařízení, na kterém server běží zaregistovat (na http://localhost/domu/) či přihlásit, dříve server nebude pracovat. K registraci je vyžadováno internetové připojení.");
+            console.log("Vypadá to, že server není spárován s žádným uživatelským účtem. Pro spárování je nutné se ze zařízení, na kterém server běží zaregistovat (na http://localhost/registrace/) či přihlásit, dříve server nebude pracovat. K registraci je vyžadováno internetové připojení.");
             open('http://localhost/registrace?forceLogout=true');
         }
 

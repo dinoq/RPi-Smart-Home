@@ -45,6 +45,15 @@ export class RegistrationComponent extends AbstractComponent {
         </div>
         `;
         
+        this.classList.add("form-component");
+
+        
+        if(Firebase.localAccess){ // Pro lokální verti neexistuje "přihlášení", ale pouze spárování (prakticky je to to samé...)
+            this.querySelector("#form-link").innerHTML = `
+                Již máte účet? <button>Spárovat zařízení s existujícím účtem!</button>
+            `
+        }
+        
         this.formInfo = this.querySelector("#form-info");
         this.username = this.querySelector("#registration-username");
         this.pwd = this.querySelector("#registration-pwd");
@@ -62,7 +71,11 @@ export class RegistrationComponent extends AbstractComponent {
         let login = this.querySelector("#form-link");
         login.addEventListener('click', (event)=>{            
             event.preventDefault();
-            URLManager.setURL(Paths.LOGIN);
+            if(Firebase.localAccess){ // Pro lokální verti neexistuje "přihlášení", ale pouze spárování (prakticky je to to samé...)
+                URLManager.setURL(Paths.PAIR_WITH_ACCOUNT);
+            }else{
+                URLManager.setURL(Paths.LOGIN);
+            }
         })
     }
 
@@ -78,13 +91,12 @@ export class RegistrationComponent extends AbstractComponent {
             `;
             this.formInfo.style.display = "flex";
         }else {
-            await Firebase.register(this.username.value, this.pwd.value)
-            .then((userCredential: any) => {
+            try {
+                let userCredential:any = await Firebase.register(this.username.value, this.pwd.value);
                 // Signed in 
                 var user = userCredential.user;
                 this.querySelector("form").submit();
-            })
-            .catch((error) => {
+            } catch (error) {
                 var errorCode = error.code;
                 var errorMessage = error.message;
                 let alert: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert"));
@@ -94,7 +106,8 @@ export class RegistrationComponent extends AbstractComponent {
                         ${this.getErrorFromErrCode(errorCode)}
                     </div>
                 `;
-            });
+                
+            }
         }
     }
 

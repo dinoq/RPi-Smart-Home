@@ -7,6 +7,7 @@ export var Pages;
     Pages[Pages["REGISTER"] = 2] = "REGISTER";
     Pages[Pages["HOME"] = 3] = "HOME";
     Pages[Pages["SETTINGS"] = 4] = "SETTINGS";
+    Pages[Pages["PAIR_WITH_ACCOUNT"] = 5] = "PAIR_WITH_ACCOUNT";
 })(Pages || (Pages = {}));
 export class AppRouter {
     constructor() {
@@ -25,6 +26,9 @@ export class AppRouter {
         if (this.pathsEquals(topLevel, Paths.LOGIN)) {
             this.route.page = Pages.LOGIN;
         }
+        else if (this.pathsEquals(topLevel, Paths.PAIR_WITH_ACCOUNT)) {
+            this.route.page = Pages.PAIR_WITH_ACCOUNT;
+        }
         else if (this.pathsEquals(topLevel, Paths.REGISTER)) {
             this.route.page = Pages.REGISTER;
             this.route.afterLoginPage = Pages.LOGIN;
@@ -39,10 +43,7 @@ export class AppRouter {
         else {
             this.route.page = Pages.UNKNOWN;
         }
-        console.log("bef " + (16179879960 - Math.round(new Date().getTime() / 100)));
-        let lin = await Firebase.loggedIn();
-        console.log("af " + (16179879960 - Math.round(new Date().getTime() / 100)));
-        if (!(lin) && this.route.page != Pages.REGISTER) {
+        if (!(await Firebase.loggedIn()) && this.route.page != Pages.REGISTER) {
             if (this.route.page == Pages.LOGIN) {
                 this.route.afterLoginPage = Pages.HOME;
                 this.route.afterLoginPath = Paths.HOME;
@@ -85,11 +86,5 @@ export var Paths;
     Paths["REGISTER"] = "registrace";
     Paths["HOME"] = "domu";
     Paths["SETTINGS"] = "nastaveni";
+    Paths["PAIR_WITH_ACCOUNT"] = "sparovat_ucet";
 })(Paths || (Paths = {}));
-export var PagesKeys;
-(function (PagesKeys) {
-    PagesKeys["LOGIN"] = "login";
-    PagesKeys["REGISTER"] = "registrovat";
-    PagesKeys["HOME"] = "domu";
-    PagesKeys["SETTINGS"] = "nastaveni";
-})(PagesKeys || (PagesKeys = {}));

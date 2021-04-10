@@ -2,7 +2,7 @@
   "port": 80,
   "db_file_path": "db.json",
   "NEW_MODULE_FIND_TIMEOUT": 10000,
-  "username": "marek.petr10@seznam.czc",
-  "password": "qwertz",
-  "saveUserCredentialsOnLogin": "true"
+  "username": "marek.petr10@seznam.cz",
+  "saveUserCredentialsOnLogin": "true",
+  "password": "qwertz"
 }

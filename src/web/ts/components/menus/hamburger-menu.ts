@@ -21,7 +21,11 @@ export class HamburgerMenu {
         }));*/
 
         this.itemsContainer = new MenuItemsContainer();
-        for (const title of HamburgerMenu.MENU_TITLES) {
+        let titles =  HamburgerMenu.globalMenu.MENU_TITLES;     
+        if(Firebase.localAccess){
+            titles =  HamburgerMenu.localMenu.MENU_TITLES;       
+        }
+        for (const title of titles) {
             let item = new MenuItem({ innerText: title });
             this.itemsContainer.addMenuItem(item);
         }
@@ -41,18 +45,34 @@ export class HamburgerMenu {
         this.show(false, false);
     }
 
-    static MENU_HREFS = [
-        Paths.HOME,
-        Paths.SETTINGS,
-        Paths.LOGIN
-    ];
-
-    static MENU_TITLES = [
-        "Domů",
-        "Nastavení",
-        "Maximalizovat okno",
-        "Odhlásit se"
-    ];
+    static localMenu = {
+        MENU_HREFS: [
+            Paths.HOME,
+            Paths.SETTINGS,
+            Paths.PAIR_WITH_ACCOUNT
+        ],
+    
+        MENU_TITLES: [
+            "Domů",
+            "Nastavení",
+            "Maximalizovat okno",
+            "Spárovat server s účtem"
+        ]
+    }
+    static globalMenu = {
+        MENU_HREFS: [
+            Paths.HOME,
+            Paths.SETTINGS,
+            Paths.LOGIN
+        ],
+    
+        MENU_TITLES: [
+            "Domů",
+            "Nastavení",
+            "Maximalizovat okno",
+            "Odhlásit se"
+        ]
+    }
 
     toggle(animate: boolean = true) {
         let containerStyle = this.itemsContainer.style;
@@ -96,22 +116,35 @@ export class HamburgerMenu {
 
         //Add links
         let links: MenuItem[] = <Array<MenuItem>>Array.from(this.itemsContainer.childNodes);
+        let titles =  HamburgerMenu.globalMenu.MENU_TITLES;       
+        let hrefs =  HamburgerMenu.globalMenu.MENU_HREFS;       
+        if(Firebase.localAccess){
+            titles =  HamburgerMenu.localMenu.MENU_TITLES;       
+            hrefs =  HamburgerMenu.localMenu.MENU_HREFS;       
+        }
         for (let i = 0; i < links.length; i++) {
             const link = links[i];
             link.addEventListener("click", async () => {
-                if (i == (links.length - 1)) {
-                    await Firebase.logout();
+                if (i == (links.length - 1)) { // Odhlásit se pro globální verzi aplikace, spárovat server s účtem pro lokální verzi
+                    if(Firebase.localAccess){
+
+                    }else{
+                        await Firebase.logout();
+                    }
                 }
-                if (i == (links.length - 2)) { // Requested fullscreen
+                if (titles[i] == ("Maximalizovat okno")) { // Requested fullscreen
                     if (links[i].innerText.toUpperCase().includes("MAX")) {
                         links[i].innerText = "Zmenšit okno"
                         document.documentElement.requestFullscreen();
                     } else {
-                        links[i].innerText = HamburgerMenu.MENU_TITLES[HamburgerMenu.MENU_TITLES.length - 2];
+                        links[i].innerText = titles[titles.length - 2];
                         document.exitFullscreen();
                     }
                 } else {
-                    URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
+                    let index = i;
+                    if(index > titles.indexOf("Maximalizovat okno"))
+                        index--;
+                    URLManager.setURL(hrefs[index]);
                 }
                 this.toggle();
             });

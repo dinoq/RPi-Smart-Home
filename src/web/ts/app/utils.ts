@@ -63,21 +63,4 @@ export class Utils {
             }
         }
     }
-
-    public static checkConnection(){
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve(false);
-            }, Config.checkConnectionMaxTimeout);
-            for(let i = 0; i < Config.checkConnectionMaxAttempts; i++){
-                fetch("https://ipv4.icanhazip.com/&time="+Date.now())
-                .then(()=>{
-                    resolve(true);
-                })
-                .catch(()=>{
-
-                })
-            }
-        })
-    }
 }

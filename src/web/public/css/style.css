@@ -135,7 +135,7 @@ html .form-wrapper form input[type="button"], html .form-wrapper .form input[typ
   padding: 0 20px;
 }
 
-login-component #form-info, registration-component #form-info {
+.form-component #form-info {
   -webkit-user-select: text;
      -moz-user-select: text;
       -ms-user-select: text;
@@ -147,18 +147,18 @@ login-component #form-info, registration-component #form-info {
   margin-top: 25px;
 }
 
-login-component .form-wrapper, registration-component .form-wrapper {
+.form-component .form-wrapper {
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
   margin-top: 25px;
 }
 
-login-component #form-link, registration-component #form-link {
+.form-component #form-link {
   margin-top: 15px;
 }
 
-login-component #form-link button, registration-component #form-link button {
+.form-component #form-link button {
   font-weight: 500;
   color: #007bff;
   text-decoration: none;
