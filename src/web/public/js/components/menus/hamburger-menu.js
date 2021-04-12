@@ -18,15 +18,45 @@ export class HamburgerMenu {
         };
         this.itemsContainer = new MenuItemsContainer();
         let titles = HamburgerMenu.globalMenu.MENU_TITLES;
+        let hrefs = HamburgerMenu.globalMenu.MENU_HREFS;
         if (Firebase.localAccess) {
             titles = HamburgerMenu.localMenu.MENU_TITLES;
+            hrefs = HamburgerMenu.localMenu.MENU_HREFS;
         }
-        for (const title of titles) {
-            let item = new MenuItem({ innerText: title });
+        for (let i = 0; i < titles.length; i++) {
+            let item = new MenuItem({ innerText: titles[i] });
             this.itemsContainer.addMenuItem(item);
         }
         this.hamburgerIcon = new MenuIcon();
         this.addListeners();
+        let getPairedPromise = Firebase.paired;
+        getPairedPromise.then((paired) => {
+            if (paired) {
+                let itemsContainerChildren = (this.itemsContainer && this.itemsContainer.children) ? Array.from(this.itemsContainer.children) : undefined;
+                if (itemsContainerChildren) {
+                    let itemToRemove = itemsContainerChildren.find((item, index, array) => { return item.innerText.includes("Spárovat"); });
+                    itemToRemove.remove();
+                }
+            }
+        });
+        /*
+
+        let getPairedPromise = Firebase.paired;
+        getPairedPromise.then((paired) => {
+            for(let i = 0; i < titles.length; i++){
+                if(titles[i] == "Spárovat server s účtem"){
+                    if(paired){
+                        continue; // V lokální síti nechceme mít v menu možnost spárování zařízení, pokud již je spárované
+                    }
+                }
+                let item = new MenuItem({ innerText: titles[i] });
+                this.itemsContainer.addMenuItem(item);
+            }
+            this.hamburgerIcon = new MenuIcon();
+            this.addListeners();
+        })
+
+        */
     }
     disconnectComponent() {
         this.componentConnected = false;

@@ -15,7 +15,7 @@ export class Firebase extends Singleton {
     _onlineValidTimeout: number = 1000;
     _lastConnCheck: number = 0;
     
-    _paired: boolean = false; // Značka, zda je server spárovaný s uživatelským účtem
+    _paired: boolean = undefined; // Značka, zda je server spárovaný s uživatelským účtem
     localAccess: boolean = false; // Označuje, zda uživatel k webové aplikaci přistupuje z lokální sítě, nebo domény auto-home.web.app. Na základě toho buď webová aplikace komunikuje přímo s databází, nebo pouze se serverem (v případě komunikace v lokální síti), který později přeposílá do databáze data, pokud má server přístup k internetu
     constructor() {
         super();        
@@ -47,6 +47,25 @@ export class Firebase extends Singleton {
                     this.auth.signOut();
                 }
             });
+        }
+    }
+
+    public static get paired(): Promise<boolean>{
+        let fb = Firebase.getInstance();
+        if(fb.localAccess){
+            if(fb._paired == undefined){
+                return this.serverCall("GET", "/paired").then(async (value) => {
+                    fb._paired = (value == "true");
+                }).catch((value) => {
+                    fb._paired = false;
+                }).then((value) => {                    
+                    return fb._paired;
+                })
+            }else{
+                return Promise.resolve(fb._paired);
+            }            
+        }else{
+            return Promise.resolve(false);
         }
     }
 
@@ -218,31 +237,39 @@ export class Firebase extends Singleton {
             let lastTimePath = await Firebase.getFullPath("/");
             lastTimePath = lastTimePath.substring(0, lastTimePath.length-1);
             if (await fb.online) {
-                await fb.database.ref(fullPath).update(updates);
                 await fb.database.ref(lastTimePath).update({lastWriteTime: Date.now()});
+                return await fb.database.ref(fullPath).update(updates);
             } 
         }
     }
     
-    static deleteDBData(dbPath: string): Promise<any> {
+    static async deleteDBData(dbPath: string): Promise<any> {
         let fb = Firebase.getInstance();
         if(fb.localAccess){
             console.warn("TODO");
         }else{
-            return Firebase.getFullPath(dbPath).then((fullPath) => {
-                return fb.database.ref(fullPath).remove();
-            })
+            let fullPath = await Firebase.getFullPath(dbPath);
+            let lastTimePath = await Firebase.getFullPath("/");
+            lastTimePath = lastTimePath.substring(0, lastTimePath.length-1);
+            if (await fb.online) {
+                await fb.database.ref(fullPath).remove();
+                return (await fb.database.ref(lastTimePath).update({lastWriteTime: Date.now()}));
+            } 
         }
     }
 
-    static pushNewDBData(dbPath: string, data: object): Promise<any> {
+    static async pushNewDBData(dbPath: string, data: object): Promise<any> {
         let fb = Firebase.getInstance();
         if(fb.localAccess){
             console.warn("TODO");
         }else{
-            return Firebase.getFullPath(dbPath).then((fullPath) => {
-                return fb.database.ref().child(fullPath).push(data);
-            })
+            let fullPath = await Firebase.getFullPath(dbPath);
+            let lastTimePath = await Firebase.getFullPath("/");
+            lastTimePath = lastTimePath.substring(0, lastTimePath.length-1);
+            if (await fb.online) {
+                await fb.database.ref(lastTimePath).update({lastWriteTime: Date.now()});
+                return await fb.database.ref().child(fullPath).push(data);   
+            } 
         }
     }
 

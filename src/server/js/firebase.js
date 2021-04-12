@@ -20,6 +20,7 @@ class Firebase {
         this._sensors = new Array();
         this._sensorsUpdates = {};
         this._updateSensorsInDBTimeout = undefined;
+        this._ignoredDBTimes = new Array(); // Obsahuje časy aktualizací z databáze, které jsou serverem ignorovány (protože změnu způsobuje sám, nechce tedy změny znovu zpracovávat)
         this.changes = new Array();
         this._CoAPIncomingMsgCallback = (req, res) => {
             console.log('coap request');
@@ -308,6 +309,11 @@ class Firebase {
         return this._online;
     }
     _databaseUpdatedHandler(data) {
+        if (data && this._ignoredDBTimes.includes(data.lastWriteTime)) {
+            /*let index = this._ignoredDBTimes.indexOf(data.lastWriteTime);
+            this._ignoredDBTimes.splice(index, 1);*/
+            return;
+        }
         if (!this._dbInited) {
             this.initLocalDB(data);
             this.getSensors(data);
@@ -595,12 +601,36 @@ class Firebase {
         console.log('data to update offline: ', data);
     }
     async copyDatabase(fromFirebase) {
+        let uid = this._fb.auth().currentUser.uid;
         if (fromFirebase) { // Lokální soubor se přepíše verzí databáze z Firebase
-            let snapshot = await this._fb.database().child(this._fb.auth().currentUser.uid).get();
-            let database = snapshot.val();
-            console.log('database: ', JSON.stringify(database));
+            let snapshot;
+            try {
+                snapshot = await this._fb.database().ref(uid).once('value');
+            }
+            catch (error) {
+            }
+            let data;
+            if (!snapshot) {
+                data = {};
+            }
+            else {
+                data = snapshot.val();
+            }
+            this._dbFile.empty(() => {
+                console.log("empty");
+                this._dbFile.save();
+                this._dbFile.unset("");
+                console.log(this._dbFile.get());
+                this._dbFile.set("asd", "data");
+                //this._dbFile.set("", data);
+            });
         }
         else { // Firebase databáze se přepíše lokálním souborem
+            let time = Date.now();
+            this._ignoredDBTimes.push(time);
+            await this._fb.database().ref(uid).remove();
+            this._dbFile.set("lastWriteTime", time);
+            await this._fb.database().ref(uid).update(this._dbFile.get());
         }
     }
 }

@@ -1,3 +1,5 @@
+Nevyužívám CoAP cestu, jak by se dalo očekávat, ale s výhodou jsem ji použil pro ty callbacky...
+
 OUT:
 Relé
 -obrazky: 

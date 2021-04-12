@@ -15,6 +15,9 @@ export class PageCreator {
             let route = await this.router.getRoute();
             if (Firebase.localAccess) {
                 if (Utils.itemIsAnyFromEnum(route.page, Pages, ["LOGIN", "PAIR_WITH_ACCOUNT", "REGISTER"])) {
+                    if (route.page == Pages.LOGIN) {
+                        URLManager.replaceURL(Paths.PAIR_WITH_ACCOUNT, Paths.PAIR_WITH_ACCOUNT);
+                    }
                     if (this.hamburgerMenu.componentConnected) {
                         this.hamburgerMenu.disconnectComponent();
                     }

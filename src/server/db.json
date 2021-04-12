@@ -1,16 +1,4 @@
 {
-  "rooms": {
-    "-MXh9fF2JDmXtkDwyovw": {
-      "devices": {
-        "-MXsE0516wQITHvRxiWp": {
-          "OUT": {
-            "-MXsE1HNRkXZHurxp0QH": {
-              "value": 0
-            }
-          }
-        }
-      }
-    }
-  },
-  "lastWriteTime": 1618079069025
+  "lastWriteTime": 1618166964810,
+  "asd": "data"
 }
