@@ -57,9 +57,25 @@ class ServerApp {
             }
             console.log(req.body)
             console.log("qqqqq",req.url);*/
-            if(req.url.includes("/update")){
-                this._firebase.clientUpdateDB(req.body);
-                res.sendStatus(200);
+            console.log("req URL: " + req.url);
+            if(req.url.includes("/updateData")){
+                this._firebase.clientUpdateInDB(req.body).then((value) => {
+                    res.sendStatus(200);
+                })
+            }else if(req.url.includes("/pushData")){
+                this._firebase.clientPushToDB(req.body).then((key) => {
+                    console.log('sending key: ', key);
+                    res.send(key);
+                })
+            }else if(req.url.includes("/getData")){
+                this._firebase.clientGetFromDB(req.body).then((data) => {
+                    console.log('sended data back: ', data);
+                    res.send(data);
+                })
+            }else if(req.url.includes("/deleteData")){
+                this._firebase.clientDeleteFromDB(req.body).then((data) => {
+                    res.sendStatus(200);
+                })
             }else if(req.url.includes("CopyDatabase")){
                 //CopyDatabaseFromFirebase or CopyDatabaseToFirebase
                 console.log("REQ for copying db: " + req.url);

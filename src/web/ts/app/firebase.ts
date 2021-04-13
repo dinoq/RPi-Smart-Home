@@ -205,32 +205,34 @@ export class Firebase extends Singleton {
         }
     }
 
-    static getDBData(dbPath: string): Promise<any> {
+    static async getDBData(dbPath: string): Promise<any> {
         let fb = Firebase.getInstance();
         if(fb.localAccess){
-            console.warn("TODO");
-        }else{
-            return new Promise((resolve, reject) => {
-                Firebase.getFullPath(dbPath).then((fullPath) => {
-                    fb.database.ref(fullPath).once('value')
-                        .then((snapshot) => {
-                            resolve(snapshot.val());
-                        })
-                        .catch((value) => {
-                            reject(new Error("Error in Firebase.getDBData()"));
-                        })
-                })
-            })
+            let resp = await fetch("getData", {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: dbPath })
+            });
+            let text = await resp.text();
+            return (text.length)? JSON.parse(text): null;
+        }else{            
+            let fullPath = await Firebase.getFullPath(dbPath);
+            try {
+                let snapshot = await fb.database.ref(fullPath).once('value');
+                return snapshot.val();
+            } catch (error) {
+                throw new Error("Error in Firebase.getDBData()");
+            }
         }
     }
 
     static async updateDBData(dbPath: string, updates: object) {
         let fb = Firebase.getInstance();
         if(fb.localAccess){
-            let resp = await fetch("update", {
+            let resp = await fetch("updateData", {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ type: "add", path: dbPath, data: updates })
+                body: JSON.stringify({ path: dbPath, data: updates })
             });
         }else{
             let fullPath = await Firebase.getFullPath(dbPath);
@@ -246,7 +248,11 @@ export class Firebase extends Singleton {
     static async deleteDBData(dbPath: string): Promise<any> {
         let fb = Firebase.getInstance();
         if(fb.localAccess){
-            console.warn("TODO");
+            let resp = await fetch("deleteData", {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: dbPath})
+            });
         }else{
             let fullPath = await Firebase.getFullPath(dbPath);
             let lastTimePath = await Firebase.getFullPath("/");
@@ -261,7 +267,13 @@ export class Firebase extends Singleton {
     static async pushNewDBData(dbPath: string, data: object): Promise<any> {
         let fb = Firebase.getInstance();
         if(fb.localAccess){
-            console.warn("TODO");
+            let resp = await fetch("pushData", {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: dbPath, data: data })
+            });
+            let text = await resp.text();
+            return (text.length)? {key: text}: {key: null};
         }else{
             let fullPath = await Firebase.getFullPath(dbPath);
             let lastTimePath = await Firebase.getFullPath("/");

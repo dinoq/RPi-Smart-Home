@@ -1,4 +1,13 @@
 {
-  "lastWriteTime": 1618166964810,
-  "asd": "data"
+  "rooms": {
+    "-MYC5YM5jqKg3vuP3j_3": {
+      "index": 1,
+      "img": {
+        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg",
+        "offset": 0
+      },
+      "name": "Místnost V6RV"
+    }
+  },
+  "lastWriteTime": 1618348780341
 }

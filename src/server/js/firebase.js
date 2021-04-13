@@ -7,6 +7,10 @@ const CommunicationManager = require('./communication-manager.js');
 const checkInternetConnected = require('check-internet-connected');
 const isOnline = require('is-online');
 const editJsonFile = require("edit-json-file");
+const jsonManager = require("jsonfile");
+const dbFilePath = "db.json";
+const objectPath = require("object-path");
+const merge = require('deepmerge');
 const ESP_js_1 = require("./ESP.js");
 class Firebase {
     constructor() {
@@ -127,7 +131,7 @@ class Firebase {
                 console.log('this._online: ', this._online);
                 if (await this.online) {
                     for (const updatePath in this._sensorsUpdates) {
-                        this._dbFile.set(updatePath.split("/").join("."), this._sensorsUpdates[updatePath]);
+                        //this._dbFile.set(updatePath.split("/").join("."), this._sensorsUpdates[updatePath]);
                     }
                     await firebase.database().ref().update(this._sensorsUpdates);
                 }
@@ -174,13 +178,74 @@ class Firebase {
             }
         };
         this.clientDBListeners = new Array();
+        let obj = {
+            q: {
+                w: {
+                    e: 5,
+                    p: "AS"
+                },
+                "R": 47
+            },
+            p: {
+                OP: {
+                    WE: 5
+                }
+            }
+        };
+        objectPath.del(obj, ["q", "w"]);
+        console.log(obj);
+        let q = {
+            "img": {
+                "offset": 0,
+                "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+            },
+            "index": 2,
+            "name": "Místnost UANS"
+        };
+        objectPath.set(q, ["img"], {
+            "offset": 20,
+            "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+        });
+        objectPath.del(q, ["q", "w"]);
+        console.log(q);
+        let f = {
+            "rooms": {
+                "-MYBqnLbRdyaQOdxYyWQ": {
+                    "index": 0,
+                    "img": {
+                        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg",
+                        "offset": 0
+                    },
+                    "name": "Místnost GIF5"
+                },
+                "-MYBqnLbRdyadfgQOdxYyWQ": {
+                    "index": 1,
+                    "img": {
+                        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg",
+                        "offset": 0
+                    },
+                    "name": "Místnost GIF5"
+                }
+            },
+            "lastWriteTime": 1618345250659
+        };
+        let change = {
+            "img": {
+                "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg",
+                "offset": 0
+            },
+            "name": "Místnost GIF5"
+        };
+        let part = objectPath.get(f, ["rooms", "-MYBqnLbRdyaQOdxYyWQ"]);
+        let v = merge(part, change);
+        objectPath.set(f, ["rooms", "-MYBqnLbRdyaQOdxYyWQ"], v);
+        console.log(f);
+        this._loggedInPromise = new Promise((resolve, reject) => { this._loggedInResolve = resolve; });
         this._config = editJsonFile("config.json", {
             autosave: true
         });
         this._communicationManager = new CommunicationManager();
-        this._dbFile = editJsonFile("db.json", {
-            autosave: true
-        });
+        this._dbFile = jsonManager.readFileSync(dbFilePath);
         this.online.then((online) => {
             if (online) {
                 this.initFirebase();
@@ -229,6 +294,18 @@ class Firebase {
             }
         });
     }
+    get userUID() {
+        return this.firebaseInited.then((firebaseInited) => {
+            return this.online.then((online) => {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => { resolve(null); }, 5000);
+                    return this._loggedInPromise.then((value) => {
+                        resolve(firebase.auth().currentUser.uid);
+                    });
+                });
+            });
+        });
+    }
     login(username, pwd) {
         this._loginInfo = { username: username, pwd: pwd };
         this.firebaseInited.then((inited) => {
@@ -237,6 +314,7 @@ class Firebase {
                     .then((user) => {
                     console.log("Uživatel byl úspěšně ověřen, server pracuje.");
                     //this.debugApp();
+                    this._loggedInResolve();
                     this._loggedIn = true;
                     this._fb.database().ref(user.user.uid).on('value', (snapshot) => {
                         console.log("update z firebase");
@@ -561,30 +639,67 @@ class Firebase {
     }
     getDBPart(path) {
         let pathArr = this.correctPath(path).split("/");
-        let part = this._dbFile.get();
+        let part = this._dbFile;
         for (let i = 0; i < pathArr.length; i++) {
             if (part[pathArr[i]] != undefined) {
                 part = part[pathArr[i]];
             }
             else {
-                part = undefined;
+                part = null;
                 break;
             }
         }
         return part;
     }
-    writeToDB(path, updates) {
+    readFromLocalDB() {
+        this._dbFile = jsonManager.readFileSync(dbFilePath);
+        return this._dbFile;
+    }
+    writeToLocalDB(path, val, time) {
+        this.readFromLocalDB();
+        let pathArr = this.correctPath(path).split("/");
+        let part = objectPath.get(this._dbFile, pathArr);
+        objectPath.set(this._dbFile, pathArr, merge(part, val));
+        this._dbFile["lastWriteTime"] = time;
+        jsonManager.writeFileSync(dbFilePath, this._dbFile, { spaces: 2 });
+    }
+    removeInLocalDB(path, time) {
+        let pathArr = this.correctPath(path).split("/");
+        /*let tmp = this._dbFile;
+        for(let i = 0; i < pathArr.length; i++){
+            if(tmp[pathArr[i]] == undefined){
+                break;
+            }
+            tmp = tmp[pathArr[i]];
+        }*/
+        /*let part = undefined;
+        for (let i = pathArr.length - 2; i >= 0; i--) {
+            let tmpObj = {};
+            tmpObj[pathArr[i]] = part;
+            part = tmpObj;
+        }
+        this._dbFile[pathArr[0]] = part;*/
+        this.readFromLocalDB();
+        objectPath.del(this._dbFile, pathArr);
+        this._dbFile["lastWriteTime"] = time;
+        console.log("after local delete:");
+        console.log(this._dbFile);
+        jsonManager.writeFileSync(dbFilePath, this._dbFile, { spaces: 2 });
+    }
+    async clientUpdateInDB(bodyData) {
+        let path = this.correctPath(bodyData.path);
+        let updates = bodyData.data;
         path = this.correctPath(path);
         let time = Date.now();
-        if (this.online && this.firebaseInited) {
-            this._fb.database().ref(firebase.auth().currentUser.uid + "/" + path).update(updates);
-            this._fb.database().ref(firebase.auth().currentUser.uid + "/").update({ lastWriteTime: time });
+        let uid = await this.userUID;
+        if (uid && await this.online && await this.firebaseInited) {
+            await this._fb.database().ref(uid + "/").update({ lastWriteTime: time });
+            await this._fb.database().ref(uid + "/" + path).update(updates);
         }
         else {
+            console.log("zkontrolovat zda není problém s uid");
         }
-        console.log("writing local", path, updates);
-        this._dbFile.set(path.split("/").join("."), updates);
-        this._dbFile.set("lastWriteTime", time);
+        this.writeToLocalDB(path, updates, time);
         for (let i = 0; i < this.clientDBListeners.length; i++) {
             if (path.includes(this.clientDBListeners[i].path)) { // Aktualizace je v cestě, na které klient naslouchá
                 let DBPart = this.getDBPart(this.clientDBListeners[i].path);
@@ -592,13 +707,57 @@ class Firebase {
             }
         }
     }
-    clientUpdateDB(data) {
-        let path = data.path;
-        let updates = data.data;
-        let type = data.type;
-        console.log('type: ', type);
-        this.writeToDB(path, updates);
-        console.log('data to update offline: ', data);
+    async clientPushToDB(bodyData) {
+        let path = this.correctPath(bodyData.path);
+        let data = bodyData.data;
+        let randomKey = "";
+        let time = Date.now();
+        let uid = await this.userUID;
+        if (uid && (await this.online)) {
+            await this._fb.database().ref(uid).update({ lastWriteTime: time });
+            randomKey = (await this._fb.database().ref().child(uid + "/" + path).push(data)).key;
+        }
+        else {
+            console.log("zkontrolovat zda není problém s uid!!!!!!!!!!!!!!!");
+            console.log("prohodit online!");
+            let charArr = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let i = 0; i < 20; i++) {
+                let newChar = charArr[Math.floor(Math.random() * charArr.length)];
+                randomKey += newChar;
+            }
+        }
+        this.writeToLocalDB(path + "/" + randomKey, data, time);
+        return randomKey;
+    }
+    async clientGetFromDB(bodyData) {
+        let path = this.correctPath(bodyData.path);
+        let uid = await this.userUID;
+        if (uid && (await this.online) && (await this.firebaseInited)) {
+            try {
+                let snapshot = await this._fb.database().ref(uid + "/" + path).once('value');
+                return snapshot.val();
+            }
+            catch (error) {
+                return null;
+            }
+        }
+        else {
+            console.log(this._loggedInPromise);
+            console.log("zkontrolovat zda není problém s uid!!!!!!!!!!!!!!!");
+            return this.getDBPart(path);
+        }
+    }
+    async clientDeleteFromDB(bodyData) {
+        let path = this.correctPath(bodyData.path);
+        let time = Date.now();
+        let uid = await this.userUID;
+        if (uid && (await this.online) && (await this.firebaseInited)) {
+            await this._fb.database().ref(uid).update({ lastWriteTime: time });
+            await this._fb.database().ref(uid + "/" + path).remove();
+        }
+        else {
+        }
+        this.removeInLocalDB(path, time);
     }
     async copyDatabase(fromFirebase) {
         let uid = this._fb.auth().currentUser.uid;
@@ -616,14 +775,14 @@ class Firebase {
             else {
                 data = snapshot.val();
             }
-            this._dbFile.empty(() => {
-                console.log("empty");
-                this._dbFile.save();
-                this._dbFile.unset("");
-                console.log(this._dbFile.get());
-                this._dbFile.set("asd", "data");
-                //this._dbFile.set("", data);
-            });
+            this._dbFile.unset("lastWriteTime");
+            this._dbFile.unset("rooms");
+            if (data.rooms) {
+                this._dbFile.set("rooms", data.rooms);
+            }
+            if (data.lastWriteTime) {
+                this._dbFile.set("lastWriteTime", data.lastWriteTime);
+            }
         }
         else { // Firebase databáze se přepíše lokálním souborem
             let time = Date.now();

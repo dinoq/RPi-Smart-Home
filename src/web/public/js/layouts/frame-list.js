@@ -189,7 +189,7 @@ export class FrameListItem extends AbstractComponent {
             for (const indexOfTitle in clickedElemsTitles) {
                 if (this.components[indexOfTitle])
                     this.components[indexOfTitle].addEventListener("click", (event) => {
-                        onClickCallback(event, this, clickedElemsTitles[indexOfTitle]);
+                        onClickCallback(event, this, clickedElemsTitles[indexOfTitle], true);
                         event.stopPropagation();
                     });
             }

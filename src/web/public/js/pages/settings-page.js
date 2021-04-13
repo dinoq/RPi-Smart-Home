@@ -93,213 +93,227 @@ export class SettingsPage extends BasePage {
             EventManager.dispatchEvent("changesSaved");
             return false;
         };
+        this.clickPromise = Promise.resolve();
         /**
          * Event hadler for click on any FrameListItem
          * @param event Event
          * @param item Clicked Item
          * @param clickedElem Textual description of clicked element in item (like delete for delete button). Is undefined in case of click outside of particular elements (buttons)
          */
-        this.itemClicked = async (event, item, clickedElem) => {
+        this.itemClicked = async (event, item, clickedElem, clickedByUser) => {
+            if (clickedByUser) {
+                await this.clickPromise;
+                this.clickPromise = new Promise((resolve, reject) => { this.clickPromiseResolver = resolve; });
+            }
             console.log('item: ', item.dbCopy);
             /*console.log('clickedElem: ', clickedElem);
             console.log('type: ', item.type);
             console.log('path: ', item.dbCopy.parentPath);*/
-            let cancelChanges = await this.showSaveDialog();
-            if (cancelChanges)
-                return;
-            let parentList = this.getItemsList(item);
-            if (Utils.itemIsAnyFromEnum(item.type, FrameListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
-                this.editSelectedItemsIDHierarchy(parentList, item);
-            }
-            if (clickedElem == undefined || clickedElem == "edit") {
-                /**
-                 * Remove class "active" from both - sensorsList and devicesList.
-                 * Because they are on same level in tab hierarchy and we dont want to keep active item from other list...
-                 */
-                if (Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["SENSORS", "DEVICES"])) {
-                    Array.from(this.sensorsList.childNodes).forEach(listItem => {
-                        listItem.active = false;
-                    });
-                    Array.from(this.devicesList.childNodes).forEach(listItem => {
-                        listItem.active = false;
-                    });
+            try {
+                let cancelChanges = await this.showSaveDialog();
+                if (cancelChanges) {
+                    this.clickPromiseResolver();
+                    return;
                 }
-                else { //Else remove class "active" only from current list
-                    Array.from(parentList.childNodes).forEach(listItem => {
-                        listItem.active = false;
-                    });
+                let parentList = this.getItemsList(item);
+                if (Utils.itemIsAnyFromEnum(item.type, FrameListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
+                    this.editSelectedItemsIDHierarchy(parentList, item);
                 }
-                item.active = true;
-                if (parentList.type == FrameListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
-                    await this.initModulesList(item);
-                }
-                else if (parentList.type == FrameListTypes.MODULES) { // We want to initialize sensors and devices only when click on room, not on sensor or device
-                    this.initSensorsList(item);
-                    this.initDevicesList(item);
-                }
-                this.itemInDetail = { item: item, parentListType: parentList.type };
-                this.initDetail();
-                if (this._focusDetail) {
-                    this.detail.scrollIntoView();
-                    this.detail.blink(1);
-                }
-            }
-            else {
-                let itemIndex = Array.from(parentList.childNodes).indexOf(item);
-                let oldIndex = item.dbCopy.index;
-                if (clickedElem == "up" || clickedElem == "down") {
-                    let children = Array.from(parentList.childNodes);
-                    let otherIndex = (clickedElem == "up") ? (itemIndex - 1) : (itemIndex + 1);
-                    let otherItem = (children[otherIndex]);
-                    let newIndex = otherItem.dbCopy.index;
-                    item.dbCopy.index = newIndex;
-                    otherItem.dbCopy.index = oldIndex;
-                    if (clickedElem == "up") {
-                        parentList.insertBefore(item, otherItem);
+                if (clickedElem == undefined || clickedElem == "edit") {
+                    /**
+                     * Remove class "active" from both - sensorsList and devicesList.
+                     * Because they are on same level in tab hierarchy and we dont want to keep active item from other list...
+                     */
+                    if (Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["SENSORS", "DEVICES"])) {
+                        Array.from(this.sensorsList.childNodes).forEach(listItem => {
+                            listItem.active = false;
+                        });
+                        Array.from(this.devicesList.childNodes).forEach(listItem => {
+                            listItem.active = false;
+                        });
                     }
-                    else if (clickedElem == "down") {
-                        parentList.insertBefore(otherItem, item);
+                    else { //Else remove class "active" only from current list
+                        Array.from(parentList.childNodes).forEach(listItem => {
+                            listItem.active = false;
+                        });
                     }
-                    let itemPath;
-                    let otherItemPath;
-                    if (parentList.type == FrameListTypes.ROOMS) {
-                        itemPath = "rooms/" + item.dbCopy.dbID;
-                        otherItemPath = "rooms/" + otherItem.dbCopy.dbID;
+                    item.active = true;
+                    if (parentList.type == FrameListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
+                        await this.initModulesList(item);
                     }
-                    else {
-                        itemPath = item.dbCopy.path;
-                        otherItemPath = otherItem.dbCopy.path;
+                    else if (parentList.type == FrameListTypes.MODULES) { // We want to initialize sensors and devices only when click on room, not on sensor or device
+                        this.initSensorsList(item);
+                        this.initDevicesList(item);
                     }
-                    await Firebase.updateDBData(itemPath, { index: newIndex });
-                    await Firebase.updateDBData(otherItemPath, { index: oldIndex });
-                    parentList.updatedOrderHandler();
+                    this.itemInDetail = { item: item, parentListType: parentList.type };
+                    this.initDetail();
+                    if (this._focusDetail) {
+                        this.detail.scrollIntoView();
+                        this.detail.blink(1);
+                    }
                 }
-                else if (clickedElem == "add") { // Add item to database
-                    if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"]))
-                        return;
-                    if (parentList.type == FrameListTypes.MODULES) { // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
-                        this._focusDetail = false;
+                else {
+                    let itemIndex = Array.from(parentList.childNodes).indexOf(item);
+                    let oldIndex = item.dbCopy.index;
+                    if (clickedElem == "up" || clickedElem == "down") {
+                        let children = Array.from(parentList.childNodes);
+                        let otherIndex = (clickedElem == "up") ? (itemIndex - 1) : (itemIndex + 1);
+                        let otherItem = (children[otherIndex]);
+                        let newIndex = otherItem.dbCopy.index;
+                        item.dbCopy.index = newIndex;
+                        otherItem.dbCopy.index = oldIndex;
+                        if (clickedElem == "up") {
+                            parentList.insertBefore(item, otherItem);
+                        }
+                        else if (clickedElem == "down") {
+                            parentList.insertBefore(otherItem, item);
+                        }
+                        let itemPath;
+                        let otherItemPath;
+                        if (parentList.type == FrameListTypes.ROOMS) {
+                            itemPath = "rooms/" + item.dbCopy.dbID;
+                            otherItemPath = "rooms/" + otherItem.dbCopy.dbID;
+                        }
+                        else {
+                            itemPath = item.dbCopy.path;
+                            otherItemPath = otherItem.dbCopy.path;
+                        }
+                        await Firebase.updateDBData(itemPath, { index: newIndex });
+                        await Firebase.updateDBData(otherItemPath, { index: oldIndex });
+                        parentList.updatedOrderHandler();
                     }
-                    let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
-                    if (parentList.type == FrameListTypes.DEVICES) {
-                        const activeModuleType = document.querySelectorAll("frame-list")[1].querySelector(".active").dbCopy.type;
-                        if (Board[activeModuleType] && Board[activeModuleType].digitalPins) {
-                            let dPins = Board[activeModuleType].digitalPins;
-                            for (let i = 0; i < 5; i++) { //Try to set one of first 5 GPIO, BUT WHICH IS FOR GIVEN MODULE ACCESSIBLE as first option in select.
-                                if (dPins["D" + i]) {
-                                    data.output = "D" + dPins["D" + i];
+                    else if (clickedElem == "add") { // Add item to database
+                        if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"])) {
+                            this.clickPromiseResolver();
+                            return;
+                        }
+                        if (parentList.type == FrameListTypes.MODULES) { // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
+                            this._focusDetail = false;
+                        }
+                        let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
+                        if (parentList.type == FrameListTypes.DEVICES) {
+                            const activeModuleType = document.querySelectorAll("frame-list")[1].querySelector(".active").dbCopy.type;
+                            if (Board[activeModuleType] && Board[activeModuleType].digitalPins) {
+                                let dPins = Board[activeModuleType].digitalPins;
+                                for (let i = 0; i < 5; i++) { //Try to set one of first 5 GPIO, BUT WHICH IS FOR GIVEN MODULE ACCESSIBLE as first option in select.
+                                    if (dPins["D" + i]) {
+                                        data.output = "D" + dPins["D" + i];
+                                    }
                                 }
                             }
                         }
-                    }
-                    let DBitems = await Firebase.getDBData(item.dbCopy.parentPath); // Get actual state of DB
-                    if (DBitems) {
-                        Utils.forEachLoop(DBitems, (item) => item.index = (item.index) ? item.index + 1 : 1); // Increment every child's index
-                        await Firebase.updateDBData(item.dbCopy.parentPath, DBitems); // Push update to DB
-                    }
-                    if (Array.from(parentList.children).includes(parentList.defaultItem)) {
-                        parentList.defaultItem.disconnectComponent();
-                    }
-                    let key = (await Firebase.pushNewDBData(item.dbCopy.parentPath, data)).key;
-                    // Re-inicialize page
-                    await this.pageReinicialize();
-                    //Select aded item
-                    let newItem = parentList.children[0];
-                    newItem = ((Utils.itemIsAnyFromEnum(parentList.children[0].type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
-                    await this.itemClicked(null, newItem, "edit");
-                    if (parentList.type == FrameListTypes.MODULES) { // Show dialog about connecting to ESP module
-                        let waitingDialog = new OneOptionDialog("Čekání na propojení serveru s modulem", DialogResponses.CANCEL);
-                        let noModuleDialog = new OneOptionDialog("Nepodařilo se najít nový modul.<br>Zkontrolujte, zda je modul zapnutý.", DialogResponses.OK);
-                        let moduleAddedDialog = new OneOptionDialog("Modul byl úspěšně přidán!", DialogResponses.OK);
-                        let noModuleFoundErrorResponse = "NO-MODULE-FOUND";
-                        let moduleHasBeenFoundResponse = "MODULE-HAS-BEEN-FOUND";
-                        let moduleAdditionCanceled = false;
-                        let waitingForModuleResponsePromise = waitingDialog.show();
-                        let IDs = [...this.selectedItemsIDHierarchy];
-                        let fbReference = null;
-                        if (IDs.length >= 2) {
-                            let firstIteration = true;
-                            fbReference = await Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
-                                if (firstIteration) { // Firebase.addDBListener gets data for first time without "event" emitted...
-                                    firstIteration = false;
-                                    return;
-                                }
-                                console.log('data: ', data);
-                                console.log('waitingDialog: ', waitingDialog);
-                                if (moduleAdditionCanceled) { //User canceled module addition in web client
-                                    if (!data) {
+                        let DBitems = await Firebase.getDBData(item.dbCopy.parentPath); // Get actual state of DB
+                        if (DBitems) {
+                            Utils.forEachLoop(DBitems, (item) => item.index = (item.index) ? item.index + 1 : 1); // Increment every child's index
+                            await Firebase.updateDBData(item.dbCopy.parentPath, DBitems); // Push update to DB
+                        }
+                        if (Array.from(parentList.children).includes(parentList.defaultItem)) {
+                            parentList.defaultItem.disconnectComponent();
+                        }
+                        let key = (await Firebase.pushNewDBData(item.dbCopy.parentPath, data)).key;
+                        // Re-inicialize page
+                        await this.pageReinicialize();
+                        //Select aded item
+                        let newItem = parentList.children[0];
+                        newItem = ((Utils.itemIsAnyFromEnum(parentList.children[0].type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
+                        await this.itemClicked(null, newItem, "edit");
+                        if (parentList.type == FrameListTypes.MODULES) { // Show dialog about connecting to ESP module
+                            let waitingDialog = new OneOptionDialog("Čekání na propojení serveru s modulem", DialogResponses.CANCEL);
+                            let noModuleDialog = new OneOptionDialog("Nepodařilo se najít nový modul.<br>Zkontrolujte, zda je modul zapnutý.", DialogResponses.OK);
+                            let moduleAddedDialog = new OneOptionDialog("Modul byl úspěšně přidán!", DialogResponses.OK);
+                            let noModuleFoundErrorResponse = "NO-MODULE-FOUND";
+                            let moduleHasBeenFoundResponse = "MODULE-HAS-BEEN-FOUND";
+                            let moduleAdditionCanceled = false;
+                            let waitingForModuleResponsePromise = waitingDialog.show();
+                            let IDs = [...this.selectedItemsIDHierarchy];
+                            let fbReference = null;
+                            if (IDs.length >= 2) {
+                                let firstIteration = true;
+                                fbReference = await Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
+                                    if (firstIteration) { // Firebase.addDBListener gets data for first time without "event" emitted...
+                                        firstIteration = false;
+                                        return;
                                     }
-                                    else if (data.IP && data.IP.length > "?.?.?.?".length) { // Module IP exists, thus module maybe has been founded
-                                        if (data.index == undefined) { // Module was deleted by web client, but RPi has founded module and update module record in DB with IP and type (so basically) created new module, but with only IP and type fields)
-                                            fbReference.off(); // remove firebase listener
-                                            Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
+                                    console.log('data: ', data);
+                                    console.log('waitingDialog: ', waitingDialog);
+                                    if (moduleAdditionCanceled) { //User canceled module addition in web client
+                                        if (!data) {
+                                        }
+                                        else if (data.IP && data.IP.length > "?.?.?.?".length) { // Module IP exists, thus module maybe has been founded
+                                            if (data.index == undefined) { // Module was deleted by web client, but RPi has founded module and update module record in DB with IP and type (so basically) created new module, but with only IP and type fields)
+                                                fbReference.off(); // remove firebase listener
+                                                Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
+                                            }
                                         }
                                     }
-                                }
-                                else {
-                                    if (!data) { // Module was not found, thus record was deleted in database. Hide dialog and reinit settings page...
-                                        this.selectedItemsIDHierarchy.splice(1);
-                                        waitingDialog.resolveShow(noModuleFoundErrorResponse);
+                                    else {
+                                        if (!data) { // Module was not found, thus record was deleted in database. Hide dialog and reinit settings page...
+                                            this.selectedItemsIDHierarchy.splice(1);
+                                            waitingDialog.resolveShow(noModuleFoundErrorResponse);
+                                        }
+                                        else if (data.IP != undefined && data.IP.length >= "?.?.?.?".length) { // Module IP exists, thus module has been founded
+                                            fbReference.off(); // remove firebase listener
+                                            waitingDialog.resolveShow(moduleHasBeenFoundResponse);
+                                        }
                                     }
-                                    else if (data.IP != undefined && data.IP.length >= "?.?.?.?".length) { // Module IP exists, thus module has been founded
-                                        fbReference.off(); // remove firebase listener
-                                        waitingDialog.resolveShow(moduleHasBeenFoundResponse);
-                                    }
-                                }
-                            });
-                        }
-                        let moduleFoundResponse = await waitingForModuleResponsePromise;
-                        if (typeof moduleFoundResponse == "string") {
-                            console.log(moduleFoundResponse);
-                            if (moduleFoundResponse == noModuleFoundErrorResponse) { // No module found => display info dialog
-                                await noModuleDialog.show();
+                                });
                             }
-                            else if (moduleFoundResponse == moduleHasBeenFoundResponse) { // Module has been found!
-                                await moduleAddedDialog.show();
-                                //Scroll to bottom and blink detail
+                            let moduleFoundResponse = await waitingForModuleResponsePromise;
+                            if (typeof moduleFoundResponse == "string") {
+                                console.log(moduleFoundResponse);
+                                if (moduleFoundResponse == noModuleFoundErrorResponse) { // No module found => display info dialog
+                                    await noModuleDialog.show();
+                                }
+                                else if (moduleFoundResponse == moduleHasBeenFoundResponse) { // Module has been found!
+                                    await moduleAddedDialog.show();
+                                    //Scroll to bottom and blink detail
+                                    this._focusDetail = true;
+                                }
                                 this._focusDetail = true;
-                            }
-                            this._focusDetail = true;
-                            waitingDialog.remove();
-                            this.pageReinicialize();
-                        }
-                        else if (typeof moduleFoundResponse == "number") { // waitingDialog canceled
-                            if (IDs.length >= 2) {
-                                moduleAdditionCanceled = true;
-                                console.log("cancel=>delete at: /rooms/" + IDs[0] + "/devices/" + IDs[1]);
-                                Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
-                                this.selectedItemsIDHierarchy.splice(1);
+                                waitingDialog.remove();
                                 this.pageReinicialize();
                             }
+                            else if (typeof moduleFoundResponse == "number") { // waitingDialog canceled
+                                if (IDs.length >= 2) {
+                                    moduleAdditionCanceled = true;
+                                    console.log("cancel=>delete at: /rooms/" + IDs[0] + "/devices/" + IDs[1]);
+                                    Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
+                                    this.selectedItemsIDHierarchy.splice(1);
+                                    this.pageReinicialize();
+                                }
+                            }
+                        }
+                        this._focusDetail = true;
+                    }
+                    else if (clickedElem == "delete") {
+                        await Firebase.deleteDBData(item.dbCopy.path);
+                        item.disconnectComponent();
+                        console.log("DEL", item.dbCopy.path);
+                        parentList.updatedOrderHandler();
+                        if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, add default item
+                            parentList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
+                        }
+                        await this.pageReinicialize();
+                        if (item.active) { // We removed item, which was in detailt or item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item lists
+                            switch (item.type) {
+                                case FrameListTypes.ROOMS:
+                                    this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
+                                    this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
+                                    this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+                                    break;
+                                case FrameListTypes.MODULES:
+                                    this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
+                                    this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     }
-                    this._focusDetail = true;
                 }
-                else if (clickedElem == "delete") {
-                    await Firebase.deleteDBData(item.dbCopy.path);
-                    item.disconnectComponent();
-                    console.log("DEL", item.dbCopy.path);
-                    parentList.updatedOrderHandler();
-                    if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, add default item
-                        parentList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
-                    }
-                    await this.pageReinicialize();
-                    if (item.active) { // We removed item, which was in detailt or item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item lists
-                        switch (item.type) {
-                            case FrameListTypes.ROOMS:
-                                this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
-                                this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
-                                this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
-                                break;
-                            case FrameListTypes.MODULES:
-                                this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
-                                this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
+            }
+            finally {
+                this.clickPromiseResolver();
             }
         };
         this.getOrderedINOUT = (dbCopy) => {
