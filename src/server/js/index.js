@@ -5,6 +5,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const open = require('open');
 const editJsonFile = require("edit-json-file");
+const communication_manager_js_1 = require("./communication-manager.js");
 const firebase_js_1 = require("./firebase.js");
 class ServerApp {
     constructor() {
@@ -49,7 +50,9 @@ class ServerApp {
             }
             console.log(req.body)
             console.log("qqqqq",req.url);*/
-            console.log("req URL: " + req.url);
+            if (this.config.get("debugLevel") > 0) {
+                console.log("Požadavek od klienta na: " + req.url);
+            }
             if (req.url.includes("/updateData")) {
                 this._firebase.clientUpdateInDB(req.body).then((value) => {
                     res.sendStatus(200);
@@ -63,12 +66,11 @@ class ServerApp {
             }
             else if (req.url.includes("/getData")) {
                 this._firebase.clientGetFromDB(req.body).then((data) => {
-                    console.log('sended data back: ', data);
                     res.send(data);
                 });
             }
             else if (req.url.includes("/deleteData")) {
-                this._firebase.clientDeleteFromDB(req.body).then((data) => {
+                this._firebase.clientRemoveFromDB(req.body).then((data) => {
                     res.sendStatus(200);
                 });
             }
@@ -160,8 +162,14 @@ class ServerApp {
         });*/
     }
     start(port) {
-        var server = this._app.listen(port || this.config.get("port") || 60000);
-        console.log("Server běží na portu: " + (port || this.config.get("port") || 60000) + ".");
+        var server = this._app.listen(port || this.config.get("webAppPort") || 60000);
+        if (this.config.get("debugLevel") > 0) {
+            console.log("Server běží na portu: " + (port || this.config.get("webAppPort") || 60000) + ".");
+            let portStr = ((port || this.config.get("webAppPort") || 60000) == 80) ? "" : ":" + (port || this.config.get("webAppPort") || 60000);
+            console.log("Pro přístup k webové aplikaci ze zařízení, na kterém běží server přejděte v internetovém prohlížeči na adresu http://localhost" + portStr);
+            console.log("Pro přístup k webové aplikaci ze jiného zařízení v lokální síti přejděte v internetovém prohlížeči na adresu http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr);
+            console.log("Pro přístup k webové aplikaci ze jiného zařízení globálně (přes internet) přejděte v internetovém prohlížeči na adresu https://auto-home.web.app/");
+        }
     }
 }
 new ServerApp().start();

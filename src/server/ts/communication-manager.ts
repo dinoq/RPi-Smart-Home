@@ -3,7 +3,7 @@ const coap = require('coap');
 const dgram = require("dgram");
 const editJsonFile = require("edit-json-file");
 
-module.exports = class CommunicationManager {
+export class CommunicationManager {
     private _config;
     private _server: any;
     constructor() { 
@@ -11,6 +11,7 @@ module.exports = class CommunicationManager {
             autosave: true
         });
 
+        //TODO upravit coapTiming
         var coapTiming = {
             ackTimeout: 0.25,
             ackRandomFactor: 1.0,
@@ -134,7 +135,7 @@ module.exports = class CommunicationManager {
      * @param output Output, eg. A2, D5... (first analog/digital, then GPIO number)
      * @param val Value to set
      */
-    public async putVal(ip: string, output: string, val: string) {
+    public async putVal(ip: string, output: string, val: string | number) {
         //console.log("T putVal1: " + Math.round(Date.now() / 100));
         this.coapRequest(ip, "/set-output", "pin=" + output, "PUT", val.toString(), null, null);
         //console.log("T putVal 2: " + Math.round(Date.now() / 100));

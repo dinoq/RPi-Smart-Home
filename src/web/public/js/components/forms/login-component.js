@@ -77,6 +77,7 @@ export class LoginComponent extends AbstractComponent {
             return "Neznámá chyba!";
         }
         let prefix = (errorCode.includes("user-not-found") || errorCode.includes("wrong-password")) ? "Nesprávné přihlašovací údaje!" : "Neznámá chyba!";
+        prefix = (errorCode.includes("network-request-failed")) ? "Chyba připojení k internetu!" : prefix;
         return prefix + " (chyba: " + errorCode + ")";
     }
     redirectAfterLogin(redirectAfterLogin) {

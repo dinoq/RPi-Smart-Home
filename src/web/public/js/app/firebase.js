@@ -1,3 +1,4 @@
+import { ServerCommunicationErrorDialog } from "../components/dialogs/error-dialog.js";
 import { Config } from "./config.js";
 import { Singleton } from "./singleton.js";
 export class Firebase extends Singleton {
@@ -190,13 +191,19 @@ export class Firebase extends Singleton {
     static async getDBData(dbPath) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            let resp = await fetch("getData", {
-                method: 'POST',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: dbPath })
-            });
-            let text = await resp.text();
-            return (text.length) ? JSON.parse(text) : null;
+            try {
+                let resp = await fetch("getData", {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: dbPath })
+                });
+                let text = await resp.text();
+                return (text.length) ? JSON.parse(text) : null;
+            }
+            catch (error) {
+                new ServerCommunicationErrorDialog();
+                return null;
+            }
         }
         else {
             let fullPath = await Firebase.getFullPath(dbPath);
@@ -212,11 +219,17 @@ export class Firebase extends Singleton {
     static async updateDBData(dbPath, updates) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            let resp = await fetch("updateData", {
-                method: 'POST',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: dbPath, data: updates })
-            });
+            try {
+                let resp = await fetch("updateData", {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: dbPath, data: updates })
+                });
+            }
+            catch (error) {
+                new ServerCommunicationErrorDialog();
+                return null;
+            }
         }
         else {
             let fullPath = await Firebase.getFullPath(dbPath);
@@ -231,11 +244,17 @@ export class Firebase extends Singleton {
     static async deleteDBData(dbPath) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            let resp = await fetch("deleteData", {
-                method: 'POST',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: dbPath })
-            });
+            try {
+                let resp = await fetch("deleteData", {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: dbPath })
+                });
+            }
+            catch (error) {
+                new ServerCommunicationErrorDialog();
+                return null;
+            }
         }
         else {
             let fullPath = await Firebase.getFullPath(dbPath);
@@ -250,13 +269,19 @@ export class Firebase extends Singleton {
     static async pushNewDBData(dbPath, data) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            let resp = await fetch("pushData", {
-                method: 'POST',
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: dbPath, data: data })
-            });
-            let text = await resp.text();
-            return (text.length) ? { key: text } : { key: null };
+            try {
+                let resp = await fetch("pushData", {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: dbPath, data: data })
+                });
+                let text = await resp.text();
+                return (text.length) ? { key: text } : { key: null };
+            }
+            catch (error) {
+                new ServerCommunicationErrorDialog();
+                return null;
+            }
         }
         else {
             let fullPath = await Firebase.getFullPath(dbPath);
@@ -303,7 +328,7 @@ export class Firebase extends Singleton {
                 }
             }
             catch (error) {
-                console.log('err2 value: ', error);
+                console.log('Chyba při kontrole připojení k internetu: ', error);
             }
         }
         this._lastConnCheck = Date.now();

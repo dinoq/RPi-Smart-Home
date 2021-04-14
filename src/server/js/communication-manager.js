@@ -1,12 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CommunicationManager = void 0;
 const os = require('os');
 const coap = require('coap');
 const dgram = require("dgram");
 const editJsonFile = require("edit-json-file");
-module.exports = class CommunicationManager {
+class CommunicationManager {
     constructor() {
         this._config = editJsonFile("config.json", {
             autosave: true
         });
+        //TODO upravit coapTiming
         var coapTiming = {
             ackTimeout: 0.25,
             ackRandomFactor: 1.0,
@@ -158,4 +162,5 @@ module.exports = class CommunicationManager {
             console.error('setAllIO err: ', err.message);
         }, false);
     }
-};
+}
+exports.CommunicationManager = CommunicationManager;

@@ -116,7 +116,7 @@ export class RegistrationComponent extends AbstractComponent {
             return "Neznámá chyba!";
         }
         let prefix = (errorCode.includes("invalid-email"))? "Špatný formát emailu!" : "Neznámá chyba!";
-        prefix = (errorCode.includes("network-request-failed"))? "Chyba připojení!" : prefix;
+        prefix = (errorCode.includes("network-request-failed"))? "Chyba připojení k internetu!" : prefix;
         prefix = (errorCode.includes("weak-password"))? "Zvolte silnější heslo! (minimum je 6 znaků)" : prefix;
         prefix = (errorCode.includes("email-already-in-use"))? "Email je již používán jiným uživatelem!" : prefix;
         return prefix + " (chyba: " + errorCode + ")";

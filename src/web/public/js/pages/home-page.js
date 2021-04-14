@@ -9,6 +9,8 @@ export class HomePage extends BasePage {
         Firebase.addDBListener("/rooms/", (data) => {
             Loader.hide();
             if (!data) {
+                this.roomsCards = new Array();
+                this.roomsIndexes = new Array();
                 this.innerHTML = `
                     <div  id="no-rooms-info-container">
                         <h1 id="no-rooms-info">V databázi nejsou žádné místnosti a zařízení. Můžete je přidat v nastavení systému (Menu -> Nastavení).</h1>

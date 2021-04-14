@@ -24,7 +24,9 @@
     "is-online": "^9.0.0",
     "jsonfile": "^6.1.0",
     "node-wifi": "^2.0.14",
+    "object-deep-compare": "^1.2.0",
     "object-path": "^0.11.5",
+    "odiff": "^1.4.3",
     "open": "^8.0.5"
   },
   "devDependencies": {

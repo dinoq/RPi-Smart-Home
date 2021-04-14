@@ -1,8 +1,19 @@
 {
-  "port": 80,
+  "webAppPort": 80,
   "db_file_path": "db.json",
   "NEW_MODULE_FIND_TIMEOUT": 10000,
   "username": "marek.petr10@seznam.cz",
   "saveUserCredentialsOnLogin": "true",
-  "password": "qwertz"
+  "password": "qwertz",
+  "firebase": {
+    "apiKey": "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
+    "authDomain": "home-automation-80eec.firebaseapp.com",
+    "databaseURL": "https://home-automation-80eec.firebaseio.com",
+    "projectId": "home-automation-80eec",
+    "storageBucket": "home-automation-80eec.appspot.com",
+    "messagingSenderId": "970359498290",
+    "appId": "1:970359498290:web:a43e83568b9db8eb783e2b",
+    "measurementId": "G-YTRZ79TCJJ"
+    },
+    "debugLevel": 1
 }

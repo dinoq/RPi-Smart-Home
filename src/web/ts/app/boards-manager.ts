@@ -59,11 +59,11 @@ export class Board {
             D2: 16,
             D3: 5,
             D4: 4,
-            //D5: 14,// Board LED
+            D5: 14,// Board LED
             D6: 12,
             D7: 13,
             D8: 0,
-            //D9: 2, // ESP8266 LED
+            D9: 2, // ESP8266 LED
             D10: 15,
             //D11: 13, // Connected to D7
             //D12: 12, // Connected to D6
@@ -88,11 +88,11 @@ export class Board {
         },
 
         digitalPins: {
-            //D0: 16, // Board LED
+            D0: 16, // Board LED
             D1: 5,
             D2: 4,
             D3: 0,
-            //D4: 2, // ESP8266 LED
+            D4: 2, // ESP8266 LED
             D5: 14,
             D6: 12,
             D7: 13,
