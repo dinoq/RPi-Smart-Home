@@ -1,7 +1,14 @@
+.vscode/
+návrh.txt
+BP/zdroje/
 src/esp/build/
+src/web/.vscode/
 src/web/.VSCodeCounter/
 src/web/database/
 src/web/node_modules/
+src/server/.vscode/
 src/server/.VSCodeCounter/
 src/server/node_modules/
-BP/zdroje/
+src/esp/build/
+src/esp/esp_sInfo_in_mem/
+src/esp/old/
