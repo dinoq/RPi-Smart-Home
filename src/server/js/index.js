@@ -201,20 +201,24 @@ class ServerApp {
     start() {
         try {
             let server = this._app.listen(this.port);
+            server.on("error", (err) => {
+                if (err.code == "EADDRINUSE") {
+                    console.error("Zvolený port (" + this.port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!");
+                    process.exit(err.errno);
+                }
+                else if (err.code == "EACCES") {
+                    console.error("Nemáte přístup ke zvolenému portu (" + this.port + "). Zvolte jiný port (s hodnotou > 1024) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
+                    process.exit(err.errno);
+                }
+                else {
+                    console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this.port + "!");
+                    process.exit(err.errno);
+                }
+            });
         }
         catch (err) {
-            if (err.code == "EADDRINUSE") {
-                console.error("Zvolený port (" + this.port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!");
-                process.exit(err.errno);
-            }
-            else if (err.code == "EACCES") {
-                console.error("Nemáte přístup ke zvolenému portu (" + this.port + "). Zvolte jiný port (s hodnotou > 1024) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
-                process.exit(err.errno);
-            }
-            else {
-                console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this.port + "!");
-                process.exit(err.errno);
-            }
+            console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this.port + "!");
+            process.exit(err.errno);
         }
         if (this.getFromConfig("debugLevel", 0) > 0) {
             //console.log("Server běží na portu: " + this.port + ".");
