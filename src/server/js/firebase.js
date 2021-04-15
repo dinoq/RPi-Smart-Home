@@ -15,9 +15,9 @@ const dbFilePath = "local-database.json";
 class Firebase {
     constructor() {
         this._firebaseInited = false; // Slouží pro informaci, zda byly již nainicializovány služby Firebase (v případě, že je server spuštěn bez přístupu k internetu, tak je nutné je po připojení k internetu nainicializovat)
-        this._previousOnline = false;
+        this._previousOnline = undefined;
         this._online = false;
-        this._onlineValidTimeout = 1000;
+        this._onlineValidTimeout = 2000;
         this._lastConnCheck = 0;
         this._dbInited = false;
         this._loggedIn = false;
@@ -33,20 +33,25 @@ class Firebase {
         this.connectionCheckInterval = async () => {
             let online = await this.online;
             let fbInited = await this.firebaseInited;
-            if (!this.loggedIn && online && this._loginInfo) { // Pokud se z nějakého důvodu nepodařilo přihlásit (ověřit) uživatele ve firebase (např. server v době spuštění nebyl online) a je nyní server online, přihlásí uživatele
-                this.login(this._loginInfo.username, this._loginInfo.pwd);
+            if (!this.loggedIn && online && this._loginInfo) { // Server je online, ale dosud nepřihlášený ve Firebase. Je to případ pokud se z nějakého důvodu nepodařilo přihlásit (ověřit) uživatele ve firebase (např. server v době spuštění nebyl online).
+                this.login(this._loginInfo.username, this._loginInfo.pwd); // Přihlásí uživatele
+                if (this._previousOnline === false) {
+                    console.log("Server opět v režimu online!");
+                }
             }
-            if (this.loggedIn) {
+            else if (this.loggedIn) { // Server buď je online, nebo alespoň už online byl a pak přešel do režimu offline
                 let uid = this._fb.auth().currentUser.uid;
                 if (!online && this._previousOnline) { // Stav se změnil z online na offline
-                    console.log("Server přechází do režimu offline!");
+                    console.log("Server přechází do režimu offline, až do připojení k internetu bude pracovat lokálně...");
                     this._firebaseHandlerActive = false;
                     this._fb.database().ref(uid).off(); // Je potřeba odstranit posluchače na změnu databáze
                 }
-                else if (online && !this._previousOnline) { //Stav se změnil z offline na online
+                else if (online && !this._previousOnline && this._previousOnline != undefined) { //Stav se změnil z offline na online. Kontrola this._previousOnline != undefined je kvůli počáteční kontrole, při ní není žádané, aby se situace vyhodnotila jako přechod z offline do online
                     console.log("Server opět v režimu online!");
                     this.addFirebaseValueHandler();
                 }
+            }
+            else { // Server je od svého spuštění offline
             }
             this._previousOnline = online;
             setTimeout(this.connectionCheckInterval, this._onlineValidTimeout);
@@ -228,6 +233,7 @@ class Firebase {
                 this.initFirebase();
             }
             else {
+                console.log("Server je offline, až do připojení k internetu bude pracovat lokálně...");
             }
         });
         // Nastaví se timeout na kontrolu připojení k internetu. Ten se znovu nastavuje opět ve funkci this.connectionCheckInterval()
@@ -246,8 +252,10 @@ class Firebase {
         }
         this._firebaseHandlerActive = true;
         let firstCycle = true;
+        console.log("addFirebaseValueHandler ADDED!!! :), UID: " + await this.userUID);
         this._fb.database().ref(await this.userUID).on('value', (snapshot) => {
             const data = snapshot.val();
+            console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
             this._databaseUpdatedHandler(data, firstCycle);
             firstCycle = false;
         });
@@ -302,7 +310,7 @@ class Firebase {
                 }
                 firebase.auth().signInWithEmailAndPassword(username, pwd)
                     .then((user) => {
-                    console.log("Uživatel byl úspěšně ověřen, server pracuje.");
+                    console.log("Uživatel byl úspěšně přihlášen k Firebase databázi. Dále bude lokální databáze udržovaná v synchronizaci s Firebase databází.");
                     //this.debugApp();
                     this._loggedInResolve(); // Pokud se někde v kódu čeká na přihlášení, tímto se "pustí" provádění kódu dále.
                     this._loggedIn = true;
@@ -319,7 +327,14 @@ class Firebase {
                 });
             }
             else {
-                console.log("Chyba přihlášení k firebase");
+                this.online.then((on) => {
+                    if (on) {
+                        console.log("Neznámá chyba při přihlášení k Firebase databázi");
+                    }
+                    else {
+                        console.log("Server je offline, nebylo možné přihlásit uživatele k Firebase databázi...");
+                    }
+                });
             }
         });
     }
@@ -363,10 +378,7 @@ class Firebase {
             return this._online;
         }
         try {
-            this._online = await isOnline({ timeout: 2000 });
-            if (!this._online) { // Pokud je zařízení offline, kontrolovat zda se stav nezměnil...Kontrola se provede po vypršení platnosti údaje o připojení (proměnná this._onlineValidTimeout)
-                setTimeout(() => this._checkConnection(), this._onlineValidTimeout);
-            }
+            this._online = await isOnline({ timeout: this._onlineValidTimeout });
         }
         catch (error) {
         }
@@ -385,11 +397,11 @@ class Firebase {
             this._ignoredDBTimes.splice(index, 1);*/
             return;
         }
-        if (firstCycle) {
+        if (firstCycle) { // Pokud se jedná o prvotní získání dat, porovná se aktuálnost dat s lokálními a ty novější přepíšou staré
             let serverLastWriteTime = this.readFromLocalDB("lastWriteTime", 0);
             let firebaseLastWriteTime = (data && data.lastWriteTime) ? data.lastWriteTime : 0;
             if (serverLastWriteTime < firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno do firebase, přepíše se lokální verze databáze
-                console.log("Vypadá to, že internetová verze databáze je aktuálnější. Přepíše lokální databázi...");
+                console.log("Internetová verze (Firebase) databáze je aktuálnější. Přepíše lokální databázi...");
                 fs.writeFileSync(dbFilePath, '{}');
                 if (data && data.rooms) {
                     this.writeToLocalDB("rooms", data.rooms, firebaseLastWriteTime);
@@ -399,7 +411,7 @@ class Firebase {
                 }
             }
             else { // Pokud bylo naposledy zapisováno lokálně NEBO je čas stejný, přepíše se firebase databáze
-                console.log("Vypadá to, že lokální verze databáze je aktuálnější. Přepíše databázi na internetu...");
+                console.log("Lokální verze databáze je aktuálnější. Přepíše databázi na internetu (Firebase databázi)...");
                 this._fb.database().ref(await this.userUID).remove();
                 let updates = { lastWriteTime: serverLastWriteTime };
                 if (this.readFromLocalDB("rooms")) {
@@ -635,7 +647,7 @@ class Firebase {
             }
             else if (change.level == DevicesTypes.DEVICE) { // ZMĚNA NA ÚROVNI ZAŘÍZENÍ
                 if (change.type == ChangeMessageTypes.VALUE_CHANGED) {
-                    console.log("change val");
+                    console.log("Klient změnil hodnotu některého zařízení.");
                     if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
                         this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
                 }
@@ -768,7 +780,7 @@ class Firebase {
             randomKey = (await this._fb.database().ref().child(uid + "/" + path).push(data)).key;
         }
         else {
-            console.log("zkontrolovat zda není problém s uid!!!!!!!!!!!!!!!");
+            console.log("zkontrolovat zda není problém s uid!!");
             console.log("prohodit online!");
             let charArr = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let i = 0; i < 20; i++) {

@@ -14,7 +14,7 @@ const configExampleFilePath = "config.json";
 class ServerApp {
     constructor() {
         this._app = express();
-        this._serverStartedPromise = new Promise((resolve, reject) => { this._serverStartedPromiseResolver = resolve; });
+        this._serverStartedPromise = new Promise((resolve, reject) => { this._serverStartedPromiseResolver = resolve; }); // Slouží pro čekání na spuštění serveru (např některé informace je potřeba vypsat až po úspěšném spuštění serveru...)
         if (fs.existsSync(configFilePath)) { // Pokud existuje soubor s konfigurací, načte se
             this._config = jsonManager.readFileSync(configFilePath);
         }
@@ -172,20 +172,20 @@ class ServerApp {
         let portStr = (this._port == 80) ? "" : ":" + this._port;
         if (devicePairedWithAccount) {
             this._firebase.login(this.getFromConfig("username"), this.getFromConfig("password"));
-            if (this.getFromConfig("openBrowserOnStart", true)) {
+            if (this.getFromConfig("openBrowserOnStart", true)) { // Po startu serveru
                 this._serverStartedPromise.then((value) => {
                     open('http://localhost' + portStr + '/domu');
                 });
             }
         }
         else {
-            console.log("Vypadá to, že server není spárován s žádným uživatelským účtem. Pro spárování je nutné se ze zařízení, na kterém server běží zaregistovat (na http://localhost" + portStr + "/registrace/) či přihlásit (http://localhost" + portStr + "/login/), dříve nebude možné systém ovládat přes internet (mimo lokální síť). K registraci je vyžadováno internetové připojení.");
-            console.log("Spárování pomocí přihlášení/registrace je také možné provést z jiného zařízení v lokální síti na adrese: http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr + "/login/, resp.: http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr + "/registrace/");
-            if (this.getFromConfig("openBrowserToRegister", true)) {
-                this._serverStartedPromise.then((value) => {
+            this._serverStartedPromise.then((value) => {
+                console.log("Vypadá to, že server není spárován s žádným uživatelským účtem. Pro spárování je nutné se ze zařízení, na kterém server běží zaregistovat (na http://localhost" + portStr + "/registrace/) či přihlásit (http://localhost" + portStr + "/login/), dříve nebude možné systém ovládat přes internet (mimo lokální síť). K registraci je vyžadováno internetové připojení.");
+                console.log("Spárování pomocí přihlášení/registrace je také možné provést z jiného zařízení v lokální síti na adrese: http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr + "/login/, resp.: http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr + "/registrace/");
+                if (this.getFromConfig("openBrowserToRegister", true)) { // Pokud uživatel nemá spárovaný účet, tak po startu serveru otevřít internetový prohlížeš s otevřenou registrací (pokud je toto chování nastavené v configu vlastností openBrowserToRegister)
                     open('http://localhost' + portStr + '/registrace?forceLogout=true');
-                });
-            }
+                }
+            });
         }
         this._app.use(express.static(p), (req, res, next) => {
             //console.log("ooo");
@@ -224,7 +224,7 @@ class ServerApp {
                     }
                     else if (err && err.code == "ERR_SOCKET_BAD_PORT") {
                         let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
-                        console.error("Špatně zvolený port (" + this._port + ")!. " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
+                        console.error("Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
                         process.exit(5);
                     }
                     else {
@@ -233,12 +233,16 @@ class ServerApp {
                     }
                 }
                 else {
-                    if (this.getFromConfig("debugLevel", 0) > 0) {
+                    if (this.getFromConfig("debugLevel", 0) > 1) {
                         //console.log("Server běží na portu: " + this.port + ".");
                         let portStr = (this._port == 80) ? "" : ":" + this._port;
                         console.log("Pro přístup k webové aplikaci ze zařízení, na kterém běží server přejděte v internetovém prohlížeči na adresu http://localhost" + portStr);
                         console.log("Pro přístup k webové aplikaci ze jiného zařízení v lokální síti přejděte v internetovém prohlížeči na adresu http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr);
                         console.log("Pro přístup k webové aplikaci ze jiného zařízení globálně (přes internet) přejděte v internetovém prohlížeči na adresu https://auto-home.web.app/");
+                    }
+                    else if (this.getFromConfig("debugLevel", 0) > 0) {
+                        console.log("Server naslouchá na portu: " + this._port);
+                        console.log("IP adresa serveru: " + communication_manager_js_1.CommunicationManager.getServerIP());
                     }
                     this._serverStartedPromiseResolver(); // Resolvne Promise, na kterou se v kódu čeká tam, kde je potřeba aby server už běžel...
                 }
@@ -254,7 +258,7 @@ class ServerApp {
                 }
                 else if (err && err.code == "ERR_SOCKET_BAD_PORT") {
                     let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
-                    console.error("Špatně zvolený port (" + this._port + ")!. " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
+                    console.error("Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
                     process.exit(5);
                 }
                 else {
@@ -266,7 +270,7 @@ class ServerApp {
         catch (err) {
             if (err && err.code == "ERR_SOCKET_BAD_PORT") {
                 let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
-                console.error("Špatně zvolený port (" + this._port + ")!. " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
+                console.error("Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
                 process.exit(5);
             }
             console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!");
@@ -274,7 +278,7 @@ class ServerApp {
         }
     }
     getFromConfig(property, valueIfUndefined) {
-        if (this._config && this._config[property]) {
+        if (this._config && (this._config[property] != undefined)) {
             return this._config[property];
         }
         else {
