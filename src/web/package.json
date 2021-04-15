@@ -1,15 +1,13 @@
 {
   "name": "es6project",
   "version": "1.0.0",
-  "description": "using babel with node",
+  "description": "Home automation web client",
   "main": "public/js/app.js",
   "scripts": {
     "compile client": "tsc -w"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "typescript": "^4.1.2"
-  },
+  "dependencies": {},
   "devDependencies": {}
 }

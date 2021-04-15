@@ -3,17 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Firebase = void 0;
 var firebase = require('firebase');
 const fs = require("fs");
-const checkInternetConnected = require('check-internet-connected');
 const isOnline = require('is-online');
 const editJsonFile = require("edit-json-file");
 const jsonManager = require("jsonfile");
-const dbFilePath = "db.json";
 const objectPath = require("object-path");
 const merge = require('deepmerge');
-const objectDeepCompare = require('object-deep-compare');
 const odiff = require('odiff');
 const ESP_js_1 = require("./ESP.js");
 const communication_manager_js_1 = require("./communication-manager.js");
+const dbFilePath = "local-database.json";
 class Firebase {
     constructor() {
         this._firebaseInited = false; // Slouží pro informaci, zda byly již nainicializovány služby Firebase (v případě, že je server spuštěn bez přístupu k internetu, tak je nutné je po připojení k internetu nainicializovat)
@@ -207,11 +205,11 @@ class Firebase {
         };
         this.clientDBListeners = new Array();
         // Načtení lokální databáze
-        if (fs.existsSync('db.json')) { // Pokud existuje soubor s lokální databází, načte se.
+        if (fs.existsSync(dbFilePath)) { // Pokud existuje soubor s lokální databází, načte se.
             this._dbFile = jsonManager.readFileSync(dbFilePath);
         }
         else { // V opačném případě se vytvoří a nainicializuje na prázdný (JSON) objekt
-            fs.writeFileSync('db.json', '{}');
+            fs.writeFileSync(dbFilePath, '{}');
             this._dbFile = {};
         }
         if (typeof this._dbFile != "object") { // Kontrola, zda se načetl regulérní JSON objekt
@@ -392,7 +390,7 @@ class Firebase {
             let firebaseLastWriteTime = (data && data.lastWriteTime) ? data.lastWriteTime : 0;
             if (serverLastWriteTime < firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno do firebase, přepíše se lokální verze databáze
                 console.log("Vypadá to, že internetová verze databáze je aktuálnější. Přepíše lokální databázi...");
-                fs.writeFileSync('db.json', '{}');
+                fs.writeFileSync(dbFilePath, '{}');
                 if (data && data.rooms) {
                     this.writeToLocalDB("rooms", data.rooms, firebaseLastWriteTime);
                 }
@@ -411,8 +409,8 @@ class Firebase {
             }
         }
         if (!this._dbInited) {
-            this.initLocalDB(data);
             this.getSensors(data);
+            this._dbInited = true;
         }
         else {
             this._checkDbChange(data);
@@ -424,13 +422,6 @@ class Firebase {
             this._firebaseInited = true;
             this._fb = firebase.initializeApp(this._config.get("firebase"));
         }
-    }
-    initLocalDB(data) {
-        if (!fs.existsSync('db.json')) { // local database file doesn't exist => create it!
-            fs.writeFileSync('db.json', '{}');
-        }
-        //fs.writeFileSync(this._config.get("db_file_path") || "db.json", JSON.stringify(data));
-        this._dbInited = true;
     }
     getSensors(data) {
         if (!data)
@@ -734,7 +725,7 @@ class Firebase {
     }
     removeInLocalDB(path, time) {
         if (path.length == 0 || path == "/") {
-            fs.writeFileSync('db.json', '{}');
+            fs.writeFileSync(dbFilePath, '{}');
             this._dbFile["lastWriteTime"] = time;
             jsonManager.writeFileSync(dbFilePath, this.readFromLocalDB("/"), { spaces: 2 });
         }

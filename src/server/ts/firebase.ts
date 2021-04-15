@@ -1,18 +1,17 @@
 
 var firebase = require('firebase');
 const fs = require("fs");
-const checkInternetConnected = require('check-internet-connected');
 const isOnline = require('is-online');
 const editJsonFile = require("edit-json-file");
 const jsonManager = require("jsonfile");
-const dbFilePath = "db.json";
 const objectPath = require("object-path");
 const merge = require('deepmerge')
-const objectDeepCompare = require('object-deep-compare');
 const odiff = require('odiff');
 
 import { SensorInfo, VALUE_TYPE } from "./ESP.js";
 import { CommunicationManager } from "./communication-manager.js";
+
+const dbFilePath = "local-database.json";
 
 export class Firebase {
     private _config;
@@ -47,10 +46,10 @@ export class Firebase {
 
     constructor() {
         // Načtení lokální databáze
-        if (fs.existsSync('db.json')) {// Pokud existuje soubor s lokální databází, načte se.
+        if (fs.existsSync(dbFilePath)) {// Pokud existuje soubor s lokální databází, načte se.
             this._dbFile = jsonManager.readFileSync(dbFilePath);
         }else{ // V opačném případě se vytvoří a nainicializuje na prázdný (JSON) objekt
-            fs.writeFileSync('db.json', '{}');
+            fs.writeFileSync(dbFilePath, '{}');
             this._dbFile = {};
         }
         if(typeof this._dbFile != "object"){ // Kontrola, zda se načetl regulérní JSON objekt
@@ -395,7 +394,7 @@ export class Firebase {
 
             if (serverLastWriteTime < firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno do firebase, přepíše se lokální verze databáze
                 console.log("Vypadá to, že internetová verze databáze je aktuálnější. Přepíše lokální databázi...");
-                fs.writeFileSync('db.json', '{}');
+                fs.writeFileSync(dbFilePath, '{}');
                 if (data && data.rooms) {
                     this.writeToLocalDB("rooms", data.rooms, firebaseLastWriteTime);
                 } else {
@@ -412,8 +411,8 @@ export class Firebase {
             }
         }
         if (!this._dbInited) {
-            this.initLocalDB(data);
             this.getSensors(data);
+            this._dbInited = true;
         } else {
             this._checkDbChange(data);
             this._processDbChanges();
@@ -425,15 +424,6 @@ export class Firebase {
             this._firebaseInited = true;
             this._fb = firebase.initializeApp(this._config.get("firebase"));
         }
-    }
-
-    initLocalDB(data) {
-        if (!fs.existsSync('db.json')) {// local database file doesn't exist => create it!
-            fs.writeFileSync('db.json', '{}');
-        }
-        //fs.writeFileSync(this._config.get("db_file_path") || "db.json", JSON.stringify(data));
-        this._dbInited = true;
-
     }
 
     getSensors(data) {
@@ -790,7 +780,7 @@ export class Firebase {
 
     public removeInLocalDB(path: string, time: string | number) {
         if(path.length == 0 || path == "/"){
-            fs.writeFileSync('db.json', '{}');
+            fs.writeFileSync(dbFilePath, '{}');
             this._dbFile["lastWriteTime"] = time;
             jsonManager.writeFileSync(dbFilePath, this.readFromLocalDB("/"), { spaces: 2 });
         }else{
