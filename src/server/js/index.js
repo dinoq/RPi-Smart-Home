@@ -208,17 +208,17 @@ class ServerApp {
                 }
                 else if (err.code == "EACCES") {
                     console.error("Nemáte přístup ke zvolenému portu (" + this.port + "). Zvolte jiný port (s hodnotou > 1024) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
-                    process.exit(err.errno);
+                    process.exit(5);
                 }
                 else {
                     console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this.port + "!");
-                    process.exit(err.errno);
+                    process.exit(5);
                 }
             });
         }
         catch (err) {
             console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this.port + "!");
-            process.exit(err.errno);
+            process.exit(5);
         }
         if (this.getFromConfig("debugLevel", 0) > 0) {
             //console.log("Server běží na portu: " + this.port + ".");
