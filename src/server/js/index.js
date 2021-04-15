@@ -173,7 +173,7 @@ class ServerApp {
             let portStr = (this.port == 80) ? "" : ":" + this.port;
             console.log("Vypadá to, že server není spárován s žádným uživatelským účtem. Pro spárování je nutné se ze zařízení, na kterém server běží zaregistovat (na http://localhost" + portStr + "/registrace/) či přihlásit (http://localhost" + portStr + "/login/), dříve nebude možné systém ovládat přes internet (mimo lokální síť). K registraci je vyžadováno internetové připojení.");
             console.log("Spárování pomocí přihlášení/registrace je také možné provést z jiného zařízení v lokální síti na adrese: http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr + "/login/, resp.: http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr + "/registrace/");
-            open('http://localhost/registrace?forceLogout=true');
+            open('http://localhost' + portStr + '/registrace?forceLogout=true');
         }
         this._app.use(express.static(p), (req, res, next) => {
             //console.log("ooo");
@@ -207,7 +207,7 @@ class ServerApp {
                     process.exit(err.errno);
                 }
                 else if (err.code == "EACCES") {
-                    console.error("Nemáte přístup ke zvolenému portu (" + this.port + "). Zvolte jiný port (s hodnotou > 1024) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
+                    console.error("Nemáte přístup ke zvolenému portu (" + this.port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
                     process.exit(5);
                 }
                 else {
