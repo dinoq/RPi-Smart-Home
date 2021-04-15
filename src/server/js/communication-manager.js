@@ -22,7 +22,9 @@ class CommunicationManager {
     }
     static getServerIP() {
         let networkInterfaces = os.networkInterfaces();
-        let addressesInfo = networkInterfaces["Wi-Fi"]; // Wi-Fi on Windows, wlan0 on Ubuntu/Raspbian
+        let wifiInterface = (os.platform() == "win32") ? "Wi-Fi" : "wlan0";
+        let addressesInfo = networkInterfaces[wifiInterface]; // Wi-Fi on Windows, wlan0 on Ubuntu/Raspbian
+        console.log('networkInterfaces: ', networkInterfaces);
         for (let i = 0; i < addressesInfo.length; i++) {
             let addrInfo = addressesInfo[i];
             if (!addrInfo.internal && addrInfo.family == "IPv4" && addrInfo.address) {
