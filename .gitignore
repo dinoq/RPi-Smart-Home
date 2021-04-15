@@ -2,4 +2,5 @@ src/esp/build/
 src/web/.VSCodeCounter/
 src/web/database/
 src/web/node_modules/
+src/server/.VSCodeCounter/
 src/server/node_modules/
