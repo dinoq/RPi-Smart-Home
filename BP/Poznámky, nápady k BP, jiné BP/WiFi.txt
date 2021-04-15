@@ -1,7 +1,0 @@
-Elektromagnetické záření se ve vakuu šíří rychlostí rovno konstantě c (přibližně 3 .10na8), v médiu jako je vzduch se pak šíří rychlostí c, podělenou indexem lomu (konkrétně pro vzduch je tento index blízký 1, takže můžeme uvažovat prakticky stejnou rychlost jako pro vakuum).
-Spektrum EM záření můžeme rozdělit podle frekvencí. V případě bezdrátových technologií nás zajímá zejména rádiové a mikrovlnné spektrum (obvykle frekvence od cca 30 MHz do 60 GHz)
-Wifi pracuje na dvou prvních vrstvách ISO OSI.
-
-Přenos na nižších frekvencích má tu výhodu, že může urazit delší vzdálenost než přenos na vyšších frekvencích o stejné energii.
-
-Wireless Association je přihlášení zařízení k AP. Děje se pouze v infrastruktruním režimu sítě.
