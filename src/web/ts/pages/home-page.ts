@@ -2,7 +2,7 @@ import { RoomCard } from "../layouts/room-card.js";
 import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
 import { IComponentProperties } from "../components/component.js";
-import { LoginComponent } from "../components/forms/login-form.js";
+import { LoginComponent } from "../components/forms/login-component.js";
 import { BasePage } from "./base-page.js";
 import { PageManager } from "../app/page-manager.js";
 import { Loader } from "../components/others/loader.js";
@@ -18,6 +18,16 @@ export class HomePage extends BasePage {
         Loader.show();
         Firebase.addDBListener("/rooms/", (data)=>{      
             Loader.hide();      
+            if(!data){       
+                this.roomsCards = new Array();
+                this.roomsIndexes = new Array();         
+                this.innerHTML = `
+                    <div  id="no-rooms-info-container">
+                        <h1 id="no-rooms-info">V databázi nejsou žádné místnosti a zařízení. Můžete je přidat v nastavení systému (Menu -> Nastavení).</h1>
+                    </div>
+                `;
+                return;
+            }
             let rooms = new Array();
             for(const roomDBName in data){
                 let room = data[roomDBName];

@@ -5,14 +5,14 @@ import { BaseDialog } from "./base-dialog.js";
 export class ErrorDialog extends BaseDialog {
     static tagName = "error-dialog";
     
-    constructor(error: string, componentProps?: IComponentProperties){
+    constructor(errorMsg: string, componentProps?: IComponentProperties){
         super(componentProps);
 
         let errorDiv = document.createElement("div");
         errorDiv.innerHTML = `        
             <div class="dialog">
                 <div class="message-box error-message text-danger">
-                    ${error} 
+                    ${errorMsg} 
                 </div>
                 <div class="dialog-btn-group">
                     <div class="btn btn-danger">
@@ -30,3 +30,24 @@ export class ErrorDialog extends BaseDialog {
         })
     }
 }
+
+export class SingletonErrorDialog {
+    
+    constructor(errorMsg: string, componentProps?: IComponentProperties){
+        let allDialogs = document.querySelectorAll(ErrorDialog.tagName);
+        let exists = Array.from(allDialogs).some((dialog: HTMLElement, index, array) => {
+            return (<HTMLElement>dialog.querySelector(".error-message")).innerText.includes(errorMsg);
+        })
+
+        if(!exists){
+            new ErrorDialog(errorMsg);
+        }
+    }
+}
+
+export class ServerCommunicationErrorDialog {
+    constructor(componentProps?: IComponentProperties){
+        new SingletonErrorDialog("Při komunikaci se serverem došlo k chybě, zkontrolujte, zda server běží.");
+    }
+}
+    

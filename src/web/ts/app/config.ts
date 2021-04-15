@@ -1,8 +1,8 @@
-import { Singleton } from "./singleton";
-
 export class Config {
 
     // Common configuration
+    public static checkConnectionMaxAttempts = 5;
+    public static checkConnectionMaxTimeout = 2000;
 
     public static defaultTransitionTime = 1000;
     // Display errors

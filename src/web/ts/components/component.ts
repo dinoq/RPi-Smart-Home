@@ -3,7 +3,7 @@ import { ComponentNameNotDefinedError, CustomComponentNotDefinedError } from "..
 import { MethodNotImplementedError } from "../errors/method-errors.js";
 import { Config } from "../app/config.js";
 import { Utils } from "../app/utils.js";
-import { LoginComponent } from "./forms/login-form.js";
+import { LoginComponent } from "./forms/login-component.js";
 
 
 export class Component extends HTMLElement {
@@ -134,8 +134,11 @@ export abstract class AbstractComponent extends Component {
     }
 
     disconnectComponent() {
-        this.parent.removeChild(this);
-        this.componentConnected = false;
+        try{
+            this.parent.removeChild(this);
+        }finally{
+            this.componentConnected = false;
+        }
     }
 
     // Appends one or more custom element (successor of AbstractComponent) to this. For appending pre-defined DOM elements (like div, table etc.) use method appendDOMComponents()

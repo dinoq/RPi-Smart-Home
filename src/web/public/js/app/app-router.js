@@ -1,45 +1,41 @@
-import { BaseError } from "../errors/base-error.js";
 import { Firebase } from "./firebase.js";
+import { URLManager } from "./url-manager.js";
 export var Pages;
 (function (Pages) {
     Pages[Pages["UNKNOWN"] = 0] = "UNKNOWN";
     Pages[Pages["LOGIN"] = 1] = "LOGIN";
     Pages[Pages["REGISTER"] = 2] = "REGISTER";
-    Pages[Pages["DASHBOARD"] = 3] = "DASHBOARD";
-    Pages[Pages["HOME"] = 4] = "HOME";
-    Pages[Pages["CONDITIONS"] = 5] = "CONDITIONS";
-    Pages[Pages["SETTINGS"] = 6] = "SETTINGS";
+    Pages[Pages["HOME"] = 3] = "HOME";
+    Pages[Pages["SETTINGS"] = 4] = "SETTINGS";
+    Pages[Pages["PAIR_WITH_ACCOUNT"] = 5] = "PAIR_WITH_ACCOUNT";
 })(Pages || (Pages = {}));
 export class AppRouter {
     constructor() {
     }
-    getRoute() {
+    async getRoute() {
         let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase(); });
         let entirePath = window.location.pathname.toLocaleLowerCase();
+        let getParams = window.location.search.substr(1).split("=");
+        let indexOfLogoutParam = getParams.indexOf("forceLogout");
+        if (indexOfLogoutParam != -1 && getParams[indexOfLogoutParam + 1] == "true") {
+            await Firebase.logout();
+            location.replace(window.location.origin + window.location.pathname); // Go to page, but without forceLogout param!
+        }
         this.route = { page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath };
         let topLevel = pathArr[0];
-        if (this.pathsEquals(topLevel, Paths.USER)) {
-            switch (pathArr[1]) {
-                case "login":
-                    this.route.page = Pages.LOGIN;
-                    break;
-                case "register":
-                    this.route.page = Pages.REGISTER;
-                    break;
-                default:
-                    this.route.path = Paths.HOME;
-                    new BaseError("Page " + entirePath + " not defined!", this);
-                    break;
-            }
+        if (this.pathsEquals(topLevel, Paths.LOGIN)) {
+            this.route.page = Pages.LOGIN;
         }
-        else if (this.pathsEquals(topLevel, Paths.DASHBOARD)) {
-            this.route.page = Pages.DASHBOARD;
+        else if (this.pathsEquals(topLevel, Paths.PAIR_WITH_ACCOUNT)) {
+            this.route.page = Pages.PAIR_WITH_ACCOUNT;
+        }
+        else if (this.pathsEquals(topLevel, Paths.REGISTER)) {
+            this.route.page = Pages.REGISTER;
+            this.route.afterLoginPage = Pages.LOGIN;
+            this.route.afterLoginPath = Paths.LOGIN;
         }
         else if (this.pathsEquals(topLevel, Paths.HOME)) {
             this.route.page = Pages.HOME;
-        }
-        else if (this.pathsEquals(topLevel, Paths.CONDITIONS)) {
-            this.route.page = Pages.CONDITIONS;
         }
         else if (this.pathsEquals(topLevel, Paths.SETTINGS)) {
             this.route.page = Pages.SETTINGS;
@@ -47,9 +43,7 @@ export class AppRouter {
         else {
             this.route.page = Pages.UNKNOWN;
         }
-        if (!Firebase.loggedIn()) {
-            this.route.page = Pages.LOGIN;
-            this.route.path = Paths.LOGIN;
+        if (!(await Firebase.loggedIn()) && this.route.page != Pages.REGISTER) {
             if (this.route.page == Pages.LOGIN) {
                 this.route.afterLoginPage = Pages.HOME;
                 this.route.afterLoginPath = Paths.HOME;
@@ -58,6 +52,9 @@ export class AppRouter {
                 this.route.afterLoginPage = this.route.page;
                 this.route.afterLoginPath = this.route.path;
             }
+            this.route.page = Pages.LOGIN;
+            this.route.path = Paths.LOGIN;
+            URLManager.replaceURL(Paths.LOGIN, "login", true);
         }
         return this.route;
     }
@@ -85,21 +82,9 @@ export class AppRouter {
 AppRouter.DEFAULT_LOGGED_PAGE = Pages.HOME;
 export var Paths;
 (function (Paths) {
-    Paths["USER"] = "uzivatel";
-    Paths["LOGIN"] = "uzivatel/login";
-    Paths["REGISTER"] = "uzivatel/registrovat";
-    Paths["DASHBOARD"] = "dashboard";
+    Paths["LOGIN"] = "login";
+    Paths["REGISTER"] = "registrace";
     Paths["HOME"] = "domu";
-    Paths["CONDITIONS"] = "podminky";
     Paths["SETTINGS"] = "nastaveni";
+    Paths["PAIR_WITH_ACCOUNT"] = "sparovat_ucet";
 })(Paths || (Paths = {}));
-export var PagesKeys;
-(function (PagesKeys) {
-    PagesKeys["USER"] = "uzivatel";
-    PagesKeys["LOGIN"] = "login";
-    PagesKeys["REGISTER"] = "registrovat";
-    PagesKeys["DASHBOARD"] = "dashboard";
-    PagesKeys["HOME"] = "domu";
-    PagesKeys["CONDITIONS"] = "podminky";
-    PagesKeys["SETTINGS"] = "nastaveni";
-})(PagesKeys || (PagesKeys = {}));

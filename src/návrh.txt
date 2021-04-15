@@ -1,11 +1,27 @@
+Nevyužívám CoAP cestu, jak by se dalo očekávat, ale s výhodou jsem ji použil pro ty callbacky...
+
 OUT:
 Relé
 -obrazky: 
-relé, znak dimmable, žárovka se znakem dimmable, bzučák,
+relé, znak dimmable, žárovka se znakem dimmable, bzučák, 
 
-Mosfet
-tranzistor, spínač, žárovka se znakem spínače,žaluzie (čtverec)
+Mosfet tranzistor, spínač, žárovka se znakem spínače,žaluzie (čtverec)
 
+Typ výstupu (definitivně):
+Spínač - jen když zbude čas
+Digitální (ON/OFF)
+Ikona: 
+světlo
+Spínač
+motor
+
+Analogový (Plynulý)
+Ikona: 
+Stmívatelné světlo
+servo motor
+
+Pokud bude čas, tak ještě něco jak typ/způsob výstupu (impulzní/"kontinualní") => také pole výchozí hodnota
+----------------------
 INPUT:
 Analog-symboly před,možnost mít jeden hlavní
 Digital
@@ -76,23 +92,21 @@ name
 img src
 img offset
 
-
-DetailFrame pro sensors:
-Modul
-vstup => zobrazit typ (Analogový/digitální senzor)
-icon type=>náhled
-name
-unit
-
-DetailFrame pro devices:
-Modul
-výstup => zobrazit typ (Analogový/digitální senzor)
-icon type=>náhled
-name
-
 DetailFrame pro ESP:
 Identifikátor (získaný z IP na text)-needitovatelné
 typ (např ESP8266)-needitovatelné =>zobrazit vybavení(V/V piny, počet pwm...)
 name
+
+DetailFrame pro sensors:
+name
+typ (analog/digital)
+ikona (teploměr, spínač, senzor intenzity osvětlení.....)
+unit (%, °C, Papnuto/Vypnuto, sepnuto/rozepnuto/ číslo (0-1024), číslo namapované na vlastní rozsah => zobrazit pole pro maximalni hodnotu(nebo rozsah pokud to nebude od 0))
+vstup => (Pin A0, D5, Senzor BME, sběrnice/rozhraní I2C)
+
+DetailFrame pro devices:
+name
+icon type=>náhled
+výstup => zobrazit typ (Analogový/digitální senzor)
 ___________________________
 

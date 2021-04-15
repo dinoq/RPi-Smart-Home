@@ -130,16 +130,18 @@ export class PageManager extends Singleton {
     }
 
     resizePages = () => {
-        this.pageManagerComponent.style.width = <string>Utils.getWindowWidth(true);
-        this.pageManagerComponent.style.height = <string>Utils.getWindowHeight(true);
-        this.pages.forEach((child, index, array) => {
-            let childStyle = (<HTMLElement>child).style;
-            childStyle.width = <string>Utils.getWindowWidth(true);
-            childStyle.height = <string>Utils.getWindowHeight(true);
-            if (index != this.activePageIndex) {
-                childStyle.left = <string>Utils.getWindowWidth(true);
-            }
-        })
+        setTimeout(() => {
+            this.pageManagerComponent.style.width = <string>Utils.getWindowWidth(true);
+            this.pageManagerComponent.style.height = <string>Utils.getWindowHeight(true);
+            this.pages.forEach((child, index, array) => {
+                let childStyle = (<HTMLElement>child).style;
+                childStyle.width = <string>Utils.getWindowWidth(true);
+                childStyle.height = <string>Utils.getWindowHeight(true);
+                if (index != this.activePageIndex) {
+                    childStyle.left = <string>Utils.getWindowWidth(true);
+                }
+            })
+        }, 1000);
     }
 
 }

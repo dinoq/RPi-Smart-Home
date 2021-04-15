@@ -7,12 +7,43 @@ import { Utils } from "../app/utils.js";
 export class RoomCard extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
+        this._sliderDbUpdateTimeout = undefined; // Timeout of sending values from slider to DB. We don't want to send every single value, but in time intervals (if value changes)...
+        this._sliderDbUpdateTimeoutTime = 1000; // Number of ms between sending values from slider to DB. See _sliderDbUpdateTimeout for more info.
+        this._sliderBbUpdateInfo = undefined; // path to update in database on slider value changed and actual val
         this.idOfSelectedDevices = "";
+        this.updateBGImg = (data) => {
+            //Does img changed?
+            let newSrc = (data.img.src.startsWith("https://")) ? `url("${data.img.src}")` : `url(img/"${data.img.src}")`;
+            if (newSrc != this.style.backgroundImage) { // Don't reload if it is not needed!
+                this.style.backgroundImage = newSrc;
+                this.style.backgroundSize = "cover";
+            }
+            let shiftTimeLimit = setTimeout(() => {
+                shiftTimeLimit = undefined;
+            }, 10000);
+            let shiftBgImg = () => {
+                if (!shiftTimeLimit)
+                    return;
+                if (this.devices.every(device => device.imgLoaded)) {
+                    let newHeight = (this.clientWidth / img.naturalWidth) * img.naturalHeight - this.clientHeight;
+                    let newPosY = Math.round(-(newHeight * data.img.offset)) + "px";
+                    if (newPosY != this.style.backgroundPositionY)
+                        this.style.backgroundPositionY = newPosY;
+                    return;
+                }
+                else {
+                    setTimeout(() => {
+                        return shiftBgImg();
+                    }, 20);
+                }
+            };
+            let img = new Image();
+            img.addEventListener("load", shiftBgImg);
+            img.src = data.img.src;
+        };
         this.updateCard = (data) => {
             this.querySelector(".room-name").innerText = data.name;
-            this.style.background = (data.img.src.startsWith("https://")) ? "url(" + data.img.src + ")" : "url(img/" + data.img.src + ")";
-            this.style.backgroundSize = "cover";
-            this.style.backgroundPositionY = data.img.offset + "px";
+            this.updateBGImg(data);
             let devices = data.devices;
             let ordered = this.getOrderedINOUT(devices, this.roomName);
             let orderedIN = ordered.orderedIN;
@@ -38,24 +69,18 @@ export class RoomCard extends AbstractComponent {
                 for (const device of orderedOUT) {
                     let lamp = new RoomDevice({});
                     this.devices.push(lamp);
-                    if ((devicesRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) < Utils.getWindowWidth() * 0.7) {
-                        devicesRow.pushComponents(lamp);
-                    }
-                    else {
+                    if ((devicesRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) > Utils.getWindowWidth() * 0.7 - 10) { // -10px left padding
                         this.devicesStack.pushComponents(devicesRow);
                         devicesRow = new HorizontalStack({
                             classList: "devices-row",
                             marginTop: "3.5rem"
                         });
                     }
+                    devicesRow.pushComponents(lamp);
                 }
             }
             if (devicesRow.childElementCount) {
                 this.devicesStack.pushComponents(devicesRow);
-            }
-            // Actualize sensors
-            for (let i = 0; i < orderedIN.length; i++) {
-                this.sensors[i].updateVal(orderedIN[i].value);
             }
             // Actualize devices
             for (let i = 0; i < orderedOUT.length; i++) {
@@ -91,7 +116,7 @@ export class RoomCard extends AbstractComponent {
                 this.devicesStack.pushComponents(deviceRow);
             }
         };
-        this.devicesClicked = (val, device) => {
+        this.devicesClicked = async (val, device) => {
             let inputElem = this.slider.querySelector("input");
             if (this.idOfSelectedDevices == device.dbID) { // Clicked on same device (second time)
                 inputElem.style.visibility = "hidden";
@@ -101,7 +126,7 @@ export class RoomCard extends AbstractComponent {
             else { // Clicked first time on that device
                 if (this.idOfSelectedDevices) // If is current selected any device, toggle color of name
                     this.getDeviceByDBID(this.idOfSelectedDevices).toggleNameColor();
-                if (device.valueType == "int") { // If clicked device is int, show slider
+                if (device.type == "analog") { // If clicked device is int, show slider
                     device.toggleNameColor();
                     inputElem.style.visibility = "visible";
                     inputElem.value = val;
@@ -112,7 +137,7 @@ export class RoomCard extends AbstractComponent {
                         inputElem.style.visibility = "hidden";
                         this.idOfSelectedDevices = "";
                     }
-                    let newVal = (device.value < 512) ? 1024 : 0;
+                    let newVal = (device.value < 512) ? 1023 : 0;
                     Firebase.updateDBData(device.devicePath, { value: newVal });
                 }
             }
@@ -121,7 +146,13 @@ export class RoomCard extends AbstractComponent {
             if (this.idOfSelectedDevices) {
                 //this.sliderActiveFor.updateVal(value); NOT SET VALUE DIRECTLY, BUT CALL FIREBASE TO UPDATE VALUE, AND FIREBASE (BECAUSE OF VALUE LISTENER) WILL NOTICE DEVICE WHICH CHANGED
                 let dev = this.getDeviceByDBID(this.idOfSelectedDevices);
-                Firebase.updateDBData(dev.devicePath, { value: value });
+                this._sliderBbUpdateInfo = { path: dev.devicePath, val: value };
+                if (!this._sliderDbUpdateTimeout) {
+                    this._sliderDbUpdateTimeout = setTimeout(() => {
+                        this._sliderDbUpdateTimeout = undefined;
+                        Firebase.updateDBData(this._sliderBbUpdateInfo.path, { value: this._sliderBbUpdateInfo.val });
+                    }, this._sliderDbUpdateTimeoutTime);
+                }
             }
         };
         this.layout = new HorizontalStack({ classList: "card-container" });
@@ -154,11 +185,13 @@ export class RoomCard extends AbstractComponent {
             const devIN = devices[espName].IN;
             for (const pin in devIN) {
                 devIN[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/IN/" + pin;
+                devIN[pin].id = pin;
                 orderedIN.push(devIN[pin]);
             }
             const devOUT = devices[espName].OUT;
             for (const pin in devOUT) {
                 devOUT[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/OUT/" + pin;
+                devOUT[pin].id = pin;
                 orderedOUT.push(devOUT[pin]);
             }
         }
@@ -180,7 +213,7 @@ export class Slider extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
         this.innerHTML = `               
-            <input type="range" min="1" max="1024" value="512" class="slider" style="visibility:hidden;">
+            <input type="range" min="1" max="1023" value="512" class="slider" style="visibility:hidden;">
         `;
     }
     initialize(sliderChanged) {
@@ -195,20 +228,68 @@ export class RoomSensor extends AbstractComponent {
     constructor(layoutProps) {
         super(layoutProps);
     }
-    updateVal(value) {
-        let val = this.querySelector(".value");
-        val.innerText = value;
-    }
     initialize(sensor) {
         this.layout = new HorizontalStack();
-        let type = new Icon(sensor.type);
-        this.layout.pushComponents(type);
+        let icon = this.getIcon(sensor);
+        this.layout.pushComponents(icon);
         let name = new BaseComponent({ innerText: sensor.name });
-        let value = new BaseComponent({ innerText: sensor.value });
+        let valAndUnit = this.getValueAndUnitText(sensor);
+        let value = new BaseComponent({ innerText: valAndUnit.valueText });
         value.classList.add("value");
-        let unit = new BaseComponent({ innerText: sensor.unit });
+        let unit = new BaseComponent({ innerText: valAndUnit.unitText, marginLeft: "0.5rem" });
         this.layout.pushComponents([name, value, unit]);
         this.appendComponents(this.layout);
+    }
+    getIcon(sensor) {
+        let icon;
+        switch (sensor.icon) {
+            case "light-intensity":
+                icon = new Icon(sensor.icon);
+                break;
+            case "switch":
+                if (sensor.value > 512)
+                    icon = new Icon("switch-on-90");
+                else
+                    icon = new Icon("switch-off-90");
+                break;
+            case "-":
+                icon = new Icon("no-icon");
+                break;
+            default:
+                icon = new Icon(sensor.icon);
+                break;
+        }
+        return icon;
+    }
+    getValueAndUnitText(sensor) {
+        let valueText = "";
+        let unitText = "";
+        switch (sensor.unit) {
+            case "-":
+                unitText = "";
+        }
+        if (sensor.unit.includes("on-off")) {
+            let values = ["On", "Off", "Zapnuto", "Vypnuto", "Sepnuto", "Rozepnuto", "Zavřeno", "Otevřeno"];
+            let valueIdx = Number.parseInt(sensor.unit.substring("on-off".length));
+            valueText = (sensor.value > 512) ? values[valueIdx * 2] : values[valueIdx * 2 + 1];
+            unitText = "";
+        }
+        else if (sensor.unit == "c") {
+            unitText = "°C";
+            valueText = (sensor.value) ? sensor.value : "0";
+        }
+        else if (sensor.unit == "percentages") {
+            unitText = "%";
+            if (sensor.input.startsWith("I2C"))
+                valueText = sensor.value;
+            else // If value was not gained from I2C sensor, recalculate value to percentages
+                valueText = (Math.round((sensor.value * 100) / 1023)).toString();
+        }
+        else if (sensor.unit == "number") {
+            unitText = "";
+            valueText = sensor.value;
+        }
+        return { valueText, unitText };
     }
 }
 RoomSensor.tagName = "room-sensor";
@@ -217,28 +298,66 @@ export class RoomDevice extends AbstractComponent {
         super(layoutProps);
         this.initialized = false;
         this.value = 0;
+        this.imgLoaded = false; // We use it when shifting bg img of room card
         //this.innerText = initVal.toString();
         this.innerHTML = `
             <div style="position:relative;">    
                 <div class="device-name" style="position:absolute;width: max-content;">
                    Nazev
                 </div>  
-                <div class="bg-image" style="position:absolute;height: 16px;bottom: 0px;overflow: hidden;">
-                    <img src="img/bulb2.png">
-                </div> 
-                <div style="position:relative;display: flex;justify-content: center;">
-                    <img src="img/bulb.png">
+                <div class="device-icon-wrapper">
                 </div>
                 
             </div>
         `;
+        this.iconWrapper = this.querySelector(".device-icon-wrapper");
         this.style.display = "flex";
         this.style.width = "150px";
         this.style.justifyContent = "center";
-        this.bgImage = this.querySelector(".bg-image");
+    }
+    initIcon() {
+        switch (this.icon) {
+            case "light":
+                this.iconWrapper.innerHTML = `        
+                    <div class="bg-image" style="position:absolute;height: 0px;bottom: 0px;overflow: hidden;">
+                        <img src="img/icons/bulb2.png">
+                    </div> 
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/bulb.png">
+                    </div>
+                `;
+                break;
+            case "dimmable-light":
+                this.iconWrapper.innerHTML = `        
+                    <div class="bg-image" style="position:absolute;height: 16px;bottom: 0px;overflow: hidden;">
+                        <img src="img/icons/bulb2.png">
+                    </div> 
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/bulb-dim.png">
+                    </div>
+                `;
+                break;
+            default:
+                this.iconWrapper.innerHTML = `        
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/${this.icon}-off.png">
+                    </div>
+                `;
+                break;
+        }
+        let img = this.iconWrapper?.querySelector("img");
+        if (img) {
+            img.addEventListener('load', (event) => {
+                this.imgLoaded = true;
+            });
+        }
+        else {
+            this.imgLoaded = true;
+        }
     }
     initialize(index, object, onClickCallback) {
-        this.valueType = object[index].valueType;
+        this.type = object[index].type;
+        this.icon = object[index].icon;
         this.devicePath = object[index].path;
         this.dbID = object[index].id;
         this.initialized = true;
@@ -251,6 +370,7 @@ export class RoomDevice extends AbstractComponent {
         deviceName.innerText = object[index].name;
         deviceName.style.left = -(this.calculateStringWidth(object[index].name) / 2) + 16 + "px";
         //deviceName.style.backgroundColor = "#00000061";
+        this.initIcon();
     }
     calculateStringWidth(str) {
         let element = document.createElement('canvas');
@@ -260,11 +380,29 @@ export class RoomDevice extends AbstractComponent {
     }
     updateVal(value) {
         let val = value;
-        if (this.valueType == "bool")
-            val = (value > 512) ? 1024 : 0;
+        if (this.type == "digital")
+            val = (value > 512) ? 1023 : 0;
         this.updateSlider(val);
         //console.log('value: ', val);
-        this.bgImage.style.height = Math.round((val / 1024) * RoomDevice.IMG_HEIGHT) + "px";
+        let bgImage;
+        switch (this.icon) {
+            case "light":
+                bgImage = this.querySelector(".bg-image");
+                bgImage.style.height = Math.round((val / 1023) * RoomDevice.IMG_HEIGHT) + "px";
+                break;
+            case "dimmable-light":
+                bgImage = this.querySelector(".bg-image");
+                bgImage.style.height = Math.round((val / 1023) * RoomDevice.IMG_HEIGHT) + "px";
+                break;
+            default:
+                let state = (val) ? "on" : "off";
+                this.iconWrapper.innerHTML = `        
+                    <div style="position:relative;display: flex;justify-content: center;">
+                        <img src="img/icons/${this.icon}-${state}.png">
+                    </div>
+                `;
+                break;
+        }
         this.value = val;
     }
     toggleNameColor() {
@@ -276,13 +414,6 @@ export class RoomDevice extends AbstractComponent {
     }
     updateSlider(value) {
         //this.slider.value=value;
-    }
-    convertNumToDBVal(val) {
-        if (this.valueType == "bool")
-            return (val < 512) ? "off" : "on";
-        return val;
-    }
-    static convertToNumVal(val, type) {
     }
 }
 RoomDevice.tagName = "room-device";

@@ -1,17 +1,18 @@
-import { LoginComponent } from "../components/forms/login-form.js";
+import { LoginComponent } from "../components/forms/login-component.js";
 import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
 import { AbstractComponent } from "../components/component.js";
-import { BlankPage } from "../pages/blank-page.js";
-import { BaseLayout } from "../layouts/base-layout.js";
 import { Effects, PageManager } from "./page-manager.js";
-import { AppRouter, IRoute, Pages, PagesKeys, Paths } from "./app-router.js";
+import { AppRouter, IRoute, Pages, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
-import { LoginPage } from "../pages/login-page.js";
-import { Dashboard } from "../pages/dashboard-page.js";
+import { PairPage } from "../pages/pair-page.js";
 import { HomePage } from "../pages/home-page.js";
 import { Firebase } from "./firebase.js";
 import { SettingsPage } from "../pages/settings-page.js";
 import { BasePage } from "../pages/base-page.js";
+import { RegistrationPage } from "../pages/registration-page.js";
+import { LoginPage } from "../pages/login-page.js";
+import { Utils } from "./utils.js";
+import { ChoiceDialog } from "../components/dialogs/choice-dialog.js";
 
 
 export class PageCreator {
@@ -30,76 +31,89 @@ export class PageCreator {
         this.renderPage();
     }
 
-    renderPage = () => {
-        let route: IRoute = this.router.getRoute();
-        let page: Pages = route.page;
-
-        if (Firebase.loggedIn()) {
-            if (!this.hamburgerMenu.componentConnected) {
-                this.hamburgerMenu.connectToBody();
+    renderPage = async () => {
+        let route: IRoute = await this.router.getRoute();
+        if(Firebase.localAccess){
+            if(Utils.itemIsAnyFromEnum(route.page, Pages, ["LOGIN", "PAIR_WITH_ACCOUNT", "REGISTER"])){
+                if(route.page == Pages.LOGIN){
+                    URLManager.replaceURL(Paths.PAIR_WITH_ACCOUNT, Paths.PAIR_WITH_ACCOUNT);
+                }
+                if (this.hamburgerMenu.componentConnected) {
+                    this.hamburgerMenu.disconnectComponent();
+                }
+                this.renderNotLoggedIn(route);
+            }else{
+                if (!this.hamburgerMenu.componentConnected) {
+                    this.hamburgerMenu.connectToBody();
+                }
+                this.renderLoggedIn(route);
             }
-            this.renderLoggedIn(route);
-        } else {
-            if (this.hamburgerMenu.componentConnected) {
-                this.hamburgerMenu.disconnectComponent();
+        }else{
+            if (await Firebase.loggedIn()) {
+                if (!this.hamburgerMenu.componentConnected) {
+                    this.hamburgerMenu.connectToBody();
+                }
+                this.renderLoggedIn(route);
+            } else {
+                if (this.hamburgerMenu.componentConnected) {
+                    this.hamburgerMenu.disconnectComponent();
+                }
+                this.renderNotLoggedIn(route);
             }
-            this.renderNotLoggedIn(route);
         }
     }
 
     renderLoggedIn(route: IRoute) {
-        let page: PagesKeys;
+        let page: Paths;
         switch (route.page) {
-            case Pages.HOME:
-                page = PagesKeys.HOME;
-                this.pageManager.addPage(new HomePage(), PagesKeys.HOME);
-                break;
-            case Pages.CONDITIONS:
-                page = PagesKeys.CONDITIONS;
-                this.pageManager.addPage(new BlankPage(), PagesKeys.CONDITIONS);
-                break;
             case Pages.SETTINGS:
-                page = PagesKeys.SETTINGS;
-                this.pageManager.addPage(new SettingsPage(), PagesKeys.SETTINGS);
+                page = Paths.SETTINGS;
+                this.pageManager.addPage(new SettingsPage(), Paths.SETTINGS);
                 break;
-            default:
-                URLManager.replaceURL(Paths.HOME, PagesKeys.HOME);
+                
+            case Pages.HOME: 
+                page = Paths.HOME;
+                this.pageManager.addPage(new HomePage(), Paths.HOME);
+                break;
+
+            default: // similar to home, but replace URL!
+                page = Paths.HOME;
+                this.pageManager.addPage(new HomePage(), Paths.HOME);
+                URLManager.replaceURL(Paths.HOME, Paths.HOME);
                 break;
         }
-        
+
         this.pageManager.setActive(page, Effects.SWIPE_TO_RIGHT);
     }
 
     renderNotLoggedIn(route: IRoute) {
         switch (route.page) {
             case Pages.LOGIN:
-                if(!this.pageManager.containsPageKey("login")){
-                    let login = this.createLogin(route.afterLoginPath);
-                    this.pageManager.addPage(login, "login");
+                if (!this.pageManager.containsPageKey(Paths.LOGIN)) {
+                    let login = new LoginPage();
+                    login.loginForm.redirectAfterLogin(route.afterLoginPath);
+                    this.pageManager.addPage(login, Paths.LOGIN);
                 }
-                this.pageManager.setActive("login");
+                this.pageManager.setActive(Paths.LOGIN);
+                break;
+            case Pages.PAIR_WITH_ACCOUNT:
+                if (!this.pageManager.containsPageKey(Paths.PAIR_WITH_ACCOUNT)) {
+                    let page = new PairPage();
+                    page.pairForm.redirectAfterLogin(route.afterLoginPath);
+                    this.pageManager.addPage(page, Paths.PAIR_WITH_ACCOUNT);
+                }
+                this.pageManager.setActive(Paths.PAIR_WITH_ACCOUNT);
+                break;
+            case Pages.REGISTER:
+                if (!this.pageManager.containsPageKey(Paths.REGISTER)) {
+                    let register = new RegistrationPage();
+                    this.pageManager.addPage(register, Paths.REGISTER);
+                }
+                this.pageManager.setActive(Paths.REGISTER);
                 break;
             default:
                 break;
         }
-        switch (route.afterLoginPage) {
-            case Pages.LOGIN:
-
-                break;
-            default:
-                URLManager.replaceURL(Paths.LOGIN, "login", true);
-                break;
-        }
-    }
-
-    createDashboard = () => {
-        //this.header.mountComponent("header");
-    }
-
-    createLogin(redirectAfterLogin: string) {
-        let login = new LoginPage();
-        login.loginForm.redirectAfterLogin(redirectAfterLogin);
-        return login;
     }
 }
 

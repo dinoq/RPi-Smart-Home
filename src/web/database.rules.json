@@ -1,17 +1,12 @@
 {
-  /* Visit https://firebase.google.com/docs/database/security to learn more about security rules. */
-  "rules": {
-    "buildings": {    
-      "$id_budovy":{
-        ".read": "root.child('users').child(auth.uid).val() === $id_budovy",
-        ".write": true
-      }
-    },
-    "users": {    
-      "$id_uzivatele":{
-        ".read": "$id_uzivatele === auth.uid",
-        ".write": "$id_uzivatele === auth.uid"
+    /* Visit https://firebase.google.com/docs/database/security to learn more about security rules. */
+    "rules": {
+      "$id_uzivatele": {    
+          //".read": true,
+          ".read": "auth != null && $id_uzivatele === auth.uid",//vratit v ramci bp zpet tohle - true vyse je jen kvuli vanocum
+          ".write": "auth != null && $id_uzivatele === auth.uid"
+          //".write": true
       }
     }
   }
-}
+  

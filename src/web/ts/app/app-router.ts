@@ -1,15 +1,16 @@
 import { BaseError } from "../errors/base-error.js";
 import { UndefinedPageError } from "../errors/system-errors/undefined-page-error.js";
 import { Firebase } from "./firebase.js";
+import { URLManager } from "./url-manager.js";
+
 
 export enum Pages {
     UNKNOWN,
     LOGIN,
     REGISTER,
-    DASHBOARD,
     HOME,
-    CONDITIONS,
-    SETTINGS
+    SETTINGS,
+    PAIR_WITH_ACCOUNT
 }
 export class AppRouter {
     public desiredPage: Pages;
@@ -18,48 +19,44 @@ export class AppRouter {
     }
 
     static DEFAULT_LOGGED_PAGE = Pages.HOME;
-    getRoute(): IRoute {
+    async getRoute(): Promise<IRoute> {
         let pathArr = window.location.pathname.split("/").slice(1).map((part) => { return part.toLocaleLowerCase() });
         let entirePath = window.location.pathname.toLocaleLowerCase();
+        let getParams = window.location.search.substr(1).split("=");
+        let indexOfLogoutParam = getParams.indexOf("forceLogout");
+        if(indexOfLogoutParam != -1 && getParams[indexOfLogoutParam+1] == "true"){            
+            await Firebase.logout();
+            location.replace(window.location.origin + window.location.pathname);// Go to page, but without forceLogout param!
+        }
 
         this.route = { page: AppRouter.DEFAULT_LOGGED_PAGE, path: entirePath };
         let topLevel: string = pathArr[0];
-        if (this.pathsEquals(topLevel, Paths.USER)) {
-            switch (pathArr[1]) {
-                case "login":
-                    this.route.page = Pages.LOGIN;
-                    break;
-                case "register":
-                    this.route.page = Pages.REGISTER;
-                    break;
-                default:
-                    this.route.path = Paths.HOME;
-                    new BaseError("Page " + entirePath + " not defined!", this);
-                    break;
-            }
-
-        } else if (this.pathsEquals(topLevel, Paths.DASHBOARD)) {
-            this.route.page = Pages.DASHBOARD;
+        if (this.pathsEquals(topLevel, Paths.LOGIN)) {            
+            this.route.page = Pages.LOGIN;
+        } else if (this.pathsEquals(topLevel, Paths.PAIR_WITH_ACCOUNT)) {
+            this.route.page = Pages.PAIR_WITH_ACCOUNT;
+        } else if (this.pathsEquals(topLevel, Paths.REGISTER)) {
+            this.route.page = Pages.REGISTER;
+            this.route.afterLoginPage = Pages.LOGIN;
+            this.route.afterLoginPath = Paths.LOGIN;
         } else if (this.pathsEquals(topLevel, Paths.HOME)) {
             this.route.page = Pages.HOME;
-        }else if (this.pathsEquals(topLevel, Paths.CONDITIONS)) {
-            this.route.page = Pages.CONDITIONS;
         } else if (this.pathsEquals(topLevel, Paths.SETTINGS)) {
             this.route.page = Pages.SETTINGS;
-        }else{
+        } else {
             this.route.page = Pages.UNKNOWN;
         }
-        
-        if (!Firebase.loggedIn()) {
-            this.route.page = Pages.LOGIN;
-            this.route.path = Paths.LOGIN;
-            if(this.route.page == Pages.LOGIN){
+        if (!(await Firebase.loggedIn()) && this.route.page != Pages.REGISTER) {
+            if (this.route.page == Pages.LOGIN) {
                 this.route.afterLoginPage = Pages.HOME;
                 this.route.afterLoginPath = Paths.HOME;
-            }else{
+            } else {
                 this.route.afterLoginPage = this.route.page;
                 this.route.afterLoginPath = this.route.path;
             }
+            this.route.page = Pages.LOGIN;
+            this.route.path = Paths.LOGIN;
+            URLManager.replaceURL(Paths.LOGIN, "login", true);
         }
         return this.route;
 
@@ -99,22 +96,11 @@ export interface IRoute {
     afterLoginPath?: string,
 }
 
-export enum Paths {
-    USER = "uzivatel",
-    LOGIN = "uzivatel/login",
-    REGISTER = "uzivatel/registrovat",
-    DASHBOARD = "dashboard",
-    HOME = "domu",
-    CONDITIONS = "podminky",
-    SETTINGS = "nastaveni",
-}
 
-export enum PagesKeys{
-    USER = "uzivatel",
+export enum Paths {
     LOGIN = "login",
-    REGISTER = "registrovat",
-    DASHBOARD = "dashboard",
+    REGISTER = "registrace",
     HOME = "domu",
-    CONDITIONS = "podminky",
     SETTINGS = "nastaveni",
+    PAIR_WITH_ACCOUNT = "sparovat_ucet"
 }

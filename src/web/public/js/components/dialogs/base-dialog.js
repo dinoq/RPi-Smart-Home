@@ -13,6 +13,12 @@ export class BaseDialog extends AbstractComponent {
         overlay.style.width = Utils.getWindowWidth(true);
         overlay.style.height = Utils.getWindowHeight(true);
     }
+    changeText(text) {
+        let msgBox = this.querySelector(".message-box");
+        if (msgBox) {
+            msgBox.innerHTML = text; // we are using innerHTML for case of HTML formated text...
+        }
+    }
 }
 export var DialogResponses;
 (function (DialogResponses) {

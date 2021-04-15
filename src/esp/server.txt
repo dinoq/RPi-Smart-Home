@@ -1,0 +1,7 @@
+
+------------
+Uvést že jsem váhal mezi přímo rozšířením HTML elementů (custom elementy) a kompozicí (je to správně?) a vysvětlit proč jsem nezvolil kompozici... (přístup k objektům díky DOMu)
+
+
+-------------------
+Uvést že jsem se snažil o co největší obecnost komponent (např framelist je "jen" hloupý frame list) - i když všude jsem to v rámci BP nedodržel, ale bylo by dobré to upravit...Uvést že jsem se o to snažil hlavně tam, kde to mělo smysl (např list frame je používaný několikrát, takže u něj to smysl mělo....)

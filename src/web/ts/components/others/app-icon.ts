@@ -4,27 +4,16 @@ export class Icon extends AbstractComponent {
     static tagName = "app-icon";
     img: HTMLImageElement;
 
-    constructor(deviceType: string, layoutProps?: IComponentProperties) {
+    constructor(iconName: string, layoutProps?: IComponentProperties) {
         super(layoutProps);
         this.innerHTML = "<img>";
         this.img = this.querySelector("img");
-        if (deviceType.startsWith("img/"))
-            this.img.src = deviceType;
+        if (iconName.startsWith("img/icons/"))
+            this.img.src = iconName;
         else{
-            this.img.src = Icon.srcFromName(deviceType);
-            this.classList.add(deviceType);
-        }
-
-    }
-
-    static srcFromName(name: string) {
-        switch (name) {
-            case "temp": return "img/icons/temp.png";
-            case "humidity": return "img/icons/humidity.png";
-            case "switch": return "img/icons/temp.png";
-            case "edit": return "img/icons/edit.png";
-            case "delete": return "img/icons/delete.png";
-            default: return "";
+            this.img.src = `img/icons/${iconName}.png`;
+            this.classList.add(iconName);
         }
     }
+
 }

@@ -2,8 +2,8 @@ import { ARROWABLE_LISTS, DBTemplates, FrameList, FrameListItem, FrameListTypes 
 import { RoomCard } from "../layouts/room-card.js";
 import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
-import { BaseComponent, IComponentProperties } from "../components/component.js";
-import { LoginComponent } from "../components/forms/login-form.js";
+import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
+import { LoginComponent } from "../components/forms/login-component.js";
 import { BasePage } from "./base-page.js";
 import { Utils } from "../app/utils.js";
 import { HorizontalStack } from "../layouts/horizontal-stack.js";
@@ -16,6 +16,8 @@ import { URLManager } from "../app/url-manager.js";
 import { PageManager } from "../app/page-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
 import { Loader } from "../components/others/loader.js";
+import { OneOptionDialog } from "../components/dialogs/cancel-dialog.js";
+import { Board, BoardsManager } from "../app/boards-manager.js";
 export class SettingsPage extends BasePage {
     static tagName = "settings-page";
 
@@ -29,8 +31,8 @@ export class SettingsPage extends BasePage {
     private sensorsDevicesTabPanel: TabLayout;
 
     private saveBtnContainer: HorizontalStack;
-    private _readyToSave: boolean = false;
     private detail: FrameDetail;
+    private _focusDetail: boolean = true;
     private itemInDetail: { item: FrameListItem, parentListType: FrameListTypes };
     private selectedItemsIDHierarchy: string[] = new Array(3);
     rooms: any[];
@@ -52,32 +54,9 @@ export class SettingsPage extends BasePage {
     };
 
 
-    set readyToSave(val) {
-        if (val) {
-            this.saveBtnContainer.classList.add("blink");
-            (<HTMLButtonElement>(<HorizontalStack>this.saveBtnContainer).children[0]).style.fontWeight = "bold";
-            this.saveBtnContainer.children[0].removeAttribute("disabled");
-        } else {
-            this.saveBtnContainer.classList.remove("blink");
-            (<HTMLButtonElement>(<HorizontalStack>this.saveBtnContainer).children[0]).style.fontWeight = "normal";
-            this.saveBtnContainer.children[0].setAttribute("disabled", "true");
-        }
-        this._readyToSave = val;
-        EventManager.blockedByUnsavedChanges = val;
-    }
-    get readyToSave() {
-        return this._readyToSave;
-    }
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
-        this.detail = new FrameDetail();
-        this.saveBtnContainer = new HorizontalStack({
-            innerHTML: `
-            <button class="save-btn">Uložit</button>
-            `,
-            classList: "settings-btns-stack"
-        });
-        this.saveBtnContainer.querySelector(".save-btn").addEventListener("click", this.saveChanges)
+        this.detail = new FrameDetail(this.saveChanges, this.initDetail);
 
         this.mainTabPanel = new TabLayout(null);
         this.modulesTabPanel = new TabLayout(null);
@@ -100,7 +79,7 @@ export class SettingsPage extends BasePage {
         let firstTab = new BaseLayout({ componentsToConnect: [this.roomsList, this.modulesTabPanel] });
         this.mainTabPanel.addTab("Místnosti", firstTab);
 
-        this.appendComponents([this.mainTabPanel, this.detail, this.saveBtnContainer]);
+        this.appendComponents([this.mainTabPanel, this.detail]);
 
         Loader.show();
         this.initPageFromDB();
@@ -128,41 +107,62 @@ export class SettingsPage extends BasePage {
         rooms.sort((a, b) => (a.index > b.index) ? 1 : -1);
         this.rooms = rooms;
         this.initRoomsList(rooms);
-        this.readyToSave = false;
+        this.detail.readyToSave = false;
     }
 
     saveChanges = async (event) => {
-        let update = {};
         let path = "";
+        let name = (<HTMLInputElement>document.getElementById("device-name")).value;
+        let update: any = { name: name };
         const listType = this.itemInDetail.parentListType;
         if (listType == FrameListTypes.ROOMS) {
-            let name = (<HTMLInputElement>document.getElementById("room-name")).value;
-            let imgSrc = (<HTMLInputElement>document.getElementById("img-src")).value;
-            let imgOffset = parseInt((<HTMLInputElement>document.getElementById("img-offset")).value);
+            let imgSrc = (<HTMLInputElement>document.getElementById("bg-img-src")).value;
+            let imgOffset = parseFloat((<HTMLInputElement>document.getElementById("slider-for-image-input")).value);
             imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
-            let itemToUpdate = { name: name, img: { src: imgSrc, offset: imgOffset } }
-            let path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
+
+            update.img = { src: imgSrc, offset: imgOffset };
+            path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
+        } else if (listType == FrameListTypes.MODULES) {
+            path = this.itemInDetail.item.dbCopy.path;
+        } else if (listType == FrameListTypes.SENSORS) {
+            let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
+            let input = (<HTMLInputElement>document.getElementById("input")).value;
+            let unit = (<HTMLInputElement>document.getElementById("unit")).value;
+
+            update.icon = iconType;
+            update.input = input;
+            update.unit = unit;
+            path = this.itemInDetail.item.dbCopy.path;
+        } else if (listType == FrameListTypes.DEVICES) {
+            let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
+            let output = (<HTMLInputElement>document.getElementById("output")).value;
+            let outputType = (<HTMLInputElement>document.getElementById("output-type")).value;
+
+            update.icon = iconType;
+            update.output = output;
+            update.type = outputType;
+            path = this.itemInDetail.item.dbCopy.path;
         }
-        if(Object.keys(update).length != 0){ // If is there something to update...
+        if (Object.keys(update).length != 0) { // If is there something to update...
             await Firebase.updateDBData(path, update);
             let dbID = this.itemInDetail.item.dbCopy.dbID;
             // Re-inicialize page
             await this.pageReinicialize();
         }
 
-        this.readyToSave = false;
+        this.detail.readyToSave = false;
     }
 
     async selectItemByID(dbID, timeLimit: number = 1000) {
-        try{
+        try {
             let anyItem = await this.getItemByDbID(dbID, timeLimit);
             await this.itemClicked(null, anyItem);
-        }catch (err){
+        } catch (err) {
             throw new Error(err);
         }
     }
 
-    async getItemByDbID(dbID, timeLimit: number = 1000): Promise<FrameListItem>{
+    async getItemByDbID(dbID, timeLimit: number = 1000): Promise<FrameListItem> {
         let anyItem: FrameListItem = undefined;
         let sleep = undefined;
         let sleepTime = 10;
@@ -186,11 +186,10 @@ export class SettingsPage extends BasePage {
                 await new Promise(resolve => sleep = setTimeout(resolve, sleepTime));
             }
         }
-        console.log('anyItem: ', anyItem);
-        
-        if(!anyItem)
-            return Promise.reject("Time limit of " + (timeLimit / 1000) + " seconds expired!"); 
-        return  anyItem;
+
+        if (!anyItem)
+            return Promise.reject("Time limit of " + (timeLimit / 1000) + " seconds expired!");
+        return anyItem;
 
     }
 
@@ -239,13 +238,13 @@ export class SettingsPage extends BasePage {
      */
     showSaveDialog = async () => {
         let dialog = new YesNoCancelDialog("V detailu máte rozpracované změny. <br>Uložit změny?");
-        if (this.readyToSave) {
+        if (this.detail.readyToSave) {
             let ans = await dialog.show();
             if (ans == DialogResponses.YES) {
                 this.saveChanges(null);
             } else if (ans == DialogResponses.NO) {
                 this.initDetail();
-                this.readyToSave = false;
+                this.detail.readyToSave = false;
             } else {
                 EventManager.dispatchEvent("changesCanceled");
                 return true;
@@ -267,22 +266,22 @@ export class SettingsPage extends BasePage {
                 break;
         }
         this.selectedItemsIDHierarchy[index] = item.dbCopy.dbID;
-        if (index < 2)
+        if (index < 2)//remove subordinate active items from selectedItemsIDHierarchy - eg. if we save new room, we don't want to keep old modules, sensors and devices list...
             this.selectedItemsIDHierarchy.splice(index + 1);
     }
 
-    async pageReinicialize(){    
+    async pageReinicialize() {
         await this.initPageFromDB();
-        this.detail.initialize();
+        this.detail.initialize(this.saveChanges, this.initDetail);
         this.modulesList.initialize();
         this.sensorsList.initialize();
-        this.devicesList.initialize();  
+        this.devicesList.initialize();
         await this.selectSavedIDs();
     }
 
-    async selectSavedIDs(){    
+    async selectSavedIDs() {
         let tmpSelectedIDs = [...this.selectedItemsIDHierarchy]; // Method selectItemByID (which is called from this forEach) mainpulates with selectedItemsIDHierarchy array, so we need to work with copy
-        for(let i = 0; i < tmpSelectedIDs.length; i++){
+        for (let i = 0; i < tmpSelectedIDs.length; i++) {
             let id: string = tmpSelectedIDs[i];
             if (id) {
                 try {
@@ -291,136 +290,244 @@ export class SettingsPage extends BasePage {
                     console.log(error);
                 }
             }
-        }    
+        }
     }
 
+    clickPromise = Promise.resolve();
+    clickPromiseResolver;
     /**
      * Event hadler for click on any FrameListItem
      * @param event Event
      * @param item Clicked Item
      * @param clickedElem Textual description of clicked element in item (like delete for delete button). Is undefined in case of click outside of particular elements (buttons)
      */
-    itemClicked = async (event, item: FrameListItem, clickedElem?: string) => {
+    itemClicked = async (event, item: FrameListItem, clickedElem?: string, clickedByUser?: boolean) => {
+        if(clickedByUser){
+            await this.clickPromise;
+            this.clickPromise = new Promise((resolve, reject) => { this.clickPromiseResolver = resolve;});
+        }
         console.log('item: ', item.dbCopy);
         /*console.log('clickedElem: ', clickedElem);
         console.log('type: ', item.type);
         console.log('path: ', item.dbCopy.parentPath);*/
 
-        let cancelChanges = await this.showSaveDialog();
-        if (cancelChanges)
-            return;
-
-        let parentList: FrameList = this.getItemsList(item);
-
-        if (Utils.itemIsAnyFromEnum(item.type, FrameListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
-            this.editSelectedItemsIDHierarchy(parentList, item);
-        }
-
-        if (clickedElem == undefined || clickedElem == "edit") {
-            /**
-             * Remove class "active" from both - sensorsList and devicesList. 
-             * Because they are on same level in tab hierarchy and we dont want to keep active item from other list...
-             */
-            if (Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["SENSORS", "DEVICES"])) {
-                Array.from(this.sensorsList.childNodes).forEach(listItem => {
-                    (<FrameListItem>listItem).active = false
-                });
-                Array.from(this.devicesList.childNodes).forEach(listItem => {
-                    (<FrameListItem>listItem).active = false
-                });
-            } else {//Else remove class "active" only from current list
-                Array.from(parentList.childNodes).forEach(listItem => {
-                    (<FrameListItem>listItem).active = false
-                });
+        try {
+            let cancelChanges = await this.showSaveDialog();
+            if (cancelChanges){
+                this.clickPromiseResolver();
+                return;
             }
-            item.active = true;
-            if (parentList.type == FrameListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
-                await this.initModulesList(item);
-            } else if (parentList.type == FrameListTypes.MODULES) { // We want to initialize sensors and devices only when click on room, not on sensor or device
-                this.initSensorsList(item);
-                this.initDevicesList(item);
+
+            let parentList: FrameList = this.getItemsList(item);
+
+            if (Utils.itemIsAnyFromEnum(item.type, FrameListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
+                this.editSelectedItemsIDHierarchy(parentList, item);
             }
-            this.itemInDetail = { item: item, parentListType: parentList.type };
-            this.initDetail();
-        } else {
 
-            let itemIndex = Array.from(parentList.childNodes).indexOf(item);
-            let oldIndex = item.dbCopy.index;
+            if (clickedElem == undefined || clickedElem == "edit") {
+                /**
+                 * Remove class "active" from both - sensorsList and devicesList. 
+                 * Because they are on same level in tab hierarchy and we dont want to keep active item from other list...
+                 */
+                if (Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["SENSORS", "DEVICES"])) {
+                    Array.from(this.sensorsList.childNodes).forEach(listItem => {
+                        (<FrameListItem>listItem).active = false
+                    });
+                    Array.from(this.devicesList.childNodes).forEach(listItem => {
+                        (<FrameListItem>listItem).active = false
+                    });
+                } else {//Else remove class "active" only from current list
+                    Array.from(parentList.childNodes).forEach(listItem => {
+                        (<FrameListItem>listItem).active = false
+                    });
+                }
+                item.active = true;
+                if (parentList.type == FrameListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
+                    await this.initModulesList(item);
+                } else if (parentList.type == FrameListTypes.MODULES) { // We want to initialize sensors and devices only when click on room, not on sensor or device
+                    this.initSensorsList(item);
+                    this.initDevicesList(item);
+                }
+                this.itemInDetail = { item: item, parentListType: parentList.type };
+                this.initDetail();
 
-            if (clickedElem == "up" || clickedElem == "down") {
-                let children = Array.from(parentList.childNodes);
-                let otherIndex = (clickedElem == "up") ? (itemIndex - 1) : (itemIndex + 1);
-                let otherItem = (<FrameListItem>(children[otherIndex]));
-                let newIndex = otherItem.dbCopy.index;
-                item.dbCopy.index = newIndex;
-                otherItem.dbCopy.index = oldIndex;
-
-                if (clickedElem == "up") {
-                    parentList.insertBefore(item, otherItem);
-                } else if (clickedElem == "down") {
-                    parentList.insertBefore(otherItem, item);
+                if (this._focusDetail) {
+                    this.detail.scrollIntoView();
+                    this.detail.blink(1);
                 }
 
-                let itemPath;
-                let otherItemPath;
-                if (parentList.type == FrameListTypes.ROOMS) {
-                    itemPath = "rooms/" + item.dbCopy.dbID;
-                    otherItemPath = "rooms/" + otherItem.dbCopy.dbID;
-                } else {
-                    itemPath = item.dbCopy.path;
-                    otherItemPath = otherItem.dbCopy.path;
-                }
-                await Firebase.updateDBData(itemPath, { index: newIndex })
-                await Firebase.updateDBData(otherItemPath, { index: oldIndex })
+            } else {
 
-                parentList.updatedOrderHandler();
-            } else if (clickedElem == "add") {// Add item to database
-                if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"]))
-                    return;
+                let itemIndex = Array.from(parentList.childNodes).indexOf(item);
+                let oldIndex = item.dbCopy.index;
 
-                let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
-                let DBitems = await Firebase.getDBData(item.dbCopy.parentPath); // Get actual state of DB
-                if (DBitems) {
-                    Utils.forEachLoop(DBitems, (item) => item.index = (item.index) ? item.index + 1 : 1) // Increment every child's index
-                    await Firebase.updateDBData(item.dbCopy.parentPath, DBitems); // Push update to DB
-                }
+                if (clickedElem == "up" || clickedElem == "down") {
+                    let children = Array.from(parentList.childNodes);
+                    let otherIndex = (clickedElem == "up") ? (itemIndex - 1) : (itemIndex + 1);
+                    let otherItem = (<FrameListItem>(children[otherIndex]));
+                    let newIndex = otherItem.dbCopy.index;
+                    item.dbCopy.index = newIndex;
+                    otherItem.dbCopy.index = oldIndex;
 
-                if (Array.from(parentList.children).includes(parentList.defaultItem)) {
-                    parentList.defaultItem.disconnectComponent();
-                }
-                let key = (await Firebase.pushNewDBData(item.dbCopy.parentPath, data)).key;
-
-                // Re-inicialize page and again select what was selected
-                this.pageReinicialize();
-
-            } else if (clickedElem == "delete") {
-                await Firebase.deleteDBData(item.dbCopy.path);
-                item.disconnectComponent();
-                console.log("DEL", item.dbCopy.path);
-                parentList.updatedOrderHandler();
-                if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, add default item
-                    parentList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
-                }
-                
-                if(item.active){// We removed item, which was in detailt or (TODO!) item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item list (maybe do via dbID's??)
-                    this.pageReinicialize();
-                    switch (item.type) {
-                        case FrameListTypes.ROOMS:
-                            this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
-                            this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
-                            this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
-                            break;
-                        case FrameListTypes.MODULES:                            
-                            this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
-                            this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
-                            break;
-                        default:
-                            break;
+                    if (clickedElem == "up") {
+                        parentList.insertBefore(item, otherItem);
+                    } else if (clickedElem == "down") {
+                        parentList.insertBefore(otherItem, item);
                     }
+
+                    let itemPath;
+                    let otherItemPath;
+                    if (parentList.type == FrameListTypes.ROOMS) {
+                        itemPath = "rooms/" + item.dbCopy.dbID;
+                        otherItemPath = "rooms/" + otherItem.dbCopy.dbID;
+                    } else {
+                        itemPath = item.dbCopy.path;
+                        otherItemPath = otherItem.dbCopy.path;
+                    }
+                    await Firebase.updateDBData(itemPath, { index: newIndex })
+                    await Firebase.updateDBData(otherItemPath, { index: oldIndex })
+
+                    parentList.updatedOrderHandler();
+                } else if (clickedElem == "add") {// Add item to database
+                    if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"])){                    
+                        this.clickPromiseResolver();
+                        return;
+                    }
+
+                    if (parentList.type == FrameListTypes.MODULES) { // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
+                        this._focusDetail = false;
+                    }
+                    let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
+                    if (parentList.type == FrameListTypes.DEVICES) {
+                        const activeModuleType = (<FrameListItem>document.querySelectorAll("frame-list")[1].querySelector(".active")).dbCopy.type;
+                        if (Board[activeModuleType] && Board[activeModuleType].digitalPins) { 
+                            let dPins = Board[activeModuleType].digitalPins;
+                            for (let i = 0; i < 5; i++) { //Try to set one of first 5 GPIO, BUT WHICH IS FOR GIVEN MODULE ACCESSIBLE as first option in select.
+                                if (dPins["D" + i]) {
+                                    data.output = "D" + dPins["D" + i];
+                                }
+                            }
+                        }
+                    }
+                    let DBitems = await Firebase.getDBData(item.dbCopy.parentPath); // Get actual state of DB
+                    if (DBitems) {
+                        Utils.forEachLoop(DBitems, (item) => item.index = (item.index) ? item.index + 1 : 1) // Increment every child's index
+                        await Firebase.updateDBData(item.dbCopy.parentPath, DBitems); // Push update to DB
+                    }
+
+                    if (Array.from(parentList.children).includes(parentList.defaultItem)) {
+                        parentList.defaultItem.disconnectComponent();
+                    }
+                    let key = (await Firebase.pushNewDBData(item.dbCopy.parentPath, data)).key;
+
+                    // Re-inicialize page
+                    await this.pageReinicialize();
+
+                    //Select aded item
+                    let newItem: FrameListItem = <FrameListItem>parentList.children[0];
+                    newItem = <FrameListItem>((Utils.itemIsAnyFromEnum((<FrameListItem>parentList.children[0]).type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
+                    
+                    await this.itemClicked(null, newItem, "edit");
+
+                    if (parentList.type == FrameListTypes.MODULES) { // Show dialog about connecting to ESP module
+                        let waitingDialog = new OneOptionDialog("Čekání na propojení serveru s modulem", DialogResponses.CANCEL);
+                        let noModuleDialog = new OneOptionDialog("Nepodařilo se najít nový modul.<br>Zkontrolujte, zda je modul zapnutý.", DialogResponses.OK);
+                        let moduleAddedDialog = new OneOptionDialog("Modul byl úspěšně přidán!", DialogResponses.OK);
+                        let noModuleFoundErrorResponse = "NO-MODULE-FOUND";
+                        let moduleHasBeenFoundResponse = "MODULE-HAS-BEEN-FOUND";
+                        let moduleAdditionCanceled = false;
+                        let waitingForModuleResponsePromise: Promise<any> = waitingDialog.show();
+                        let IDs = [...this.selectedItemsIDHierarchy];
+                        let fbReference = null;
+                        if (IDs.length >= 2) {
+                            let firstIteration = true;
+                            fbReference = await Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
+                                if(firstIteration){ // Firebase.addDBListener gets data for first time without "event" emitted...
+                                    firstIteration = false;
+                                    return;
+                                }
+                                console.log('data: ', data);
+                                console.log('waitingDialog: ', waitingDialog);
+                                if (moduleAdditionCanceled) { //User canceled module addition in web client
+                                    if(!data){
+                                        
+                                    }else if(data.IP && data.IP.length > "?.?.?.?".length){ // Module IP exists, thus module maybe has been founded
+                                        if(data.index == undefined){ // Module was deleted by web client, but RPi has founded module and update module record in DB with IP and type (so basically) created new module, but with only IP and type fields)
+                                            fbReference.off(); // remove firebase listener
+                                            Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
+                                        }
+                                    }
+                                }else{                                
+                                    if (!data) { // Module was not found, thus record was deleted in database. Hide dialog and reinit settings page...
+                                        this.selectedItemsIDHierarchy.splice(1);
+                                        waitingDialog.resolveShow(noModuleFoundErrorResponse);
+                                    } else if(data.IP != undefined && data.IP.length >= "?.?.?.?".length){ // Module IP exists, thus module has been founded
+                                        fbReference.off(); // remove firebase listener
+                                        waitingDialog.resolveShow(moduleHasBeenFoundResponse);
+                                    }
+                                }
+                            });
+                        }
+                        let moduleFoundResponse: any = await waitingForModuleResponsePromise;
+                        if (typeof moduleFoundResponse == "string") {
+                            console.log(moduleFoundResponse);
+                            if (moduleFoundResponse == noModuleFoundErrorResponse) {// No module found => display info dialog
+                                await noModuleDialog.show();
+
+                            } else if (moduleFoundResponse == moduleHasBeenFoundResponse) {// Module has been found!
+                                await moduleAddedDialog.show();
+                                //Scroll to bottom and blink detail
+                                this._focusDetail = true;
+                            }
+                            this._focusDetail = true;
+                            waitingDialog.remove();
+                            this.pageReinicialize();
+                        } else if (typeof moduleFoundResponse == "number") { // waitingDialog canceled
+                            if (IDs.length >= 2) {
+                                moduleAdditionCanceled = true;
+                                console.log("cancel=>delete at: /rooms/" + IDs[0] + "/devices/" + IDs[1]);
+                                Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
+                                this.selectedItemsIDHierarchy.splice(1);
+                                this.pageReinicialize();
+                            }
+                        }
+                    }
+                    this._focusDetail = true;
+
+
+                } else if (clickedElem == "delete") {
+                    await Firebase.deleteDBData(item.dbCopy.path);
+                    item.disconnectComponent();
+                    console.log("DEL", item.dbCopy.path);
+                    parentList.updatedOrderHandler();
+                    if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, add default item
+                        parentList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
+                    }
+                    await this.pageReinicialize();
+
+                    if (item.active) {// We removed item, which was in detailt or item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item lists
+                        switch (item.type) {
+                            case FrameListTypes.ROOMS:
+                                this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
+                                this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
+                                this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+                                break;
+                            case FrameListTypes.MODULES:
+                                this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
+                                this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
                 }
 
             }
-
+               
+            
+        } finally {
+            this.clickPromiseResolver();
         }
     }
 
@@ -454,10 +561,10 @@ export class SettingsPage extends BasePage {
         list.clearItems();
         list.initAddItemBtn(this.itemClicked, "/rooms/");
         list.addItems(list.addItemBtn);
-        if(!rooms.length){
+        if (!rooms.length) {
             list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.ROOMS, true));
             list.addItems(list.defaultItem);
-        }else{
+        } else {
             for (let i = 0; i < rooms.length; i++) {
                 let bottom = (i != (rooms.length - 1)) ? "1px solid var(--default-blue-color)" : "none";
                 let item = new FrameListItem({ borderBottom: bottom });
@@ -472,12 +579,12 @@ export class SettingsPage extends BasePage {
     initModulesList = async (item) => {
         let getOrderedModules = (devices) => {
             let ordered = new Array();
-            for(const dev in devices){
+            for (const dev in devices) {
                 ordered.push(devices[dev]);
                 devices[dev]["dbID"] = dev;
             }
-            ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);       
-            return ordered; 
+            ordered.sort((a, b) => (a.index > b.index) ? 1 : -1);
+            return ordered;
         }
 
         let devs = getOrderedModules(item.dbCopy.devices);
@@ -490,7 +597,7 @@ export class SettingsPage extends BasePage {
             list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES, true));
             list.addItems(list.defaultItem);
         }
-        for(let i = 0; i < devs.length; i++){
+        for (let i = 0; i < devs.length; i++) {
             let listItem = new FrameListItem();
             devs[i]["path"] = "rooms/" + item.dbCopy.dbID + "/devices/" + devs[i]["dbID"];
             //devs[devName]["parentPath"] = item.dbCopy.path;
@@ -551,21 +658,29 @@ export class SettingsPage extends BasePage {
         list.updatedOrderHandler();
     }
 
-    initDetail() {
+    initDetail = () => {
         let item = this.itemInDetail.item;
-        let parenListType = this.itemInDetail.parentListType;
+        let parentListType = this.itemInDetail.parentListType;
         let title = this.getTitleForEditingFromItem(item, item.dbCopy.name);
         let values;
-        if (parenListType == FrameListTypes.ROOMS) {
-            values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset];
-        } else if (parenListType == FrameListTypes.MODULES) {
+        if (parentListType == FrameListTypes.ROOMS) {
+            values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset, null]; // Last element is slidable image, which doesn't need init val directly (it asks slider for value)
+        } else if (parentListType == FrameListTypes.MODULES) {
             values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];
-        } else if (parenListType == FrameListTypes.SENSORS) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.pin, item.dbCopy.unit];
-        } else if (parenListType == FrameListTypes.DEVICES) {
-            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.pin];
+        } else if (parentListType == FrameListTypes.SENSORS) {
+            let type;
+            console.log("zřejmě se zde bude nutné ptát na item.dbCopy.type a ne input");
+            if (item.dbCopy.input.charAt(0) == "A")
+                type = "analog";
+            else if (item.dbCopy.input.charAt(0) == "D")
+                type = "digital";
+            else
+                type = "bus";
+            values = [item.dbCopy.name, type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
+        } else if (parentListType == FrameListTypes.DEVICES) {
+            values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
         }
-        this.detail.updateDetail(title, parenListType, (event) => { this.readyToSave = true }, values);
+        this.detail.updateDetail(title, parentListType, values);
 
     }
 
@@ -574,9 +689,9 @@ export class SettingsPage extends BasePage {
     }
 
     itemTypeToDefItmStr(type: FrameListTypes, noItem: boolean = false) {
-        if(noItem){
+        if (noItem) {
             return this.defaultItemsStrings.noItem[this.itemTypeToDefaultTypeIndex(type)];
-        }else{
+        } else {
             return this.defaultItemsStrings.choseItem[this.itemTypeToDefaultTypeIndex(type)];
         }
     }

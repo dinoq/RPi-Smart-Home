@@ -1,18 +1,15 @@
 {
-    "name": "es6project",
-    "version": "1.0.0",
-    "description": "using babel with node",
-    "main": "public/js/app.js",
-    "scripts": {
-        "ts": "tsc -w",
-        "server": "node server.js"
-    },
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "express": "^4.17.1",
-        "ip": "^1.1.5",
-        "serve": "^11.3.2",
-        "typescript": "^4.1.2"
-    }
+  "name": "es6project",
+  "version": "1.0.0",
+  "description": "using babel with node",
+  "main": "public/js/app.js",
+  "scripts": {
+    "compile client": "tsc -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^4.1.2"
+  },
+  "devDependencies": {}
 }

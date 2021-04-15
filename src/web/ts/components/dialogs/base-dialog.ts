@@ -18,6 +18,13 @@ export class BaseDialog extends AbstractComponent {
         overlay.style.width = <string>Utils.getWindowWidth(true);
         overlay.style.height = <string>Utils.getWindowHeight(true);
     }
+
+    protected changeText(text: string){
+        let msgBox = this.querySelector(".message-box");
+        if(msgBox){
+            msgBox.innerHTML = text; // we are using innerHTML for case of HTML formated text...
+        }
+    }
 }
 
 export enum DialogResponses{

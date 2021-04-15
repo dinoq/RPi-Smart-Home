@@ -1,0 +1,71 @@
+{
+  "lastWriteTime": 1618432919011,
+  "rooms": {
+    "-MYGbMbmxFK7dlHQNqC8": {
+      "img": {
+        "offset": 0.37,
+        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+      },
+      "index": 12,
+      "name": "Místnost QRUR77",
+      "devices": {
+        "-MYGqAPDF6WhhlQDy7R2": {
+          "IP": "192.168.1.9",
+          "index": 0,
+          "name": "Modul MOCM",
+          "type": "NodeMCU",
+          "OUT": {
+            "-MYGqHlawJ2QwZxFSSWj": {
+              "icon": "light",
+              "index": 0,
+              "name": "Zařízení 4JQZ",
+              "output": "D16",
+              "type": "digital",
+              "value": 1023
+            }
+          }
+        }
+      }
+    },
+    "-MYGgiJX8xyKGAf1bX8L": {
+      "img": {
+        "offset": 0,
+        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+      },
+      "index": 4,
+      "name": "Místnost 87YIzzzzz"
+    },
+    "-MYGgjM-vzE1isktOkO1": {
+      "img": {
+        "offset": 0,
+        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+      },
+      "index": 3,
+      "name": "Místnost 20DI"
+    },
+    "-MYGglxh6ukuSnfwUl4I": {
+      "img": {
+        "offset": 0,
+        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+      },
+      "index": 2,
+      "name": "Místnost R55Ytttt"
+    },
+    "-MYH5u7Bq8fb273EAR-5": {
+      "img": {
+        "offset": 0,
+        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+      },
+      "index": 1,
+      "name": "Místnost 96VO"
+    },
+    "-MYH6cTffUcABc8ZXZDz": {
+      "img": {
+        "offset": 0,
+        "src": "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg"
+      },
+      "index": 0,
+      "name": "Místnost 32BD"
+    }
+  }
+}

@@ -17,12 +17,46 @@ export class HamburgerMenu {
             new MethodNotImplementedError("resize", this, true);
         };
         this.itemsContainer = new MenuItemsContainer();
-        for (const title of HamburgerMenu.MENU_TITLES) {
-            let item = new MenuItem({ innerText: title });
+        let titles = HamburgerMenu.globalMenu.MENU_TITLES;
+        let hrefs = HamburgerMenu.globalMenu.MENU_HREFS;
+        if (Firebase.localAccess) {
+            titles = HamburgerMenu.localMenu.MENU_TITLES;
+            hrefs = HamburgerMenu.localMenu.MENU_HREFS;
+        }
+        for (let i = 0; i < titles.length; i++) {
+            let item = new MenuItem({ innerText: titles[i] });
             this.itemsContainer.addMenuItem(item);
         }
         this.hamburgerIcon = new MenuIcon();
         this.addListeners();
+        let getPairedPromise = Firebase.paired;
+        getPairedPromise.then((paired) => {
+            if (paired) {
+                let itemsContainerChildren = (this.itemsContainer && this.itemsContainer.children) ? Array.from(this.itemsContainer.children) : undefined;
+                if (itemsContainerChildren) {
+                    let itemToRemove = itemsContainerChildren.find((item, index, array) => { return item.innerText.includes("Spárovat"); });
+                    itemToRemove.remove();
+                }
+            }
+        });
+        /*
+
+        let getPairedPromise = Firebase.paired;
+        getPairedPromise.then((paired) => {
+            for(let i = 0; i < titles.length; i++){
+                if(titles[i] == "Spárovat server s účtem"){
+                    if(paired){
+                        continue; // V lokální síti nechceme mít v menu možnost spárování zařízení, pokud již je spárované
+                    }
+                }
+                let item = new MenuItem({ innerText: titles[i] });
+                this.itemsContainer.addMenuItem(item);
+            }
+            this.hamburgerIcon = new MenuIcon();
+            this.addListeners();
+        })
+
+        */
     }
     disconnectComponent() {
         this.componentConnected = false;
@@ -49,11 +83,11 @@ export class HamburgerMenu {
             containerStyle.transition = "left 1s";
         }
         if (show) {
-            this.hamburgerIcon.src = "img/close.png";
+            this.hamburgerIcon.src = "img/icons/close.png";
             containerStyle.left = "0px";
         }
         else {
-            this.hamburgerIcon.src = "img/menu.png";
+            this.hamburgerIcon.src = "img/icons/menu.png";
             containerStyle.left = -this.itemsContainer.clientWidth -
                 Utils.pxToNumber(getComputedStyle(this.itemsContainer).left) + "px";
         }
@@ -73,41 +107,69 @@ export class HamburgerMenu {
         window.addEventListener("resize", this.resize);
         //Add links
         let links = Array.from(this.itemsContainer.childNodes);
+        let titles = HamburgerMenu.globalMenu.MENU_TITLES;
+        let hrefs = HamburgerMenu.globalMenu.MENU_HREFS;
+        if (Firebase.localAccess) {
+            titles = HamburgerMenu.localMenu.MENU_TITLES;
+            hrefs = HamburgerMenu.localMenu.MENU_HREFS;
+        }
         for (let i = 0; i < links.length; i++) {
             const link = links[i];
-            link.addEventListener("click", () => {
-                if (i == (links.length - 1)) {
-                    Firebase.logout();
+            link.addEventListener("click", async () => {
+                if (i == (links.length - 1)) { // Odhlásit se pro globální verzi aplikace, spárovat server s účtem pro lokální verzi
+                    if (Firebase.localAccess) {
+                    }
+                    else {
+                        await Firebase.logout();
+                    }
                 }
-                if (i == (links.length - 2)) { // Requested fullscreen
+                if (titles[i] == ("Maximalizovat okno")) { // Requested fullscreen
                     if (links[i].innerText.toUpperCase().includes("MAX")) {
                         links[i].innerText = "Zmenšit okno";
                         document.documentElement.requestFullscreen();
                     }
                     else {
-                        links[i].innerText = HamburgerMenu.MENU_TITLES[HamburgerMenu.MENU_TITLES.length - 2];
+                        links[i].innerText = titles[titles.length - 2];
                         document.exitFullscreen();
                     }
                 }
                 else {
-                    URLManager.setURL(HamburgerMenu.MENU_HREFS[i]);
+                    let index = i;
+                    if (index > titles.indexOf("Maximalizovat okno"))
+                        index--;
+                    URLManager.setURL(hrefs[index]);
                 }
                 this.toggle();
             });
         }
     }
 }
-HamburgerMenu.MENU_HREFS = [
-    Paths.HOME,
-    Paths.SETTINGS,
-    Paths.LOGIN
-];
-HamburgerMenu.MENU_TITLES = [
-    "Domů",
-    "Nastavení",
-    "Maximalizovat okno",
-    "Odhlásit se"
-];
+HamburgerMenu.localMenu = {
+    MENU_HREFS: [
+        Paths.HOME,
+        Paths.SETTINGS,
+        Paths.PAIR_WITH_ACCOUNT
+    ],
+    MENU_TITLES: [
+        "Domů",
+        "Nastavení",
+        "Maximalizovat okno",
+        "Spárovat server s účtem"
+    ]
+};
+HamburgerMenu.globalMenu = {
+    MENU_HREFS: [
+        Paths.HOME,
+        Paths.SETTINGS,
+        Paths.LOGIN
+    ],
+    MENU_TITLES: [
+        "Domů",
+        "Nastavení",
+        "Maximalizovat okno",
+        "Odhlásit se"
+    ]
+};
 export class MenuItemsContainer extends AbstractComponent {
     constructor(componentProps) {
         super(componentProps);
@@ -122,7 +184,7 @@ export class MenuIcon extends AbstractComponent {
     constructor(componentProps) {
         super(Utils.mergeObjects(componentProps, {
             "z-index": Config.defaultMenuDepth.toString(),
-            innerHTML: `<img src="img/menu.png">`
+            innerHTML: `<img src="img/icons/menu.png">`
         }));
     }
     set src(val) {

@@ -15,6 +15,7 @@ export class FrameList extends AbstractComponent {
                 classList: "frame-list",
             }
         });
+        this.FLItems = new Array();
         this.type = type;
         this.initialize();
     }
@@ -83,6 +84,19 @@ export class FrameList extends AbstractComponent {
     addItems(item, index = -1) {
         this.appendComponents(item, index);
         this.updatedOrderHandler();
+        let addToFLItems = (itm) => {
+            if (Utils.itemIsAnyFromEnum(itm.type, FrameListTypes, CLASSIC_FRAME_LIST_TYPES)) {
+                this.FLItems.push(itm);
+            }
+        };
+        if (Array.isArray(item)) {
+            item.forEach((itm) => {
+                addToFLItems(itm);
+            });
+        }
+        else {
+            addToFLItems(item);
+        }
     }
 }
 FrameList.tagName = "frame-list";
@@ -91,6 +105,15 @@ export class FrameListItem extends AbstractComponent {
         super(layoutProps);
         this._active = false;
         this.components = new Array();
+    }
+    get text() {
+        return this._text;
+    }
+    set text(val) {
+        if (val.length)
+            this._text = val;
+        else
+            this._text = "(Bez názvu)";
     }
     get active() {
         return this._active;
@@ -166,7 +189,7 @@ export class FrameListItem extends AbstractComponent {
             for (const indexOfTitle in clickedElemsTitles) {
                 if (this.components[indexOfTitle])
                     this.components[indexOfTitle].addEventListener("click", (event) => {
-                        onClickCallback(event, this, clickedElemsTitles[indexOfTitle]);
+                        onClickCallback(event, this, clickedElemsTitles[indexOfTitle], true);
                         event.stopPropagation();
                     });
             }
@@ -193,6 +216,7 @@ export class FrameListItem extends AbstractComponent {
 }
 FrameListItem.tagName = "frame-list-item";
 export const ARROWABLE_LISTS = ["ROOMS", "MODULES", "SENSORS", "DEVICES"];
+export const CLASSIC_FRAME_LIST_TYPES = ["ROOMS", "MODULES", "SENSORS", "DEVICES"];
 export var FrameListTypes;
 (function (FrameListTypes) {
     FrameListTypes[FrameListTypes["BASE"] = 0] = "BASE";
@@ -209,7 +233,7 @@ export const DBTemplates = {
             index: 0,
             img: {
                 src: "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg",
-                offset: 700
+                offset: 0
             },
             name: "Místnost " + Math.random().toString(36).substring(2, 6).toUpperCase()
         };
@@ -220,29 +244,29 @@ export const DBTemplates = {
             in: {},
             out: {},
             name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "ESP8266"
+            type: "wemosD1",
+            IP: ""
         };
     },
     get SENSORS() {
         return {
-            type: "switch",
+            type: "analog",
             index: 0,
             name: "Snímač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            valueType: "bool",
-            unit: "°C",
-            value: "on",
-            pin: "A0"
+            unit: "percentages",
+            value: 0,
+            input: "A17",
+            icon: "temp"
         };
     },
     get DEVICES() {
         return {
-            type: "switch",
             index: 0,
             name: "Zařízení " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            valueType: "bool",
-            unit: "°C",
-            value: "on",
-            pin: "D1"
+            output: "D1",
+            type: "digital",
+            value: 0,
+            icon: "light"
         };
     }
 };
