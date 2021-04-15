@@ -209,7 +209,7 @@ class ServerApp {
             server.on("error", (err)=>{
                 if(err.code == "EADDRINUSE"){
                     console.error("Zvolený port (" + this.port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!");
-                    process.exit(err.errno);
+                    process.exit(5);
                 }else if(err.code == "EACCES"){
                     console.error("Nemáte přístup ke zvolenému portu (" + this.port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
                     process.exit(5);
