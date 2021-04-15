@@ -3,7 +3,9 @@
   "NEW_MODULE_FIND_TIMEOUT": 10000,
   "username": "",
   "password": "",
-  "saveUserCredentialsOnLogin": "true",
+  "saveUserCredentialsOnLogin": true,
+  "openBrowserToRegister": true,
+  "openBrowserOnStart": true,
   "firebase": {
     "apiKey": "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
     "authDomain": "home-automation-80eec.firebaseapp.com",

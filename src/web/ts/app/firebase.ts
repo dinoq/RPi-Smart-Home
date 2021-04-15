@@ -15,24 +15,22 @@ export class Firebase extends Singleton {
     _online: boolean = false;
     _onlineValidTimeout: number = 1000;
     _lastConnCheck: number = 0;
-    
+
     _paired: boolean = undefined; // Značka, zda je server spárovaný s uživatelským účtem
     localAccess: boolean = false; // Označuje, zda uživatel k webové aplikaci přistupuje z lokální sítě, nebo domény auto-home.web.app. Na základě toho buď webová aplikace komunikuje přímo s databází, nebo pouze se serverem (v případě komunikace v lokální síti), který později přeposílá do databáze data, pokud má server přístup k internetu
     constructor() {
-        super();        
+        super();
         this.localAccess = !(window.location.hostname.includes("auto-home.web.app"));
 
-        if(this.localAccess){ // V případě lokální aplikace nechceme využívat firebase (v případě offline by navíc došlo k vyjímce)
-            console.warn("TODO");
-            
-            this.serverCall("GET", "/paired").then(async (value) => {
-                this._paired = value == "true";
+        if (this.localAccess) { // V případě lokální aplikace nechceme využívat firebase (v případě offline by navíc došlo k vyjímce)            
+            this.serverCall("GET", "/paired", true).then(async (pairedObj) => {
+                this._paired = (pairedObj && pairedObj.paired) ? true : false;
             }).catch((value) => {
                 this._paired = false;
             })
-        }else{
+        } else {
             this.authInited = new Promise((resolve, reject) => { this.resolveAuthInited = resolve; });
-    
+
             this.database = firebase.database();
             this.auth = firebase.auth();
             //console.log("firebase|" + (16179879960 - Math.round(new Date().getTime() / 100)));
@@ -51,26 +49,26 @@ export class Firebase extends Singleton {
         }
     }
 
-    public static get paired(): Promise<boolean>{
+    public static get paired(): Promise<boolean> {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
-            if(fb._paired == undefined){
+        if (fb.localAccess) {
+            if (fb._paired == undefined) {
                 return this.serverCall("GET", "/paired").then(async (value) => {
                     fb._paired = (value == "true");
                 }).catch((value) => {
                     fb._paired = false;
-                }).then((value) => {                    
+                }).then((value) => {
                     return fb._paired;
                 })
-            }else{
+            } else {
                 return Promise.resolve(fb._paired);
-            }            
-        }else{
+            }
+        } else {
             return Promise.resolve(false);
         }
     }
 
-    public static get localAccess(){
+    public static get localAccess() {
         return Firebase.getInstance().localAccess;
     }
 
@@ -80,9 +78,9 @@ export class Firebase extends Singleton {
 
     static login(username, pwd, persistence: string = AuthPersistence.LOCAL) {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             console.warn("TODO");
-        }else{
+        } else {
             return new Promise((resolve, reject) => {
                 fb.auth.setPersistence(persistence)
                     .then(() => {
@@ -91,13 +89,13 @@ export class Firebase extends Singleton {
                                 fb.uid = user.uid;
                                 fb.loggedIn = true;
                                 resolve(user);
-    
+
                             }).catch((error) => {
                                 fb.uid = undefined;
                                 fb.loggedIn = false;
                                 reject(error);
                             });
-    
+
                     })
                     .catch((error) => {
                         fb.uid = undefined;
@@ -107,16 +105,16 @@ export class Firebase extends Singleton {
                         var errorMessage = error.message;
                         console.log("Chyba: " + errorMessage);
                     });
-    
+
             })
         }
     }
 
     static register(username, pwd) {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             console.warn("TODO");
-        }else{
+        } else {
             return new Promise((resolve, reject) => {
                 fb.auth.createUserWithEmailAndPassword(username, pwd)
                     .then((userCredential: any) => {
@@ -124,7 +122,7 @@ export class Firebase extends Singleton {
                         fb.uid = userCredential.user.uid;
                         fb.loggedIn = true;
                         resolve(userCredential);
-    
+
                     }).catch((error) => {
                         var errorCode = error.code;
                         var errorMessage = error.message;
@@ -138,9 +136,9 @@ export class Firebase extends Singleton {
 
     static async logout() {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             console.warn("TODO");
-        }else{
+        } else {
             fb.loggedIn = false;
             fb.uid = null;
             await fb.auth.signOut();
@@ -149,10 +147,10 @@ export class Firebase extends Singleton {
 
     static async loggedIn() {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             console.warn("TODO");
             return true;
-        }else{
+        } else {
             await fb.authInited;
             return fb.loggedIn;
         }
@@ -163,40 +161,42 @@ export class Firebase extends Singleton {
         let slash = (path.lastIndexOf("/") == path.length - 1) ? "" : "/";
         path += slash;
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             console.warn("TODO");
             return path;
-        }else{
+        } else {
             await fb.authInited;
             path = fb.uid + path;
             return path;
         }
     }
-    public static async serverCall(method: string, url: string){
+    public static async serverCall(method: string, url: string) {
         let fb = Firebase.getInstance();
         return fb.serverCall(method, url);
     }
 
-    public async serverCall(method: string, url: string){
-        let res = await fetch(url, { 
-            method: method, 
+    public async serverCall(method: string, url: string, getAsJSON: boolean = false) {
+        let res = await fetch(url, {
+            method: method,
             headers: { "Content-Type": "text/plain" }
         })
 
-        let responseText = await res.text();
-        return responseText;
+        if (getAsJSON) {
+            return await res.json();
+        }
+        return await res.text();
     }
 
     static async addDBListener(dbPath: string, callback) {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             console.warn("TODO");
             //fb.serverCall("POST", "addDBListener");            
-            const source = new EventSource('/addDBListener?path='+dbPath)
-            source.addEventListener('message', function(e) {
+            const source = new EventSource('/addDBListener?path=' + dbPath)
+            source.addEventListener('message', function (e) {
                 callback(JSON.parse(e.data));
             })
-        }else{
+        } else {
             let dbReference = fb.database.ref(await Firebase.getFullPath(dbPath));
             dbReference.on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -208,7 +208,7 @@ export class Firebase extends Singleton {
 
     static async getDBData(dbPath: string): Promise<any> {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             try {
                 let resp = await fetch("getData", {
                     method: 'POST',
@@ -216,12 +216,12 @@ export class Firebase extends Singleton {
                     body: JSON.stringify({ path: dbPath })
                 });
                 let text = await resp.text();
-                return (text.length)? JSON.parse(text): null;
+                return (text.length) ? JSON.parse(text) : null;
             } catch (error) {
                 new ServerCommunicationErrorDialog();
                 return null;
             }
-        }else{            
+        } else {
             let fullPath = await Firebase.getFullPath(dbPath);
             try {
                 let snapshot = await fb.database.ref(fullPath).once('value');
@@ -234,7 +234,7 @@ export class Firebase extends Singleton {
 
     static async updateDBData(dbPath: string, updates: object) {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             try {
                 let resp = await fetch("updateData", {
                     method: 'POST',
@@ -245,64 +245,64 @@ export class Firebase extends Singleton {
                 new ServerCommunicationErrorDialog();
                 return null;
             }
-        }else{
+        } else {
             let fullPath = await Firebase.getFullPath(dbPath);
             let lastTimePath = await Firebase.getFullPath("/");
-            lastTimePath = lastTimePath.substring(0, lastTimePath.length-1);
+            lastTimePath = lastTimePath.substring(0, lastTimePath.length - 1);
             if (await fb.online) {
-                await fb.database.ref(lastTimePath).update({lastWriteTime: Date.now()});
+                await fb.database.ref(lastTimePath).update({ lastWriteTime: Date.now() });
                 return await fb.database.ref(fullPath).update(updates);
-            } 
+            }
         }
     }
-    
+
     static async deleteDBData(dbPath: string): Promise<any> {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
+        if (fb.localAccess) {
             try {
                 let resp = await fetch("deleteData", {
                     method: 'POST',
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ path: dbPath})
+                    body: JSON.stringify({ path: dbPath })
                 });
             } catch (error) {
                 new ServerCommunicationErrorDialog();
                 return null;
             }
-        }else{
+        } else {
             let fullPath = await Firebase.getFullPath(dbPath);
             let lastTimePath = await Firebase.getFullPath("/");
-            lastTimePath = lastTimePath.substring(0, lastTimePath.length-1);
+            lastTimePath = lastTimePath.substring(0, lastTimePath.length - 1);
             if (await fb.online) {
                 await fb.database.ref(fullPath).remove();
-                return (await fb.database.ref(lastTimePath).update({lastWriteTime: Date.now()}));
-            } 
+                return (await fb.database.ref(lastTimePath).update({ lastWriteTime: Date.now() }));
+            }
         }
     }
 
     static async pushNewDBData(dbPath: string, data: object): Promise<any> {
         let fb = Firebase.getInstance();
-        if(fb.localAccess){
-            try{
+        if (fb.localAccess) {
+            try {
                 let resp = await fetch("pushData", {
                     method: 'POST',
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ path: dbPath, data: data })
                 });
                 let text = await resp.text();
-                return (text.length)? {key: text}: {key: null};
+                return (text.length) ? { key: text } : { key: null };
             } catch (error) {
                 new ServerCommunicationErrorDialog();
                 return null;
             }
-        }else{
+        } else {
             let fullPath = await Firebase.getFullPath(dbPath);
             let lastTimePath = await Firebase.getFullPath("/");
-            lastTimePath = lastTimePath.substring(0, lastTimePath.length-1);
+            lastTimePath = lastTimePath.substring(0, lastTimePath.length - 1);
             if (await fb.online) {
-                await fb.database.ref(lastTimePath).update({lastWriteTime: Date.now()});
-                return await fb.database.ref().child(fullPath).push(data);   
-            } 
+                await fb.database.ref(lastTimePath).update({ lastWriteTime: Date.now() });
+                return await fb.database.ref().child(fullPath).push(data);
+            }
         }
     }
 
@@ -315,7 +315,7 @@ export class Firebase extends Singleton {
         if ((this._lastConnCheck + this._onlineValidTimeout) > Date.now()) { // internet connection state is "cached"
             //console.log("Cached!");
             return this._online;
-        }else{
+        } else {
             //console.log("not Cached!");
         }
         let attemptCount;
@@ -325,23 +325,23 @@ export class Firebase extends Singleton {
             attemptCount = Config.checkConnectionMaxAttempts;
             fetchResolve(false);
         }, Config.checkConnectionMaxTimeout);
-        
+
         for (attemptCount = 0; attemptCount < Config.checkConnectionMaxAttempts; attemptCount++) {
             try {
-                let success = await new Promise((resolve, reject) =>{
+                let success = await new Promise((resolve, reject) => {
                     fetchResolve = resolve;
                     fetch("https://ipv4.icanhazip.com/&time=" + Date.now())
-                    .then((value) => {     
-                        resolve(true);
-                    }).catch((value) => {
-                        resolve(false);
-                    })
+                        .then((value) => {
+                            resolve(true);
+                        }).catch((value) => {
+                            resolve(false);
+                        })
                 })
-                if(success){ // successfully fetched
+                if (success) { // successfully fetched
                     this._lastConnCheck = Date.now();
                     this._online = true;
                     return this._online;
-                }                
+                }
             } catch (error) {
                 console.log('Chyba při kontrole připojení k internetu: ', error);
             }

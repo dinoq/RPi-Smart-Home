@@ -12,10 +12,9 @@ export class Firebase extends Singleton {
         this._paired = undefined; // Značka, zda je server spárovaný s uživatelským účtem
         this.localAccess = false; // Označuje, zda uživatel k webové aplikaci přistupuje z lokální sítě, nebo domény auto-home.web.app. Na základě toho buď webová aplikace komunikuje přímo s databází, nebo pouze se serverem (v případě komunikace v lokální síti), který později přeposílá do databáze data, pokud má server přístup k internetu
         this.localAccess = !(window.location.hostname.includes("auto-home.web.app"));
-        if (this.localAccess) { // V případě lokální aplikace nechceme využívat firebase (v případě offline by navíc došlo k vyjímce)
-            console.warn("TODO");
-            this.serverCall("GET", "/paired").then(async (value) => {
-                this._paired = value == "true";
+        if (this.localAccess) { // V případě lokální aplikace nechceme využívat firebase (v případě offline by navíc došlo k vyjímce)            
+            this.serverCall("GET", "/paired", true).then(async (pairedObj) => {
+                this._paired = (pairedObj && pairedObj.paired) ? true : false;
             }).catch((value) => {
                 this._paired = false;
             });
@@ -161,13 +160,15 @@ export class Firebase extends Singleton {
         let fb = Firebase.getInstance();
         return fb.serverCall(method, url);
     }
-    async serverCall(method, url) {
+    async serverCall(method, url, getAsJSON = false) {
         let res = await fetch(url, {
             method: method,
             headers: { "Content-Type": "text/plain" }
         });
-        let responseText = await res.text();
-        return responseText;
+        if (getAsJSON) {
+            return await res.json();
+        }
+        return await res.text();
     }
     static async addDBListener(dbPath, callback) {
         let fb = Firebase.getInstance();

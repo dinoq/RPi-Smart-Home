@@ -14,21 +14,24 @@ const configExampleFilePath = "config.json";
 class ServerApp {
     constructor() {
         this._app = express();
+        this._serverStartedPromise = new Promise((resolve, reject) => { this._serverStartedPromiseResolver = resolve; });
         if (fs.existsSync(configFilePath)) { // Pokud existuje soubor s konfigurací, načte se
-            this.config = jsonManager.readFileSync(configFilePath);
+            this._config = jsonManager.readFileSync(configFilePath);
         }
         else { // V opačném případě se zjišťuje, zda existuje soubor s příkladem konfigurace.
             if (fs.existsSync(configExampleFilePath)) { // Pokud soubor s příkladem konfigurace existuje, vytvoří na jeho základě konfigurační soubor
-                this.config = jsonManager.readFileSync(configExampleFilePath);
-                jsonManager.writeFileSync(configFilePath, this.config, { spaces: 2 });
+                this._config = jsonManager.readFileSync(configExampleFilePath);
+                jsonManager.writeFileSync(configFilePath, this._config, { spaces: 2 });
             }
             else { // Pokud ani soubor s příkladem konfigurace neexistuje, vytvoří se programově oba soubory
-                this.config = {
+                this._config = {
                     "webAppPort": 80,
                     "NEW_MODULE_FIND_TIMEOUT": 10000,
                     "username": "",
                     "password": "",
-                    "saveUserCredentialsOnLogin": "true",
+                    "saveUserCredentialsOnLogin": true,
+                    "openBrowserToRegister": true,
+                    "openBrowserOnStart": true,
                     "firebase": {
                         "apiKey": "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
                         "authDomain": "home-automation-80eec.firebaseapp.com",
@@ -41,11 +44,11 @@ class ServerApp {
                     },
                     "debugLevel": 1
                 };
-                jsonManager.writeFileSync(configExampleFilePath, this.config, { spaces: 2 });
-                jsonManager.writeFileSync(configFilePath, this.config, { spaces: 2 });
+                jsonManager.writeFileSync(configExampleFilePath, this._config, { spaces: 2 });
+                jsonManager.writeFileSync(configFilePath, this._config, { spaces: 2 });
             }
         }
-        this.port = this.getFromConfig("webAppPort", 80);
+        this._port = this.getFromConfig("webAppPort", 80);
         this._firebase = new firebase_js_1.Firebase();
         var p = path.join(__dirname, '../../web/public');
         /*this._app.use("/updates", (req, res) => {
@@ -133,9 +136,9 @@ class ServerApp {
                     pwd = (req && req.body) ? req.body["registration-pwd"] : undefined;
                 }
                 if (uName != undefined && pwd != undefined) {
-                    this.config["username"] = uName;
-                    this.config["password"] = pwd;
-                    jsonManager.writeFileSync(configFilePath, this.config, { spaces: 2 });
+                    this._config["username"] = uName;
+                    this._config["password"] = pwd;
+                    jsonManager.writeFileSync(configFilePath, this._config, { spaces: 2 });
                     console.log("Přihlašovací údaje uloženy do konfiguračního souboru.");
                     this._firebase.login(uName, pwd);
                 }
@@ -147,7 +150,7 @@ class ServerApp {
             && this.getFromConfig("password") && this.getFromConfig("password").toString().length;
         this._app.get('/*', (req, res, next) => {
             if (req.url.includes("paired")) {
-                res.send(devicePairedWithAccount);
+                res.send({ paired: devicePairedWithAccount });
             }
             else {
                 next();
@@ -166,14 +169,23 @@ class ServerApp {
                 res.write("<script>localStorage.clear();location.reload();</script>");
             }
         });*/
+        let portStr = (this._port == 80) ? "" : ":" + this._port;
         if (devicePairedWithAccount) {
             this._firebase.login(this.getFromConfig("username"), this.getFromConfig("password"));
+            if (this.getFromConfig("openBrowserOnStart", true)) {
+                this._serverStartedPromise.then((value) => {
+                    open('http://localhost' + portStr + '/domu');
+                });
+            }
         }
         else {
-            let portStr = (this.port == 80) ? "" : ":" + this.port;
             console.log("Vypadá to, že server není spárován s žádným uživatelským účtem. Pro spárování je nutné se ze zařízení, na kterém server běží zaregistovat (na http://localhost" + portStr + "/registrace/) či přihlásit (http://localhost" + portStr + "/login/), dříve nebude možné systém ovládat přes internet (mimo lokální síť). K registraci je vyžadováno internetové připojení.");
             console.log("Spárování pomocí přihlášení/registrace je také možné provést z jiného zařízení v lokální síti na adrese: http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr + "/login/, resp.: http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr + "/registrace/");
-            open('http://localhost' + portStr + '/registrace?forceLogout=true');
+            if (this.getFromConfig("openBrowserToRegister", true)) {
+                this._serverStartedPromise.then((value) => {
+                    open('http://localhost' + portStr + '/registrace?forceLogout=true');
+                });
+            }
         }
         this._app.use(express.static(p), (req, res, next) => {
             //console.log("ooo");
@@ -200,37 +212,70 @@ class ServerApp {
     }
     start() {
         try {
-            let server = this._app.listen(this.port);
+            let server = this._app.listen(this._port, (err) => {
+                if (err) {
+                    if (err.code == "EADDRINUSE") {
+                        console.error("Zvolený port (" + this._port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!");
+                        process.exit(5);
+                    }
+                    else if (err.code == "EACCES") {
+                        console.error("Nemáte přístup ke zvolenému portu (" + this._port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
+                        process.exit(5);
+                    }
+                    else if (err && err.code == "ERR_SOCKET_BAD_PORT") {
+                        let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
+                        console.error("Špatně zvolený port (" + this._port + ")!. " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
+                        process.exit(5);
+                    }
+                    else {
+                        console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!");
+                        process.exit(5);
+                    }
+                }
+                else {
+                    if (this.getFromConfig("debugLevel", 0) > 0) {
+                        //console.log("Server běží na portu: " + this.port + ".");
+                        let portStr = (this._port == 80) ? "" : ":" + this._port;
+                        console.log("Pro přístup k webové aplikaci ze zařízení, na kterém běží server přejděte v internetovém prohlížeči na adresu http://localhost" + portStr);
+                        console.log("Pro přístup k webové aplikaci ze jiného zařízení v lokální síti přejděte v internetovém prohlížeči na adresu http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr);
+                        console.log("Pro přístup k webové aplikaci ze jiného zařízení globálně (přes internet) přejděte v internetovém prohlížeči na adresu https://auto-home.web.app/");
+                    }
+                    this._serverStartedPromiseResolver(); // Resolvne Promise, na kterou se v kódu čeká tam, kde je potřeba aby server už běžel...
+                }
+            });
             server.on("error", (err) => {
-                if (err.code == "EADDRINUSE") {
-                    console.error("Zvolený port (" + this.port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!");
+                if (err && err.code == "EADDRINUSE") {
+                    console.error("Zvolený port (" + this._port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!");
                     process.exit(5);
                 }
-                else if (err.code == "EACCES") {
-                    console.error("Nemáte přístup ke zvolenému portu (" + this.port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
+                else if (err && err.code == "EACCES") {
+                    console.error("Nemáte přístup ke zvolenému portu (" + this._port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
+                    process.exit(5);
+                }
+                else if (err && err.code == "ERR_SOCKET_BAD_PORT") {
+                    let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
+                    console.error("Špatně zvolený port (" + this._port + ")!. " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
                     process.exit(5);
                 }
                 else {
-                    console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this.port + "!");
+                    console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!");
                     process.exit(5);
                 }
             });
         }
         catch (err) {
-            console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this.port + "!");
+            if (err && err.code == "ERR_SOCKET_BAD_PORT") {
+                let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
+                console.error("Špatně zvolený port (" + this._port + ")!. " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
+                process.exit(5);
+            }
+            console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!");
             process.exit(5);
-        }
-        if (this.getFromConfig("debugLevel", 0) > 0) {
-            //console.log("Server běží na portu: " + this.port + ".");
-            let portStr = (this.port == 80) ? "" : ":" + this.port;
-            console.log("Pro přístup k webové aplikaci ze zařízení, na kterém běží server přejděte v internetovém prohlížeči na adresu http://localhost" + portStr);
-            console.log("Pro přístup k webové aplikaci ze jiného zařízení v lokální síti přejděte v internetovém prohlížeči na adresu http://" + communication_manager_js_1.CommunicationManager.getServerIP() + portStr);
-            console.log("Pro přístup k webové aplikaci ze jiného zařízení globálně (přes internet) přejděte v internetovém prohlížeči na adresu https://auto-home.web.app/");
         }
     }
     getFromConfig(property, valueIfUndefined) {
-        if (this.config && this.config[property]) {
-            return this.config[property];
+        if (this._config && this._config[property]) {
+            return this._config[property];
         }
         else {
             if (valueIfUndefined != undefined) {
