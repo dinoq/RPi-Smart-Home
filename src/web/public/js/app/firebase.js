@@ -174,11 +174,40 @@ export class Firebase extends Singleton {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
             console.warn("TODO");
-            //fb.serverCall("POST", "addDBListener");            
-            const source = new EventSource('/addDBListener?path=' + dbPath);
-            source.addEventListener('message', function (e) {
-                callback(JSON.parse(e.data));
-            });
+            let source;
+            try {
+                source = new EventSource('/addDBListener?path=' + dbPath);
+                let messageHandler = (e) => {
+                    callback(JSON.parse(e.data));
+                };
+                let errorHandler = (e) => {
+                    fetch("alive", {
+                        method: 'POST',
+                        headers: { "Content-Type": "application/json" }
+                    }).then((resp) => {
+                        if (!resp) {
+                            new ServerCommunicationErrorDialog();
+                            source.close();
+                        }
+                    }).catch((err) => {
+                        new ServerCommunicationErrorDialog();
+                        source.close();
+                    });
+                };
+                source.addEventListener('message', messageHandler);
+                source.addEventListener('error', errorHandler);
+                let off = () => {
+                    console.log("OFF path: " + dbPath);
+                    source.removeEventListener('message', messageHandler);
+                    source.removeEventListener('error', errorHandler);
+                    source.close();
+                };
+                return { off: off };
+            }
+            catch (error) {
+                new ServerCommunicationErrorDialog();
+                source.close();
+            }
         }
         else {
             let dbReference = fb.database.ref(await Firebase.getFullPath(dbPath));

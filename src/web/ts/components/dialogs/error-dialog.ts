@@ -15,8 +15,8 @@ export class ErrorDialog extends BaseDialog {
                     ${errorMsg} 
                 </div>
                 <div class="dialog-btn-group">
-                    <div class="btn btn-danger">
-                        close
+                    <div class="btn btn-danger close-btn">
+                        Zavřít
                     </div>
                 </div>
             </div>
@@ -25,14 +25,14 @@ export class ErrorDialog extends BaseDialog {
         this.appendChild(errorDiv);
 
         document.body.appendChild(this);
-        this.querySelector(".btn").addEventListener('click', ()=>{            
+        this.querySelector(".close-btn").addEventListener('click', ()=>{            
             this.remove();
         })
     }
 }
 
 export class SingletonErrorDialog {
-    
+    public dialog;
     constructor(errorMsg: string, componentProps?: IComponentProperties){
         let allDialogs = document.querySelectorAll(ErrorDialog.tagName);
         let exists = Array.from(allDialogs).some((dialog: HTMLElement, index, array) => {
@@ -40,14 +40,71 @@ export class SingletonErrorDialog {
         })
 
         if(!exists){
-            new ErrorDialog(errorMsg);
+            this.dialog = new ErrorDialog(errorMsg);
         }
     }
 }
 
 export class ServerCommunicationErrorDialog {
     constructor(componentProps?: IComponentProperties){
-        new SingletonErrorDialog("Při komunikaci se serverem došlo k chybě, zkontrolujte, zda server běží.");
+        let dialog = new SingletonErrorDialog("Při komunikaci se serverem došlo k chybě, zkontrolujte, zda server běží.<br>Pokud server běží, zkuste aktualizovat stránku.").dialog;
+        let btnWrapper = dialog.querySelector(".dialog-btn-group");
+        let refreshBtn = document.createElement("div");
+        refreshBtn.classList.add("btn");
+        refreshBtn.classList.add("btn-secondary");
+        refreshBtn.classList.add("refresh-btn");
+        refreshBtn.innerText = "Aktualizovat";
+
+        refreshBtn.addEventListener('click', ()=>{
+            location.reload();
+        })
+
+        btnWrapper.prepend(refreshBtn);
+
+        let interval = setInterval(()=>{ 
+            fetch("alive", {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" }
+            }).then((resp) => {
+                if(resp){
+                    if(dialog)
+                        dialog.remove();
+                    new ServerAgainOnlineDialog();
+                    clearInterval(interval);
+                    interval = undefined;
+                }                        
+            }).catch((err)=>{
+            })
+        }, 2000);
+                   
+    }
+}
+    
+
+export class ServerAgainOnlineDialog {
+    constructor(componentProps?: IComponentProperties){
+        let dialog = new SingletonErrorDialog("Server opět online!<br>Pro správnou funkci webového klienta doporučujeme aktualizovat stránku.").dialog;
+        let btnWrapper = dialog.querySelector(".dialog-btn-group");
+
+        let refreshBtn = document.createElement("div");
+        refreshBtn.classList.add("btn");
+        refreshBtn.classList.add("btn-secondary");
+        refreshBtn.classList.add("refresh-btn");
+        refreshBtn.innerText = "Aktualizovat";
+
+        refreshBtn.addEventListener('click', ()=>{
+            location.reload();
+        })
+
+        btnWrapper.prepend(refreshBtn);
+
+        let msgBox = dialog.querySelector(".message-box");
+        msgBox.classList.remove("text-danger");
+        msgBox.style.color = "#00a62e";
+
+        let closeBtn = dialog.querySelector(".btn-danger");
+        closeBtn.classList.remove("btn-danger");
+        closeBtn.classList.add("btn-primary");
     }
 }
     

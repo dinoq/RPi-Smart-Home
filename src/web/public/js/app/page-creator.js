@@ -56,7 +56,7 @@ export class PageCreator {
         switch (route.page) {
             case Pages.SETTINGS:
                 page = Paths.SETTINGS;
-                this.pageManager.addPage(new SettingsPage(), Paths.SETTINGS);
+                this.pageManager.addPage(new SettingsPage(), Paths.SETTINGS, true);
                 break;
             case Pages.HOME:
                 page = Paths.HOME;

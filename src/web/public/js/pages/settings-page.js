@@ -112,7 +112,8 @@ export class SettingsPage extends BasePage {
             try {
                 let cancelChanges = await this.showSaveDialog();
                 if (cancelChanges) {
-                    this.clickPromiseResolver();
+                    if (this.clickPromiseResolver)
+                        this.clickPromiseResolver();
                     return;
                 }
                 let parentList = this.getItemsList(item);
@@ -184,7 +185,8 @@ export class SettingsPage extends BasePage {
                     }
                     else if (clickedElem == "add") { // Add item to database
                         if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"])) {
-                            this.clickPromiseResolver();
+                            if (this.clickPromiseResolver)
+                                this.clickPromiseResolver();
                             return;
                         }
                         if (parentList.type == FrameListTypes.MODULES) { // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
@@ -226,10 +228,10 @@ export class SettingsPage extends BasePage {
                             let moduleAdditionCanceled = false;
                             let waitingForModuleResponsePromise = waitingDialog.show();
                             let IDs = [...this.selectedItemsIDHierarchy];
-                            let fbReference = null;
+                            let dbListenerReference = null;
                             if (IDs.length >= 2) {
                                 let firstIteration = true;
-                                fbReference = await Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
+                                dbListenerReference = await Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
                                     if (firstIteration) { // Firebase.addDBListener gets data for first time without "event" emitted...
                                         firstIteration = false;
                                         return;
@@ -241,7 +243,12 @@ export class SettingsPage extends BasePage {
                                         }
                                         else if (data.IP && data.IP.length > "?.?.?.?".length) { // Module IP exists, thus module maybe has been founded
                                             if (data.index == undefined) { // Module was deleted by web client, but RPi has founded module and update module record in DB with IP and type (so basically) created new module, but with only IP and type fields)
-                                                fbReference.off(); // remove firebase listener
+                                                if (Firebase.localAccess) {
+                                                    dbListenerReference.off(); // remove firebase listener
+                                                }
+                                                else {
+                                                    dbListenerReference.off(); // remove firebase listener
+                                                }
                                                 Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
                                             }
                                         }
@@ -252,7 +259,7 @@ export class SettingsPage extends BasePage {
                                             waitingDialog.resolveShow(noModuleFoundErrorResponse);
                                         }
                                         else if (data.IP != undefined && data.IP.length >= "?.?.?.?".length) { // Module IP exists, thus module has been founded
-                                            fbReference.off(); // remove firebase listener
+                                            dbListenerReference.off(); // remove firebase listener
                                             waitingDialog.resolveShow(moduleHasBeenFoundResponse);
                                         }
                                     }
@@ -313,7 +320,8 @@ export class SettingsPage extends BasePage {
                 }
             }
             finally {
-                this.clickPromiseResolver();
+                if (this.clickPromiseResolver)
+                    this.clickPromiseResolver();
             }
         };
         this.getOrderedINOUT = (dbCopy) => {

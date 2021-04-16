@@ -10,7 +10,7 @@ export class PageManager extends Singleton {
         this.activePageIndex = 0;
         this.activePage = null;
         this.resizePages = () => {
-            setTimeout(() => {
+            let resize = () => {
                 this.pageManagerComponent.style.width = Utils.getWindowWidth(true);
                 this.pageManagerComponent.style.height = Utils.getWindowHeight(true);
                 this.pages.forEach((child, index, array) => {
@@ -21,7 +21,9 @@ export class PageManager extends Singleton {
                         childStyle.left = Utils.getWindowWidth(true);
                     }
                 });
-            }, 1000);
+            };
+            setTimeout(resize, 1000);
+            resize();
         };
         this.pages = new Array();
         this.pagesKeys = new Array();
@@ -33,7 +35,7 @@ export class PageManager extends Singleton {
     static getInstance() {
         return super.getInstance();
     }
-    addPage(page, key) {
+    addPage(page, key, forceAdd = false) {
         if (this.pages.indexOf(page) != -1) {
             //new PageAlreadyAddedToPageManagerError(page, true);            
             console.log("Page (by class) already added to pagemanager: " + page.constructor.name);
@@ -47,7 +49,14 @@ export class PageManager extends Singleton {
             else {
                 //console.log("Page already added to pagemanager: " + page.constructor.name );
             }
-            return;
+            if (forceAdd) {
+                this.pages[i].remove();
+                this.pages.splice(i, 1);
+                this.pagesKeys.splice(i, 1);
+            }
+            else {
+                return;
+            }
         }
         this.pages.push(page);
         this.pagesKeys.push(key);
@@ -128,7 +137,7 @@ export class PageManager extends Singleton {
             else
                 page.style.display = "none";
         });
-        //this.styleActivePage();
+        this.resizePages();
     }
 }
 export class PageManagerComponent extends AbstractComponent {

@@ -20,6 +20,11 @@ $xl: 1200px;
         @content;
     }
 }
+@mixin smaller-than-sm-devices {
+    @media (max-width: $sm) {
+        @content;
+    }
+}
 @mixin md-devices {
     @media (min-width: $md) {
         @content;
@@ -152,7 +157,7 @@ html {
 
 .form-component {
     #form-info {
-        user-select: text; //switch of text selecting
+        user-select: text; //switch on text selecting
         display: none;
         justify-content: center;
         margin-top: 25px;
@@ -177,6 +182,7 @@ html {
 
 .dialog-wrapper {
     .dialog {
+        user-select: text; //switch on text selecting
         display: block;
         position: absolute;
         left: 25%;
@@ -189,10 +195,23 @@ html {
         color: black;
         font-size: 1.5em;
         z-index: 1000;
+        text-align: center;
 
         -webkit-box-shadow: 0px 0px 22px -2px rgba(0, 0, 0, 0.75);
         -moz-box-shadow: 0px 0px 22px -2px rgba(0, 0, 0, 0.75);
         box-shadow: 0px 0px 22px -2px rgba(0, 0, 0, 0.75);
+        
+        @include smaller-than-sm-devices() {
+            left: 5%;
+            top: 5%;
+            width: 90%;
+        }
+        
+        @include smaller-than-md-devices() {
+            left: 10%;
+            top: 10%;
+            width: 80%;
+        }
     }
 
     .overlay {
@@ -218,6 +237,13 @@ html {
         > .btn {
             margin: 0 10px;
             font-size: 1.3em;
+            @include smaller-than-sm-devices() {
+                font-size: 1.0em;
+            }
+            
+            @include smaller-than-md-devices() {
+                font-size: 1.1em;
+            }
         }
     }
     .close-btn {

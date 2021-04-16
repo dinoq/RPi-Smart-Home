@@ -1,17 +1,13 @@
 const os = require('os');
 const coap = require('coap');
 const dgram = require("dgram");
-const editJsonFile = require("edit-json-file");
 
 export class CommunicationManager {
-    private _config;
     private _server: any;
     constructor() { 
-        this._config = editJsonFile("config.json", {
-            autosave: true
-        });
 
         //TODO upravit coapTiming
+        //Nastavení časování CoAP zpráv
         var coapTiming = {
             ackTimeout: 0.25,
             ackRandomFactor: 1.0,
@@ -22,18 +18,32 @@ export class CommunicationManager {
         coap.updateTiming(coapTiming);
     }
 
-    public static getServerIP() {
+    public static getAddressInfos(){
         let networkInterfaces = os.networkInterfaces();
-        let wifiInterface = (os.platform() == "win32")? "Wi-Fi" : "wlan0";
-        let addressesInfo = networkInterfaces[wifiInterface]; // Wi-Fi on Windows, wlan0 on Ubuntu/Raspbian
-        for (let i = 0; i < addressesInfo.length; i++) {
-            let addrInfo = addressesInfo[i];
+        let wifiInterface = (os.platform() == "win32") ? "Wi-Fi" : "wlan0";
+        let interfaceInfos = networkInterfaces[wifiInterface];
+        interfaceInfos = (interfaceInfos)? interfaceInfos : [];
+        return interfaceInfos; // Wi-Fi on Windows, wlan0 on Ubuntu/Raspbian
+    }
+
+    /**
+     * Funkce vrací IP adresu serveru.
+     * @returns IP adresu serveru.
+     */
+    public static getServerIP() {
+        let addressInfos = CommunicationManager.getAddressInfos();
+        for (let i = 0; i < addressInfos.length; i++) {
+            let addrInfo = addressInfos[i];
             if (!addrInfo.internal && addrInfo.family == "IPv4" && addrInfo.address) {
                 return addrInfo.address;
             }
         }
     }
 
+    /**
+     * Nainicializuje CoAP server, kterému klienti posílají CoAP zprávy např. pokud se změní hodnoty jejich snímačů.
+     * @param CoAPIncomingMsgCallback Callback funkce, které se jako argument předá request od klienta.
+     */
     public initCoapServer(CoAPIncomingMsgCallback){
         //init multicast listening
         const localIP = CommunicationManager.getServerIP();
@@ -52,6 +62,11 @@ export class CommunicationManager {
 
     }
 
+    /**
+     * Funkce naváže "prvnotní" komunikaci s ESP modulem. 
+     * Pošle "hello-client" CoAP zprávu na "All CoAP Nodes" multicastovou skupinu, na které by měli nové ESP moduly naslouchat.
+     * @returns Promise, který se resolvne při získání odpovědi od nového modulu (v ní modul posílá typ vývojové desky,o který se jedná), případně rejectne při chybě (např při timeoutu).
+     */
     initCommunicationWithESP() {
         return new Promise((resolve, reject) => {
             console.log('initCommunicationWithESP: ');
@@ -64,6 +79,18 @@ export class CommunicationManager {
         })
     }
 
+    /**
+     * Funkce pošle CoAP zprávu na CoAP server (na ESP modul).
+     * @param ip IP adresa modulu.
+     * @param pathname "cesta ke zdroji".
+     * @param query Query (parametry).
+     * @param method zvolená metoda (GET, POST...).
+     * @param valToWrite Hodnota, kterou chceme poslat.
+     * @param onResponse Callback funkce, která se zavolá při získání odpovědi od modulu (předává se ji získaná odpověď).
+     * @param onError Callback funkce, která se zavolá při chybě (předává se ji vyvolaná chyba).
+     * @param confirmable Rozhoduje, zda se zpráva posílá jako potvrditelná.
+     * @param multicast Rozhoduje, zda se zpráva posílá multicastem.
+     */
     private coapRequest(ip: string, pathname: string, query: string, method: string, 
         valToWrite: null | string, onResponse: any, onError: any, confirmable: boolean = true, multicast: boolean = false) {
         let params: any = {
@@ -96,6 +123,16 @@ export class CommunicationManager {
         req.end();
     }
 
+    /**
+     * Funkce pošle CoAP zprávu na CoAP server (na ESP modul) a vrátí Promise, která se resolve při získání odpovědi, resp. rejectne při chybě.
+     * @param ip IP adresa modulu.
+     * @param pathname "Cesta ke zdroji"
+     * @param query Query (parametry).
+     * @param method zvolená metoda (GET, POST...).
+     * @param valToWrite Hodnota, kterou chceme poslat.
+     * @param confirmable Rozhoduje, zda se zpráva posílá jako potvrditelná.
+     * @returns Promise, který se resolve při získání odpovědi, resp. rejectne při chybě.
+     */
     private coapRequestAsync(ip: string, pathname: string, query: string, method: string, 
         valToWrite: null | string, confirmable: boolean = true) {
         return new Promise((resolve, reject) => {
@@ -122,6 +159,11 @@ export class CommunicationManager {
         })
     }
 
+    /**
+     * Funkce odešle CoAP zprávou ESP modulu jeho ID z databáze.
+     * @param ip IP adresa modulu.
+     * @param id Odesílané ID.
+     */
     public async sendESPItsID(ip:string, id: string) {
         this.coapRequest(ip, "/set-id", "", "PUT", id, null, (err) => {
             // module didnt recieve its new ID
@@ -132,21 +174,19 @@ export class CommunicationManager {
 
     /**
      * 
-     * @param ip IP address of module
-     * @param output Output, eg. A2, D5... (first analog/digital, then GPIO number)
-     * @param val Value to set
+     * @param ip IP adresa moduli.
+     * @param output Výstup, např. A2, D5... (Formát: A/D (analogový/digitální) + GPIO číslo).
+     * @param val Hodnota, která se má na daném výstupu nastavit.
      */
     public async putVal(ip: string, output: string, val: string | number) {
-        //console.log("T putVal1: " + Math.round(Date.now() / 100));
         this.coapRequest(ip, "/set-output", "pin=" + output, "PUT", val.toString(), null, null);
-        //console.log("T putVal 2: " + Math.round(Date.now() / 100));
     }
 
     /**
-     * Function send to module rquisition for observation of specified input.
-     * @param ip IP address of module
-     * @param input Input which server want to observe. Eg. A17, D13, I2C-BMP280-teplota...
-     * @returns Promise, which resolve when CoAP response received (or reject on error)
+     * Funkce odešle modulu žádost o sledování specifikovaného vstupu
+     * @param ip IP adresa modulu.
+     * @param input Vstup, který server požaduje sledovat. Např. A17, D13, I2C-BMP280-teplota... (Formát: [A/D (analogový/digitální) + GPIO číslo] pro klasické GPIO, [I2C-NAZEV_SNIMACE-SLEDOVANA_VELICINA] pro i2c).
+     * @returns Promise, který se resolve při získání odpovědi, resp. rejectne při chybě.
      */
     public ObserveInput(ip: string, input: string) {
         return new Promise((resolve, reject) => {
@@ -158,7 +198,13 @@ export class CommunicationManager {
             }, true);
         });
     }
-
+    
+    /**
+     * Funkce odešle modulu žádost o ZASTAVENÍ sledování specifikovaného vstupu.
+     * @param ip IP adresa modulu.
+     * @param input Vstup, který server požaduje sledovat. Např. A17, D13, I2C-BMP280-teplota... (Formát: [A/D (analogový/digitální) + GPIO číslo] pro klasické GPIO, [I2C-NAZEV_SNIMACE-SLEDOVANA_VELICINA] pro i2c).
+     * @returns Promise, který se resolve při získání odpovědi, resp. rejectne při chybě.
+     */
     public stopInputObservation(ip: string, input: string) {
         return new Promise((resolve, reject) => {
             this.coapRequest(ip, "/stop-input-observation", "input=" + input, "PUT", null, (res) =>{
@@ -169,6 +215,12 @@ export class CommunicationManager {
         });
     }
 
+    /**
+     * Funkce odešle modulu žádost o změnu vstupu, který modul již sleduje. Např. pokud uživatel ve webovém klientovi změní u snímače vstup z D2 na D5.
+     * @param ip IP adresa modulu.
+     * @param oldInput Starý vstup.
+     * @param newInput Nový vstup.
+     */
     public async changeObservedInput(ip: string, oldInput: string, newInput: string) {
         try {
             await this.coapRequestAsync(ip, "/change-observed-input", "old=" + oldInput + "&new=" + newInput, "PUT", null, true);        
@@ -177,15 +229,20 @@ export class CommunicationManager {
         }
     }
 
+    /**
+     * Funkce odešle modulu žádost o "resetování". Jde o odstranění modulu ze systému, takto resetovaný modul je připravený k přidání do systému jako "nový".
+     * @param ip IP adresa modulu.
+     */
     public resetModule(ip: string) {
         this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, true);
     }
 
     /**
-     * Function send configuration of all inputs and outputs (from database). CoAP message query is in format something like "IN:A17|D13|I2C-BMP280-teplota&OUT:D3=1024|A8=250"
-     * @param ip 
-     * @param IN 
-     * @param OUT 
+     * Funkce pošle modulu konfiguraci všech jeho již konfigurovaných vstupů a výstupů z databáze.
+     * O tuto konfiguraci si modul sám "řekne" při svém startu, aby si korektně nastavil své výstupy a zjistil, které vstupy má sledovat. 
+     * Parametry (Query) CoAP zprávy jsou ve formátu něco jako "IN:A17|D13|I2C-BMP280-teplota&OUT:D3=1024|A8=250".
+     * @param ip IP adresa modulu.
+     * @param InOut Konfigurace vstupů a výstupů daného modulu.
      */
     public setAllIO(ip: string, InOut: string){
         console.log('setAllIO: ', InOut);

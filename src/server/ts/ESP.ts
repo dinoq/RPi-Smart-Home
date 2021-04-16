@@ -1,4 +1,4 @@
-// From esp.h:
+// Konstanty z esp.h:
 export enum VALUE_TYPE {
     ANALOG = 1, // Start from 1, because we add it to string and we don't want to consider it as null terminator
     DIGITAL,
@@ -16,6 +16,9 @@ enum IN_TYPE {
 };
 
 
+/**
+ * Třída reprezentuje záznam o Senzoru (Vstup, typ vstupu a hodnota)
+ */
 export class SensorInfo {
     IN; //Pin number or I2C_IN_TYPE
     val_type; // ANALOG/DIGITAL/I2C
@@ -27,7 +30,10 @@ export class SensorInfo {
         this.val = val;
     }
 
-    //returns input in database format
+    /**
+     * Funkce vrací textový řetězec popisu daného vstupu (v "databázovém" formátu)
+     * @returns 
+     */
     public getInput() {
         let analog = this.val_type == VALUE_TYPE.ANALOG;
         let digital = this.val_type == VALUE_TYPE.DIGITAL;
@@ -54,15 +60,8 @@ export class SensorInfo {
 
 };
 
+// Definice jednotlivých řetězců, jak odpovídají databázovému popisu snímačů
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_TEMP] = "BMP280-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_PRESS] = "BMP280-tlak";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_TEMP] = "SHT21-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_HUM] = "SHT21-vlhkost";
-
-/*
-module.exports = {
-    VALUE_TYPE: VALUE_TYPE,
-    IN_TYPE: IN_TYPE,
-    SInfo: SensorInfo
-}
-*/

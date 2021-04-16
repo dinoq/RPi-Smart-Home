@@ -27,7 +27,7 @@ export class PageManager extends Singleton {
         return <PageManager>super.getInstance();
     }
 
-    addPage(page: BasePage, key: string) {
+    addPage(page: BasePage, key: string, forceAdd: boolean = false) {
         if (this.pages.indexOf(page) != -1) {
             //new PageAlreadyAddedToPageManagerError(page, true);            
             console.log("Page (by class) already added to pagemanager: " + page.constructor.name);
@@ -40,7 +40,13 @@ export class PageManager extends Singleton {
             } else {
                 //console.log("Page already added to pagemanager: " + page.constructor.name );
             }
-            return;
+            if (forceAdd) {
+                this.pages[i].remove();
+                this.pages.splice(i, 1);
+                this.pagesKeys.splice(i, 1);
+            } else {
+                return;
+            }
         }
 
         this.pages.push(page);
@@ -126,11 +132,12 @@ export class PageManager extends Singleton {
                 page.style.display = "none"
 
         });
-        //this.styleActivePage();
+
+        this.resizePages();
     }
 
     resizePages = () => {
-        setTimeout(() => {
+        let resize = () => {
             this.pageManagerComponent.style.width = <string>Utils.getWindowWidth(true);
             this.pageManagerComponent.style.height = <string>Utils.getWindowHeight(true);
             this.pages.forEach((child, index, array) => {
@@ -141,7 +148,9 @@ export class PageManager extends Singleton {
                     childStyle.left = <string>Utils.getWindowWidth(true);
                 }
             })
-        }, 1000);
+        }
+        setTimeout(resize, 1000);
+        resize();
     }
 
 }

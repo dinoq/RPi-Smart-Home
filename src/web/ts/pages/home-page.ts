@@ -1,10 +1,7 @@
 import { RoomCard } from "../layouts/room-card.js";
-import { Config } from "../app/config.js";
 import { Firebase } from "../app/firebase.js";
 import { IComponentProperties } from "../components/component.js";
-import { LoginComponent } from "../components/forms/login-component.js";
 import { BasePage } from "./base-page.js";
-import { PageManager } from "../app/page-manager.js";
 import { Loader } from "../components/others/loader.js";
 
 export class HomePage extends BasePage {
@@ -14,7 +11,6 @@ export class HomePage extends BasePage {
     roomsCards: Array<RoomCard>;
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
-
         Loader.show();
         Firebase.addDBListener("/rooms/", (data)=>{      
             Loader.hide();      
