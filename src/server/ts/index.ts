@@ -49,7 +49,7 @@ class ServerApp {
                     'Cache-Control': 'no-cache',
                     'Connection': 'keep-alive'
                 })
-                res.write('\n');
+                res.write('\n\n');
                 let path = (req.query && req.query.path) ? req.query.path : "";
                 this._firebase.addClientDBListener(path, res);
             } else {

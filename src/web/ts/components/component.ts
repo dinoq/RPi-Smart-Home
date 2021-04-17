@@ -136,7 +136,10 @@ export abstract class AbstractComponent extends Component {
     disconnectComponent() {
         try{
             this.parent.removeChild(this);
-        }finally{
+        }catch(err){
+            
+        }
+        finally{
             this.componentConnected = false;
         }
     }

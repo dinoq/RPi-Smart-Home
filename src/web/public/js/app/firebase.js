@@ -280,6 +280,7 @@ export class Firebase extends Singleton {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ path: dbPath })
                 });
+                return resp;
             }
             catch (error) {
                 new ServerCommunicationErrorDialog();

@@ -29,7 +29,6 @@ class Firebase {
         this._updateSensorsInDBTimeout = undefined;
         this._ignoredDBTimes = new Array(); // Obsahuje časy aktualizací z databáze, které jsou serverem ignorovány (protože změnu vyvolal sám, nechce tedy změny znovu zpracovávat)
         this._firebaseHandlerActive = false; // Označuje, zda je aktivní posluchač události změny firebase databáze
-        this._changes = new Array();
         /**
          * Funkce je volána pravidelně, aby kontrolovala připojení k internetu a v případě ztráty (či opětovném) připojení provede dané akce...
          */
@@ -349,7 +348,7 @@ class Firebase {
     async _firebaseDatabaseUpdateHandler(data, firstCycle) {
         if (firstCycle) { // Pokud se jedná o prvotní získání dat, porovná se aktuálnost dat s lokálními a ty novější přepíšou staré
             this.compareDatabasesAndUpdateOlder(data);
-            return; // Není potřeba kontrolovat a zpracovávat změny (funkcemi _checkDbChange a _processDbChanges níže), jelikož databáze se voláním compareDatabasesAndUpdateOlder "srovnají"
+            return; // Není potřeba kontrolovat a zpracovávat změny (funkcemi _checkDbChange a _processDbChanges), jelikož databáze se voláním compareDatabasesAndUpdateOlder "srovnají"
         }
         // Pokud změnu vyvolal server, nechceme změny (znovu) zpracovávat
         if (data && this._ignoredDBTimes.includes(data.lastWriteTime)) {
@@ -360,7 +359,6 @@ class Firebase {
         }
         else {
             this._checkDbChange(this.readFromLocalDB("/"), data);
-            this._processDbChanges();
         }
     }
     /**
@@ -372,8 +370,7 @@ class Firebase {
         let uid = await this.userUID;
         let snapshot = await this._fb.database().ref(uid + "/").once('value');
         let data = snapshot.val();
-        this._checkDbChange(data, this.readFromLocalDB("/"));
-        this._processDbChanges();
+        this._checkDbChange(data, this.readFromLocalDB("/")); // Tohle je potřeba, aby v případě, že jsou změny na serveru bez připojení k internetu, tak aby i tak server zpracoval změny
         await this._fb.database().ref(uid).update({ lastWriteTime: time });
         this._fb.database().ref(uid).remove();
         let updates = { lastWriteTime: time };
@@ -434,14 +431,15 @@ class Firebase {
         }
         // check rooms
         const newRooms = (newData) ? newData["rooms"] : undefined;
-        const oldRooms = oldData;
+        const oldRooms = (oldData) ? oldData["rooms"] : undefined;
+        ;
         let newRoomsIDs = new Array();
         for (const newRoomID in newRooms) {
             newRoomsIDs.push(newRoomID);
             const newRoom = newRooms[newRoomID];
             const oldRoom = (oldRooms) ? oldRooms[newRoomID] : undefined;
             if (!oldRoom) { // Room added
-                this._changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, data: { path: newRoomID } });
+                this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, data: { path: newRoomID } });
             }
             // check modules
             const newModules = newRoom["devices"];
@@ -453,7 +451,7 @@ class Firebase {
                     if (newModule.index != undefined) { // If module.index is undefined => module was actually deleted from db and only updated by server with ip and type
                         let path = "rooms/" + newRoomID + "/devices/" + newModuleID;
                         console.log('new module path: ', path);
-                        this._changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: newModuleID, path: path } });
+                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: newModuleID, path: path } });
                     }
                 }
                 // check sensors
@@ -463,22 +461,22 @@ class Firebase {
                     const newSensor = (newSensors) ? newSensors[newSensorID] : undefined;
                     const oldSensor = (oldSensors) ? oldSensors[newSensorID] : undefined;
                     if (!oldSensor) { // Sensor added
-                        this._changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], input: newSensor.input.toString() } });
+                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], input: newSensor.input.toString() } });
                         //Add also to sensors in order to update in DB
                         newSensor["IP"] = newModules[newModuleID]["IP"];
-                        newSensor["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`;
+                        newSensor["pathToValue"] = `rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`;
                         this._sensors.push(newSensor);
                     }
                     else if (newSensor.input != oldSensor.input) { // sensor changed
                         //find old sensor in this._sensors
                         let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; });
-                        let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`);
+                        let sIdx = sensorsPaths.indexOf(`rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`);
                         if (sIdx != -1) {
                             newSensor["IP"] = newModules[newModuleID]["IP"];
-                            newSensor["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`;
+                            newSensor["pathToValue"] = `rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`;
                             this._sensors[sIdx] = newSensor;
                         }
-                        this._changes.push({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], oldInput: oldSensor.input.toString(), newInput: newSensor.input.toString(), type: newSensors[newSensorID].type.toString() } });
+                        this._processDbChange({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], oldInput: oldSensor.input.toString(), newInput: newSensor.input.toString(), type: newSensors[newSensorID].type.toString() } });
                     }
                 }
                 // check devices
@@ -503,7 +501,7 @@ class Firebase {
                                 output = "D" + output.substring(1);
                             }
                         }
-                        this._changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: newModules[newModuleID]["IP"], output: output, value: val.toString() } });
+                        this._processDbChange({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: newModules[newModuleID]["IP"], output: output, value: val.toString() } });
                     }
                 }
             }
@@ -512,7 +510,7 @@ class Firebase {
         for (const oldRoomID in oldRooms) {
             const newRoom = (newRooms) ? newRooms[oldRoomID] : undefined;
             if (!newRoom) { // ROOM was removed
-                this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.ROOM, data: { path: oldRoomID } });
+                this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.ROOM, data: { path: oldRoomID } });
             }
             const oldRoom = (oldRooms) ? oldRooms[oldRoomID] : undefined;
             const newModules = (newRoom) ? newRoom["devices"] : undefined;
@@ -520,7 +518,7 @@ class Firebase {
             for (const oldModuleID in oldModules) {
                 const newModule = (newModules) ? newModules[oldModuleID] : undefined;
                 if (!newModule) { // MODULE was removed
-                    this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.MODULE, data: { ip: oldModules[oldModuleID].IP } });
+                    this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.MODULE, data: { ip: oldModules[oldModuleID].IP } });
                 }
                 const oldModule = (oldModules) ? oldModules[oldModuleID] : undefined;
                 const newSensors = (newModule && newModule["IN"]) ? newModule["IN"] : undefined;
@@ -530,11 +528,11 @@ class Firebase {
                     if (!newSensor) { // SENSOR was removed
                         //find old sensor in this._sensors and remove it
                         let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; });
-                        let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${oldRoomID}/devices/${oldModuleID}/IN/${oldSensorID}/value`);
+                        let sIdx = sensorsPaths.indexOf(`rooms/${oldRoomID}/devices/${oldModuleID}/IN/${oldSensorID}/value`);
                         if (sIdx != -1) {
                             this._sensors.splice(sIdx, 1);
                         }
-                        this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: oldModule.IP, input: oldSensors[oldSensorID].input.toString() } });
+                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: oldModule.IP, input: oldSensors[oldSensorID].input.toString() } });
                     }
                 }
                 const newDevices = (newModule && newModule["OUT"]) ? newModule["OUT"] : undefined;
@@ -542,7 +540,7 @@ class Firebase {
                 for (const oldDeviceID in oldDevices) {
                     const newDevice = (newDevices) ? newDevices[oldDeviceID] : undefined;
                     if (!newDevice) { // DEVICE was removed
-                        this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: oldModule.IP, output: oldDevices[oldDeviceID].output.toString() } });
+                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: oldModule.IP, output: oldDevices[oldDeviceID].output.toString() } });
                     }
                 }
             }
@@ -578,58 +576,53 @@ class Firebase {
         }
     }
     /**
-     * Funkce zpracuje změny, které přišli z Firebase databáze.
-     * Změny byli uloženy ve funkci this._checkDbChange(), ve které se uložili do vlastnosti this.changes (tyto změny mají formát objektu typu IChangeMessage)
+     * Funkce zpracuje změnu v databázi (ve smyslu komunkace s moduly)
+     * @param change Konkrétní změna, kterou je potřeba zpracovat
      */
-    _processDbChanges() {
-        for (let i = 0; i < this._changes.length; i++) {
-            let change = this._changes[i];
-            let index = this._changes.indexOf(change);
-            this._changes.splice(index, 1); // Změna se odstraní, aby se znovu nezpracovávala
-            if (change.level == DevicesTypes.ROOM) { // ZMĚNA NA ÚROVNI MÍSTNOSTI
-                if (change.type == ChangeMessageTypes.REMOVED) { // ROOM was removed => reset all modules from that room...
-                    //TODO: remove all modules on removing non-empty room
-                }
+    _processDbChange(change) {
+        if (change.level == DevicesTypes.ROOM) { // ZMĚNA NA ÚROVNI MÍSTNOSTI
+            if (change.type == ChangeMessageTypes.REMOVED) { // ROOM was removed => reset all modules from that room...
+                //TODO: remove all modules on removing non-empty room
             }
-            else if (change.level == DevicesTypes.MODULE) { // ZMĚNA NA ÚROVNI MODULU
-                if (change.type == ChangeMessageTypes.ADDED) { // Module was added => init communication
-                    this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
-                        this._communicationManager.sendESPItsID(espIP, change.data.id);
-                        this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } });
-                    }).catch((err) => {
-                        this.clientRemoveFromDB({ path: change.data.path });
-                    });
-                }
-                else if (change.type == ChangeMessageTypes.REMOVED) { // Module was removed => reset module...
-                    if (change.data.ip)
-                        this._communicationManager.resetModule(change.data.ip);
-                }
+        }
+        else if (change.level == DevicesTypes.MODULE) { // ZMĚNA NA ÚROVNI MODULU
+            if (change.type == ChangeMessageTypes.ADDED) { // Module was added => init communication
+                this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
+                    this._communicationManager.sendESPItsID(espIP, change.data.id);
+                    this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } });
+                }).catch((err) => {
+                    this.clientRemoveFromDB({ path: change.data.path });
+                });
             }
-            else if (change.level == DevicesTypes.SENSOR) { // ZMĚNA NA ÚROVNI SNÍMAČE
-                if (change.type == ChangeMessageTypes.ADDED) { // Snímač byl přidán => je potřeba, aby modul naslouchal novým hodnotám na daném vstupu
-                    this._communicationManager.ObserveInput(change.data.ip, change.data.input)
-                        .catch((err) => {
-                        console.log('listenTo err', err);
-                    });
-                }
-                else if (change.type == ChangeMessageTypes.REPLACED) { // Sensor was added => listen to new values
-                    this._communicationManager.changeObservedInput(change.data.ip, change.data.oldInput, change.data.newInput);
-                }
-                else if (change.type == ChangeMessageTypes.REMOVED) {
-                    this._communicationManager.stopInputObservation(change.data.ip, change.data.input).catch((err) => {
-                        console.log('stopInputObservation err: ', err);
-                    });
-                }
+            else if (change.type == ChangeMessageTypes.REMOVED) { // Module was removed => reset module...
+                if (change.data.ip)
+                    this._communicationManager.resetModule(change.data.ip);
             }
-            else if (change.level == DevicesTypes.DEVICE) { // ZMĚNA NA ÚROVNI ZAŘÍZENÍ
-                if (change.type == ChangeMessageTypes.VALUE_CHANGED) {
-                    console.log("Klient změnil hodnotu některého zařízení.");
-                    if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
-                        this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
-                }
-                else if (change.type == ChangeMessageTypes.REMOVED) {
-                    //nothing needs to be done.
-                }
+        }
+        else if (change.level == DevicesTypes.SENSOR) { // ZMĚNA NA ÚROVNI SNÍMAČE
+            if (change.type == ChangeMessageTypes.ADDED) { // Snímač byl přidán => je potřeba, aby modul naslouchal novým hodnotám na daném vstupu
+                this._communicationManager.ObserveInput(change.data.ip, change.data.input)
+                    .catch((err) => {
+                    console.log('listenTo err', err);
+                });
+            }
+            else if (change.type == ChangeMessageTypes.REPLACED) { // Sensor was added => listen to new values
+                this._communicationManager.changeObservedInput(change.data.ip, change.data.oldInput, change.data.newInput);
+            }
+            else if (change.type == ChangeMessageTypes.REMOVED) {
+                this._communicationManager.stopInputObservation(change.data.ip, change.data.input).catch((err) => {
+                    console.log('stopInputObservation err: ', err);
+                });
+            }
+        }
+        else if (change.level == DevicesTypes.DEVICE) { // ZMĚNA NA ÚROVNI ZAŘÍZENÍ
+            if (change.type == ChangeMessageTypes.VALUE_CHANGED) {
+                console.log("Klient změnil hodnotu některého zařízení.");
+                if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
+                    this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
+            }
+            else if (change.type == ChangeMessageTypes.REMOVED) {
+                //nothing needs to be done.
             }
         }
     }
@@ -722,6 +715,16 @@ class Firebase {
             time = Date.now();
         }
         let tmpDbFile = JSON.parse(JSON.stringify(this.readFromLocalDB("/", {}))); // Záloha lokální databáze pro pozdější vyhodnocení změn funkcí _checkDbChange() (viz níže ve funkci)
+        let processUpdate = () => {
+            let pathArr = this.correctPath(path).split("/");
+            let part = this.readFromLocalDB(path);
+            if (typeof part == "object" && typeof val == "object") { // Pokud jsou v daném umístění objekty, uložíme deep merge těchto objektů
+                objectPath.set(this._dbFile, pathArr, merge(part, val));
+            }
+            else { // Jinak prostě nahradíme starou hodnotu novou hodnotou
+                objectPath.set(this._dbFile, pathArr, val);
+            }
+        };
         if (path.length == 0 || path == "/") {
             path = "/";
             if (val.rooms) {
@@ -729,6 +732,23 @@ class Firebase {
                 objectPath.set(this._dbFile, "rooms", merge(part, val.rooms));
             }
             else { // Jinak víme, že přišla cesta "/"", a data ve formátu, který obsahuj cestu (např. 'rooms/-MYRjLerob8wpXvP4bxZ/devices/-MYTWRVGgRyE32PCruIi/IN/-MYTe9Otf3NLzkDHV65Z/value': 297). 
+                let updates = val;
+                let updatesObjectArray = new Array();
+                path = "rooms";
+                for (const longPathName in updates) {
+                    let pathArr = longPathName.split("/").slice(1);
+                    let updateObject = {};
+                    updateObject[pathArr[pathArr.length - 1]] = updates[longPathName];
+                    for (let i = pathArr.length - 2; i >= 0; i--) {
+                        let tmp = {};
+                        tmp[pathArr[i]] = updateObject;
+                        updateObject = tmp;
+                    }
+                    updatesObjectArray.push(updateObject);
+                }
+                val = merge.all(updatesObjectArray);
+                processUpdate();
+                /*BLBOST:
                 let remapped;
                 for (const update in val) {
                     if (update == "lastWriteTime") {
@@ -738,22 +758,14 @@ class Firebase {
                     let part = this.readFromLocalDB(path);
                     if (typeof part == "object" && typeof val == "object") { // Pokud jsou v daném umístění objekty, uložíme deep merge těchto objektů
                         objectPath.set(this._dbFile, pathArr, merge(part, val));
-                    }
-                    else { // Jinak prostě nahradíme starou hodnotu novou hodnotou
+                    } else { // Jinak prostě nahradíme starou hodnotu novou hodnotou
                         objectPath.set(this._dbFile, pathArr, val);
                     }
-                }
+                }*/
             }
         }
         else {
-            let pathArr = this.correctPath(path).split("/");
-            let part = this.readFromLocalDB(path);
-            if (typeof part == "object" && typeof val == "object") { // Pokud jsou v daném umístění objekty, uložíme deep merge těchto objektů
-                objectPath.set(this._dbFile, pathArr, merge(part, val));
-            }
-            else { // Jinak prostě nahradíme starou hodnotu novou hodnotou
-                objectPath.set(this._dbFile, pathArr, val);
-            }
+            processUpdate();
         }
         this._dbFile["lastWriteTime"] = time;
         for (let i = 0; i < this.clientDBListeners.length; i++) {
@@ -765,7 +777,6 @@ class Firebase {
         jsonManager.writeFileSync(dbFilePath, this.readFromLocalDB("/"), { spaces: 2 });
         //Ještě uložit zkontrolovat a zpracovat změny z pohledu modulů...
         this._checkDbChange(tmpDbFile, this.readFromLocalDB("/"), true);
-        this._processDbChanges();
     }
     /**
      * Funkce smaže záznam na dané cestě (parametr path) z lokální databáze.
@@ -779,6 +790,7 @@ class Firebase {
         let tmpDbFile = JSON.parse(JSON.stringify(this.readFromLocalDB("/", {}))); // Záloha lokální databáze pro pozdější vyhodnocení změn funkcí _checkDbChange() (viz níže ve funkci)
         if (path.length == 0 || path == "/") {
             fs.writeFileSync(dbFilePath, '{}');
+            this._dbFile = {};
             this._dbFile["lastWriteTime"] = time;
             jsonManager.writeFileSync(dbFilePath, this.readFromLocalDB("/"), { spaces: 2 });
         }
@@ -796,7 +808,6 @@ class Firebase {
         }
         //Ještě uložit zkontrolovat a zpracovat změny z pohledu modulů...
         this._checkDbChange(tmpDbFile, this.readFromLocalDB("/"), true);
-        this._processDbChanges();
     }
     /**
      * Funkce aktualizuje lokální (a v případě připojení k internetu i Firebase) databázi. Funkce je volaná na základě požadavku webového klienta.
@@ -930,12 +941,9 @@ class Firebase {
         let firebaseLastWriteTime = (data && data.lastWriteTime) ? data.lastWriteTime : 0;
         if (serverLastWriteTime < firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno do firebase, přepíše se lokální verze databáze
             console.log("Internetová verze (Firebase) databáze je aktuálnější. Přepíše lokální databázi...");
-            fs.writeFileSync(dbFilePath, '{}');
+            this.removeInLocalDB("/", firebaseLastWriteTime);
             if (data && data.rooms) {
                 this.writeToLocalDB("rooms", data.rooms, firebaseLastWriteTime);
-            }
-            else {
-                this.writeToLocalDB("lastWriteTime", firebaseLastWriteTime, firebaseLastWriteTime);
             }
         }
         else if (serverLastWriteTime > firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno lokálně, přepíše se firebase databáze

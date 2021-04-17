@@ -91,7 +91,7 @@ class ErrorLogger {
                 `Reakce serveru na chybu:${lineBreak}` +
                     `${this._colorize(errorInfo.reaction, "purple")}${doubleLineBreak}`;
         }
-        let nativeErrorMsg = `Kompletní výpis chyby:${lineBreak}`;
+        let nativeErrorMsg = `Kompletní výpis původní chyby:${lineBreak}`;
         let nativeErrorMsgHTML = nativeErrorMsg;
         if (nativeError) {
             let stack = "";
@@ -143,9 +143,10 @@ class ErrorLogger {
             `${trackedObjects}${lineBreak}` +
             //`${lineBreak}`+
             `${line}`;
-        let contentHTML = `<pre style="background-color: #def0ff">` +
+        let contentHTML = `<pre style="background-color: #ffd1d1;">` +
             `<code>` +
             `<hr>` +
+            `<div style="padding: 10px 20px;">` +
             `Čas vzniku chyby: ${this._colorize(new Date().toLocaleString(), "blue")}${lineBreak}` +
             `Číslo chyby od spuštění serveru: ${this._colorize(logCount.toString(), "blue")}${lineBreak}` +
             `ID chyby: ${this._colorize(logID, "blue")}${doubleLineBreak}` +
@@ -155,6 +156,7 @@ class ErrorLogger {
             `${nativeErrorMsgHTML}${doubleLineBreak}` +
             `${exitCodeStrHTML}${doubleLineBreak}` +
             `${trackedObjectsHTML}${lineBreak}` +
+            `</div>` +
             `<hr>` +
             `</code>` +
             `</pre>${lineBreak}`;

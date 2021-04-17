@@ -184,7 +184,7 @@ void checkInValues()
                 }
                 
 
-                COAP_TYPE confirmable = (watched[i].val == UNINITIALIZED_SENSOR_VALUE)? COAP_CON : COAP_NONCON; // If sensor value was uninitialized, send msg as confirmable!
+                COAP_TYPE confirmable = (watched[i].val == UNITIALIZED_SENSOR_VALUE)? COAP_CON : COAP_NONCON; // If sensor value was uninitialized, send msg as confirmable!
                 int msgid = coap.send(RpiIP, CoAPPort, "new-value", confirmable, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
 
                 watched[i].val = newVal;
@@ -386,7 +386,7 @@ void resetSensorInfos()
     {
         watched[i].IN = UNSET;
         watched[i].val_type = UNSET;
-        watched[i].val = UNINITIALIZED_SENSOR_VALUE;
+        watched[i].val = UNITIALIZED_SENSOR_VALUE;
     }
 }
 
@@ -474,7 +474,7 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
             SensorInfo info = getSensorInfo(input);
             Serial.println("infoinfoinfoinfo");
             Serial.println(info.IN);
-            info.val = UNINITIALIZED_SENSOR_VALUE; // Uninitialize value in order to get (send) value at next calling of checkInValues() in loop()
+            info.val = UNITIALIZED_SENSOR_VALUE; // Uninitialize value in order to get (send) value at next calling of checkInValues() in loop()
             if (!alreadyWatched(info))
             {
                 watched[watchedINIndex++] = info;
@@ -634,9 +634,23 @@ void callbackObserveInput(CoapPacket &packet, IPAddress ip, int port)
     char inputCh[len];
     input.toCharArray(inputCh, len);
     SensorInfo info = getSensorInfo(inputCh);
-    if (!alreadyWatched(info))
+    
+    //Odešleme okamžitou "odpověď" s hodnotou serveru
+    char payload[32];
+    float newVal = getSensorVal(info);
+    float valToSend = (info.val_type == DIGITAL && (newVal > 0)) ? 1023 : newVal; // if digital, map value from 0/1 to 0/1023 (because client interpret digital values this way). Else send newVal
+    if(valToSend == INVALID_SENSOR_VALUE){ // send ?? instead of value
+        sprintf(payload, "in:??%c%c", info.val_type, (info.IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
+    }else{
+        sprintf(payload, "in:%f%c%c", valToSend, info.val_type, (info.IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
+    }
+    int msgid = coap.send(RpiIP, CoAPPort, "new-value", COAP_CON, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
+
+    //Přidáme do pole sledovaných vstupů...
+    if (!alreadyWatched(info)) // Není potřeba hlídat duplikáty...
     {
         Serial.println("unikátni listen");
+        info.val = UNITIALIZED_SENSOR_VALUE;
         watched[watchedINIndex++] = info;
         if (info.val_type == DIGITAL || info.val_type == ANALOG)
         {
@@ -702,7 +716,7 @@ void callbackStopInputObservation(CoapPacket &packet, IPAddress ip, int port)
 
             watched[WATCHED_IN_LIMIT - 1].IN = UNSET;
             watched[WATCHED_IN_LIMIT - 1].val_type = UNSET;
-            watched[WATCHED_IN_LIMIT - 1].val = UNINITIALIZED_SENSOR_VALUE;
+            watched[WATCHED_IN_LIMIT - 1].val = UNITIALIZED_SENSOR_VALUE;
         }
     }
 

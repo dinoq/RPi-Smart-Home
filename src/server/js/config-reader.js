@@ -24,7 +24,7 @@ class ConfigReader {
                     "saveUserCredentialsOnLogin": true,
                     "openBrowserToRegister": true,
                     "openBrowserOnStart": true,
-                    "clearLogFilesOnStart": true,
+                    "clearLogFilesOnStart": false,
                     "showLogFilesOnError": true,
                     "firebase": {
                         "apiKey": "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",

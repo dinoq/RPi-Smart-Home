@@ -120,6 +120,8 @@ export class AbstractComponent extends Component {
         try {
             this.parent.removeChild(this);
         }
+        catch (err) {
+        }
         finally {
             this.componentConnected = false;
         }

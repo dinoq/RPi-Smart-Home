@@ -97,7 +97,7 @@ boolean beginBMP();
 const byte WATCHED_IN_LIMIT = 20;
 
 const float INVALID_SENSOR_VALUE = -2000000000.0;       // "Random" value, which will probably not be used in any sensor as valid value
-const float UNINITIALIZED_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
+const float UNITIALIZED_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
 const int SENSOR_CHECK_TIME = 500;                     // How often check for sensors values (in ms). Must be > 180 if sensor BH1750 is used.
 
 const byte ID_MEM_ADDR = 7;       // Address of beginning of SensorInfos in flash memory. It is saved after string "IP:????" => 7
