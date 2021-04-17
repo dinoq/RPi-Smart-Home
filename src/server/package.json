@@ -26,7 +26,8 @@
     "jsonfile": "^6.1.0",
     "node-wifi": "^2.0.14",
     "object-path": "^0.11.5",
-    "open": "^8.0.5"
+    "open": "^8.0.5",
+    "prepend-file": "^2.0.0"
   },
   "devDependencies": {}
 }

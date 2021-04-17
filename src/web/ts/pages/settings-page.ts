@@ -492,7 +492,7 @@ export class SettingsPage extends BasePage {
                             if (IDs.length >= 2) {
                                 moduleAdditionCanceled = true;
                                 console.log("cancel=>delete at: /rooms/" + IDs[0] + "/devices/" + IDs[1]);
-                                Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
+                                await Firebase.deleteDBData("/rooms/" + IDs[0] + "/devices/" + IDs[1]); //Remove module from database
                                 this.selectedItemsIDHierarchy.splice(1);
                                 this.pageReinicialize();
                             }

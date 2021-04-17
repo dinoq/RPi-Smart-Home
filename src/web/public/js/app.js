@@ -28,16 +28,6 @@ import { ChoiceDialog } from "./components/dialogs/choice-dialog.js";
 export var app = null;
 class AutoHomeApp {
     constructor() {
-        this.ajax = () => {
-            let xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    console.log('this.responseText: ', this.responseText);
-                }
-            };
-            xhttp.open("GET", "a.php", true);
-            xhttp.send();
-        };
         this.initFirebase();
         this.registerAllComponents();
         this.pageCreator = new PageCreator();

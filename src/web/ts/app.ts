@@ -89,18 +89,6 @@ class AutoHomeApp {
         }
     }
 
-    ajax=()=>{
-        let xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                console.log('this.responseText: ', this.responseText);
-            }
-          };
-          xhttp.open("GET", "a.php", true);
-          xhttp.send();
-    }
-
-
     initFirebase(){       
         var firebaseConfig = {
             apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",

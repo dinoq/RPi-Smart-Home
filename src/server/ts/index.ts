@@ -3,9 +3,11 @@ const path = require('path');
 const bodyParser = require('body-parser')
 const open = require('open');
 const jsonManager = require("jsonfile");
+const fs = require("fs");
 
 import { CommunicationManager } from "./communication-manager.js";
 import { ConfigReader } from "./config-reader.js";
+import { ErrorLogger } from "./error-logger.js";
 import { Firebase } from "./firebase.js";
 
 
@@ -18,12 +20,17 @@ class ServerApp {
     private _serverStartedPromise = new Promise((resolve, reject) => { this._serverStartedPromiseResolver = resolve; }) // Slouží pro čekání na spuštění serveru (např některé informace je potřeba vypsat až po úspěšném spuštění serveru...)
 
     constructor() {
-        if(CommunicationManager.getAddressInfos().length == 0){
-            console.error("Došlo k neznámé chybě při startu aplikace! Server pravděpodobně není připojený k žádnému AP! \nPro funkci systému není nutné mít připojení k internetu, ale je nezbytné, aby bylo zařízení, na kterém poběží server připojeno do lokální sítě (k AP)! Číslo chyby pro lokaci v kódu: " + 6);
-            process.exit(5);
+        this._clearLogFiles();
+        if (CommunicationManager.getAddressInfos().length == 0) {
+            ErrorLogger.log(null, {
+                errorDescription:"Došlo k neznámé chybě při startu aplikace! Server pravděpodobně není připojený k žádnému AP! \nPro funkci systému není nutné mít připojení k internetu, ale je nezbytné, aby bylo zařízení, na kterém poběží server připojeno do lokální sítě (k AP)!", 
+                placeID: 6
+            }, null, 5);
         }
 
+
         this._port = ConfigReader.getValue("webAppPort", 80);
+
 
         this._firebase = new Firebase();
 
@@ -51,13 +58,13 @@ class ServerApp {
         });
 
         // Zpracování všechPOST požadavků od klientů
-        this._app.post('/*', (req, res) => { 
+        this._app.post('/*', (req, res) => {
             if (ConfigReader.getValue("debugLevel", 0) > 0) {
                 console.log("Požadavek od klienta na: " + req.url);
             }
             if (req.url.includes("/alive")) {// Dotaz, na server pro ověření, že funguje spojení mezi (webovým) klientem a serverem
                 res.sendStatus(200);
-            }else if (req.url.includes("/updateData")) {// Požadavek na aktualizaci dat v databázi
+            } else if (req.url.includes("/updateData")) {// Požadavek na aktualizaci dat v databázi
                 this._firebase.clientUpdateInDB(req.body).then((value) => {
                     res.sendStatus(200);
                 })
@@ -98,7 +105,7 @@ class ServerApp {
                     pwd = (req && req.body) ? req.body["registration-pwd"] : undefined;
                 }
                 if (uName != undefined && pwd != undefined) {
-                    ConfigReader.setValue("username",uName);
+                    ConfigReader.setValue("username", uName);
                     ConfigReader.setValue("password", pwd);
                     console.log("Přihlašovací údaje uloženy do konfiguračního souboru.");
                     this._firebase.login(uName, pwd);
@@ -159,24 +166,32 @@ class ServerApp {
      * Funkce ošetřuje chyby a pokud nějaká nastane během spouštění webového serveru, tak vypíše chybovou hlášku a ukončí aplikaci.
      */
     public start() {
-        
+
         try {
             let server = this._app.listen(this._port, (err) => {
                 // Obsluha chyb
                 if (err) {
                     if (err.code == "EADDRINUSE") {
-                        console.error("Zvolený port (" + this._port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!");
-                        process.exit(5);
+                        ErrorLogger.log(err, {
+                            errorDescription:"Zvolený port (" + this._port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!", 
+                            placeID: 17
+                        }, null, 5);
                     } else if (err.code == "EACCES") {
-                        console.error("Nemáte přístup ke zvolenému portu (" + this._port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
-                        process.exit(5);
+                        ErrorLogger.log(err, {
+                            errorDescription:"Nemáte přístup ke zvolenému portu (" + this._port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!", 
+                            placeID: 16
+                        }, null, 5);
                     } else if (err && err.code == "ERR_SOCKET_BAD_PORT") {
                         let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
-                        console.error("Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
-                        process.exit(5);
+                        ErrorLogger.log(err, {
+                            errorDescription:"Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!", 
+                            placeID: 15
+                        }, null, 5);
                     } else {
-                        console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "! Číslo chyby pro lokaci v kódu: " + 3);
-                        process.exit(5);
+                        ErrorLogger.log(err, {
+                            errorDescription:"Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!", 
+                            placeID: 3
+                        }, null, 5);
                     }
                 } else {
                     // Server byl úspěšně spuštěn
@@ -195,29 +210,77 @@ class ServerApp {
             server.on("error", (err) => {
                 // Obsluha chyb
                 if (err && err.code == "EADDRINUSE") {
-                    console.error("Zvolený port (" + this._port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!");
-                    process.exit(5);
+                    ErrorLogger.log(err, {
+                        errorDescription:"Zvolený port (" + this._port + ") již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!", 
+                        placeID: 22
+                    }, null, 5);
                 } else if (err && err.code == "EACCES") {
-                    console.error("Nemáte přístup ke zvolenému portu (" + this._port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!");
-                    process.exit(5);
+                    ErrorLogger.log(err, {
+                        errorDescription:"Nemáte přístup ke zvolenému portu (" + this._port + "). Zvolte jiný port (s hodnotou > 1023) v souboru server/config.json, nebo spusťe server jako admin (sudo npm start)!", 
+                        placeID: 21
+                    }, null, 5);
                 } else if (err && err.code == "ERR_SOCKET_BAD_PORT") {
                     let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
-                    console.error("Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
-                    process.exit(5);
+                    ErrorLogger.log(err, {
+                        errorDescription: "Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!",
+                        placeID: 20
+                    }, null, 5);
                 } else {
-                    console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "! Číslo chyby pro lokaci v kódu: " + 4);
-                    process.exit(5);
+                    ErrorLogger.log(err, {
+                        errorDescription:"Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!", 
+                        placeID: 4
+                    }, null, 5);
                 }
             })
         } catch (err) {
             // Obsluha chyb
             if (err && err.code == "ERR_SOCKET_BAD_PORT") {
                 let tooHighPortNumberMsg = (this._port > 65535) ? "Číslo portu musí být v rozmezí 0 až 65535." : "";
-                console.error("Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!");
+                ErrorLogger.log(err, {
+                    errorDescription: "Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!",
+                    placeID: 18
+                });
                 process.exit(5);
-            }else{
-                console.error("Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "! Číslo chyby pro lokaci v kódu: " + 5);
+            } else {
+                ErrorLogger.log(err, {
+                    errorDescription: "Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!", 
+                    placeID: 5
+                });
                 process.exit(5);
+            }
+        }
+    }
+
+    private _clearLogFiles(){        
+        if (ConfigReader.getValue("clearLogFilesOnStart", false)) {
+            try {
+                if (fs.existsSync(ErrorLogger.ERROR_LOG_FILE_PATH)) {
+                    fs.unlinkSync(ErrorLogger.ERROR_LOG_FILE_PATH);
+                    /*try{
+                        fs.writeFileSync(ErrorLogger.ERROR_LOG_FILE_PATH, "");
+                    }catch (err){
+                        ErrorLogger.log(err, {
+                            errorDescription: `Neznámá chyba při pokusu o vytvoření souboru pro logování chyb (${ErrorLogger.ERROR_LOG_FILE_PATH})!`, 
+                            placeID: 24
+                        })
+                    }*/
+                }
+                if (fs.existsSync(ErrorLogger.ERROR_HTML_LOG_FILE_PATH)) {
+                    fs.unlinkSync(ErrorLogger.ERROR_HTML_LOG_FILE_PATH);
+                    /*try{
+                        fs.writeFileSync(ErrorLogger.ERROR_HTML_LOG_FILE_PATH, "");
+                    }catch (err){
+                        ErrorLogger.log(err, {
+                            errorDescription: `Neznámá chyba při pokusu o vytvoření souboru pro logování chyb (${ErrorLogger.ERROR_HTML_LOG_FILE_PATH})!`, 
+                            placeID: 25
+                        })
+                    }*/
+                }
+            } catch (err) {
+                ErrorLogger.log(err, {
+                    errorDescription:"Neznámá chyba při pokusu o smazání souborů pro logování chyb!", 
+                    placeID: 13
+                })
             }
         }
     }

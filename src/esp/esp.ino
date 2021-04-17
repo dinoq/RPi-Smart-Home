@@ -700,7 +700,6 @@ void callbackStopInputObservation(CoapPacket &packet, IPAddress ip, int port)
                 watched[j].val = watched[j + 1].val;
             }
 
-            //reset also last watched for case, that removed watched is at last pos
             watched[WATCHED_IN_LIMIT - 1].IN = UNSET;
             watched[WATCHED_IN_LIMIT - 1].val_type = UNSET;
             watched[WATCHED_IN_LIMIT - 1].val = UNINITIALIZED_SENSOR_VALUE;

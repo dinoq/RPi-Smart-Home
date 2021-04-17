@@ -6,6 +6,8 @@
   "saveUserCredentialsOnLogin": true,
   "openBrowserToRegister": true,
   "openBrowserOnStart": true,
+  "clearLogFilesOnStart": true,
+  "showLogFilesOnError": true,
   "firebase": {
     "apiKey": "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
     "authDomain": "home-automation-80eec.firebaseapp.com",

@@ -164,6 +164,25 @@ class Firebase {
             }
         };
         this.clientDBListeners = new Array(); // Pole posluchačů (webových klientů) události změny databáze
+        var lhs = {
+            name: 'my object',
+            description: 'it\'s an object!',
+            details: {
+                it: 'has',
+                an: 'array',
+                with: ['a', 'few', 'elements']
+            }
+        };
+        var rhs = {
+            name: 'updated object',
+            description: 'it\'s an object!',
+            Q: {
+                B: {
+                    T: 5
+                }
+            }
+        };
+        //console.log('differences: ', diff(lhs, rhs));
         // Načtení lokální databáze
         if (fs.existsSync(dbFilePath)) { // Pokud existuje soubor s lokální databází, načte se.
             try {
@@ -186,12 +205,12 @@ class Firebase {
             this._dbFile = {};
         }
         if (typeof this._dbFile != "object") { // Kontrola, zda se načetl regulérní JSON objekt
-            fs.writeFileSync(dbFilePath, '{}');
             this._dbFile = {};
         }
         this._getSensors(this.readFromLocalDB("/", {}));
         // Vytvoření Promise, která se resolvne při přihlášení. Využívá se, pokud je někde potřeba čekat na přihlášení do Firebase.
         this._loggedInPromise = new Promise((resolve, reject) => { this._loggedInResolve = resolve; });
+        this._communicationManager = new communication_manager_js_1.CommunicationManager();
         this.online.then((online) => {
             if (online) {
                 this.initFirebase();
@@ -202,7 +221,6 @@ class Firebase {
         });
         // Nastaví se timeout na kontrolu připojení k internetu. Ten se znovu nastavuje opět ve funkci this.connectionCheckInterval()
         setTimeout(this.connectionCheckInterval, this._onlineValidTimeout);
-        this._communicationManager = new communication_manager_js_1.CommunicationManager();
         this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
     }
     get loggedIn() {
@@ -351,8 +369,9 @@ class Firebase {
             this.compareDatabasesAndUpdateOlder(data);
             return; // Není potřeba kontrolovat a zpracovávat změny (funkcemi _checkDbChange a _processDbChanges níže), jelikož databáze se voláním compareDatabasesAndUpdateOlder "srovnají"
         }
-        // Pokud změnu vyvolal server, nechceme změny (znovu) zpracovávat
         if (data && this._ignoredDBTimes.includes(data.lastWriteTime)) {
+            /*let index = this._ignoredDBTimes.indexOf(data.lastWriteTime);
+            this._ignoredDBTimes.splice(index, 1);*/
             return;
         }
         if (!this._dbInited) {
@@ -432,68 +451,70 @@ class Firebase {
         if (comparingLocalDB) {
             console.log("comparingLocalDB");
         }
-        // check rooms
-        const newRooms = (newData) ? newData["rooms"] : undefined;
-        const oldRooms = oldData;
+        /*// check rooms
+        const newRooms = (data) ? data["rooms"] : undefined;
+        const localRooms = this.readFromLocalDB("rooms");
         let newRoomsIDs = new Array();
         for (const newRoomID in newRooms) {
             newRoomsIDs.push(newRoomID);
-            const newRoom = newRooms[newRoomID];
-            const oldRoom = (oldRooms) ? oldRooms[newRoomID] : undefined;
-            if (!oldRoom) { // Room added
+            const room = newRooms[newRoomID];
+            const localRoom = (localRooms) ? localRooms[newRoomID] : undefined;
+            if (!localRoom) { // Room added
                 this._changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.ROOM, data: { path: newRoomID } });
             }
+
             // check modules
-            const newModules = newRoom["devices"];
-            const oldModules = (oldRoom) ? oldRoom["devices"] : undefined;
-            for (const newModuleID in newModules) {
-                const newModule = (newModules) ? newModules[newModuleID] : undefined;
-                const oldModule = (oldModules) ? oldModules[newModuleID] : undefined;
-                if (!oldModule) { // Module added                    
-                    if (newModule.index != undefined) { // If module.index is undefined => module was actually deleted from db and only updated by server with ip and type
-                        let path = "rooms/" + newRoomID + "/devices/" + newModuleID;
+            const modules = room["devices"];
+            const localModules = (localRoom) ? localRoom["devices"] : undefined;
+            for (const moduleID in modules) {
+                const module = (modules) ? modules[moduleID] : undefined;
+                const localModule = (localModules) ? localModules[moduleID] : undefined;
+                if (!localModule) {// Module added
+                    if (module.index != undefined) { // If module.index is undefined => module was actually deleted from db and only updated by server with ip and type
+                        let path = "rooms/" + newRoomID + "/devices/" + moduleID;
                         console.log('new module path: ', path);
-                        this._changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: newModuleID, path: path } });
+                        this._changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: moduleID, path: path } });
                     }
                 }
+
                 // check sensors
-                const newSensors = (newModule) ? newModule["IN"] : undefined;
-                const oldSensors = (oldModule) ? oldModule["IN"] : undefined;
-                for (const newSensorID in newSensors) {
-                    const newSensor = (newSensors) ? newSensors[newSensorID] : undefined;
-                    const oldSensor = (oldSensors) ? oldSensors[newSensorID] : undefined;
-                    if (!oldSensor) { // Sensor added
-                        this._changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], input: newSensor.input.toString() } });
+                const sensors = (module) ? module["IN"] : undefined;
+                const localSensors = (localModule) ? localModule["IN"] : undefined;
+                for (const sensorID in sensors) {
+                    const sensor = (sensors) ? sensors[sensorID] : undefined;
+                    const localSensor = (localSensors) ? localSensors[sensorID] : undefined;
+                    if (!localSensor) {// Sensor added
+                        this._changes.push({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: modules[moduleID]["IP"], input: sensor.input.toString() } });
                         //Add also to sensors in order to update in DB
-                        newSensor["IP"] = newModules[newModuleID]["IP"];
-                        newSensor["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`;
-                        this._sensors.push(newSensor);
-                    }
-                    else if (newSensor.input != oldSensor.input) { // sensor changed
+                        sensor["IP"] = modules[moduleID]["IP"];
+                        sensor["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${moduleID}/IN/${sensorID}/value`;
+                        this._sensors.push(sensor);
+                    } else if (sensor.input != localSensor.input) { // sensor changed
                         //find old sensor in this._sensors
-                        let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; });
-                        let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`);
+                        let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; })
+                        let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${moduleID}/IN/${sensorID}/value`);
                         if (sIdx != -1) {
-                            newSensor["IP"] = newModules[newModuleID]["IP"];
-                            newSensor["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`;
-                            this._sensors[sIdx] = newSensor;
+                            sensor["IP"] = modules[moduleID]["IP"];
+                            sensor["pathToValue"] = `${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${moduleID}/IN/${sensorID}/value`;
+                            this._sensors[sIdx] = sensor;
                         }
-                        this._changes.push({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], oldInput: oldSensor.input.toString(), newInput: newSensor.input.toString(), type: newSensors[newSensorID].type.toString() } });
+                        this._changes.push({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: modules[moduleID]["IP"], oldInput: localSensor.input.toString(), newInput: sensor.input.toString(), type: sensors[sensorID].type.toString() } });
                     }
                 }
+
                 // check devices
-                const newDevices = newModules[newModuleID]["OUT"];
-                const oldDevices = (oldModules && oldModules[newModuleID]) ? oldModules[newModuleID]["OUT"] : undefined;
-                for (const newDeviceID in newDevices) {
-                    const newDevice = (newDevices) ? newDevices[newDeviceID] : undefined;
-                    const oldDevice = (oldDevices) ? oldDevices[newDeviceID] : undefined;
-                    if (!oldDevice || (newDevice.value != oldDevice.value)
-                        || (newDevice.output != oldDevice.output)
-                        || (newDevice.type != oldDevice.type)) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
-                        let output = (newDevice.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
-                        output += newDevice.output.toString().substring(1);
-                        let val = Number.parseInt(newDevices[newDeviceID].value);
-                        if (newDevice.type == "analog") {
+                const devices = modules[moduleID]["OUT"];
+                const localDevices = (localModules && localModules[moduleID]) ? localModules[moduleID]["OUT"] : undefined;
+                for (const deviceID in devices) {
+                    const device = (devices) ? devices[deviceID] : undefined;
+                    const localDevice = (localDevices) ? localDevices[deviceID] : undefined;
+                    if (!localDevice || (device.value != localDevice.value)
+                        || (device.output != localDevice.output)
+                        || (device.type != localDevice.type)) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
+                        let output = (device.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
+                        output += device.output.toString().substring(1);
+                        let val = Number.parseInt(devices[deviceID].value);
+                        if (device.type == "analog") {
                             if (val < 50) {
                                 val = 0;
                                 output = "D" + output.substring(1);
@@ -503,50 +524,54 @@ class Firebase {
                                 output = "D" + output.substring(1);
                             }
                         }
-                        this._changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: newModules[newModuleID]["IP"], output: output, value: val.toString() } });
+                        this._changes.push({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: modules[moduleID]["IP"], output: output, value: val.toString() } });
                     }
                 }
             }
         }
-        //Compare old saved DB with received in order to detect removed things
-        for (const oldRoomID in oldRooms) {
-            const newRoom = (newRooms) ? newRooms[oldRoomID] : undefined;
-            if (!newRoom) { // ROOM was removed
-                this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.ROOM, data: { path: oldRoomID } });
+
+        //Compare local saved DB with received in order to detect removed things
+        for (const localRoomID in localRooms) {
+            const room = (newRooms) ? newRooms[localRoomID] : undefined;
+            if (!room) { // ROOM was removed
+                this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.ROOM, data: { path: localRoomID } });
             }
-            const oldRoom = (oldRooms) ? oldRooms[oldRoomID] : undefined;
-            const newModules = (newRoom) ? newRoom["devices"] : undefined;
-            const oldModules = (oldRoom) ? oldRoom["devices"] : undefined;
-            for (const oldModuleID in oldModules) {
-                const newModule = (newModules) ? newModules[oldModuleID] : undefined;
-                if (!newModule) { // MODULE was removed
-                    this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.MODULE, data: { ip: oldModules[oldModuleID].IP } });
+            const localRoom = (localRooms) ? localRooms[localRoomID] : undefined;
+            const modules = (room) ? room["devices"] : undefined;
+            const localModules = (localRoom) ? localRoom["devices"] : undefined;
+            for (const localModuleID in localModules) {
+                const module = (modules) ? modules[localModuleID] : undefined;
+                if (!module) { // MODULE was removed
+                    this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.MODULE, data: { ip: localModules[localModuleID].IP } });
                 }
-                const oldModule = (oldModules) ? oldModules[oldModuleID] : undefined;
-                const newSensors = (newModule && newModule["IN"]) ? newModule["IN"] : undefined;
-                const oldSensors = (oldModule && oldModule["IN"]) ? oldModule["IN"] : undefined;
-                for (const oldSensorID in oldSensors) {
-                    const newSensor = (newSensors) ? newSensors[oldSensorID] : undefined;
-                    if (!newSensor) { // SENSOR was removed
+                const localModule = (localModules) ? localModules[localModuleID] : undefined;
+                const sensors = (module && module["IN"]) ? module["IN"] : undefined;
+                const localSensors = (localModule && localModule["IN"]) ? localModule["IN"] : undefined;
+                for (const localSensorID in localSensors) {
+                    const sensor = (sensors) ? sensors[localSensorID] : undefined;
+                    if (!sensor) {// SENSOR was removed
                         //find old sensor in this._sensors and remove it
-                        let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; });
-                        let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${oldRoomID}/devices/${oldModuleID}/IN/${oldSensorID}/value`);
+                        let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; })
+                        let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${localRoomID}/devices/${localModuleID}/IN/${localSensorID}/value`);
                         if (sIdx != -1) {
                             this._sensors.splice(sIdx, 1);
                         }
-                        this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: oldModule.IP, input: oldSensors[oldSensorID].input.toString() } });
+
+                        this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: localModule.IP, input: localSensors[localSensorID].input.toString() } });
+
                     }
                 }
-                const newDevices = (newModule && newModule["OUT"]) ? newModule["OUT"] : undefined;
-                const oldDevices = (oldModule && oldModule["OUT"]) ? oldModule["OUT"] : undefined;
-                for (const oldDeviceID in oldDevices) {
-                    const newDevice = (newDevices) ? newDevices[oldDeviceID] : undefined;
-                    if (!newDevice) { // DEVICE was removed
-                        this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: oldModule.IP, output: oldDevices[oldDeviceID].output.toString() } });
+
+                const devices = (module && module["OUT"]) ? module["OUT"] : undefined;
+                const localDevices = (localModule && localModule["OUT"]) ? localModule["OUT"] : undefined;
+                for (const localDeviceID in localDevices) {
+                    const device = (devices) ? devices[localDeviceID] : undefined;
+                    if (!device) {// DEVICE was removed
+                        this._changes.push({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: localModule.IP, output: localDevices[localDeviceID].output.toString() } });
                     }
                 }
             }
-        }
+        }*/
         if (!comparingLocalDB) {
             /*Pokud se proovnává Firebase s lokální datbází, tak se získá rozdíl nových dat (z Firebase databáze) oproti starým (lokálním).
             Všechny změny se uloží lokálně, čímž se this._dbFile srovná s daty ve Firebase databázi*/
@@ -568,10 +593,7 @@ class Firebase {
                         this.removeInLocalDB(path, time);
                     }
                     else {
-                        error_logger_js_1.ErrorLogger.log(null, {
-                            errorDescription: "Neznámý typ rozdílu nových dat z databáze...!",
-                            placeID: 26
-                        }, { diff: diff });
+                        console.log("Neznámý typ rozdílu nových dat z databáze...!");
                     }
                 });
             }

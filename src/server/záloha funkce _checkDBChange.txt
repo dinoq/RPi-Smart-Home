@@ -1,0 +1,148 @@
+
+        let getLevelFromPath = (path): DevicesTypes => {
+            if (!path || !path.length) {
+                ErrorLogger.log(null, {
+                    errorDescription: "Neznámá chyba při zpracovávání změn v databázi!",
+                    placeID: 9
+                }, { path: path });
+                return DevicesTypes.UNKNOWN;
+            }
+            if (path.length >= 5 && path.includes("rooms") && path.includes("devices")) {
+                if (path.includes("IN")) {
+                    return DevicesTypes.SENSOR;
+                } else if (path.includes("OUT")) {
+                    return DevicesTypes.DEVICE;
+                } else if (path.includes("index") || path.includes("name") || path.includes("type") || path.includes("IP")) {
+                    return DevicesTypes.MODULE;
+                } else {
+                    ErrorLogger.log(null, {
+                        errorDescription: "Neznámá chyba při zpracovávání změn v databázi, zřejmě nevalidní data!",
+                        placeID: 10
+                    }, { path: path });
+                    return DevicesTypes.UNKNOWN;
+                }
+            } else if (path.length >= 3 && path.includes("rooms") && path.includes("devices")) {
+                return DevicesTypes.MODULE;
+            } else if (path.length >= 1 && path.indexOf("rooms") == 0) {
+                return DevicesTypes.ROOM;
+            } else if (path.length == 1 && path.indexOf("lastWriteTime") == 0) {
+                return DevicesTypes.LAST_WRITE_TIME;
+            } else {
+                ErrorLogger.log(null, {
+                    errorDescription: "Neznámá chyba při zpracovávání změn v databázi, zřejmě nevalidní data!",
+                    placeID: 11
+                }, { path: path });
+                return DevicesTypes.UNKNOWN;
+            }
+        }
+
+        let differences = diff(oldData, newData);
+        console.log("differences?: " + (differences != undefined));
+        if (differences) {
+            differences.forEach((diff, index, array) => {
+                let change;
+                let lvl = getLevelFromPath(diff.path);
+                if (lvl == DevicesTypes.LAST_WRITE_TIME) {
+                    return;
+                }
+                let evenPathLength = (diff.path.length % 2 == 0);
+                let pathStr = diff.path.join("/");
+                pathStr = (evenPathLength) ? pathStr.substring(0, pathStr.lastIndexOf("/")) : pathStr;
+                let newID = (evenPathLength) ? (diff.path.join("/")).substring(pathStr.length + 1) : Object.keys(diff.rhs)[0];
+                let fullPath = pathStr + "/" + newID;
+                let modulePath = fullPath.substring(0, fullPath.lastIndexOf("OUT") - 1);
+                
+                if (diff.kind == ObjectChangeTypes.NEW) { // Do Firebase bylo přidáno něco, co lokálně neexistuje
+                    change = { type: ChangeMessageTypes.ADDED, level: lvl, data: { path: fullPath } };
+                    if (lvl == DevicesTypes.MODULE) {
+                        change.data["id"] = newID;
+                    } else if (lvl == DevicesTypes.SENSOR) {
+                        change.data["ip"] = this.readFromDBObject(newData, modulePath + "/IP");
+                        change.data["input"] = (diff.rhs && diff.rhs.input) ? diff.rhs.input.toString() : "";
+                        let ip = change.data["ip"];
+                        let pathToVal = fullPath + "/value";
+                        this._sensors.push({ IP: ip, pathToValue: pathToVal });
+
+                    } else if (lvl == DevicesTypes.DEVICE) {
+                        let device = this.readFromDBObject(newData, fullPath);
+                        let output = (device.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
+                        output += device.output.toString().substring(1);
+                        let val = Number.parseInt(device.value);
+                        if (device.type == "analog") {
+                            if (val < 50) {
+                                val = 0;
+                                output = "D" + output.substring(1);
+                            }
+                            if (val > 950) {
+                                val = 1023;
+                                output = "D" + output.substring(1);
+                            }
+                        }
+                        
+                        change.data["ip"] = this.readFromDBObject(newData, modulePath + "/IP");
+                        change.data["output"] = output;
+                        change.data["value"] = val.toString();
+                    }
+                } else if (diff.kind == ObjectChangeTypes.EDITED) { // Nějaká změna hodnoty
+                    if (diff.path[diff.path.length - 1] != "index") {// Změny indexu nijak server nezpracovává (ve smyslu že by komunikoval s klientem)                        
+                        let lvl = getLevelFromPath(diff.path);
+                        
+                        if (lvl == DevicesTypes.MODULE) {
+
+                        }
+                        else if (lvl == DevicesTypes.SENSOR) {
+                            // Najde se starý senzor v this._sensors
+                            fullPath = fullPath.split("/").slice(0,6).join("/");
+                            let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; })
+                            let sIdx = sensorsPaths.indexOf(fullPath + "/value");
+                            //let sIdx = sensorsPaths.indexOf(`${firebase.auth().currentUser.uid}/rooms/${newRoomID}/devices/${moduleID}/IN/${sensorID}/value`);
+                            let sensor = this.readFromDBObject(newData, fullPath);
+                            if (sIdx != -1) {
+                                sensor["IP"] = this.readFromDBObject(newData, modulePath + "/IP");
+                                sensor["pathToValue"] = fullPath
+                                this._sensors[sIdx] = sensor;
+                            }
+                            //TODO: change = { type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: sensor["IP"], oldInput: localSensor.input.toString(), newInput: sensor.input.toString(), type: sensor.type.toString() } };
+                        }
+                        else if (lvl == DevicesTypes.DEVICE) {
+
+                        }
+                    }
+                } else if (diff.kind == ObjectChangeTypes.DELETED) {
+                    let lvl = getLevelFromPath(diff.path);
+                    change = { type: ChangeMessageTypes.REMOVED, level: lvl, data: {} };
+                    if (lvl == DevicesTypes.MODULE) {
+                        change.data["ip"] = (diff.lhs && diff.lhs.IP) ? diff.lhs.IP : undefined;
+                    }
+                    else if (lvl == DevicesTypes.SENSOR) {
+                        let modulePath = fullPath.substring(0, fullPath.lastIndexOf("IN") - 1);
+                        change.data["ip"] = this.readFromLocalDB(modulePath + "/IP");
+                        change.data["input"] = (diff.lhs && diff.lhs.input) ? diff.lhs.input.toString() : "";
+
+                        let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; })
+                        let sIdx = sensorsPaths.indexOf(fullPath + "/value");
+                        if (sIdx != -1) {
+                            this._sensors.splice(sIdx, 1);
+                        }
+                    }
+                    else if (lvl == DevicesTypes.DEVICE) {
+
+                    }
+                } else { // Zpracování chyb
+                    if (diff.kind == "A") { // Přidání do pole - tahle situace ale v systému vůbec není, nemělo by to sem nikdy dojít
+                        ErrorLogger.log(null, {
+                            errorDescription: "Nepodporovaná akce při zpracovávání změn z Firebase databáze!",
+                            placeID: 7
+                        }, { diff: diff, change: change });
+                    } else {
+                        ErrorLogger.log(null, {
+                            errorDescription: "Neznámá chyba při zpracovávání změn z Firebase databáze!",
+                            placeID: 8
+                        }, { diff: diff, change: change });
+                    }
+
+                }
+                if (change)
+                    this._changes.push(change);
+            })
+        }
