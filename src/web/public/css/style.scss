@@ -391,11 +391,11 @@ home-page {
 }
 
 
-.frame-list {
+.list-component {
     .room-name {
         padding-left: 20px;
     }
-    frame-list-item {
+    list-item {
         border-bottom: 1px solid var(--default-blue-color);
         background-color: #ececec;
 
@@ -444,7 +444,7 @@ $blink-color: #00aaff4f;
         background-color: var(--default-page-bg-color);
     }
 }
-frame-detail {
+detail-component {
 
     .form-wrapper {
         .form {
@@ -548,7 +548,9 @@ page-manager {
             }
 
             slidable-img {
-                background-color: #c1c1c1;
+                .bordered-img{
+                    border: 1px solid grey;
+                }
             }
         }
     }

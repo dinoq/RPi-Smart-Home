@@ -49,7 +49,7 @@ Total : 49 files,  4089 codes, 159 comments, 681 blanks, all 4929 lines
 | [src/web/ts/errors/system-errors/undefined-page-error.ts](/src/web/ts/errors/system-errors/undefined-page-error.ts) | TypeScript | 9 | 0 | 3 | 12 |
 | [src/web/ts/layouts/base-layout.ts](/src/web/ts/layouts/base-layout.ts) | TypeScript | 7 | 0 | 5 | 12 |
 | [src/web/ts/layouts/frame-detail.ts](/src/web/ts/layouts/frame-detail.ts) | TypeScript | 358 | 5 | 66 | 429 |
-| [src/web/ts/layouts/frame-list.ts](/src/web/ts/layouts/frame-list.ts) | TypeScript | 271 | 6 | 45 | 322 |
+| [src/web/ts/layouts/list-component.ts](/src/web/ts/layouts/list-component.ts) | TypeScript | 271 | 6 | 45 | 322 |
 | [src/web/ts/layouts/horizontal-stack.ts](/src/web/ts/layouts/horizontal-stack.ts) | TypeScript | 10 | 0 | 5 | 15 |
 | [src/web/ts/layouts/room-card.ts](/src/web/ts/layouts/room-card.ts) | TypeScript | 416 | 16 | 68 | 500 |
 | [src/web/ts/layouts/tab-layout.ts](/src/web/ts/layouts/tab-layout.ts) | TypeScript | 51 | 0 | 14 | 65 |

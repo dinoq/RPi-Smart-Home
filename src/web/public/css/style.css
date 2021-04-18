@@ -415,34 +415,34 @@ home-page room-card .card-container .right-stack .devices-row {
           justify-content: space-between;
 }
 
-.frame-list .room-name {
+.list-component .room-name {
   padding-left: 20px;
 }
 
-.frame-list frame-list-item {
+.list-component list-item {
   border-bottom: 1px solid var(--default-blue-color);
   background-color: #ececec;
 }
 
-.frame-list frame-list-item:nth-child(odd) {
+.list-component list-item:nth-child(odd) {
   background-color: #fafafa;
 }
 
-.frame-list frame-list-item:hover:not(.no-hover) {
+.list-component list-item:hover:not(.no-hover) {
   cursor: pointer;
 }
 
-.frame-list frame-list-item:hover:not(.no-hover):not(.active) {
+.list-component list-item:hover:not(.no-hover):not(.active) {
   background-color: #d5d5d5;
 }
 
-.frame-list frame-list-item.active {
+.list-component list-item.active {
   background-color: var(--default-blue-color);
   color: white;
 }
 
-.frame-list frame-list-item > .components-wrapper > *:hover:not(.room-name):not(.text):not(.btn-wrapper),
-.frame-list frame-list-item > .components-wrapper .btn:hover {
+.list-component list-item > .components-wrapper > *:hover:not(.room-name):not(.text):not(.btn-wrapper),
+.list-component list-item > .components-wrapper .btn:hover {
   opacity: 0.7;
 }
 
@@ -464,23 +464,23 @@ home-page room-card .card-container .right-stack .devices-row {
   }
 }
 
-frame-detail .form-wrapper .form {
+detail-component .form-wrapper .form {
   border-radius: 10px;
   background-color: #ffffff;
   padding: 10px;
 }
 
-frame-detail .blinking {
+detail-component .blinking {
   -webkit-animation: blink 1s linear infinite;
   animation: blink 1s linear infinite;
 }
 
-frame-detail .blink-once {
+detail-component .blink-once {
   -webkit-animation: blink 1s linear 1;
   animation: blink 1s linear 1;
 }
 
-frame-detail input:disabled {
+detail-component input:disabled {
   background-color: #d7d7d7;
 }
 
@@ -559,8 +559,8 @@ page-manager settings-page .form-wrapper form, page-manager settings-page .form-
   margin: 5px;
 }
 
-page-manager settings-page .form-wrapper form slidable-img, page-manager settings-page .form-wrapper .form slidable-img {
-  background-color: #c1c1c1;
+page-manager settings-page .form-wrapper form slidable-img .bordered-img, page-manager settings-page .form-wrapper .form slidable-img .bordered-img {
+  border: 1px solid grey;
 }
 
 /*

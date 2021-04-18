@@ -56,6 +56,7 @@ void setup()
     coap.server(callbackStopInputObservation, "stop-input-observation");
     coap.server(callbackChangeObservedInput, "change-observed-input");
     coap.server(callbackResetModule, "reset-module");
+    coap.server(callbackServerHasBeenReset, "server-has-been-reset");
     coap.server(callbackHelloClient, "hello-client");
     coap.server(callbackSetID, "set-id");
     
@@ -398,6 +399,17 @@ void callbackResetModule(CoapPacket &packet, IPAddress ip, int port)
 
     Serial.println("callbackResetModule");
     resetModule(); // Parameters packet, ip and port are not need when reseting module
+    coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen); // Send response back to ip, because RPiIP is no longer set!
+}
+
+// CoAP server endpoint URL for 
+void callbackServerHasBeenReset(CoapPacket &packet, IPAddress ip, int port)
+{
+    if (!RpiIP.isSet())
+        return;
+
+    Serial.println("callbackServerHasBeenReset");
+    TODO!
     coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen); // Send response back to ip, because RPiIP is no longer set!
 }
 
@@ -791,6 +803,7 @@ SensorInfo getSensorInfo(char input[])
     }
     else
     {
+        sendErrorReportToServer("Neznámý vstup ve funkci getSensorInfo(char input[])! Možné hodnoty jsou A/D/I2C. Případně přidejte nové.", __PRETTY_FUNCTION__);
         Serial.println("-Chyba: neznámý vstup ve funkci getSensorInfo(char input[])! Možné hodnoty jsou A/D/I2C. Případně přidejte nové.");
     }
 
@@ -997,7 +1010,24 @@ boolean beginBMP(){
     return beginBMP(false);
 }
 
-
+/**
+ * do func name by se mělo vždy přiřazovat __PRETTY_FUNCTION__! 
+ */
+void sendErrorReportToServer(char errorMsg[], const char funcName[]){
+    String msgToSend = String(errorMsg) + ". Ve funkci: " + String(funcName) + ".";
+    if (!RpiIP.isSet()){
+        Serial.println("Došlo k chybě: " + String(errorMsg) + ". Ve funkci: " + String(funcName) + ".Adresa serveru není nastavená, nebylo možné mu odeslat hlášení o chybě!");
+        return;
+    }
+    char buf[msgToSend.length()+1];
+    msgToSend.toCharArray(buf, msgToSend.length()+1);
+    int msgid = coap.send(RpiIP, CoAPPort, "report-error", COAP_NONCON, COAP_GET, NULL, 0, (const uint8_t*)buf, msgToSend.length(), COAP_TEXT_PLAIN);
+    
+    /*Serial.println("FUNC NAME:");
+    Serial.println(__FUNCTION__);//checkInValues
+    Serial.println(__func__); //checkInValues
+    Serial.println(__PRETTY_FUNCTION__); // void checkInValues()*/
+}
 
 
 

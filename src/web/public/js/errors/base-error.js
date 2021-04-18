@@ -1,5 +1,5 @@
 import { ErrorDialog } from "../components/dialogs/error-dialog.js";
-export class BaseError {
+export class AbstractError {
     constructor(msg = "", caller, showImmediately = true) {
         this.showInDialog = false;
         if (caller) {
@@ -23,6 +23,22 @@ export class BaseError {
         if (this.showInDialog) {
             let stringWithBR = this.errMsg.replaceAll("\n", "<br>");
             new ErrorDialog(stringWithBR, {});
+        }
+    }
+}
+export class BaseConsoleError extends AbstractError {
+    constructor(msg = "", caller, showImmediately = true) {
+        super(msg, caller, showImmediately);
+        this.showInDialog = false;
+    }
+}
+export class BaseDialogError extends AbstractError {
+    constructor(msg = "", caller, showImmediately = true) {
+        super(msg, caller, false);
+        this.showInDialog = true;
+        this.showImmediately = showImmediately;
+        if (showImmediately) {
+            this.show();
         }
     }
 }

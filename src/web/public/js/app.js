@@ -12,10 +12,10 @@ import { VerticalStack } from "./layouts/vertical-stack.js";
 import { HorizontalStack } from "./layouts/horizontal-stack.js";
 import { BaseComponent } from "./components/component.js";
 import { SettingsPage } from "./pages/settings-page.js";
-import { FrameList, FrameListItem } from "./layouts/frame-list.js";
+import { List, ListItem } from "./layouts/list-component.js";
 import { Icon } from "./components/others/app-icon.js";
 import { TabLayout } from "./layouts/tab-layout.js";
-import { FrameDetail, FrameDetailRow, SlidableImg } from "./layouts/frame-detail.js";
+import { BaseDetail, DetailRow, SlidableImg } from "./layouts/detail-component.js";
 import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
 import { LoaderComponent } from "./components/others/loader.js";
 import { OneOptionDialog } from "./components/dialogs/cancel-dialog.js";
@@ -25,6 +25,8 @@ import { PairComponent } from "./components/forms/pair-component.js";
 import { LoginPage } from "./pages/login-page.js";
 import { PairPage } from "./pages/pair-page.js";
 import { ChoiceDialog } from "./components/dialogs/choice-dialog.js";
+import { SettingsDetail } from "./layouts/settings-detail.js";
+import { AutomationDetail } from "./layouts/automation-detail.js";
 export var app = null;
 class AutoHomeApp {
     constructor() {
@@ -58,10 +60,12 @@ class AutoHomeApp {
             Icon,
             LoaderComponent,
             SettingsPage,
-            FrameList,
-            FrameListItem,
-            FrameDetail,
-            FrameDetailRow,
+            List,
+            ListItem,
+            BaseDetail,
+            SettingsDetail,
+            AutomationDetail,
+            DetailRow,
             TabLayout,
             SlidableImg,
             PairComponent,

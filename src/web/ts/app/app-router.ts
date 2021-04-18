@@ -1,5 +1,5 @@
-import { BaseError } from "../errors/base-error.js";
-import { UndefinedPageError } from "../errors/system-errors/undefined-page-error.js";
+import { AbstractError } from "../errors/base-error.js";
+import { UndefinedPageError } from "../errors/console-errors/undefined-page-error.js";
 import { Firebase } from "./firebase.js";
 import { URLManager } from "./url-manager.js";
 

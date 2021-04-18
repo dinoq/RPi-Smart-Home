@@ -1,6 +1,6 @@
-import { BaseError } from "./base-error.js";
+import { AbstractError } from "./base-error.js";
 
-export class CustomComponentNotDefinedError extends BaseError{
+export class CustomComponentNotDefinedError extends AbstractError{
     showInDialog: boolean = true;
     constructor(errorStackClasses: Array<string>) {
         super("", null, false);
@@ -18,7 +18,7 @@ export class CustomComponentNotDefinedError extends BaseError{
     }
 }
 
-export class ComponentNameNotDefinedError extends BaseError{
+export class ComponentNameNotDefinedError extends AbstractError{
     protected showInDialog: boolean = false;
     constructor() {
         super("", null, false);

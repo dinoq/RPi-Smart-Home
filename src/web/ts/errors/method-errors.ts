@@ -1,8 +1,8 @@
 import { ErrorDialog } from "../components/dialogs/error-dialog.js";
 import { Config } from "../app/config.js";
-import { BaseError } from "./base-error.js";
+import { AbstractError } from "./base-error.js";
 
-export class MethodNotImplementedError extends BaseError{
+export class MethodNotImplementedError extends AbstractError{
     protected showInDialog: boolean = false;
     constructor(methodName: string="", caller, showImmediately) {
         super("", caller, false);
@@ -14,7 +14,7 @@ export class MethodNotImplementedError extends BaseError{
     }
 
     show(methodName: string=""){
-        let display = true;
+        let display = false;
         switch (methodName) {
             case "addListeners":
                 display = Config.showAddListenersNotImplemented

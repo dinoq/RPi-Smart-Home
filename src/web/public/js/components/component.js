@@ -1,4 +1,4 @@
-import { BaseError } from "../errors/base-error.js";
+import { BaseDialogError } from "../errors/base-error.js";
 import { CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
 import { Config } from "../app/config.js";
@@ -36,10 +36,15 @@ export class Component extends HTMLElement {
     }
     static defineComponent() {
         if (this.tagName && this.tagName.includes("-") && this.tagName != "default-tag") {
-            customElements.define(this.tagName, this);
+            try {
+                customElements.define(this.tagName, this);
+            }
+            catch (error) {
+                new BaseDialogError("Chyba při definici vlastní komponenty.\n Popis původní chyby:\n " + error.message, this.name, true);
+            }
         }
         else {
-            new BaseError("static property tagName not specified in class", this.name, true);
+            new BaseDialogError("Statická vlastnost tagName nespecifikována pro " + this.name, this.name, true);
         }
     }
 }

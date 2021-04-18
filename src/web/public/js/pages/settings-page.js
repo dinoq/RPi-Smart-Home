@@ -1,16 +1,16 @@
-import { ARROWABLE_LISTS, DBTemplates, FrameList, FrameListItem, FrameListTypes } from "../layouts/frame-list.js";
+import { ARROWABLE_LISTS, DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
 import { Firebase } from "../app/firebase.js";
 import { BasePage } from "./base-page.js";
 import { Utils } from "../app/utils.js";
 import { TabLayout } from "../layouts/tab-layout.js";
-import { FrameDetail } from "../layouts/frame-detail.js";
 import { YesNoCancelDialog } from "../components/dialogs/yes-no-cancel-dialog.js";
 import { DialogResponses } from "../components/dialogs/base-dialog.js";
 import { EventManager } from "../app/event-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
 import { Loader } from "../components/others/loader.js";
 import { OneOptionDialog } from "../components/dialogs/cancel-dialog.js";
-import { Board } from "../app/boards-manager.js";
+import { Board, BoardsManager } from "../app/boards-manager.js";
+import { SettingsDetail } from "../layouts/settings-detail.js";
 export class SettingsPage extends BasePage {
     constructor(componentProps) {
         super(componentProps);
@@ -35,17 +35,17 @@ export class SettingsPage extends BasePage {
             let name = document.getElementById("device-name").value;
             let update = { name: name };
             const listType = this.itemInDetail.parentListType;
-            if (listType == FrameListTypes.ROOMS) {
+            if (listType == ListTypes.ROOMS) {
                 let imgSrc = document.getElementById("bg-img-src").value;
-                let imgOffset = parseFloat(document.getElementById("slider-for-image-input").value);
+                let imgOffset = parseFloat(document.getElementById("slider-for-image").value);
                 imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
                 update.img = { src: imgSrc, offset: imgOffset };
                 path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
             }
-            else if (listType == FrameListTypes.MODULES) {
+            else if (listType == ListTypes.MODULES) {
                 path = this.itemInDetail.item.dbCopy.path;
             }
-            else if (listType == FrameListTypes.SENSORS) {
+            else if (listType == ListTypes.SENSORS) {
                 let iconType = document.getElementById("icon-type").value;
                 let input = document.getElementById("input").value;
                 let unit = document.getElementById("unit").value;
@@ -54,7 +54,7 @@ export class SettingsPage extends BasePage {
                 update.unit = unit;
                 path = this.itemInDetail.item.dbCopy.path;
             }
-            else if (listType == FrameListTypes.DEVICES) {
+            else if (listType == ListTypes.DEVICES) {
                 let iconType = document.getElementById("icon-type").value;
                 let output = document.getElementById("output").value;
                 let outputType = document.getElementById("output-type").value;
@@ -117,7 +117,7 @@ export class SettingsPage extends BasePage {
                     return;
                 }
                 let parentList = this.getItemsList(item);
-                if (Utils.itemIsAnyFromEnum(item.type, FrameListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
+                if (Utils.itemIsAnyFromEnum(item.type, ListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
                     this.editSelectedItemsIDHierarchy(parentList, item);
                 }
                 if (clickedElem == undefined || clickedElem == "edit") {
@@ -125,7 +125,7 @@ export class SettingsPage extends BasePage {
                      * Remove class "active" from both - sensorsList and devicesList.
                      * Because they are on same level in tab hierarchy and we dont want to keep active item from other list...
                      */
-                    if (Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["SENSORS", "DEVICES"])) {
+                    if (Utils.itemIsAnyFromEnum(parentList.type, ListTypes, ["SENSORS", "DEVICES"])) {
                         Array.from(this.sensorsList.childNodes).forEach(listItem => {
                             listItem.active = false;
                         });
@@ -139,10 +139,10 @@ export class SettingsPage extends BasePage {
                         });
                     }
                     item.active = true;
-                    if (parentList.type == FrameListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
+                    if (parentList.type == ListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
                         await this.initModulesList(item);
                     }
-                    else if (parentList.type == FrameListTypes.MODULES) { // We want to initialize sensors and devices only when click on room, not on sensor or device
+                    else if (parentList.type == ListTypes.MODULES) { // We want to initialize sensors and devices only when click on room, not on sensor or device
                         this.initSensorsList(item);
                         this.initDevicesList(item);
                     }
@@ -171,7 +171,7 @@ export class SettingsPage extends BasePage {
                         }
                         let itemPath;
                         let otherItemPath;
-                        if (parentList.type == FrameListTypes.ROOMS) {
+                        if (parentList.type == ListTypes.ROOMS) {
                             itemPath = "rooms/" + item.dbCopy.dbID;
                             otherItemPath = "rooms/" + otherItem.dbCopy.dbID;
                         }
@@ -184,17 +184,17 @@ export class SettingsPage extends BasePage {
                         parentList.updatedOrderHandler();
                     }
                     else if (clickedElem == "add") { // Add item to database
-                        if (!Utils.itemIsAnyFromEnum(parentList.type, FrameListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"])) {
+                        if (!Utils.itemIsAnyFromEnum(parentList.type, ListTypes, ["ROOMS", "MODULES", "SENSORS", "DEVICES"])) {
                             if (this.clickPromiseResolver)
                                 this.clickPromiseResolver();
                             return;
                         }
-                        if (parentList.type == FrameListTypes.MODULES) { // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
+                        if (parentList.type == ListTypes.MODULES) { // If parent list type is MODULES, don't focus to detail (due to calling this.pageReinicialize()) until new module is initialized
                             this._focusDetail = false;
                         }
-                        let data = DBTemplates[FrameListTypes[parentList.type]]; // Get template of data from list type
-                        if (parentList.type == FrameListTypes.DEVICES) {
-                            const activeModuleType = document.querySelectorAll("frame-list")[1].querySelector(".active").dbCopy.type;
+                        let data = DBTemplates[ListTypes[parentList.type]]; // Get template of data from list type
+                        if (parentList.type == ListTypes.DEVICES) {
+                            const activeModuleType = document.querySelectorAll("list-component")[1].querySelector(".active").dbCopy.type;
                             if (Board[activeModuleType] && Board[activeModuleType].digitalPins) {
                                 let dPins = Board[activeModuleType].digitalPins;
                                 for (let i = 0; i < 5; i++) { //Try to set one of first 5 GPIO, BUT WHICH IS FOR GIVEN MODULE ACCESSIBLE as first option in select.
@@ -217,9 +217,9 @@ export class SettingsPage extends BasePage {
                         await this.pageReinicialize();
                         //Select aded item
                         let newItem = parentList.children[0];
-                        newItem = ((Utils.itemIsAnyFromEnum(parentList.children[0].type, FrameListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
+                        newItem = ((Utils.itemIsAnyFromEnum(parentList.children[0].type, ListTypes, ["BTN_ONLY"])) ? parentList.children[1] : newItem);
                         await this.itemClicked(null, newItem, "edit");
-                        if (parentList.type == FrameListTypes.MODULES) { // Show dialog about connecting to ESP module
+                        if (parentList.type == ListTypes.MODULES) { // Show dialog about connecting to ESP module
                             let waitingDialog = new OneOptionDialog("Čekání na propojení serveru s modulem", DialogResponses.CANCEL);
                             let noModuleDialog = new OneOptionDialog("Nepodařilo se najít nový modul.<br>Zkontrolujte, zda je modul zapnutý.", DialogResponses.OK);
                             let moduleAddedDialog = new OneOptionDialog("Modul byl úspěšně přidán!", DialogResponses.OK);
@@ -298,19 +298,19 @@ export class SettingsPage extends BasePage {
                         console.log("DEL", item.dbCopy.path);
                         parentList.updatedOrderHandler();
                         if (Array.from(parentList.children).length == 1 && Array.from(parentList.children).includes(parentList.addItemBtn)) { // If list contains only "add" button, add default item
-                            parentList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
+                            parentList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(parentList.type, true));
                         }
                         await this.pageReinicialize();
                         if (item.active) { // We removed item, which was in detailt or item, which has selected any of its child item (eg. selected was sensor of deleted module), thus reinit child item lists
                             switch (item.type) {
-                                case FrameListTypes.ROOMS:
-                                    this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
-                                    this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
-                                    this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+                                case ListTypes.ROOMS:
+                                    this.modulesList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.MODULES));
+                                    this.sensorsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.SENSORS));
+                                    this.devicesList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.DEVICES));
                                     break;
-                                case FrameListTypes.MODULES:
-                                    this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
-                                    this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+                                case ListTypes.MODULES:
+                                    this.sensorsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.SENSORS));
+                                    this.devicesList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.DEVICES));
                                     break;
                                 default:
                                     break;
@@ -362,14 +362,14 @@ export class SettingsPage extends BasePage {
             list.initAddItemBtn(this.itemClicked, "/rooms/" + item.dbCopy.dbID + "/devices/");
             list.addItems(list.addItemBtn);
             if (!devs || devs.length == 0) {
-                list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES, true));
+                list.defaultItem.initialize(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.MODULES, true));
                 list.addItems(list.defaultItem);
             }
             for (let i = 0; i < devs.length; i++) {
-                let listItem = new FrameListItem();
+                let listItem = new ListItem();
                 devs[i]["path"] = "rooms/" + item.dbCopy.dbID + "/devices/" + devs[i]["dbID"];
                 //devs[devName]["parentPath"] = item.dbCopy.path;
-                listItem.initialize(FrameListTypes.MODULES, this.itemClicked, devs[i], devs[i].name, { up: (i != 0), down: (i != (devs.length - 1)) });
+                listItem.initialize(ListTypes.MODULES, this.itemClicked, devs[i], devs[i].name, { up: (i != 0), down: (i != (devs.length - 1)) });
                 list.addItems(listItem);
             }
             // Empty sensor and device list...
@@ -387,12 +387,12 @@ export class SettingsPage extends BasePage {
             list.addItems(list.addItemBtn);
             for (let i = 0; i < orderedIN.length; i++) {
                 let bottom = (i != (orderedIN.length - 1)) ? "1px solid var(--default-blue-color)" : "none";
-                let item = new FrameListItem({ borderBottom: bottom });
-                item.initialize(FrameListTypes.SENSORS, this.itemClicked, orderedIN[i], orderedIN[i].name, { up: (i != 0), down: (i != (orderedIN.length - 1)) });
+                let item = new ListItem({ borderBottom: bottom });
+                item.initialize(ListTypes.SENSORS, this.itemClicked, orderedIN[i], orderedIN[i].name, { up: (i != 0), down: (i != (orderedIN.length - 1)) });
                 list.addItems(item);
             }
             if (!orderedIN || !orderedIN.length) {
-                list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS, true));
+                list.defaultItem.initialize(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.SENSORS, true));
                 list.addItems(list.defaultItem);
             }
             list.updatedOrderHandler();
@@ -406,12 +406,12 @@ export class SettingsPage extends BasePage {
             list.addItems(list.addItemBtn);
             for (let i = 0; i < orderedOUT.length; i++) {
                 let bottom = (i != (orderedOUT.length - 1)) ? "1px solid var(--default-blue-color)" : "none";
-                let item = new FrameListItem({ borderBottom: bottom });
-                item.initialize(FrameListTypes.DEVICES, this.itemClicked, orderedOUT[i], orderedOUT[i].name, { up: (i != 0), down: (i != (orderedOUT.length - 1)) });
+                let item = new ListItem({ borderBottom: bottom });
+                item.initialize(ListTypes.DEVICES, this.itemClicked, orderedOUT[i], orderedOUT[i].name, { up: (i != 0), down: (i != (orderedOUT.length - 1)) });
                 list.addItems(item);
             }
             if (!orderedOUT || !orderedOUT.length) {
-                list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES, true));
+                list.defaultItem.initialize(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.DEVICES, true));
                 list.addItems(list.defaultItem);
             }
             list.updatedOrderHandler();
@@ -421,13 +421,22 @@ export class SettingsPage extends BasePage {
             let parentListType = this.itemInDetail.parentListType;
             let title = this.getTitleForEditingFromItem(item, item.dbCopy.name);
             let values;
-            if (parentListType == FrameListTypes.ROOMS) {
-                values = [item.dbCopy.name, item.dbCopy.img.src, item.dbCopy.img.offset, null]; // Last element is slidable image, which doesn't need init val directly (it asks slider for value)
+            if (parentListType == ListTypes.ROOMS) {
+                values = [
+                    { selectedValue: item.dbCopy.name },
+                    { selectedValue: item.dbCopy.img.src },
+                    { selectedValue: item.dbCopy.img.offset }
+                ];
             }
-            else if (parentListType == FrameListTypes.MODULES) {
-                values = [item.dbCopy.name, item.dbCopy.dbID, item.dbCopy.type];
+            else if (parentListType == ListTypes.MODULES) {
+                values = [
+                    { selectedValue: item.dbCopy.name },
+                    { selectedValue: item.dbCopy.dbID },
+                    { selectedValue: item.dbCopy.type },
+                    { selectedValue: item.dbCopy.IP },
+                ];
             }
-            else if (parentListType == FrameListTypes.SENSORS) {
+            else if (parentListType == ListTypes.SENSORS) {
                 let type;
                 console.log("zřejmě se zde bude nutné ptát na item.dbCopy.type a ne input");
                 if (item.dbCopy.input.charAt(0) == "A")
@@ -436,25 +445,86 @@ export class SettingsPage extends BasePage {
                     type = "digital";
                 else
                     type = "bus";
-                values = [item.dbCopy.name, type, item.dbCopy.input, item.dbCopy.unit, item.dbCopy.icon];
+                let selectedModule = document.querySelectorAll("list-component")[1].querySelector(".active");
+                let boardType = selectedModule.dbCopy.type;
+                let i2cPins = (Board[boardType]) ? Board[boardType].i2cPins : undefined;
+                let i2cText = (i2cPins) ? `Sběrnice I2C (SCL = pin ${i2cPins.SCL}, SDA = pin ${i2cPins.SDA})` : "Sběrnice I2C (chybí!)";
+                values = [
+                    { selectedValue: item.dbCopy.name },
+                    {
+                        selectedValue: type,
+                        options: {
+                            optionTexts: ["Digitální pin", "Analogový pin", i2cText],
+                            optionValues: ["digital", "analog", "bus"]
+                        }
+                    },
+                    {
+                        selectedValue: item.dbCopy.input,
+                        dependsOnProps: {
+                            dependsOnID: "input-type",
+                            optionTexts: [
+                                BoardsManager.mapToArrayForSelect("digital", boardType, "text"),
+                                BoardsManager.mapToArrayForSelect("analog", boardType, "text"),
+                                BoardsManager.mapToArrayForSelect("bus", boardType, "text") //i2c
+                            ],
+                            optionValues: [
+                                BoardsManager.mapToArrayForSelect("digital", boardType, "value"),
+                                BoardsManager.mapToArrayForSelect("analog", boardType, "value"),
+                                BoardsManager.mapToArrayForSelect("bus", boardType, "value") //i2c
+                            ]
+                        }
+                    },
+                    {
+                        selectedValue: item.dbCopy.unit,
+                        dependsOnProps: {
+                            dependsOnID: "input-type",
+                            optionTexts: [
+                                BoardsManager.mapToArrayForSelect("digital", boardType, "text"),
+                                BoardsManager.mapToArrayForSelect("analog", boardType, "text"),
+                                BoardsManager.mapToArrayForSelect("bus", boardType, "text") //i2c
+                            ],
+                            optionValues: [
+                                BoardsManager.mapToArrayForSelect("digital", boardType, "value"),
+                                BoardsManager.mapToArrayForSelect("analog", boardType, "value"),
+                                BoardsManager.mapToArrayForSelect("bus", boardType, "value") //i2c
+                            ]
+                        }
+                    },
+                    {
+                        selectedValue: item.dbCopy.icon,
+                        dependsOnProps: {
+                            dependsOnID: "input-type",
+                            optionTexts: [
+                                BoardsManager.mapToArrayForSelect("digital", boardType, "text"),
+                                BoardsManager.mapToArrayForSelect("analog", boardType, "text"),
+                                BoardsManager.mapToArrayForSelect("bus", boardType, "text") //i2c
+                            ],
+                            optionValues: [
+                                BoardsManager.mapToArrayForSelect("digital", boardType, "value"),
+                                BoardsManager.mapToArrayForSelect("analog", boardType, "value"),
+                                BoardsManager.mapToArrayForSelect("bus", boardType, "value") //i2c
+                            ]
+                        }
+                    }
+                ];
             }
-            else if (parentListType == FrameListTypes.DEVICES) {
+            else if (parentListType == ListTypes.DEVICES) {
                 values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
             }
             this.detail.updateDetail(title, parentListType, values);
         };
-        this.detail = new FrameDetail(this.saveChanges, this.initDetail);
+        this.detail = new SettingsDetail(this.saveChanges, this.initDetail);
         this.mainTabPanel = new TabLayout(null);
         this.modulesTabPanel = new TabLayout(null);
         this.sensorsDevicesTabPanel = new TabLayout(null);
-        this.roomsList = new FrameList(FrameListTypes.ROOMS);
-        this.roomsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.ROOMS));
-        this.modulesList = new FrameList(FrameListTypes.MODULES);
-        this.modulesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.MODULES));
-        this.sensorsList = new FrameList(FrameListTypes.SENSORS);
-        this.sensorsList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.SENSORS));
-        this.devicesList = new FrameList(FrameListTypes.DEVICES);
-        this.devicesList.initDefaultItem(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.DEVICES));
+        this.roomsList = new List(ListTypes.ROOMS);
+        this.roomsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.ROOMS));
+        this.modulesList = new List(ListTypes.MODULES);
+        this.modulesList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.MODULES));
+        this.sensorsList = new List(ListTypes.SENSORS);
+        this.sensorsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.SENSORS));
+        this.devicesList = new List(ListTypes.DEVICES);
+        this.devicesList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.DEVICES));
         // Add tabs to all Tab Panels
         this.sensorsDevicesTabPanel.addTab("Snímače", this.sensorsList);
         this.sensorsDevicesTabPanel.addTab("Zařízení", this.devicesList);
@@ -543,18 +613,18 @@ export class SettingsPage extends BasePage {
         let list = this.getItemsList(item);
         let title = 'Editujete ';
         switch (list.type) {
-            case FrameListTypes.BASE:
+            case ListTypes.BASE:
                 break;
-            case FrameListTypes.MODULES:
+            case ListTypes.MODULES:
                 title += 'modul ';
                 break;
-            case FrameListTypes.SENSORS:
+            case ListTypes.SENSORS:
                 title += 'snímač ';
                 break;
-            case FrameListTypes.DEVICES:
+            case ListTypes.DEVICES:
                 title += 'zařízení ';
                 break;
-            case FrameListTypes.ROOMS:
+            case ListTypes.ROOMS:
                 title += 'místnost ';
                 break;
         }
@@ -564,11 +634,11 @@ export class SettingsPage extends BasePage {
     editSelectedItemsIDHierarchy(parentList, item) {
         let index = 0; //default 0 = ROOMS
         switch (parentList.type) {
-            case FrameListTypes.MODULES:
+            case ListTypes.MODULES:
                 index = 1;
                 break;
-            case FrameListTypes.SENSORS:
-            case FrameListTypes.DEVICES:
+            case ListTypes.SENSORS:
+            case ListTypes.DEVICES:
                 index = 2;
                 break;
         }
@@ -604,22 +674,22 @@ export class SettingsPage extends BasePage {
         list.initAddItemBtn(this.itemClicked, "/rooms/");
         list.addItems(list.addItemBtn);
         if (!rooms.length) {
-            list.defaultItem.initialize(FrameListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(FrameListTypes.ROOMS, true));
+            list.defaultItem.initialize(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.ROOMS, true));
             list.addItems(list.defaultItem);
         }
         else {
             for (let i = 0; i < rooms.length; i++) {
                 let bottom = (i != (rooms.length - 1)) ? "1px solid var(--default-blue-color)" : "none";
-                let item = new FrameListItem({ borderBottom: bottom });
+                let item = new ListItem({ borderBottom: bottom });
                 rooms[i]["path"] = "rooms/" + rooms[i].dbID;
-                item.initialize(FrameListTypes.ROOMS, this.itemClicked, rooms[i], rooms[i].name, { up: (i != 0), down: (i != (rooms.length - 1)) });
+                item.initialize(ListTypes.ROOMS, this.itemClicked, rooms[i], rooms[i].name, { up: (i != 0), down: (i != (rooms.length - 1)) });
                 list.addItems(item);
             }
             list.updatedOrderHandler();
         }
     }
     itemTypeToDefaultTypeIndex(type) {
-        return defaultItemTypesIndexes[FrameListTypes[type]];
+        return defaultItemTypesIndexes[ListTypes[type]];
     }
     itemTypeToDefItmStr(type, noItem = false) {
         if (noItem) {

@@ -12,7 +12,7 @@ const path = require('path');
 import { SensorInfo, VALUE_TYPE } from "./ESP.js";
 import { CommunicationManager } from "./communication-manager.js";
 import { ConfigReader } from "./config-reader.js";
-import { ErrorLogger } from "./error-logger.js";
+import { ErrorLogger, ErrorTypes } from "./error-logger.js";
 
 const dbFilePath = "local-database.json";
 
@@ -242,7 +242,6 @@ export class Firebase {
      * @param res Objekt odpovědi
      */
     private _CoAPIncomingMsgCallback = (req: any, res: any) => {
-        console.log('coap request');
         if (req.url == "/new-value") { // Modul poslal novou hodnotu některého snímače
             let val_type = req.payload[req.payload.length - 2];
             let IN = Number.parseInt(req.payload[req.payload.length - 1]) - 1;
@@ -297,6 +296,33 @@ export class Firebase {
             } /*else { // Databáze stále není nainicializovaná
                 //console.log("DB was not still inited in server");
             }*/
+        }else if(req.url == "/report-error"){
+            let ip = req.rsinfo.address;
+            let moduleInfo = {};
+            let db = this.readFromLocalDB("/");
+            if(db && db["rooms"]){
+                for(const roomID in db["rooms"]){
+                    let room = db["rooms"][roomID];
+                    let modules = (room && room["devices"])? room["devices"]: undefined;
+                    for(const moduleID in modules){
+                        let module = modules[moduleID];
+                        if(module && module.IP){
+                            moduleInfo = module;
+                        }
+                    }
+                }
+            }
+            ErrorLogger.log(null, {
+                errorDescription: "Přišla chyba z modulu: \n"+req.payload.toString(),
+                placeID: 28,
+                type: ErrorTypes.MODULE_ERROR
+            }, {infoOModulu: moduleInfo})
+        }else{
+            ErrorLogger.log(null, {
+                errorDescription: "Modul poslal požadavek na serverem nezpracováváné URL!",
+                placeID: 27,
+                type: ErrorTypes.WARNING
+            })
         }
     }
 

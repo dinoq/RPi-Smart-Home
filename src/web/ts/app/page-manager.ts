@@ -1,6 +1,6 @@
 import { AbstractComponent, IComponentProperties as IComponentProperties } from "../components/component.js";
 import { BasePage } from "../pages/base-page.js";
-import { BaseError } from "../errors/base-error.js";
+import { AbstractError, BaseConsoleError } from "../errors/base-error.js";
 import { PageAlreadyAddedToPageManagerError, PageNotExistInPageManagerError } from "../errors/page-errors.js";
 import { Config } from "./config.js";
 import { Singleton } from "./singleton.js";
@@ -36,7 +36,7 @@ export class PageManager extends Singleton {
         if (this.pagesKeys.includes(key)) {//Duplicate key in manager
             let i = this.pagesKeys.indexOf(key);
             if (page.constructor.name != this.pages[i].constructor.name) {
-                new BaseError("Already added page with same key!", this, true);
+                new BaseConsoleError("Already added page with same key!", this, true);
             } else {
                 //console.log("Page already added to pagemanager: " + page.constructor.name );
             }

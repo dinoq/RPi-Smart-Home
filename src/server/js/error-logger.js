@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ErrorLogger = void 0;
+exports.ErrorTypes = exports.ErrorLogger = void 0;
 const fs = require('fs');
 const prependFile = require('prepend-file');
 const os = require('os');
@@ -143,7 +143,15 @@ class ErrorLogger {
             `${trackedObjects}${lineBreak}` +
             //`${lineBreak}`+
             `${line}`;
-        let contentHTML = `<pre style="background-color: #ffd1d1;">` +
+        let blockColor = "#ffd1d1"; // Defaultně pro error
+        if (errorInfo.type) {
+            blockColor = (errorInfo.type == ErrorTypes.WARNING) ? "#fff6d1" : blockColor;
+            blockColor = (errorInfo.type == ErrorTypes.MODULE_ERROR) ? "#c9ceff" : blockColor;
+        }
+        if (exitCode > -1) { // Fatal error
+            blockColor = "#ffadad";
+        }
+        let contentHTML = `<pre style="background-color: ${blockColor};">` +
             `<code>` +
             `<hr>` +
             `<div style="padding: 10px 20px;">` +
@@ -209,3 +217,10 @@ class ErrorLogger {
 exports.ErrorLogger = ErrorLogger;
 ErrorLogger.ERROR_LOG_FILE_PATH = "log.txt";
 ErrorLogger.ERROR_HTML_LOG_FILE_PATH = "log.html";
+var ErrorTypes;
+(function (ErrorTypes) {
+    ErrorTypes[ErrorTypes["ERROR"] = 0] = "ERROR";
+    ErrorTypes[ErrorTypes["FATAL_ERROR"] = 1] = "FATAL_ERROR";
+    ErrorTypes[ErrorTypes["WARNING"] = 2] = "WARNING";
+    ErrorTypes[ErrorTypes["MODULE_ERROR"] = 3] = "MODULE_ERROR";
+})(ErrorTypes = exports.ErrorTypes || (exports.ErrorTypes = {}));

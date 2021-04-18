@@ -1,7 +1,7 @@
 import { BasePage } from "../pages/base-page.js";
-import { BaseError } from "./base-error.js";
+import { AbstractError } from "./base-error.js";
 
-export class PageNotExistInPageManagerError extends BaseError{
+export class PageNotExistInPageManagerError extends AbstractError{
     protected showInDialog: boolean = true;
     constructor(page: number | BasePage, length: number, showImmediately) {
         super("", null, false);
@@ -16,7 +16,7 @@ export class PageNotExistInPageManagerError extends BaseError{
     }
 }
 
-export class PageAlreadyAddedToPageManagerError extends BaseError{
+export class PageAlreadyAddedToPageManagerError extends AbstractError{
     protected showInDialog: boolean = true;
     constructor(page: BasePage, showImmediately) {
         super("", null, false);

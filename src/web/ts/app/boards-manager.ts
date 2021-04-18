@@ -7,17 +7,26 @@ export class BoardsManager {
         return (Board[boardType]) ? Board[boardType].digitalPins : [];
     }
 
-    static mapToArrayForSelect(type: string, boardType: string): Array<string> {
+    /**
+     * 
+     * @param typeOfIO 
+     * @param boardType 
+     * @param type Rozhoduje, co chceme funkcí získat, zda to, co má být v selectu jako value ("value"), nebo innerText ("text")
+     * @returns 
+     */
+    static mapToArrayForSelect(typeOfIO: string, boardType: string, type: string): Array<string> {
         let optionArr = new Array();
+
+        type = (type == "value" || type == "text") ? type : "text";
 
         if (!Board[boardType])
             return optionArr;
 
-        if (type == "digital" || type == "analog") {
+        if (typeOfIO == "digital" || typeOfIO == "analog") {
             let pins: object;
             let typeAbbr;
 
-            if (type == "digital") {
+            if (typeOfIO == "digital") {
                 pins = Board[boardType].digitalPins;
                 typeAbbr = "D";
             } else {
@@ -25,26 +34,31 @@ export class BoardsManager {
                 typeAbbr = "A";
             }
             for (const pin in pins) {
-                optionArr.push(typeAbbr + pins[pin]);
-                optionArr.push(`${pin} (pin ${pins[pin]})`);
+                if(type == "value")
+                    optionArr.push(typeAbbr + pins[pin]);
+                else
+                    optionArr.push(`${pin} (pin ${pins[pin]})`);
             }
-        } else if (type == "bus") {
+        } else if (typeOfIO == "bus") {
             let buses: Array<string> = Board[boardType].bus;
-            if(buses){
+            if (buses) {
                 for (const bus of buses) {
                     for (const busDevice of BusDevices[bus]) {
                         //let sensorName = busDevice.substring(0, busDevice.indexOf(""))
                         let sensorName = busDevice.replace(" ", "-");
                         sensorName = sensorName.replace("(", "");
                         sensorName = sensorName.replace(")", "");
-                        optionArr.push(`${bus}-${sensorName}`);
-                        optionArr.push(`${busDevice}`);
+                        if(type == "value")
+                            optionArr.push(`${bus}-${sensorName}`);
+                        else
+                            optionArr.push(`${busDevice}`);
                     }
                 }
             }
         }
         return optionArr;
     }
+
 }
 
 export class Board {
@@ -71,17 +85,17 @@ export class Board {
             //D14: 4, // Connected to D4
             //D15: 5, // Connected to D3
         },
-        
+
         builtInLedPin: 2,
 
         i2cPins: {
             SCL: "D3",
-            SDA: "D4" 
+            SDA: "D4"
         },
 
         bus: ["SPI", "I2C"]
     };
-    
+
     static NodeMCU = {
         analogPins: {
             A0: 17
@@ -107,12 +121,12 @@ export class Board {
 
         i2cPins: {
             SCL: "D1",
-            SDA: "D2" 
+            SDA: "D2"
         },
 
         bus: ["SPI", "I2C"]
     };
-    
+
     static esp01 = {
         analogPins: {
         },
@@ -130,13 +144,13 @@ export class Board {
             SCL: "D1",
             SDA: "D2" 
         },*/
-/*
-        bus: ["SPI", "I2C"]*/
+        /*
+                bus: ["SPI", "I2C"]*/
     };
 }
 
 class BusDevices {
-    static I2C = ["BMP280 (teplota)", "BMP280 (tlak)","SHT21 (teplota)", "SHT21 (vlhkost)"]
+    static I2C = ["BMP280 (teplota)", "BMP280 (tlak)", "SHT21 (teplota)", "SHT21 (vlhkost)"]
 
     static SPI = []
 }

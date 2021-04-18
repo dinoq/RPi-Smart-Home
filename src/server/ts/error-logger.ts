@@ -40,7 +40,7 @@ export class ErrorLogger {
     private _colorize(str: string, color: string) {
         return `<span style="color: ${color}">${str}</span>`
     }
-    private async logToFile(nativeError: any, errorInfo: { errorDescription: string, placeID: number, reaction?: string }, state: object, exitCode: number = -1) {
+    private async logToFile(nativeError: any, errorInfo: ErrorInfo, state: object, exitCode: number = -1) {
         let logCount = this._logCount;
         let logID = ""; // Náhodné 30ti místné ID chyby pro identifikaci
         let charArr = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -161,8 +161,16 @@ export class ErrorLogger {
             //`${lineBreak}`+
             `${line}`;
 
+        let blockColor = "#ffd1d1"; // Defaultně pro error
+        if(errorInfo.type){
+            blockColor = (errorInfo.type == ErrorTypes.WARNING)? "#fff6d1": blockColor;
+            blockColor = (errorInfo.type == ErrorTypes.MODULE_ERROR)? "#c9ceff": blockColor;
+        }
+        if(exitCode > -1){ // Fatal error
+            blockColor = "#ffadad";
+        }
         let contentHTML =
-            `<pre style="background-color: #ffd1d1;">` +
+            `<pre style="background-color: ${blockColor};">` +
             `<code>` +
             `<hr>` +
             `<div style="padding: 10px 20px;">` +
@@ -193,7 +201,7 @@ export class ErrorLogger {
         return {ID: logID, Count: logCount};
     }
 
-    private async _log(nativeError: any, errorInfo: { errorDescription: string, placeID: number, reaction?: string }, state: object, exitCode: number = -1) {
+    private async _log(nativeError: any, errorInfo: ErrorInfo, state: object, exitCode: number = -1) {
         this._logCount++;
         let log = await this.logToFile(nativeError, errorInfo, state, exitCode);
 
@@ -224,8 +232,23 @@ export class ErrorLogger {
 
     }
 
-    public static async log(nativeError: any, errorInfo: { errorDescription: string, placeID: number, reaction?: string }, state: object = {}, exitCode: number = -1) {
+    public static async log(nativeError: any, errorInfo: ErrorInfo, state: object = {}, exitCode: number = -1) {
         let logger = ErrorLogger.getInstance();
         await logger._log(nativeError, errorInfo, state, exitCode);
     }
+}
+
+
+export enum ErrorTypes{
+    ERROR,
+    FATAL_ERROR,
+    WARNING,
+    MODULE_ERROR
+}
+
+export interface ErrorInfo{
+    errorDescription: string, 
+    placeID: number, 
+    reaction?: string,
+    type?: ErrorTypes    
 }

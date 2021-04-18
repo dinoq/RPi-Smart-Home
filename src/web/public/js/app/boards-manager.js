@@ -5,14 +5,22 @@ export class BoardsManager {
     static getDigitalPins(boardType) {
         return (Board[boardType]) ? Board[boardType].digitalPins : [];
     }
-    static mapToArrayForSelect(type, boardType) {
+    /**
+     *
+     * @param typeOfIO
+     * @param boardType
+     * @param type Rozhoduje, co chceme funkcí získat, zda to, co má být v selectu jako value ("value"), nebo innerText ("text")
+     * @returns
+     */
+    static mapToArrayForSelect(typeOfIO, boardType, type) {
         let optionArr = new Array();
+        type = (type == "value" || type == "text") ? type : "text";
         if (!Board[boardType])
             return optionArr;
-        if (type == "digital" || type == "analog") {
+        if (typeOfIO == "digital" || typeOfIO == "analog") {
             let pins;
             let typeAbbr;
-            if (type == "digital") {
+            if (typeOfIO == "digital") {
                 pins = Board[boardType].digitalPins;
                 typeAbbr = "D";
             }
@@ -21,11 +29,13 @@ export class BoardsManager {
                 typeAbbr = "A";
             }
             for (const pin in pins) {
-                optionArr.push(typeAbbr + pins[pin]);
-                optionArr.push(`${pin} (pin ${pins[pin]})`);
+                if (type == "value")
+                    optionArr.push(typeAbbr + pins[pin]);
+                else
+                    optionArr.push(`${pin} (pin ${pins[pin]})`);
             }
         }
-        else if (type == "bus") {
+        else if (typeOfIO == "bus") {
             let buses = Board[boardType].bus;
             if (buses) {
                 for (const bus of buses) {
@@ -34,8 +44,10 @@ export class BoardsManager {
                         let sensorName = busDevice.replace(" ", "-");
                         sensorName = sensorName.replace("(", "");
                         sensorName = sensorName.replace(")", "");
-                        optionArr.push(`${bus}-${sensorName}`);
-                        optionArr.push(`${busDevice}`);
+                        if (type == "value")
+                            optionArr.push(`${bus}-${sensorName}`);
+                        else
+                            optionArr.push(`${busDevice}`);
                     }
                 }
             }

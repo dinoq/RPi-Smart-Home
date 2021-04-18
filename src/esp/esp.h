@@ -69,6 +69,7 @@ void setRPiIP(IPAddress ip);
 void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port);
 void setModuleID(char ID[], byte idLen);
 void resetSensorInfos();
+void callbackServerHasBeenReset(CoapPacket &packet, IPAddress ip, int port);
 void callbackResetModule(CoapPacket &packet, IPAddress ip, int port);
 void resetModule();
 void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port);
@@ -89,6 +90,10 @@ void blinkIfNotConnectedAndDelay();
 void beginWireIfNotBegun();
 boolean beginBMP(boolean forceBegin);
 boolean beginBMP();
+
+void sendErrorReportToServer(char errorMsg[], const char funcName[]);
+
+
 
 /**
  * Function prototypes PART END

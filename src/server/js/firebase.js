@@ -64,7 +64,6 @@ class Firebase {
          * @param res Objekt odpovědi
          */
         this._CoAPIncomingMsgCallback = (req, res) => {
-            console.log('coap request');
             if (req.url == "/new-value") { // Modul poslal novou hodnotu některého snímače
                 let val_type = req.payload[req.payload.length - 2];
                 let IN = Number.parseInt(req.payload[req.payload.length - 1]) - 1;
@@ -121,6 +120,35 @@ class Firebase {
                 } /*else { // Databáze stále není nainicializovaná
                     //console.log("DB was not still inited in server");
                 }*/
+            }
+            else if (req.url == "/report-error") {
+                let ip = req.rsinfo.address;
+                let moduleInfo = {};
+                let db = this.readFromLocalDB("/");
+                if (db && db["rooms"]) {
+                    for (const roomID in db["rooms"]) {
+                        let room = db["rooms"][roomID];
+                        let modules = (room && room["devices"]) ? room["devices"] : undefined;
+                        for (const moduleID in modules) {
+                            let module = modules[moduleID];
+                            if (module && module.IP) {
+                                moduleInfo = module;
+                            }
+                        }
+                    }
+                }
+                error_logger_js_1.ErrorLogger.log(null, {
+                    errorDescription: "Přišla chyba z modulu: \n" + req.payload.toString(),
+                    placeID: 28,
+                    type: error_logger_js_1.ErrorTypes.MODULE_ERROR
+                }, { infoOModulu: moduleInfo });
+            }
+            else {
+                error_logger_js_1.ErrorLogger.log(null, {
+                    errorDescription: "Modul poslal požadavek na serverem nezpracováváné URL!",
+                    placeID: 27,
+                    type: error_logger_js_1.ErrorTypes.WARNING
+                });
             }
         };
         this._updateSensor = async (sensorInfo, moduleIP) => {

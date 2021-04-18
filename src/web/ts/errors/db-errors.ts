@@ -1,7 +1,7 @@
-import { DETAIL_FIELD_TYPES } from "../layouts/frame-detail.js";
-import { BaseError } from "./base-error.js";
+import { DETAIL_FIELD_TYPES } from "../layouts/detail-component.js";
+import { AbstractError } from "./base-error.js";
 
-export class UnknownValueInDatabaseError extends BaseError{
+export class UnknownValueInDatabaseError extends AbstractError{
     showInDialog: boolean = true;
     constructor(value: string, inputType: DETAIL_FIELD_TYPES) {
         super("", null, false);
