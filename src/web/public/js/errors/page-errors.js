@@ -1,4 +1,4 @@
-import { AbstractError } from "./base-error.js";
+import { AbstractError } from "./base-errors.js";
 export class PageNotExistInPageManagerError extends AbstractError {
     constructor(page, length, showImmediately) {
         super("", null, false);

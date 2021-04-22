@@ -1,6 +1,6 @@
 import { ErrorDialog } from "../components/dialogs/error-dialog.js";
 import { Config } from "../app/config.js";
-import { AbstractError } from "./base-error.js";
+import { AbstractError } from "./base-errors.js";
 
 export class MethodNotImplementedError extends AbstractError{
     protected showInDialog: boolean = false;

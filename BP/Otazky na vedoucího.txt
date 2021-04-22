@@ -42,7 +42,7 @@ DOTAZY KE ZDROJŮM
 - u web -článků-uvádět revizi jen když je u článku uvedena, nebo projít historii pomocí nástroje web.archive.org?
 -u  web článků bez autora kde je jasné že to psal někdo za organizaci -napsat tu organizaci? (např. arduino nebo když oracle má definici databáze https://www.oracle.com/cz/database/what-is-database/)
 -Mám se u online zdrojů zabývat jejich proměnnou? Např. když se změní datum revize/cesta k článku apod...(jako jestli je mám průběžně aktualizovat když si toho všimnu)?
-
+techreport- není na FIT zmíněný, je to ok? (RFC7252)
 
 
 Dotazy na později:

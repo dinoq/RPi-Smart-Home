@@ -1,4 +1,4 @@
-import { AbstractError } from "../../errors/base-error.js";
+import { AbstractError } from "../../errors/base-errors.js";
 import { MethodNotImplementedError } from "../../errors/method-errors.js";
 import { Paths } from "../../app/app-router.js";
 import { Config } from "../../app/config.js";

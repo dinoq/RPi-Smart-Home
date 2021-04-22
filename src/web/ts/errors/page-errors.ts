@@ -1,5 +1,5 @@
 import { BasePage } from "../pages/base-page.js";
-import { AbstractError } from "./base-error.js";
+import { AbstractError } from "./base-errors.js";
 
 export class PageNotExistInPageManagerError extends AbstractError{
     protected showInDialog: boolean = true;

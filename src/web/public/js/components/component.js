@@ -1,4 +1,4 @@
-import { BaseDialogError } from "../errors/base-error.js";
+import { BaseDialogError } from "../errors/base-errors.js";
 import { CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
 import { Config } from "../app/config.js";

@@ -1,5 +1,5 @@
 import { DETAIL_FIELD_TYPES } from "../layouts/detail-component.js";
-import { AbstractError } from "./base-error.js";
+import { AbstractError } from "./base-errors.js";
 export class UnknownValueInDatabaseError extends AbstractError {
     constructor(value, inputType) {
         super("", null, false);

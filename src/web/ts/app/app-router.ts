@@ -1,4 +1,4 @@
-import { AbstractError } from "../errors/base-error.js";
+import { AbstractError } from "../errors/base-errors.js";
 import { UndefinedPageError } from "../errors/console-errors/undefined-page-error.js";
 import { Firebase } from "./firebase.js";
 import { URLManager } from "./url-manager.js";

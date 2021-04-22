@@ -93,7 +93,7 @@ boolean beginBMP();
 
 void sendErrorReportToServer(char errorMsg[], const char funcName[]);
 
-
+void pinWrite(byte pinNumber, int value, String pinType);
 
 /**
  * Function prototypes PART END

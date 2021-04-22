@@ -1,5 +1,5 @@
 import { AbstractComponent } from "../components/component.js";
-import { BaseConsoleError } from "../errors/base-error.js";
+import { BaseConsoleError } from "../errors/base-errors.js";
 import { PageNotExistInPageManagerError } from "../errors/page-errors.js";
 import { Config } from "./config.js";
 import { Singleton } from "./singleton.js";

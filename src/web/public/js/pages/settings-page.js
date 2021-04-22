@@ -116,6 +116,11 @@ export class SettingsPage extends BasePage {
                         this.clickPromiseResolver();
                     return;
                 }
+                if (!item.isConnected) { // V některých případech je (zejména při "zběsilém" klikání) potřeba odfiltrovat kliknutí na prvky, které ale mezitím již byly odstraněny z DOM stromu
+                    if (this.clickPromiseResolver)
+                        this.clickPromiseResolver();
+                    return;
+                }
                 let parentList = this.getItemsList(item);
                 if (Utils.itemIsAnyFromEnum(item.type, ListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
                     this.editSelectedItemsIDHierarchy(parentList, item);
@@ -437,79 +442,42 @@ export class SettingsPage extends BasePage {
                 ];
             }
             else if (parentListType == ListTypes.SENSORS) {
-                let type;
-                console.log("zřejmě se zde bude nutné ptát na item.dbCopy.type a ne input");
-                if (item.dbCopy.input.charAt(0) == "A")
-                    type = "analog";
-                else if (item.dbCopy.input.charAt(0) == "D")
-                    type = "digital";
-                else
-                    type = "bus";
+                values = this.getSensorValuesForDetail();
+            }
+            else if (parentListType == ListTypes.DEVICES) {
                 let selectedModule = document.querySelectorAll("list-component")[1].querySelector(".active");
                 let boardType = selectedModule.dbCopy.type;
-                let i2cPins = (Board[boardType]) ? Board[boardType].i2cPins : undefined;
-                let i2cText = (i2cPins) ? `Sběrnice I2C (SCL = pin ${i2cPins.SCL}, SDA = pin ${i2cPins.SDA})` : "Sběrnice I2C (chybí!)";
                 values = [
                     { selectedValue: item.dbCopy.name },
                     {
-                        selectedValue: type,
+                        selectedValue: item.dbCopy.type,
                         options: {
-                            optionTexts: ["Digitální pin", "Analogový pin", i2cText],
-                            optionValues: ["digital", "analog", "bus"]
+                            optionTexts: ["Digitální výstup", "Analogový výstup"],
+                            optionValues: ["digital", "analog"]
                         }
                     },
                     {
-                        selectedValue: item.dbCopy.input,
-                        dependsOnProps: {
-                            dependsOnID: "input-type",
-                            optionTexts: [
-                                BoardsManager.mapToArrayForSelect("digital", boardType, "text"),
-                                BoardsManager.mapToArrayForSelect("analog", boardType, "text"),
-                                BoardsManager.mapToArrayForSelect("bus", boardType, "text") //i2c
-                            ],
-                            optionValues: [
-                                BoardsManager.mapToArrayForSelect("digital", boardType, "value"),
-                                BoardsManager.mapToArrayForSelect("analog", boardType, "value"),
-                                BoardsManager.mapToArrayForSelect("bus", boardType, "value") //i2c
-                            ]
-                        }
-                    },
-                    {
-                        selectedValue: item.dbCopy.unit,
-                        dependsOnProps: {
-                            dependsOnID: "input-type",
-                            optionTexts: [
-                                BoardsManager.mapToArrayForSelect("digital", boardType, "text"),
-                                BoardsManager.mapToArrayForSelect("analog", boardType, "text"),
-                                BoardsManager.mapToArrayForSelect("bus", boardType, "text") //i2c
-                            ],
-                            optionValues: [
-                                BoardsManager.mapToArrayForSelect("digital", boardType, "value"),
-                                BoardsManager.mapToArrayForSelect("analog", boardType, "value"),
-                                BoardsManager.mapToArrayForSelect("bus", boardType, "value") //i2c
-                            ]
+                        selectedValue: item.dbCopy.output,
+                        options: {
+                            optionTexts: BoardsManager.mapToArrayForSelect("digital", boardType, "text"),
+                            optionValues: BoardsManager.mapToArrayForSelect("digital", boardType, "value")
                         }
                     },
                     {
                         selectedValue: item.dbCopy.icon,
                         dependsOnProps: {
-                            dependsOnID: "input-type",
+                            dependsOnID: "output-type",
                             optionTexts: [
-                                BoardsManager.mapToArrayForSelect("digital", boardType, "text"),
-                                BoardsManager.mapToArrayForSelect("analog", boardType, "text"),
-                                BoardsManager.mapToArrayForSelect("bus", boardType, "text") //i2c
+                                ["Světlo", "Spínač", "Motor"],
+                                ["Stmívatelné světlo"] //analog
                             ],
                             optionValues: [
-                                BoardsManager.mapToArrayForSelect("digital", boardType, "value"),
-                                BoardsManager.mapToArrayForSelect("analog", boardType, "value"),
-                                BoardsManager.mapToArrayForSelect("bus", boardType, "value") //i2c
+                                ["light", "switch", "motor"],
+                                ["dimmable-light"] //analog
                             ]
                         }
                     }
                 ];
-            }
-            else if (parentListType == ListTypes.DEVICES) {
-                values = [item.dbCopy.name, item.dbCopy.type, item.dbCopy.output, item.dbCopy.icon];
             }
             this.detail.updateDetail(title, parentListType, values);
         };
@@ -663,7 +631,8 @@ export class SettingsPage extends BasePage {
                     await this.selectItemByID(id);
                 }
                 catch (error) {
-                    console.log(error);
+                    this.selectedItemsIDHierarchy.splice(i, this.selectedItemsIDHierarchy.length - i);
+                    break;
                 }
             }
         }
@@ -687,6 +656,83 @@ export class SettingsPage extends BasePage {
             }
             list.updatedOrderHandler();
         }
+    }
+    /**
+     * Funkce vrátí pole hodnot pro inicializaci detailu pro snímač.
+     * Tohle je řešeno samostatnou funkcí proto, protože kód je velmi dlouhý na to, aby byl součástí funkce this.initDetail()
+     * @returns Pole hodnot pro inicializaci detailu pro snímač
+     */
+    getSensorValuesForDetail() {
+        let item = this.itemInDetail.item;
+        let selectedModule = document.querySelectorAll("list-component")[1].querySelector(".active");
+        let boardType = selectedModule.dbCopy.type;
+        let i2cPins = (Board[boardType]) ? Board[boardType].i2cPins : undefined;
+        let i2cText = (i2cPins) ? `Sběrnice I2C (SCL = pin ${i2cPins.SCL}, SDA = pin ${i2cPins.SDA})` : "Sběrnice I2C (chybí!)";
+        let type;
+        if (item.dbCopy.input.charAt(0) == "A")
+            type = "analog";
+        else if (item.dbCopy.input.charAt(0) == "D")
+            type = "digital";
+        else
+            type = "bus";
+        return [
+            { selectedValue: item.dbCopy.name },
+            {
+                selectedValue: type,
+                options: {
+                    optionTexts: ["Digitální pin", "Analogový pin", i2cText],
+                    optionValues: ["digital", "analog", "bus"]
+                }
+            },
+            {
+                selectedValue: item.dbCopy.input,
+                dependsOnProps: {
+                    dependsOnID: "input-type",
+                    optionTexts: [
+                        BoardsManager.mapToArrayForSelect("digital", boardType, "text"),
+                        BoardsManager.mapToArrayForSelect("analog", boardType, "text"),
+                        BoardsManager.mapToArrayForSelect("bus", boardType, "text") //i2c
+                    ],
+                    optionValues: [
+                        BoardsManager.mapToArrayForSelect("digital", boardType, "value"),
+                        BoardsManager.mapToArrayForSelect("analog", boardType, "value"),
+                        BoardsManager.mapToArrayForSelect("bus", boardType, "value") //i2c
+                    ]
+                }
+            },
+            {
+                selectedValue: item.dbCopy.unit,
+                dependsOnProps: {
+                    dependsOnID: "input-type",
+                    optionTexts: [
+                        ["On / Off", "Zapnuto / Vypnuto", "Sepnuto / Rozepnuto", "Zavřeno / Otevřeno"],
+                        ["°C", "% (přepočet z 0 až 1023 na 0% až 100%)", "číslo 0-1023 (Bez jednotky)"],
+                        ["°C", "% (bez přepočtu)", "číslo 0-1023 (Bez jednotky)"] //bus
+                    ],
+                    optionValues: [
+                        ["on-off0", "on-off1", "on-off2", "on-off3"],
+                        ["c", "percentages", "number"],
+                        ["c", "percentages", "number"] //bus
+                    ]
+                }
+            },
+            {
+                selectedValue: item.dbCopy.icon,
+                dependsOnProps: {
+                    dependsOnID: "input-type",
+                    optionTexts: [
+                        ["Spínač", "Bez ikony"],
+                        ["Teploměr", "Tlakoměr", "Vlhkost", "Bez ikony"],
+                        ["Teploměr", "Senzor BMP (teplota)", "Senzor SHT (teplota)", "Tlakoměr", "Vlhkost", "Bez ikony"] // Bus
+                    ],
+                    optionValues: [
+                        ["switch", "-"],
+                        ["temp", "press", "hum", "-"],
+                        ["temp", "bmp-temp", "sht-temp", "press", "hum", "-"] // Bus
+                    ]
+                }
+            }
+        ];
     }
     itemTypeToDefaultTypeIndex(type) {
         return defaultItemTypesIndexes[ListTypes[type]];

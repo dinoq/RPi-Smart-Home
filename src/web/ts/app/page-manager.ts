@@ -1,6 +1,6 @@
 import { AbstractComponent, IComponentProperties as IComponentProperties } from "../components/component.js";
 import { BasePage } from "../pages/base-page.js";
-import { AbstractError, BaseConsoleError } from "../errors/base-error.js";
+import { AbstractError, BaseConsoleError } from "../errors/base-errors.js";
 import { PageAlreadyAddedToPageManagerError, PageNotExistInPageManagerError } from "../errors/page-errors.js";
 import { Config } from "./config.js";
 import { Singleton } from "./singleton.js";

@@ -2,7 +2,7 @@ import { IComponentProperties } from "../components/component.js";
 import { ListTypes } from "./list-component.js";
 import { BaseDetail, DETAIL_FIELD_TYPES } from "./detail-component.js";
 import { UnknownPageError } from "../errors/console-errors/uknown-page-error.js";
-import { BaseConsoleError, BaseDialogError } from "../errors/base-error.js";
+import { BaseConsoleError, BaseDialogError } from "../errors/base-errors.js";
 
 export class SettingsDetail extends BaseDetail {
     static tagName = "settings-detail";
@@ -41,7 +41,7 @@ export class SettingsDetail extends BaseDetail {
                 ["device-name", "Název zařízení", DETAIL_FIELD_TYPES.TEXT_FIELD],
                 ["output-type", "Typ výstupu", DETAIL_FIELD_TYPES.SELECTBOX],
                 ["output", "Výstup", DETAIL_FIELD_TYPES.SELECTBOX],
-                ["icon-type", "Ikona", DETAIL_FIELD_TYPES.SELECTBOX]
+                ["icon-type", "Ikona", DETAIL_FIELD_TYPES.DEPENDENT_SELECTBOX]
             ];
         }
         return elementsToCreate;

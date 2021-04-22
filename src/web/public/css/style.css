@@ -397,6 +397,7 @@ home-page room-card .card-container .right-stack {
       -ms-flex-direction: column-reverse;
           flex-direction: column-reverse;
   padding: 40px 0;
+  padding-top: 55px;
   padding-left: 10px;
 }
 
@@ -464,23 +465,23 @@ home-page room-card .card-container .right-stack .devices-row {
   }
 }
 
-detail-component .form-wrapper .form {
+detail-component .form-wrapper .form, .detail-component .form-wrapper .form {
   border-radius: 10px;
   background-color: #ffffff;
   padding: 10px;
 }
 
-detail-component .blinking {
+detail-component .blinking, .detail-component .blinking {
   -webkit-animation: blink 1s linear infinite;
   animation: blink 1s linear infinite;
 }
 
-detail-component .blink-once {
+detail-component .blink-once, .detail-component .blink-once {
   -webkit-animation: blink 1s linear 1;
   animation: blink 1s linear 1;
 }
 
-detail-component input:disabled {
+detail-component input:disabled, .detail-component input:disabled {
   background-color: #d7d7d7;
 }
 

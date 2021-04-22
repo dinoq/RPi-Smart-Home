@@ -371,6 +371,7 @@ home-page {
                 flex-grow: 1;
                 flex-direction: column-reverse;
                 padding: 40px 0;
+                padding-top: 55px;
                 padding-left: 10px;
     
                 slider-component {
@@ -444,7 +445,7 @@ $blink-color: #00aaff4f;
         background-color: var(--default-page-bg-color);
     }
 }
-detail-component {
+detail-component, .detail-component {
 
     .form-wrapper {
         .form {

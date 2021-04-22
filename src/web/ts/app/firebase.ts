@@ -79,7 +79,7 @@ export class Firebase extends Singleton {
     static login(username, pwd, persistence: string = AuthPersistence.LOCAL) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
+            //V lokální síti se nepřihlašuje pomocí této funkce...
         } else {
             return new Promise((resolve, reject) => {
                 fb.auth.setPersistence(persistence)
@@ -113,7 +113,7 @@ export class Firebase extends Singleton {
     static register(username, pwd) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
+            //V lokální síti se neregistruje pomocí této funkce...
         } else {
             return new Promise((resolve, reject) => {
                 fb.auth.createUserWithEmailAndPassword(username, pwd)
@@ -137,7 +137,7 @@ export class Firebase extends Singleton {
     static async logout() {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
+            //V lokální síti se neodhlašuje pomocí této funkce...
         } else {
             fb.loggedIn = false;
             fb.uid = null;
@@ -148,7 +148,6 @@ export class Firebase extends Singleton {
     static async loggedIn() {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
             return true;
         } else {
             await fb.authInited;
@@ -162,7 +161,6 @@ export class Firebase extends Singleton {
         path += slash;
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
             return path;
         } else {
             await fb.authInited;
@@ -190,7 +188,6 @@ export class Firebase extends Singleton {
     static async addDBListener(dbPath: string, callback) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");    
             let source;
             try {
                 source = new EventSource('/addDBListener?path=' + dbPath)

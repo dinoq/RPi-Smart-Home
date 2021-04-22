@@ -6,7 +6,7 @@ import { UnknownValueInDatabaseError } from "../errors/db-errors.js";
 import { ARROWABLE_LISTS, List, ListItem, ListTypes } from "./list-component.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
-import { BaseDialogError } from "../errors/base-error.js";
+import { BaseDialogError, BaseSingletonDialogError } from "../errors/base-errors.js";
 
 export abstract class BaseDetail extends AbstractComponent {
     static tagName = "detail-component";
@@ -43,7 +43,7 @@ export abstract class BaseDetail extends AbstractComponent {
 
     //blinkable: string[] = new Array(); // String array of blinkable elements (for query)
     constructor(saveCallback, cancelCallback, layoutProps?: IComponentProperties) {
-        super(layoutProps);
+        super({...layoutProps, classList: "detail-component"});
         this.initialize(saveCallback, cancelCallback);
     }
 
@@ -87,12 +87,14 @@ export abstract class BaseDetail extends AbstractComponent {
     updateDetail(title: string, type: ListTypes, values) {
         this.updateTitle(title);
 
+        let layoutChanged = false;
         if (type != this.actualFrameListType) { //Layout already created
             this.updateDetailLayout(type);
+            layoutChanged = true;
         }
 
         Array.from(this.rows.children).forEach((row, index) => {
-            (<DetailRow>row).initializeValues(values[index], (event) => { this.readyToSave = true });
+            (<DetailRow>row).initializeValues(values[index], (event) => { this.readyToSave = true }, layoutChanged);
         });
     }
 
@@ -145,6 +147,7 @@ export class DetailRow extends AbstractComponent {
     type: DETAIL_FIELD_TYPES;
     inputID: string;
     input: HTMLElement;
+    labelName: string = "";
     constructor(detailRowProps: IDetailRowProps, layoutProps?: IComponentProperties) {
         super(Utils.mergeObjects(layoutProps, {
         }));
@@ -284,10 +287,10 @@ export class DetailRow extends AbstractComponent {
     initializeRow(detailRowProps: IDetailRowProps) {
         let type = detailRowProps.type;
         let id = detailRowProps.id;
-        let name = detailRowProps.name;
+        this.labelName = detailRowProps.name;
         this.innerHTML = `        
             <div class="form-label">
-                <label for="${id}" class="active-label">${name}</label>
+                <label for="${id}" class="active-label">${this.labelName}</label>
                 <div class="input-field">
                 </div>
             </div>
@@ -348,15 +351,19 @@ export class DetailRow extends AbstractComponent {
         outputTypeChangedHandler();
     }
 
-    initializeValues(initObject: IDetailRowInitObject, onInputCallback) {
+    initializeValues(initObject: IDetailRowInitObject, onInputCallback, layoutChanged: boolean) {
+        let val = (initObject && initObject.selectedValue != undefined) ? initObject.selectedValue.toString() : undefined;
+        this.input.addEventListener("input", onInputCallback);
+
+
         if (this.type == DETAIL_FIELD_TYPES.DEPENDENT_SELECTBOX) {
             if (!("dependsOnProps" in initObject)) {
-                new BaseDialogError("Chyba při inicializaci detailu!", this, true);
+                new BaseDialogError("Chyba při inicializaci detailu!", this);
                 return;
             }
             let allOptions = [];
             let texts = initObject.dependsOnProps.optionTexts;
-            let vals = initObject.dependsOnProps.optionTexts;
+            let vals = initObject.dependsOnProps.optionValues;
             for (let i = 0; i < texts.length; i++) {
                 let options = "";
                 for (let j = 0; j < texts[i].length; j++) {
@@ -369,13 +376,41 @@ export class DetailRow extends AbstractComponent {
             //Vytvoří se jednotlivé option
             this.input.innerHTML = allOptions[0];
 
-            let parent = document.getElementById(initObject.dependsOnProps.dependsOnID);
-            TODO
+            let parent: HTMLSelectElement = <HTMLSelectElement>document.getElementById(initObject.dependsOnProps.dependsOnID);
+            if(!parent || !(parent instanceof HTMLSelectElement)){
+                new BaseDialogError("Chyba při inicializaci detailu!", this);
+                return;
+            }
+
+            let parentChangedHandler = () => {
+                let selectElem = this.querySelector("select");
+                if(!allOptions[parent.selectedIndex]){
+                    let parentLabelName = "";
+                    let labelName = "";
+                    try {
+                        labelName = " (" + this.labelName + ")";
+                        parentLabelName = " (" + parent.parentElement.parentElement.querySelector("label").innerText + ")";
+                    } catch (error) {
+                        
+                    }
+                    new BaseDialogError(`Chyba při inicializaci detailu! Pro SELECT${labelName} nebyl specifikován seznam hodnot pro zvolenou hodnotu nadřazeného SELECTU${parentLabelName}`, this);
+                    return;
+                }
+                if(selectElem.innerHTML != allOptions[parent.selectedIndex]){// Options se změní pouze pokud již nejsou aktuálně nastavené (jinak by se při inicializaci tohoto SELECTU v některých případech přepsala inicializační hodnota...)
+                    selectElem.innerHTML = allOptions[parent.selectedIndex];    
+                }
+            }
+
+            parentChangedHandler();
+            if(layoutChanged){
+                parent.addEventListener("input", parentChangedHandler);
+                parent.addEventListener("change", parentChangedHandler);
+            }
 
         } else if (this.type == DETAIL_FIELD_TYPES.SELECTBOX) {
             let options = "";
             let texts = initObject.options.optionTexts;
-            let vals = initObject.options.optionTexts;
+            let vals = initObject.options.optionValues;
             for (let i = 0; i < texts.length; i++) {
                 const text = texts[i];
                 const val = vals[i];
@@ -384,26 +419,24 @@ export class DetailRow extends AbstractComponent {
             //Vytvoří se jednotlivé option
             this.input.innerHTML = options;
         } else {
-            let val = (initObject && initObject.selectedValue != undefined) ? initObject.selectedValue.toString() : undefined;
-            if (!val) {
+            if (val == undefined) {
                 new BaseDialogError("Chyba při inicializaci detailu!", this, true);
                 return;
             }
-            let element = this.input;
 
-            (<HTMLInputElement>element).value = val;
-            element.addEventListener("input", onInputCallback);
-            if ((<HTMLInputElement>element).value != val) {
-                if (element instanceof HTMLSelectElement)
-                    element.selectedIndex = 0;
-                else if (element instanceof HTMLInputElement)
-                    element.value = "";
-
-                new UnknownValueInDatabaseError(val, this.type);
-                onInputCallback(); // Call callback to set readyToSave btn active...
-            }
-            element.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
         }
+        
+        (<HTMLInputElement>this.input).value = val;
+        if ((<HTMLInputElement>this.input).value != val) {
+            if (this.input instanceof HTMLSelectElement)
+                this.input.selectedIndex = 0;
+            else if (this.input instanceof HTMLInputElement)
+                this.input.value = "";
+
+            new UnknownValueInDatabaseError(val, this.type);
+            onInputCallback(); // Call callback to set readyToSave btn active...
+        }
+        this.input.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
     }
 
 }

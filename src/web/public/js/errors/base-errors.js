@@ -32,7 +32,7 @@ export class BaseConsoleError extends AbstractError {
         this.showInDialog = false;
     }
 }
-export class BaseDialogError extends AbstractError {
+export class BaseSingletonDialogError extends AbstractError {
     constructor(msg = "", caller, showImmediately = true) {
         super(msg, caller, false);
         this.showInDialog = true;
@@ -42,20 +42,14 @@ export class BaseDialogError extends AbstractError {
         }
     }
 }
-export class BaseSingletonDialogError extends AbstractError {
-    constructor(msg = "", caller, showImmediately = true) {
-        super(msg, caller, false);
-        this.showInDialog = true;
-        this.showImmediately = showImmediately;
-        if (showImmediately) {
-            this.show();
-        }
+export class BaseDialogError {
+    constructor(errorMsg = "", caller, showImmediately = true) {
         let allDialogs = document.querySelectorAll(ErrorDialog.tagName);
         let exists = Array.from(allDialogs).some((dialog, index, array) => {
             return dialog.querySelector(".error-message").innerText.includes(errorMsg);
         });
         if (!exists) {
-            this.dialog = new ErrorDialog(errorMsg);
+            this.dialog = new BaseSingletonDialogError(errorMsg, caller, showImmediately);
         }
     }
 }

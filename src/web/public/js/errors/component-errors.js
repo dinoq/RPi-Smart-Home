@@ -1,4 +1,4 @@
-import { AbstractError } from "./base-error.js";
+import { AbstractError } from "./base-errors.js";
 export class CustomComponentNotDefinedError extends AbstractError {
     constructor(errorStackClasses) {
         super("", null, false);

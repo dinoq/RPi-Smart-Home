@@ -29,6 +29,42 @@ class Firebase {
         this._updateSensorsInDBTimeout = undefined;
         this._ignoredDBTimes = new Array(); // Obsahuje časy aktualizací z databáze, které jsou serverem ignorovány (protože změnu vyvolal sám, nechce tedy změny znovu zpracovávat)
         this._firebaseHandlerActive = false; // Označuje, zda je aktivní posluchač události změny firebase databáze
+        /*
+        
+        
+        automations = {
+            asdf:{
+                type: "timeout",
+                time: 1,
+                expires: Math.round(Date.now()/1000)+5,
+                output: "rooms/q4dF4zAHFXDZUL1xZK6d/devices/-MYvEMsIx3BHl7w_MvVa/OUT/-MYvEOxuCNPahisdrsm-",
+                value: 500
+            }
+        }
+        */
+        this.automate = () => {
+            let automations = this.readFromLocalDB("automations", {});
+            if (!automations || typeof automations != "object") {
+                return;
+            }
+            for (const automationID in automations) {
+                let automation = automations[automationID];
+                if (!automation) {
+                    continue;
+                }
+                let actualTime = Math.round(Date.now() / 1000);
+                if (automation.type == "timeout" && automation.expires != -1) {
+                    if (actualTime > automation.expires) {
+                        if (actualTime < automation.expires + 10) { // Pouze pokud timeout vypršel před méně než 10ti vteřinami...
+                            this.clientUpdateInDB({ path: automation.output, data: { value: automation.value } });
+                        }
+                        automations[automationID].expires = -1;
+                        this.clientUpdateInDB({ path: "automations/" + automationID, data: { expires: -1 } });
+                    }
+                }
+            }
+            setTimeout(this.automate, 1000);
+        };
         /**
          * Funkce je volána pravidelně, aby kontrolovala připojení k internetu a v případě ztráty (či opětovném) připojení provede dané akce...
          */
@@ -105,7 +141,18 @@ class Firebase {
                                 let output = (devices[deviceID].type == "analog") ? "A" : "D"; //First convert val to rigt type (ANALOG/DIGITAL)
                                 output += devices[deviceID].output.substring(1);
                                 OUT = (OUT) ? OUT + "|" : "OUT:";
-                                OUT += output + "=" + devices[deviceID].value;
+                                let val = devices[deviceID].value;
+                                if (devices[deviceID].type == "analog") {
+                                    if (val < 50) {
+                                        val = 0;
+                                        output = "D" + output.substring(1);
+                                    }
+                                    if (val > 950) {
+                                        val = 1023;
+                                        output = "D" + output.substring(1);
+                                    }
+                                }
+                                OUT += output + "=" + val;
                             }
                         }
                     }
@@ -231,6 +278,7 @@ class Firebase {
         setTimeout(this.connectionCheckInterval, this._onlineValidTimeout);
         this._communicationManager = new communication_manager_js_1.CommunicationManager();
         this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
+        setTimeout(this.automate, 1000);
     }
     get loggedIn() {
         return this._loggedIn;
@@ -404,8 +452,11 @@ class Firebase {
         let updates = { lastWriteTime: time };
         if (this.readFromLocalDB("rooms")) {
             updates["rooms"] = this.readFromLocalDB("rooms");
-            this._fb.database().ref(uid).update(updates);
         }
+        if (this.readFromLocalDB("automations")) {
+            updates["automations"] = this.readFromLocalDB("automations");
+        }
+        this._fb.database().ref(uid).update(updates);
     }
     /**
      * Nainicializuje služby Firebase
@@ -513,9 +564,8 @@ class Firebase {
                 for (const newDeviceID in newDevices) {
                     const newDevice = (newDevices) ? newDevices[newDeviceID] : undefined;
                     const oldDevice = (oldDevices) ? oldDevices[newDeviceID] : undefined;
-                    if (!oldDevice || (newDevice.value != oldDevice.value)
-                        || (newDevice.output != oldDevice.output)
-                        || (newDevice.type != oldDevice.type)) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
+                    const outputOrTypeChanged = oldDevice && ((newDevice.output != oldDevice.output) || (newDevice.type != oldDevice.type));
+                    if (!oldDevice || (newDevice.value != oldDevice.value) || outputOrTypeChanged) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
                         let output = (newDevice.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
                         output += newDevice.output.toString().substring(1);
                         let val = Number.parseInt(newDevices[newDeviceID].value);
@@ -530,6 +580,11 @@ class Firebase {
                             }
                         }
                         this._processDbChange({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: newModules[newModuleID]["IP"], output: output, value: val.toString() } });
+                        if (outputOrTypeChanged) {
+                            let oldOutput = (oldDevice.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
+                            oldOutput += oldDevice.output.toString().substring(1);
+                            this._processDbChange({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: newModules[newModuleID]["IP"], output: oldOutput, value: 0 } });
+                        }
                     }
                 }
             }
@@ -650,7 +705,8 @@ class Firebase {
                     this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
             }
             else if (change.type == ChangeMessageTypes.REMOVED) {
-                //nothing needs to be done.
+                if (change.data.ip && change.data.output)
+                    this._communicationManager.putVal(change.data.ip, change.data.output, 0);
             }
         }
     }
@@ -755,14 +811,20 @@ class Firebase {
         };
         if (path.length == 0 || path == "/") {
             path = "/";
-            if (val.rooms) {
-                let part = this.readFromLocalDB("rooms");
-                objectPath.set(this._dbFile, "rooms", merge(part, val.rooms));
+            if (val.rooms || val.automation) {
+                if (val.rooms) {
+                    let part = this.readFromLocalDB("rooms");
+                    objectPath.set(this._dbFile, "rooms", merge(part, val.rooms));
+                }
+                if (val.automation) {
+                    let part = this.readFromLocalDB("automation");
+                    objectPath.set(this._dbFile, "automation", merge(part, val.automation));
+                }
             }
             else { // Jinak víme, že přišla cesta "/"", a data ve formátu, který obsahuj cestu (např. 'rooms/-MYRjLerob8wpXvP4bxZ/devices/-MYTWRVGgRyE32PCruIi/IN/-MYTe9Otf3NLzkDHV65Z/value': 297). 
                 let updates = val;
                 let updatesObjectArray = new Array();
-                path = "rooms";
+                path = (Object.keys(updates)[0].startsWith("rooms") || Object.keys(updates)[0].startsWith("/rooms")) ? "rooms" : "automation";
                 for (const longPathName in updates) {
                     let pathArr = longPathName.split("/").slice(1);
                     let updateObject = {};
@@ -950,6 +1012,9 @@ class Firebase {
             if (data.rooms) {
                 this.writeToLocalDB("rooms", data.rooms, time);
             }
+            if (data.automation) {
+                this.writeToLocalDB("automation", data.automation, time);
+            }
         }
         else { // Firebase databáze se přepíše lokálním souborem
             let time = Date.now();
@@ -973,13 +1038,16 @@ class Firebase {
             if (data && data.rooms) {
                 this.writeToLocalDB("rooms", data.rooms, firebaseLastWriteTime);
             }
+            if (data && data.automation) {
+                this.writeToLocalDB("automation", data.automation, firebaseLastWriteTime);
+            }
         }
         else if (serverLastWriteTime > firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno lokálně, přepíše se firebase databáze
             console.log("Lokální verze databáze je aktuálnější. Přepíše databázi na internetu (Firebase databázi)...");
             this._rewriteFireBaseDatabase(serverLastWriteTime);
         }
         else { //Jinak jsou zřejme databáze v synchronizaci
-            let dbAreDifferent = (diff(this.readFromLocalDB("/", {}), data) > 0);
+            let dbAreDifferent = (diff(this.readFromLocalDB("/", {}), data) != undefined);
             if (dbAreDifferent) { // Uložený čas poslední změny je sice stejný, ale vypadá to, že některá data byla upravena (zřejmě manuálně), předpokládá se, že lokální databáze má vyšší prioritu, přepíše tedy Firebase databázi
                 console.log("Ačkoli časy posledních změn lokální i vzdálené databáze odpovídají, některá data jsou rozdílná. Lokální databáze přpíše databázi na internetu (Firebase databázi)...");
                 this._rewriteFireBaseDatabase(serverLastWriteTime);

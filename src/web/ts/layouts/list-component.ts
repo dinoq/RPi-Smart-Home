@@ -2,7 +2,7 @@ import { Firebase } from "../app/firebase.js";
 import { Utils } from "../app/utils.js";
 import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
 import { Icon } from "../components/others/app-icon.js";
-import { AbstractError, BaseConsoleError } from "../errors/base-error.js";
+import { AbstractError, BaseConsoleError } from "../errors/base-errors.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
 

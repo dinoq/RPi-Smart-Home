@@ -36,7 +36,7 @@ export class SettingsDetail extends BaseDetail {
                 ["device-name", "Název zařízení", DETAIL_FIELD_TYPES.TEXT_FIELD],
                 ["output-type", "Typ výstupu", DETAIL_FIELD_TYPES.SELECTBOX],
                 ["output", "Výstup", DETAIL_FIELD_TYPES.SELECTBOX],
-                ["icon-type", "Ikona", DETAIL_FIELD_TYPES.SELECTBOX]
+                ["icon-type", "Ikona", DETAIL_FIELD_TYPES.DEPENDENT_SELECTBOX]
             ];
         }
         return elementsToCreate;

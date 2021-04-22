@@ -1,4 +1,4 @@
-import { AbstractError, BaseConsoleError, BaseDialogError } from "../errors/base-error.js";
+import { AbstractError, BaseConsoleError, BaseDialogError } from "../errors/base-errors.js";
 import { ComponentNameNotDefinedError, CustomComponentNotDefinedError } from "../errors/component-errors.js";
 import { MethodNotImplementedError } from "../errors/method-errors.js";
 import { Config } from "../app/config.js";
@@ -69,7 +69,7 @@ export abstract class AbstractComponent extends Component {
 
 
 
-    initializeFromProps(componentProps?: IComponentProperties): void {
+    initializeFromProps(componentProps?: IComponentProperties): void {        
         if (!this.style.display) { //If not set
             this.style.display = "block";
         }

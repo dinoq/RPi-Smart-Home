@@ -16,6 +16,8 @@ int lastConnectedToRPi = 0; // Number of seconds from last connection
 bool BMP280Begun = false;
 bool wireBegun = false;
 
+int usedOutputPins[30];
+
 int watchedINIndex = 0;
 SensorInfo watched[WATCHED_IN_LIMIT];
 Memory mem;
@@ -40,13 +42,24 @@ void setup()
     randomSeed(micros());
     delay(200); // Sleep little bit after reset to wait for Serial init...
 
+
+    for (int i = 0; i < (sizeof(usedOutputPins)/sizeof(usedOutputPins[0])); i++){ // Nainicializuje se pole používaných výstupních pinů. Toto pole se používá pro reset modulu.
+        usedOutputPins[i] = -1;
+    }
+
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
         Serial.print(".");
     }
+    byte a = -1;
+    byte b = 255;
 
+    Serial.println("aaaaaaaaaa");
+    Serial.println(a==b);
+    Serial.println(a);
+    Serial.println(b);
     Serial.printf("\nWiFi connected, IP: %s\n", WiFi.localIP().toString().c_str());
 
     Serial.println("Setup CoAP callbacks");
@@ -74,7 +87,7 @@ void setup()
     Serial.println();
     
     pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LED_BUILTIN_LOW);
+    pinWrite(LED_BUILTIN, LED_BUILTIN_LOW, "digital");
 
     // Uncomment if you want to completely reset module on start (not recommended!)...
     //resetModule();
@@ -100,9 +113,9 @@ void blinkIfNotConnectedAndDelay(){
     int lightOffTime = 900 ;
     int lightOnTime = 50;
 
-    digitalWrite(LED_BUILTIN, LED_BUILTIN_HIGH);
+    pinWrite(LED_BUILTIN, LED_BUILTIN_HIGH, "digital");
     delay(lightOnTime);
-    digitalWrite(LED_BUILTIN, LED_BUILTIN_LOW);
+    pinWrite(LED_BUILTIN, LED_BUILTIN_LOW, "digital");
     delay(lightOffTime);   
 
 }
@@ -112,9 +125,9 @@ void blinkFast(){
 
     //blink with builtin led
     for(int i = 0; i < 5; i++){
-        digitalWrite(LED_BUILTIN, LED_BUILTIN_HIGH);
+        pinWrite(LED_BUILTIN, LED_BUILTIN_HIGH, "digital");
         delay(blinkDelay);
-        digitalWrite(LED_BUILTIN, LED_BUILTIN_LOW);
+        pinWrite(LED_BUILTIN, LED_BUILTIN_LOW, "digital");
         delay(blinkDelay);
     }
 }
@@ -304,6 +317,7 @@ bool valueIsIn(byte val, byte arr[])
 */
 void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port)
 {
+    Serial.println("callbackHelloClienttttttttt");
     if (RpiIP.isSet()) // If RPi IP is set, we don't want to init communication again (or with another server)
         return;
 
@@ -321,6 +335,7 @@ void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port)
 */
 void callbackSetID(CoapPacket &packet, IPAddress ip, int port)
 {
+    Serial.println("callbackHelloClienttttttttt2222222");
     if (moduleID.length() > 0 || RpiIP.isSet()) // If module ID or RPi IP is set, we don't want to init communication again (or with another server)
         return;
 
@@ -409,7 +424,7 @@ void callbackServerHasBeenReset(CoapPacket &packet, IPAddress ip, int port)
         return;
 
     Serial.println("callbackServerHasBeenReset");
-    TODO!
+    //TODO!
     coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen); // Send response back to ip, because RPiIP is no longer set!
 }
 
@@ -426,7 +441,17 @@ void resetModule()
     //Also reset all sensors info...
     resetSensorInfos();
     IO_Inited = false;
+
     
+    for (int i = 0; i < (sizeof(usedOutputPins)/sizeof(usedOutputPins[0])); i++){ // Nainicializuje se pole používaných výstupních pinů. Toto pole se používá pro reset modulu.
+        int pinNumber = usedOutputPins[i];
+        if(pinNumber > -1){
+            pinMode(pinNumber, OUTPUT);
+            pinWrite(pinNumber, LOW, "digital");
+            usedOutputPins[i] = -1;
+        }
+    }
+
     blinkFast();
 }
 
@@ -522,18 +547,18 @@ void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port)
             { // Digital pin
                 if (valueToSet > 512)
                 {
-                    digitalWrite(pinNumber, H);
+                    pinWrite(pinNumber, H, "digital");
                     Serial.println("HIGH" + String(pinNumber));
                 }
                 else
                 {
-                    digitalWrite(pinNumber, L);
+                    pinWrite(pinNumber, L, "digital");
                     Serial.println("LOW" + String(pinNumber));
                 }
             }
             else
             { // Analog pin
-                analogWrite(pinNumber, valueToSet);
+                pinWrite(pinNumber, valueToSet, "analog");
                 Serial.println("ANALOG:" + String(valueToSet));
             }
         }
@@ -593,18 +618,18 @@ void callbackSetOutput(CoapPacket &packet, IPAddress ip, int port)
     { // Digital pin
         if (valueToSet > 512)
         {
-            digitalWrite(pinNumber, H);
+            pinWrite(pinNumber, H, "digital");
             Serial.println("HIGH" + String(pinNumber));
         }
         else
         {
-            digitalWrite(pinNumber, L);
+            pinWrite(pinNumber, L, "digital");
             Serial.println("LOW" + String(pinNumber));
         }
     }
     else
     { // Analog pin
-        analogWrite(pinNumber, valueToSet);
+        pinWrite(pinNumber, valueToSet, "analog");
         Serial.println("ANALOG:" + String(valueToSet));
     }
 
@@ -1029,7 +1054,29 @@ void sendErrorReportToServer(char errorMsg[], const char funcName[]){
     Serial.println(__PRETTY_FUNCTION__); // void checkInValues()*/
 }
 
-
+void pinWrite(byte pinNumber, int value, String pinType){
+    if(pinType.equals("analog")){
+        analogWrite(pinNumber, value);
+    }else{
+        digitalWrite(pinNumber, value);
+    }
+            Serial.println("jdu na cyklus:");
+    for (int i = 0; i < (sizeof(usedOutputPins)/sizeof(usedOutputPins[0])); i++){ // Nainicializuje se pole používaných výstupních pinů. Toto pole se používá pro reset modulu.
+        Serial.println("hele pin:");
+        Serial.println( usedOutputPins[i]);
+        int pinNum = usedOutputPins[i];
+        Serial.println("hele pin2:");
+        Serial.println(pinNum);
+        if(pinNum == -1){
+            Serial.println("save pin:");
+            Serial.println(pinNumber);
+            Serial.println("at i:");
+            Serial.println(i);
+            usedOutputPins[i] = pinNumber;
+            break;
+        }
+    }
+}
 
 
 

@@ -68,7 +68,7 @@ export class Firebase extends Singleton {
     static login(username, pwd, persistence = AuthPersistence.LOCAL) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
+            //V lokální síti se nepřihlašuje pomocí této funkce...
         }
         else {
             return new Promise((resolve, reject) => {
@@ -99,7 +99,7 @@ export class Firebase extends Singleton {
     static register(username, pwd) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
+            //V lokální síti se neregistruje pomocí této funkce...
         }
         else {
             return new Promise((resolve, reject) => {
@@ -122,7 +122,7 @@ export class Firebase extends Singleton {
     static async logout() {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
+            //V lokální síti se neodhlašuje pomocí této funkce...
         }
         else {
             fb.loggedIn = false;
@@ -133,7 +133,6 @@ export class Firebase extends Singleton {
     static async loggedIn() {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
             return true;
         }
         else {
@@ -147,7 +146,6 @@ export class Firebase extends Singleton {
         path += slash;
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
             return path;
         }
         else {
@@ -173,7 +171,6 @@ export class Firebase extends Singleton {
     static async addDBListener(dbPath, callback) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
-            console.warn("TODO");
             let source;
             try {
                 source = new EventSource('/addDBListener?path=' + dbPath);

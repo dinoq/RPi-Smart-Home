@@ -1,7 +1,7 @@
 import { Utils } from "../app/utils.js";
 import { AbstractComponent, BaseComponent } from "../components/component.js";
 import { Icon } from "../components/others/app-icon.js";
-import { BaseConsoleError } from "../errors/base-error.js";
+import { BaseConsoleError } from "../errors/base-errors.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 export class List extends AbstractComponent {
     constructor(type, layoutProps) {
