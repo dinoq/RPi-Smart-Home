@@ -1,8 +1,8 @@
 import { ErrorDialog } from "./components/dialogs/error-dialog.js";
 import { LoginComponent } from "./components/forms/login-component.js";
 import { HeaderComponent } from "./components/headers/header-component.js";
-import { MenuIcon, MenuItemsContainer } from "./components/menus/hamburger-menu.js";
-import { MenuItem } from "./components/menus/menu-item.js";
+import { MenuIcon, MenuItemsContainer } from "./components/menu/hamburger-menu.js";
+import { MenuItem } from "./components/menu/menu-item.js";
 import { BaseLayout } from "./layouts/base-layout.js";
 import { PageCreator } from "./app/page-creator.js";
 import { PageManagerComponent } from "./app/page-manager.js";
@@ -27,6 +27,7 @@ import { PairPage } from "./pages/pair-page.js";
 import { ChoiceDialog } from "./components/dialogs/choice-dialog.js";
 import { SettingsDetail } from "./layouts/settings-detail.js";
 import { AutomationDetail } from "./layouts/automation-detail.js";
+import { AutomationsPage } from "./pages/automations-page.js";
 
 export declare var firebase: any;
 
@@ -78,6 +79,8 @@ class AutoHomeApp {
             DetailRow,
             TabLayout,
             SlidableImg,
+
+            AutomationsPage,
 
             PairComponent,
             PairPage,

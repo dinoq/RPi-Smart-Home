@@ -1,5 +1,5 @@
 import { LoginComponent } from "../components/forms/login-component.js";
-import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
+import { HamburgerMenu } from "../components/menu/hamburger-menu.js";
 import { AbstractComponent } from "../components/component.js";
 import { Effects, PageManager } from "./page-manager.js";
 import { AppRouter, IRoute, Pages, Paths } from "./app-router.js";
@@ -13,6 +13,7 @@ import { RegistrationPage } from "../pages/registration-page.js";
 import { LoginPage } from "../pages/login-page.js";
 import { Utils } from "./utils.js";
 import { ChoiceDialog } from "../components/dialogs/choice-dialog.js";
+import { AutomationsPage } from "../pages/automations-page.js";
 
 
 export class PageCreator {
@@ -69,6 +70,11 @@ export class PageCreator {
             case Pages.SETTINGS:
                 page = Paths.SETTINGS;
                 this.pageManager.addPage(new SettingsPage(), Paths.SETTINGS, true);
+                break;
+                
+            case Pages.AUTOMATIONS:
+                page = Paths.AUTOMATIONS;
+                this.pageManager.addPage(new AutomationsPage(), Paths.AUTOMATIONS, true);
                 break;
                 
             case Pages.HOME: 

@@ -7,7 +7,9 @@ $sm: 576px;
 $md: 768px;
 $lg: 992px;
 $xl: 1200px;
-
+*{
+    //display: block;
+}
 :root {
     --default-page-bg-color: #eaeaea;
     --default-blue-color: #00aaff;
@@ -417,11 +419,36 @@ home-page {
         }
 
         > .components-wrapper {
-            > *:hover:not(.room-name):not(.text):not(.btn-wrapper),
+            > *:hover:not(.room-name):not(.text):not(.btn-wrapper):not(.opaque),
             .btn:hover {
                 opacity: 0.7;
             }
         }
+    }
+
+    .btn.add-btn{
+        background-color: var(--default-blue-color);//#78d7f3
+        border-radius: 15px;
+        padding: 0px 50px;
+        margin: 2px;
+        justify-content: center;
+        display: flex;
+        color: white;//"#fff700",
+        font-weight: bold;
+        font-size: 1.5rem;
+
+        &.disabled{
+            background-color: #959595;
+
+            &:hover{
+                opacity: 0.65;
+            }
+        }
+    }
+    
+    input[type=checkbox]{
+        width: 24px;
+        height: 24px;
     }
 }
 
@@ -515,43 +542,41 @@ page-manager {
     left: 0px;
     background-color: var(--default-page-bg-color);
 
-    settings-page {
-        .settings-btns-stack {
-            /*position: absolute;
-            top: 5px;*/
-            margin-top: 10px;
-            width: 100%;
-            justify-content: center;
+    .btns-stack {
+        /*position: absolute;
+        top: 5px;*/
+        margin-top: 10px;
+        width: 100%;
+        justify-content: center;
 
-            .btn {
-                border: 1px solid var(--default-blue-color);
-                height: 36px;
-                border-radius: 15px;
-                padding: 0 20px;
-                margin: 0 10px;
+        .btn {
+            border: 1px solid var(--default-blue-color);
+            height: 36px;
+            border-radius: 15px;
+            padding: 0 20px;
+            margin: 0 10px;
 
-                &:enabled:hover {
-                    background-color: #d5d5d5;
-                }
+            &:enabled:hover {
+                background-color: #d5d5d5;
             }
         }
+    }
 
-        .form-wrapper form, .form-wrapper .form {
-            max-width: initial;
-            width: 100%;
-            padding: 5px;
-            margin: 5px;
+    .form-wrapper form, .form-wrapper .form {
+        max-width: initial;
+        width: 100%;
+        padding: 5px;
+        margin: 5px;
 
-            input:not([type="checkbox"]),
-            select,
-            slidable-img {
-                //max-width: 500px;
-            }
+        input:not([type="checkbox"]),
+        select,
+        slidable-img {
+            //max-width: 500px;
+        }
 
-            slidable-img {
-                .bordered-img{
-                    border: 1px solid grey;
-                }
+        slidable-img {
+            .bordered-img{
+                border: 1px solid grey;
             }
         }
     }

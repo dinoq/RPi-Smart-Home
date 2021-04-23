@@ -37,7 +37,6 @@ export class Component extends HTMLElement {
             classes.forEach((str, index, array) => {
                 classes[index] = str.substring(0, str.indexOf(" "));
             })
-            console.log(classes);
             new CustomComponentNotDefinedError(classes);
             super();
         }
@@ -78,9 +77,7 @@ export abstract class AbstractComponent extends Component {
         for (const property in componentProps) {
             if (this.style[property] != undefined) {//Is CSS pproperty, thus asign it!
                 this.style[property] = componentProps[property];
-            } else {//Is not CSS property, thus is meant to be layout property
-                //console.log(property+" is not CSS property!");
-            }
+            } 
         }
         if (componentProps.connectToParent) {
             AbstractComponent.connectComponent(componentProps.connectToParent, this);

@@ -30,16 +30,14 @@ export class PageManager extends Singleton {
     addPage(page: BasePage, key: string, forceAdd: boolean = false) {
         if (this.pages.indexOf(page) != -1) {
             //new PageAlreadyAddedToPageManagerError(page, true);            
-            console.log("Page (by class) already added to pagemanager: " + page.constructor.name);
+            console.error("Page (by class) already added to pagemanager: " + page.constructor.name);
             return;
         }
         if (this.pagesKeys.includes(key)) {//Duplicate key in manager
             let i = this.pagesKeys.indexOf(key);
             if (page.constructor.name != this.pages[i].constructor.name) {
                 new BaseConsoleError("Already added page with same key!", this, true);
-            } else {
-                //console.log("Page already added to pagemanager: " + page.constructor.name );
-            }
+            } 
             if (forceAdd) {
                 this.pages[i].remove();
                 this.pages.splice(i, 1);

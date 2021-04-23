@@ -10,6 +10,7 @@ export enum Pages {
     REGISTER,
     HOME,
     SETTINGS,
+    AUTOMATIONS,
     PAIR_WITH_ACCOUNT
 }
 export class AppRouter {
@@ -43,6 +44,8 @@ export class AppRouter {
             this.route.page = Pages.HOME;
         } else if (this.pathsEquals(topLevel, Paths.SETTINGS)) {
             this.route.page = Pages.SETTINGS;
+        } else if (this.pathsEquals(topLevel, Paths.AUTOMATIONS)) {
+            this.route.page = Pages.AUTOMATIONS;
         } else {
             this.route.page = Pages.UNKNOWN;
         }
@@ -97,10 +100,13 @@ export interface IRoute {
 }
 
 
+
+
 export enum Paths {
     LOGIN = "login",
     REGISTER = "registrace",
     HOME = "domu",
     SETTINGS = "nastaveni",
-    PAIR_WITH_ACCOUNT = "sparovat_ucet"
+    PAIR_WITH_ACCOUNT = "sparovat_ucet",
+    AUTOMATIONS = "automatizace"
 }

@@ -26,7 +26,6 @@ export class Firebase {
     private _onlineValidTimeout: number = 2000;
     private _lastConnCheck: number = 0;
 
-    private _dbInited: boolean = false;
     private _loggedIn: boolean = false;
     private _loggedInResolve;
     private _loggedInPromise;
@@ -40,6 +39,7 @@ export class Firebase {
 
     private _ignoredDBTimes = new Array(); // Obsahuje časy aktualizací z databáze, které jsou serverem ignorovány (protože změnu vyvolal sám, nechce tedy změny znovu zpracovávat)
 
+    private usedIPsByModules = new Array();
     private _firebaseHandlerActive = false; // Označuje, zda je aktivní posluchač události změny firebase databáze
     public get loggedIn(): boolean {
         return this._loggedIn;
@@ -73,6 +73,7 @@ export class Firebase {
         }
 
         this._getSensors(this.readFromLocalDB("/", {}));
+        this.getModulesIPs();
 
         // Vytvoření Promise, která se resolvne při přihlášení. Využívá se, pokud je někde potřeba čekat na přihlášení do Firebase.
         this._loggedInPromise = new Promise((resolve, reject) => { this._loggedInResolve = resolve; });
@@ -178,10 +179,9 @@ automations = {
 
         this._firebaseHandlerActive = true;
         let firstCycle = true;
-        console.log("addFirebaseValueHandler ADDED!!! :), UID: " + await this.userUID);
         this._fb.database().ref(await this.userUID).on('value', (snapshot) => {
             const data = snapshot.val();
-            console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
+            //console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
             this._firebaseDatabaseUpdateHandler(data, firstCycle);
             firstCycle = false;
         });
@@ -345,11 +345,9 @@ automations = {
 
             if (moduleFoundedInDB) {
                 this._communicationManager.setAllIO(moduleIP, IN + "&" + OUT);
-            } else /*if (this._dbInited)*/ { // Module was probably deleted from database, when module was OFF => reset that module
+            } else { // Module was probably deleted from database, when module was OFF => reset that module
                 this._communicationManager.resetModule(moduleIP);
-            } /*else { // Databáze stále není nainicializovaná
-                //console.log("DB was not still inited in server");
-            }*/
+            } 
         }else if(req.url == "/report-error"){
             let ip = req.rsinfo.address;
             let moduleInfo = {};
@@ -397,11 +395,9 @@ automations = {
             if (!this._updateSensorsInDBTimeout) {
                 this._updateSensorsInDBTimeout = setTimeout(this._updateSensorsInDB, 200);
             }
-        } else /*if (this._dbInited)*/ { // Module was probably deleted from database, when module was OFF => reset that module
+        } else { // Module was probably deleted from database, when module was OFF => reset that module
             this._communicationManager.resetModule(moduleIP);
-        } /*else { // Else db is still not inited => try update later...
-            setTimeout(() => { this._updateSensor(sensorInfo, moduleIP) }, 1000);
-        }*/
+        }
     }
 
     private _updateSensorsInDB = async () => {
@@ -462,11 +458,7 @@ automations = {
             return;
         }
 
-        if (!this._dbInited) {
-            this._dbInited = true;
-        } else {
-            this._checkDbChange(this.readFromLocalDB("/"), data);
-        }
+        this._checkDbChange(this.readFromLocalDB("/"), data);
     }
 
     /**
@@ -544,9 +536,6 @@ automations = {
                 //TODO!!! smazat vše i z lokální db (_dbFile)
             }
             return
-        }
-        if (comparingLocalDB) {
-            console.log("comparingLocalDB");
         }
 
         // check rooms
@@ -717,14 +706,25 @@ automations = {
         } else if (change.level == DevicesTypes.MODULE) { // ZMĚNA NA ÚROVNI MODULU
             if (change.type == ChangeMessageTypes.ADDED) {// Module was added => init communication
                 this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
-                    this._communicationManager.sendESPItsID(espIP, change.data.id);
-                    this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } })
+                    /**
+                     * Pokud uživatel "zběsile" klikal na přidání modulů, tak se k modulu dostalo několik požadavků na přidání,
+                     * v důsledku čehož i odeslal několik "kladných" odpovědí. Přidat jej však chceme jen jednou...
+                     */
+                    if(this.usedIPsByModules.includes(espIP)){
+                        throw new Error(); // Aby to "spadlo" do carch bloku a došlo k vymazání nového záznamu o modulu z databáze
+                    }else{                        
+                        this._communicationManager.sendESPItsID(espIP, change.data.id);
+                        this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } })
+                        this.usedIPsByModules.push(espIP);
+                    }
                 }).catch((err) => {
                     this.clientRemoveFromDB({ path: change.data.path });
                 })
             } else if (change.type == ChangeMessageTypes.REMOVED) {// Module was removed => reset module...
-                if (change.data.ip)
+                if (change.data.ip){
                     this._communicationManager.resetModule(change.data.ip);
+                    this.usedIPsByModules.splice(this.usedIPsByModules.indexOf(change.data.ip), 1);
+                }
             }
         } else if (change.level == DevicesTypes.SENSOR) { // ZMĚNA NA ÚROVNI SNÍMAČE
             if (change.type == ChangeMessageTypes.ADDED) {// Snímač byl přidán => je potřeba, aby modul naslouchal novým hodnotám na daném vstupu
@@ -748,6 +748,25 @@ automations = {
             } else if (change.type == ChangeMessageTypes.REMOVED) {
                 if (change.data.ip && change.data.output)
                     this._communicationManager.putVal(change.data.ip, change.data.output, 0);
+            }
+        }
+    }
+
+    /**
+     * Funkce zjišťuje, zda se IP modulu již nacházíé v databázi
+     * @param newEspIP 
+     * @returns 
+     */
+    getModulesIPs(){        
+        const rooms = this.readFromLocalDB("rooms");
+        for (const roomID in rooms) {
+            const room = rooms[roomID];
+            const modules = room["devices"];
+            for (const moduleID in modules) {
+                const module = modules[moduleID];
+                if (module.IP != undefined) { 
+                    this.usedIPsByModules.push(module.IP);
+                }
             }
         }
     }

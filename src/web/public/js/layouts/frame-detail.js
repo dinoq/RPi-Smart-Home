@@ -49,7 +49,7 @@ export class FrameDetail extends AbstractComponent {
             <button class="btn cancel-btn">Zrušit změny</button>
             <button class="btn save-btn">Uložit</button>
             `,
-            classList: "settings-btns-stack"
+            classList: "btns-stack"
         });
         this._cancelBtn = this.btnsContainer.querySelector(".cancel-btn");
         this._cancelBtn.addEventListener("click", () => {

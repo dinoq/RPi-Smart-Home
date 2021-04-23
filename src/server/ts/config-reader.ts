@@ -1,42 +1,69 @@
 const fs = require("fs");
+const path = require('path');
 const jsonManager = require("jsonfile");
 
 const configFilePath = "config.json";
 const configExampleFilePath = "config.json";
+import { ErrorLogger } from "./error-logger";
 
 export class ConfigReader {
     static instance: ConfigReader;
     private _config: any;
+    static CONFIG_EXAMPLE = {
+        "webAppPort": 80, // Port, na kterém webový server funguje
+        "NEW_MODULE_FIND_TIMEOUT": 10000,
+        "username": "", // Přihlašovací jméno k Firebase účtu
+        "password": "", // heslo k Firebase účtu
+        "saveUserCredentialsOnLogin": true, // Rozhoduje, zda ukládat přihlašovací údaje uživatele do Firebase při každém případném přihlášení ve webovém klientovi (pokud k němu uživatel přistupuje lokálně)
+        "openBrowserToRegister": true, // Rozhoduje, zda při startu serveru otevřít (na zařízení kde běží server) internetový prohlížeč s registrační stránkou, pokud uživatel nemá spárovaný lokální účet s Firebase účtem (tedy pokud nemá v configu nastavené klíče username a password)
+        "openBrowserOnStart": true, // Rozhoduje, zda se má automaticky (na zařízení kde běží server) otevřít internetový prohlížeč  s přihlašovací stránkou. Pokud má zařízení deplej a je určeno k tomu aby sloužilo jako prvek v domácnosti "na zdi", který bude zobrazovat snímače a zařízení v místnosti, je vhodné nastavit jej na hodnotu true
+        "clearLogFilesOnStart": false, // Rozhoduje, zda se mají při startu serveru smazat soubory, logující chyby (log.txt a log.html). Pokud je false, tak v souboru zůstávají staré logy (ale až po těch nových)
+        "showLogFilesOnError": true, // Rozhoduje, zda se má v prohlížeči otevřít log s chybami v případě pádu aplikace.
+        "firebase": { // Konfigurace Firebase aplikace, je nutné získat z Firebase účtu...
+            "apiKey": "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
+            "authDomain": "home-automation-80eec.firebaseapp.com",
+            "databaseURL": "https://home-automation-80eec.firebaseio.com",
+            "projectId": "home-automation-80eec",
+            "storageBucket": "home-automation-80eec.appspot.com",
+            "messagingSenderId": "970359498290",
+            "appId": "1:970359498290:web:a43e83568b9db8eb783e2b",
+            "measurementId": "G-YTRZ79TCJJ"
+        },
+        "debugLevel": 1 // Rozhoduje o množství informací, které server vypisuje do konzole. Číslo 0 - 2.
+    };
+
     constructor() {
-        if (fs.existsSync(configFilePath)) {// Pokud existuje soubor s konfigurací, načte se
-            this._config = jsonManager.readFileSync(configFilePath);
+        if (fs.existsSync(configFilePath)) {// Pokud existuje soubor s konfigurací, načte se            
+            try {
+                this._config = jsonManager.readFileSync(configFilePath);
+            } catch (error) {
+                this._config = ConfigReader.CONFIG_EXAMPLE;
+                let fullPath = path.join(__dirname, '../' + configFilePath);
+                ErrorLogger.log(error, {
+                    errorDescription: `Došlo k chybě při pokusu o načtení konfiguračního souboru (souboru ${fullPath})!`,
+                    placeID: 29,
+                });
+            }
         } else { // V opačném případě se zjišťuje, zda existuje soubor s příkladem konfigurace.
-            if (fs.existsSync(configExampleFilePath)) {// Pokud soubor s příkladem konfigurace existuje, vytvoří na jeho základě konfigurační soubor
-                this._config = jsonManager.readFileSync(configExampleFilePath);
+            if (fs.existsSync(configExampleFilePath)) {// Pokud soubor s příkladem konfigurace existuje, vytvoří na jeho základě konfigurační soubor      
+                try {
+                    this._config = jsonManager.readFileSync(configExampleFilePath);
+                } catch (error) {
+                    this._config = ConfigReader.CONFIG_EXAMPLE;
+                    let fullPath = path.join(__dirname, '../' + configExampleFilePath);
+                    ErrorLogger.log(error, {
+                        errorDescription: `Došlo k chybě při pokusu o načtení náhradního konfiguračního souboru (souboru ${fullPath})!`,
+                        placeID: 30,
+                    });
+                }
                 jsonManager.writeFileSync(configFilePath, this._config, { spaces: 2 });
             } else {// Pokud ani soubor s příkladem konfigurace neexistuje, vytvoří se programově oba soubory
-                this._config = {
-                    "webAppPort": 80, // Port, na kterém webový server funguje
-                    "NEW_MODULE_FIND_TIMEOUT": 10000,
-                    "username": "", // Přihlašovací jméno k Firebase účtu
-                    "password": "", // heslo k Firebase účtu
-                    "saveUserCredentialsOnLogin": true, // Rozhoduje, zda ukládat přihlašovací údaje uživatele do Firebase při každém případném přihlášení ve webovém klientovi (pokud k němu uživatel přistupuje lokálně)
-                    "openBrowserToRegister": true, // Rozhoduje, zda při startu serveru otevřít (na zařízení kde běží server) internetový prohlížeč s registrační stránkou, pokud uživatel nemá spárovaný lokální účet s Firebase účtem (tedy pokud nemá v configu nastavené klíče username a password)
-                    "openBrowserOnStart": true, // Rozhoduje, zda se má automaticky (na zařízení kde běží server) otevřít internetový prohlížeč  s přihlašovací stránkou. Pokud má zařízení deplej a je určeno k tomu aby sloužilo jako prvek v domácnosti "na zdi", který bude zobrazovat snímače a zařízení v místnosti, je vhodné nastavit jej na hodnotu true
-                    "clearLogFilesOnStart": false, // Rozhoduje, zda se mají při startu serveru smazat soubory, logující chyby (log.txt a log.html). Pokud je false, tak v souboru zůstávají staré logy (ale až po těch nových)
-                    "showLogFilesOnError": true, // Rozhoduje, zda se má v prohlížeči otevřít log s chybami v případě pádu aplikace.
-                    "firebase": { // Konfigurace Firebase aplikace, je nutné získat z Firebase účtu...
-                        "apiKey": "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
-                        "authDomain": "home-automation-80eec.firebaseapp.com",
-                        "databaseURL": "https://home-automation-80eec.firebaseio.com",
-                        "projectId": "home-automation-80eec",
-                        "storageBucket": "home-automation-80eec.appspot.com",
-                        "messagingSenderId": "970359498290",
-                        "appId": "1:970359498290:web:a43e83568b9db8eb783e2b",
-                        "measurementId": "G-YTRZ79TCJJ"
-                    },
-                    "debugLevel": 1 // Rozhoduje o množství informací, které server vypisuje do konzole. Číslo 0 - 2.
-                }
+                let fullPath = path.join(__dirname, '../' + configFilePath);
+                ErrorLogger.log(null, {
+                    errorDescription: `Konfigurační soubor nenalezen (soubor ${fullPath})! Soubor bude vytvořen...`,
+                    placeID: 31,
+                });
+                this._config = ConfigReader.CONFIG_EXAMPLE;
                 jsonManager.writeFileSync(configExampleFilePath, this._config, { spaces: 2 });
                 jsonManager.writeFileSync(configFilePath, this._config, { spaces: 2 });
             }

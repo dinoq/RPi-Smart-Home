@@ -126,8 +126,6 @@ export class RoomCard extends AbstractComponent {
         let ordered = this.getOrderedINOUT(devices, this.roomName);
         let orderedIN = ordered.orderedIN;
         let orderedOUT = ordered.orderedOUT;
-        //console.log('orderedIN: ', orderedIN);
-        //console.log('orderedOUT: ', orderedOUT);
 
 
         let devicesRow = new HorizontalStack({
@@ -459,7 +457,6 @@ export class RoomDevice extends AbstractComponent {
         if (this.type == "digital")
             val = (value > 512) ? 1023 : 0;
         this.updateSlider(val);
-        //console.log('value: ', val);
 
         let bgImage;
         switch (this.icon) {

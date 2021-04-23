@@ -7,7 +7,8 @@ export var Pages;
     Pages[Pages["REGISTER"] = 2] = "REGISTER";
     Pages[Pages["HOME"] = 3] = "HOME";
     Pages[Pages["SETTINGS"] = 4] = "SETTINGS";
-    Pages[Pages["PAIR_WITH_ACCOUNT"] = 5] = "PAIR_WITH_ACCOUNT";
+    Pages[Pages["AUTOMATIONS"] = 5] = "AUTOMATIONS";
+    Pages[Pages["PAIR_WITH_ACCOUNT"] = 6] = "PAIR_WITH_ACCOUNT";
 })(Pages || (Pages = {}));
 export class AppRouter {
     constructor() {
@@ -39,6 +40,9 @@ export class AppRouter {
         }
         else if (this.pathsEquals(topLevel, Paths.SETTINGS)) {
             this.route.page = Pages.SETTINGS;
+        }
+        else if (this.pathsEquals(topLevel, Paths.AUTOMATIONS)) {
+            this.route.page = Pages.AUTOMATIONS;
         }
         else {
             this.route.page = Pages.UNKNOWN;
@@ -87,4 +91,5 @@ export var Paths;
     Paths["HOME"] = "domu";
     Paths["SETTINGS"] = "nastaveni";
     Paths["PAIR_WITH_ACCOUNT"] = "sparovat_ucet";
+    Paths["AUTOMATIONS"] = "automatizace";
 })(Paths || (Paths = {}));

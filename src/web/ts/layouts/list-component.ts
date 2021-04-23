@@ -9,12 +9,15 @@ import { VerticalStack } from "./vertical-stack.js";
 
 export class List extends AbstractComponent {
     static tagName = "list-component";
+    addBtnContainer: BaseComponent;
     defaultItem: ListItem;
     addItemBtn: ListItem;
     type: ListTypes;
     FLItems: ListItem[] = new Array();
+    listItemsContainer: VerticalStack;
+    layout: any;
 
-    constructor(type: ListTypes, layoutProps?: IComponentProperties) {
+    constructor(listProps: { type: ListTypes, addBtnCallback: any }, layoutProps?: IComponentProperties) {
         super({
             ...layoutProps, ...{
                 //maxHeight: "25%",
@@ -27,56 +30,88 @@ export class List extends AbstractComponent {
             }
         });
 
-        this.type = type;
-        this.initialize();
+        this.layout = new VerticalStack();
+        this.listItemsContainer = new VerticalStack();
+        this.addBtnContainer = new BaseComponent({
+        });
+
+        this.layout.appendComponents(this.addBtnContainer);
+        this.layout.appendComponents(this.listItemsContainer);
+        this.initAddItemBtn(listProps.addBtnCallback);
+
+        this.type = listProps.type;
+
+        this.appendComponents(this.layout);
+
 
     }
 
-    initialize() {
+    reinitializeList() {
         this.clearItems();
-        this.initAddItemBtn();
         if (!this.defaultItem)
             this.defaultItem = new ListItem();
-        else
-            this.addItems(this.defaultItem);
+
+        AbstractComponent.appendComponentsToDOMElements(this.listItemsContainer, this.defaultItem);
     }
 
-    initDefaultItem(type: ListTypes, text: string) {
-        this.defaultItem.initialize(type, text);
-        this.addItems(this.defaultItem);
+    initDefaultItem(type: ListTypes, text: string, disableAddBtn = false) {
+        this.clearItems();
+        this.defaultItem = new ListItem();
+        //this.defaultItem.initialize(type, text);
+        this.defaultItem.initializeItem({
+            type: type,
+            expandableText: text
+        })
+        this.listItemsContainer.appendComponents(this.defaultItem)
+        if(disableAddBtn){
+            this.disableAddBtn();
+        }
     }
 
-    initAddItemBtn(callback: any = null, parentPath: string = "") {
+    enableAddBtn(){        
+        this.addItemBtn.querySelector(".btn").classList.remove("disabled");
+    }
+
+    disableAddBtn(){        
+        this.addItemBtn.querySelector(".btn").classList.add("disabled");
+    }
+
+    initAddItemBtn(callback: any) {
         this.addItemBtn = new ListItem();
 
         let btn = new BaseComponent({
-            backgroundColor: "var(--default-blue-color)",//#78d7f3
-            borderRadius: "15px",
-            padding: "0px 50px",
-            margin: "2px",
-            justifyContent: "center",
-            display: "flex",
-            color: "white",//"#fff700",
-            fontWeight: "bold",
-            fontSize: "1.5rem",
             innerText: "+",
-            classList: "btn"
+            classList: ["btn", "add-btn"]
         });
-        this.addItemBtn.initialize(ListTypes.BTN_ONLY, callback);
-        this.addItemBtn.dbCopy.parentPath = parentPath;
+        //this.addItemBtn.initialize(ListTypes.BTN_ONLY, callback);
+        this.addItemBtn.initializeItem({
+            type: ListTypes.BTN_ONLY,
+            onClickCallback: callback
+        })
         //this.addItemBtn.initializeFromProps()
         this.addItemBtn.components[0].appendComponents(btn);
+        AbstractComponent.appendComponentsToDOMElements(this.addBtnContainer, this.addItemBtn, 0);
+
+    }
+    updateAddItemBtn(parentPath: string) {
+        this.addItemBtn.dbCopy.parentPath = parentPath;
     }
 
+    getItemIndex(item: ListItem) {
+        if (item == this.addItemBtn) {
+            return -2;
+        }
+        return Array.from(this.listItemsContainer.childNodes).indexOf(item);
+    }
     clearItems() {
-        this.innerHTML = "";
+        this.listItemsContainer.innerHTML = "";
     }
 
     /**
      * Called after order of child items is changed. Edit thongs like order arrows visibility, bottom border visibility (last item has no bottom border) etc...
      */
     updatedOrderHandler() {
-        let children = this.childNodes;
+        let children = this.listItemsContainer.childNodes;
         let firstWithArrows = null;
         children.forEach((child, index, array) => {
             (<ListItem>child).updateArrows(false, false); // First of all, switch off arrows for case when is only one item in list (because this case don't match any of conditions below)
@@ -99,21 +134,28 @@ export class List extends AbstractComponent {
     }
 
     addItems(item: ListItem | ListItem[], index: number = -1) {
-        this.appendComponents(item, index);
+        AbstractComponent.appendComponentsToDOMElements(this.listItemsContainer, item, index);
         this.updatedOrderHandler();
+        /*
+                let addToFLItems = (itm: ListItem) =>{
+                    if(Utils.itemIsAnyFromEnum(itm.type, ListTypes, CLASSIC_FRAME_LIST_TYPES)){
+                        this.FLItems.push(itm);
+                    }
+                };
+                if(Array.isArray(item)){
+                    item.forEach((itm) =>{
+                        addToFLItems(itm);
+                    })
+                }else{
+                    addToFLItems(item);
+                }*/
+    }
 
-        let addToFLItems = (itm: ListItem) =>{
-            if(Utils.itemIsAnyFromEnum(itm.type, ListTypes, CLASSIC_FRAME_LIST_TYPES)){
-                this.FLItems.push(itm);
-            }
+    getItems() {
+        return {
+            addBtnItem: this.addItemBtn,
+            items: Array.from(this.listItemsContainer.childNodes)
         };
-        if(Array.isArray(item)){
-            item.forEach((itm) =>{
-                addToFLItems(itm);
-            })
-        }else{
-            addToFLItems(item);
-        }
     }
 
 }
@@ -128,112 +170,128 @@ export class ListItem extends AbstractComponent {
     dbCopy: any;
     _text: string;
     showArrows: { up: boolean, down: boolean };
+    editable: boolean;
+    deletable: boolean;
+    checkbox: HTMLInputElement;
+    checkboxLabel: BaseComponent;
 
-    get text(){
+    get expandableText() {
         return this._text;
     }
 
-    set text(val) {
-        if(val.length)
-            this._text = val;
-        else
-            this._text = "(Bez názvu)";
+    set expandableText(val) {
+        if(val == undefined){
+            this._text = undefined;
+        }else{
+            if (val.length)
+                this._text = val;
+            else
+                this._text = "(Bez názvu)";
+        }
     }
     private _active: boolean = false;
 
-    get active(){
+    get active() {
         return this._active;
     }
-    set active(val){
+    set active(val) {
         this._active = val;
-        if(val)
+        if (val)
             this.classList.add("active");
         else
             this.classList.remove("active");
-        
+
     }
 
     constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
-        this.components = new Array();
     }
 
-    initialize(...args) {
-        let onClickCallback = null;
-        this.type = args[0];
+    initializeItem(itemProps: ListItemProps) {
+        this.type = itemProps.type;
         if (this.layout)
             this.layout.disconnectComponent();
 
+        this.components = new Array();
         let componentIndex = 0;
-        let clickedElemsTitles: object = {};
+
+        let clickedElemsTitles: Array<string> = new Array();
         this.layout = new HorizontalStack({ padding: "0 10px", classList: "components-wrapper" });
-        this.dbCopy = {};
+        this.dbCopy = (itemProps.dbCopy) ? itemProps.dbCopy : {};
+        this.showArrows = (itemProps.showArrows) ? itemProps.showArrows : undefined;
+        this.expandableText = (itemProps.expandableText) ? itemProps.expandableText : undefined;
+        this.editable = (itemProps.editable) ? itemProps.editable : undefined;
+        this.deletable = (itemProps.deletable) ? itemProps.deletable : undefined;
 
-        if (Utils.itemIsAnyFromEnum(this.type, ListTypes, ARROWABLE_LISTS)) {
-            this.components = new Array(5);
-            this.dbCopy = args[2];
-            this.text = args[3];
-            this.showArrows = args[4];
+        if(this.showArrows != undefined){
+            this.components.push(new BaseComponent({ innerText: "▶", transform: "rotate(-90deg)", classList: ["up", "list-item-button"] }));
+            clickedElemsTitles.push("up");
 
-            this.components[componentIndex++] = new BaseComponent({ innerText: "▶", transform: "rotate(-90deg)", classList: ["up", "list-item-button"] });
-            this.components[componentIndex++] = new BaseComponent({ innerText: "▶", transform: "rotate(90deg)", classList: ["down", "list-item-button"] });
-            this.components[componentIndex++] = new BaseComponent({ innerText: this.text, classList: "room-name", flexGrow: "1", display: "flex", flexDirection: "column", justifyContent: "center", marginLeft: "15px" });
-            this.components[componentIndex++] = new Icon("edit", { marginRight: "10px", classList: ["list-item-button"] });
-            this.components[componentIndex++] = new Icon("delete", { classList: ["list-item-button"] });
-
-            this.layout.pushComponents(this.components);
-            onClickCallback = args[1];
-
-            clickedElemsTitles = { 0: "up", 1: "down", 3: "edit", 4: "delete" };
-
-        } else if (this.type == ListTypes.MODULES) {
-            this.components = new Array(3);
-            this.dbCopy = args[2];
-            this.text = args[3];
-
-            this.components[componentIndex++] = new BaseComponent({ innerText: this.text, classList: "room-name", flexGrow: "1", display: "flex", flexDirection: "column", justifyContent: "center", marginLeft: "15px" });
-            this.components[componentIndex++] = new Icon("edit", { marginRight: "10px" });
-            this.components[componentIndex++] = new Icon("delete");
-
-            this.layout.pushComponents(this.components);
-            onClickCallback = args[1];
-
-            clickedElemsTitles = { 1: "edit", 2: "delete" };
-
-        } else if (this.type == ListTypes.BTN_ONLY) {
-            this.components = new Array(1);
-            this.classList.add("no-hover");
-            onClickCallback = args[1];
-            clickedElemsTitles = { 0: "add" };
-            this.components[componentIndex++] = new BaseComponent({ classList: "btn-wrapper", display: "flex", flexDirection: "row", justifyContent: "center", marginLeft: "15px" });
-            this.layout.style.justifyContent = "center";
-            this.layout.pushComponents(this.components);
-        } else if (this.type == ListTypes.TEXT_ONLY) {
-            this.components = new Array(1);
-            this.classList.add("no-hover");
-            this.text = args[1];
-            this.components[componentIndex++] = new BaseComponent({ innerText: this.text, classList: "room-name", flexDirection: "column", justifyContent: "center", marginLeft: "15px" });
-
-            this.layout.style.justifyContent = "center";
-            this.layout.pushComponents(this.components);
-
-        } else {
-            new BaseConsoleError("FrameListTypes chyba - " + ListTypes[this.type] + " nedefinován v initialize() FrameListItemu", this, true);
+            this.components.push(new BaseComponent({ innerText: "▶", transform: "rotate(90deg)", classList: ["down", "list-item-button"] }));
+            clickedElemsTitles.push("down");
         }
 
+        if(itemProps.enableCheckbox != undefined){
+            this.checkbox = document.createElement("input");
+            this.checkbox.type = "checkbox";
+            this.checkboxLabel = new BaseComponent({ innerText: "(aktivní)", marginLeft: "10px" });
+            let stack = new HorizontalStack({alignItems: "center", classList: "opaque"});
+            AbstractComponent.appendComponentsToDOMElements(stack, [this.checkbox, this.checkboxLabel]);
+            
+            this.components.push(stack);
+            clickedElemsTitles.push("checkbox");
+        }
+        
+        if(this.expandableText != undefined){
+            if(this.expandableText.endsWith("undefined")){
+                this.expandableText = this.expandableText.substring(0, this.expandableText.lastIndexOf("undefined"));
+            }
+            if (this.type == ListTypes.TEXT_ONLY) {
+                this.classList.add("no-hover");
+                this.components.push(new BaseComponent({ innerText: this.expandableText, classList: "room-name", flexDirection: "column", justifyContent: "center", marginLeft: "15px" }));
+                clickedElemsTitles.push("not-clickable");
+                this.layout.style.justifyContent = "center";
+            }else{
+                this.components.push(new BaseComponent({ 
+                    innerText: this.expandableText, classList: "room-name", flexGrow: "1", 
+                    display: "flex", flexDirection: "column", justifyContent: "center", marginLeft: "15px" }));
+                clickedElemsTitles.push(undefined);
+            }
+        }
+        if(this.editable){
+            this.components.push(new Icon("edit", { marginRight: "10px", classList: ["list-item-button"] }));
+            clickedElemsTitles.push("edit");
+        }
+        if(this.deletable){
+            this.components.push(new Icon("delete", { classList: ["list-item-button"] }));
+            clickedElemsTitles.push("delete");
+        }
+
+
+        if (this.type == ListTypes.BTN_ONLY) {
+            this.classList.add("no-hover");
+            this.components.push(new BaseComponent({ classList: "btn-wrapper", display: "flex", flexDirection: "row", justifyContent: "center", marginLeft: "15px" }));
+            clickedElemsTitles.push("add");
+            this.layout.style.justifyContent = "center";
+        }
+
+        this.layout.pushComponents(this.components);
         this.appendComponents(this.layout);
 
-
-        this.addListeners(onClickCallback, clickedElemsTitles);
+        this.addListeners(itemProps.onClickCallback, clickedElemsTitles);
     }
 
-    addListeners(onClickCallback: Function, clickedElemsTitles: object): void {
+    addListeners(onClickCallback: Function, clickedElemsTitles: Array<any>): void {
         if (!onClickCallback)
             return;
         if (Utils.itemIsAnyFromEnum(this.type, ListTypes, [...ARROWABLE_LISTS, "BTN_ONLY"])) {
             for (const indexOfTitle in clickedElemsTitles) {
                 if (this.components[indexOfTitle])
                     this.components[indexOfTitle].addEventListener("click", (event) => {
+                        //V případě že by bylo kliknuto na neaktivní tlačítko pro přidávání objektů, tak se nestane nic, jinak se zavolá onClickCallback()
+                        if(clickedElemsTitles[indexOfTitle]=="add" && Array.from(this.components[indexOfTitle].querySelector(".btn").classList).includes("disabled")){
+                            return;
+                        }
                         onClickCallback(event, this, clickedElemsTitles[indexOfTitle], true);
                         event.stopPropagation()
                     })
@@ -262,6 +320,21 @@ export class ListItem extends AbstractComponent {
     }
 }
 
+interface ListItemProps {
+    type: ListTypes;
+    dbCopy?: any,
+    expandableText?: string,
+    showArrows?: {
+        up: boolean,
+        down: boolean
+    },
+    onClickCallback?: any
+    editable?: any;
+    deletable?: any;
+    enableCheckbox?: any;
+
+}
+
 export const ARROWABLE_LISTS: string[] = ["ROOMS", "MODULES", "SENSORS", "DEVICES"];
 export const CLASSIC_FRAME_LIST_TYPES: string[] = ["ROOMS", "MODULES", "SENSORS", "DEVICES"];
 export enum ListTypes {
@@ -271,7 +344,9 @@ export enum ListTypes {
     MODULES,
     ROOMS,
     BTN_ONLY,
-    TEXT_ONLY
+    TEXT_ONLY,
+    TIMEOUT,
+    SENSORS_AUTOMATIONS
 }
 
 export const DBTemplates = {
@@ -317,6 +392,23 @@ export const DBTemplates = {
             type: "digital",
             value: 0,
             icon: "light"
+        }
+    },
+    get TIMEOUT() {
+        return {
+            name: "Časovač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            type: "timeout",
+            timeout: 1, // Timeout v sekundách
+            expires: Math.round(Date.now()/1000)+5,
+            output: "", //např: "rooms/q4dF4zAHFXDZUL1xZK6d/devices/-MYvEMsIx3BHl7w_MvVa/OUT/-MYvEOxuCNPahisdrsm-",
+            value: 500
+        }
+    },
+    get SENSORS_AUTOMATIONS() {
+        return {
+            index: 0,
+            name: "Automatizace " + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            todo: "todo"
         }
     }
 };

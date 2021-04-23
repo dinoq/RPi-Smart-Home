@@ -442,9 +442,38 @@ home-page room-card .card-container .right-stack .devices-row {
   color: white;
 }
 
-.list-component list-item > .components-wrapper > *:hover:not(.room-name):not(.text):not(.btn-wrapper),
+.list-component list-item > .components-wrapper > *:hover:not(.room-name):not(.text):not(.btn-wrapper):not(.opaque),
 .list-component list-item > .components-wrapper .btn:hover {
   opacity: 0.7;
+}
+
+.list-component .btn.add-btn {
+  background-color: var(--default-blue-color);
+  border-radius: 15px;
+  padding: 0px 50px;
+  margin: 2px;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.list-component .btn.add-btn.disabled {
+  background-color: #959595;
+}
+
+.list-component .btn.add-btn.disabled:hover {
+  opacity: 0.65;
+}
+
+.list-component input[type=checkbox] {
+  width: 24px;
+  height: 24px;
 }
 
 @keyframes blink {
@@ -531,9 +560,9 @@ page-manager {
   background-color: var(--default-page-bg-color);
 }
 
-page-manager settings-page .settings-btns-stack {
+page-manager .btns-stack {
   /*position: absolute;
-            top: 5px;*/
+        top: 5px;*/
   margin-top: 10px;
   width: 100%;
   -webkit-box-pack: center;
@@ -541,7 +570,7 @@ page-manager settings-page .settings-btns-stack {
           justify-content: center;
 }
 
-page-manager settings-page .settings-btns-stack .btn {
+page-manager .btns-stack .btn {
   border: 1px solid var(--default-blue-color);
   height: 36px;
   border-radius: 15px;
@@ -549,18 +578,18 @@ page-manager settings-page .settings-btns-stack .btn {
   margin: 0 10px;
 }
 
-page-manager settings-page .settings-btns-stack .btn:enabled:hover {
+page-manager .btns-stack .btn:enabled:hover {
   background-color: #d5d5d5;
 }
 
-page-manager settings-page .form-wrapper form, page-manager settings-page .form-wrapper .form {
+page-manager .form-wrapper form, page-manager .form-wrapper .form {
   max-width: initial;
   width: 100%;
   padding: 5px;
   margin: 5px;
 }
 
-page-manager settings-page .form-wrapper form slidable-img .bordered-img, page-manager settings-page .form-wrapper .form slidable-img .bordered-img {
+page-manager .form-wrapper form slidable-img .bordered-img, page-manager .form-wrapper .form slidable-img .bordered-img {
   border: 1px solid grey;
 }
 

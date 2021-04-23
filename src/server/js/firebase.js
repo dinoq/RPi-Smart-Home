@@ -22,12 +22,12 @@ class Firebase {
         this._online = false;
         this._onlineValidTimeout = 2000;
         this._lastConnCheck = 0;
-        this._dbInited = false;
         this._loggedIn = false;
         this._sensors = new Array();
         this._sensorsUpdates = {};
         this._updateSensorsInDBTimeout = undefined;
         this._ignoredDBTimes = new Array(); // Obsahuje časy aktualizací z databáze, které jsou serverem ignorovány (protože změnu vyvolal sám, nechce tedy změny znovu zpracovávat)
+        this.usedIPsByModules = new Array();
         this._firebaseHandlerActive = false; // Označuje, zda je aktivní posluchač události změny firebase databáze
         /*
         
@@ -162,11 +162,9 @@ class Firebase {
                 if (moduleFoundedInDB) {
                     this._communicationManager.setAllIO(moduleIP, IN + "&" + OUT);
                 }
-                else /*if (this._dbInited)*/ { // Module was probably deleted from database, when module was OFF => reset that module
+                else { // Module was probably deleted from database, when module was OFF => reset that module
                     this._communicationManager.resetModule(moduleIP);
-                } /*else { // Databáze stále není nainicializovaná
-                    //console.log("DB was not still inited in server");
-                }*/
+                }
             }
             else if (req.url == "/report-error") {
                 let ip = req.rsinfo.address;
@@ -215,11 +213,9 @@ class Firebase {
                     this._updateSensorsInDBTimeout = setTimeout(this._updateSensorsInDB, 200);
                 }
             }
-            else /*if (this._dbInited)*/ { // Module was probably deleted from database, when module was OFF => reset that module
+            else { // Module was probably deleted from database, when module was OFF => reset that module
                 this._communicationManager.resetModule(moduleIP);
-            } /*else { // Else db is still not inited => try update later...
-                setTimeout(() => { this._updateSensor(sensorInfo, moduleIP) }, 1000);
-            }*/
+            }
         };
         this._updateSensorsInDB = async () => {
             this._updateSensorsInDBTimeout = undefined;
@@ -264,6 +260,7 @@ class Firebase {
             this._dbFile = {};
         }
         this._getSensors(this.readFromLocalDB("/", {}));
+        this.getModulesIPs();
         // Vytvoření Promise, která se resolvne při přihlášení. Využívá se, pokud je někde potřeba čekat na přihlášení do Firebase.
         this._loggedInPromise = new Promise((resolve, reject) => { this._loggedInResolve = resolve; });
         this.online.then((online) => {
@@ -292,10 +289,9 @@ class Firebase {
         }
         this._firebaseHandlerActive = true;
         let firstCycle = true;
-        console.log("addFirebaseValueHandler ADDED!!! :), UID: " + await this.userUID);
         this._fb.database().ref(await this.userUID).on('value', (snapshot) => {
             const data = snapshot.val();
-            console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
+            //console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
             this._firebaseDatabaseUpdateHandler(data, firstCycle);
             firstCycle = false;
         });
@@ -430,12 +426,7 @@ class Firebase {
         if (data && this._ignoredDBTimes.includes(data.lastWriteTime)) {
             return;
         }
-        if (!this._dbInited) {
-            this._dbInited = true;
-        }
-        else {
-            this._checkDbChange(this.readFromLocalDB("/"), data);
-        }
+        this._checkDbChange(this.readFromLocalDB("/"), data);
     }
     /**
      * Funkce přepíše Firebase databázi lokální verzí databáze
@@ -504,9 +495,6 @@ class Firebase {
                 //TODO!!! smazat vše i z lokální db (_dbFile)
             }
             return;
-        }
-        if (comparingLocalDB) {
-            console.log("comparingLocalDB");
         }
         // check rooms
         const newRooms = (newData) ? newData["rooms"] : undefined;
@@ -671,15 +659,27 @@ class Firebase {
         else if (change.level == DevicesTypes.MODULE) { // ZMĚNA NA ÚROVNI MODULU
             if (change.type == ChangeMessageTypes.ADDED) { // Module was added => init communication
                 this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
-                    this._communicationManager.sendESPItsID(espIP, change.data.id);
-                    this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } });
+                    /**
+                     * Pokud uživatel "zběsile" klikal na přidání modulů, tak se k modulu dostalo několik požadavků na přidání,
+                     * v důsledku čehož i odeslal několik "kladných" odpovědí. Přidat jej však chceme jen jednou...
+                     */
+                    if (this.usedIPsByModules.includes(espIP)) {
+                        throw new Error(); // Aby to "spadlo" do carch bloku a došlo k vymazání nového záznamu o modulu z databáze
+                    }
+                    else {
+                        this._communicationManager.sendESPItsID(espIP, change.data.id);
+                        this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } });
+                        this.usedIPsByModules.push(espIP);
+                    }
                 }).catch((err) => {
                     this.clientRemoveFromDB({ path: change.data.path });
                 });
             }
             else if (change.type == ChangeMessageTypes.REMOVED) { // Module was removed => reset module...
-                if (change.data.ip)
+                if (change.data.ip) {
                     this._communicationManager.resetModule(change.data.ip);
+                    this.usedIPsByModules.splice(this.usedIPsByModules.indexOf(change.data.ip), 1);
+                }
             }
         }
         else if (change.level == DevicesTypes.SENSOR) { // ZMĚNA NA ÚROVNI SNÍMAČE
@@ -707,6 +707,24 @@ class Firebase {
             else if (change.type == ChangeMessageTypes.REMOVED) {
                 if (change.data.ip && change.data.output)
                     this._communicationManager.putVal(change.data.ip, change.data.output, 0);
+            }
+        }
+    }
+    /**
+     * Funkce zjišťuje, zda se IP modulu již nacházíé v databázi
+     * @param newEspIP
+     * @returns
+     */
+    getModulesIPs() {
+        const rooms = this.readFromLocalDB("rooms");
+        for (const roomID in rooms) {
+            const room = rooms[roomID];
+            const modules = room["devices"];
+            for (const moduleID in modules) {
+                const module = modules[moduleID];
+                if (module.IP != undefined) {
+                    this.usedIPsByModules.push(module.IP);
+                }
             }
         }
     }

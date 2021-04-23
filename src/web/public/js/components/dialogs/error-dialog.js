@@ -62,7 +62,7 @@ export class ServerCommunicationErrorDialog {
                 }
             }).catch((err) => {
             });
-        }, 2000);
+        }, 5000);
     }
 }
 export class ServerAgainOnlineDialog {

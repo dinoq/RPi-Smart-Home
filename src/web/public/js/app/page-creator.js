@@ -1,4 +1,4 @@
-import { HamburgerMenu } from "../components/menus/hamburger-menu.js";
+import { HamburgerMenu } from "../components/menu/hamburger-menu.js";
 import { Effects, PageManager } from "./page-manager.js";
 import { AppRouter, Pages, Paths } from "./app-router.js";
 import { URLManager } from "./url-manager.js";
@@ -9,6 +9,7 @@ import { SettingsPage } from "../pages/settings-page.js";
 import { RegistrationPage } from "../pages/registration-page.js";
 import { LoginPage } from "../pages/login-page.js";
 import { Utils } from "./utils.js";
+import { AutomationsPage } from "../pages/automations-page.js";
 export class PageCreator {
     constructor() {
         this.renderPage = async () => {
@@ -57,6 +58,10 @@ export class PageCreator {
             case Pages.SETTINGS:
                 page = Paths.SETTINGS;
                 this.pageManager.addPage(new SettingsPage(), Paths.SETTINGS, true);
+                break;
+            case Pages.AUTOMATIONS:
+                page = Paths.AUTOMATIONS;
+                this.pageManager.addPage(new AutomationsPage(), Paths.AUTOMATIONS, true);
                 break;
             case Pages.HOME:
                 page = Paths.HOME;

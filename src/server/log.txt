@@ -1,3 +1,22 @@
+Čas vzniku chyby: 2021-4-23 22:16:09
+Číslo chyby od spuštění serveru: 1
+ID chyby: OK9BKbm1zvgBXKso7EpPUI5heQWBgC
+
+Chybová hláška:
+Chyba připojení k internetu. Server bude pracovat v lokální síti.
+
+Číslo chyby (placeID) pro lokaci v kódu: 19
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: A network error (such as timeout, interrupted connection or unreachable host) has occurred.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
 Čas vzniku chyby: 2021-4-18 19:52:18
 Číslo chyby od spuštění serveru: 162
 ID chyby: p9yrf5TowajGBj9NPh83Pe9jCcX4Q9

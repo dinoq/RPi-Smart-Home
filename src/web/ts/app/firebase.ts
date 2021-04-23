@@ -33,9 +33,7 @@ export class Firebase extends Singleton {
 
             this.database = firebase.database();
             this.auth = firebase.auth();
-            //console.log("firebase|" + (16179879960 - Math.round(new Date().getTime() / 100)));
             this.auth.onAuthStateChanged((user) => {
-                //console.log("Až ted|" + (16179879960 - Math.round(new Date().getTime() / 100)));
                 this.resolveAuthInited(user);
                 if (user) {
                     this.loggedIn = true;
@@ -103,7 +101,7 @@ export class Firebase extends Singleton {
                         reject(error);
                         var errorCode = error.code;
                         var errorMessage = error.message;
-                        console.log("Chyba: " + errorMessage);
+                        console.error("Chyba: " + errorMessage);
                     });
 
             })
@@ -118,7 +116,6 @@ export class Firebase extends Singleton {
             return new Promise((resolve, reject) => {
                 fb.auth.createUserWithEmailAndPassword(username, pwd)
                     .then((userCredential: any) => {
-                        console.log('userCredential: ', userCredential);
                         fb.uid = userCredential.user.uid;
                         fb.loggedIn = true;
                         resolve(userCredential);
@@ -214,7 +211,6 @@ export class Firebase extends Singleton {
                 source.addEventListener('message', messageHandler);
                 source.addEventListener('error',  errorHandler)
                 let off = ()=>{
-                    console.log("OFF path: "+dbPath);
                     source.removeEventListener('message', messageHandler);
                     source.removeEventListener('error',  errorHandler)
                     source.close();
@@ -343,10 +339,7 @@ export class Firebase extends Singleton {
 
     public async checkConnection(): Promise<boolean> {
         if ((this._lastConnCheck + this._onlineValidTimeout) > Date.now()) { // internet connection state is "cached"
-            //console.log("Cached!");
             return this._online;
-        } else {
-            //console.log("not Cached!");
         }
         let attemptCount;
 
@@ -373,7 +366,7 @@ export class Firebase extends Singleton {
                     return this._online;
                 }
             } catch (error) {
-                console.log('Chyba při kontrole připojení k internetu: ', error);
+                console.error('Chyba při kontrole připojení k internetu: ', error);
             }
         }
         this._lastConnCheck = Date.now();

@@ -18,6 +18,9 @@ export abstract class BaseDetail extends AbstractComponent {
     private _cancelBtn: HTMLButtonElement;
 
     private _readyToSave: boolean = false;
+
+    abstract getElementsToCreate(type: ListTypes): any[];
+    
     set readyToSave(val) {
         if (val) {
             this._saveBtn.classList.add("blink");
@@ -64,7 +67,7 @@ export abstract class BaseDetail extends AbstractComponent {
             <button class="btn cancel-btn">Zrušit změny</button>
             <button class="btn save-btn">Uložit</button>
             `,
-            classList: "settings-btns-stack"
+            classList: "btns-stack"
         });
         this._cancelBtn = this.btnsContainer.querySelector(".cancel-btn");
         this._cancelBtn.addEventListener("click", () => {
@@ -120,7 +123,6 @@ export abstract class BaseDetail extends AbstractComponent {
         });
     }
 
-    abstract getElementsToCreate(type: ListTypes): any[];
 
     blink(count: number = 3) {
         Array.from(this.rows.children).forEach((row: HTMLElement, index) => {
@@ -149,140 +151,8 @@ export class DetailRow extends AbstractComponent {
     input: HTMLElement;
     labelName: string = "";
     constructor(detailRowProps: IDetailRowProps, layoutProps?: IComponentProperties) {
-        super(Utils.mergeObjects(layoutProps, {
-        }));
-
-
+        super(layoutProps);
         this.initializeRow(detailRowProps);
-        /*  
-          this.innerHTML = `        
-              <div class="form-label">
-                  <label for="${id}" class="active-label">${name}</label>
-                  <div class="input-field">
-                  </div>
-              </div>
-          `;
-  
-          let input: HTMLElement = this.querySelector(".input-field");
-          if (type == DETAIL_FIELD_TYPES.TEXT_FIELD) {
-              input.innerHTML = `        
-                  <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value=""/>                   
-              `;
-          } else if (type == DETAIL_FIELD_TYPES.DISABLED_TEXT_FIELD) {
-              input.innerHTML = `          
-                  <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value="" disabled/> 
-              `;
-          } else if (type == DETAIL_FIELD_TYPES.SELECT_SENSOR_TYPE) {
-              let selectedModule = <ListItem>document.querySelectorAll("list-component")[1].querySelector(".active");
-              let boardType = selectedModule.dbCopy.type;            
-              let i2cPins = (Board[boardType])? Board[boardType].i2cPins : undefined;
-              let i2cOption = (i2cPins)? `<option value="bus">Sběrnice I2C (SCL = pin ${i2cPins.SCL}, SDA = pin ${i2cPins.SDA})</option>` : "";
-              input.innerHTML = `                            
-                  <select id="${id}" name="${id}">
-                  <option value="digital">Digitální pin</option>
-                  <option value="analog">Analogový pin</option>
-                  ${i2cOption}
-                  </select>
-              `;
-          } else if (type == DETAIL_FIELD_TYPES.SELECT_SENSOR_INPUT) {
-              let selectedModule = <ListItem>document.querySelectorAll("list-component")[1].querySelector(".active");
-              let boardType = selectedModule.dbCopy.type;
-  
-              input.innerHTML = `                            
-                  <select id="${id}" name="${id}">
-                  </select>
-              `;
-  
-              let inputType = <HTMLInputElement>document.getElementById("input-type");            
-  
-              let options = [
-                  BoardsManager.mapToArrayForSelect("digital", boardType),  // digital
-                  BoardsManager.mapToArrayForSelect("analog", boardType),  //analog
-                  BoardsManager.mapToArrayForSelect("bus", boardType)  
-              ];
-  
-              this.initOptionsFromADSelect(options, inputType);
-          } else if (type == DETAIL_FIELD_TYPES.SELECT_INPUT_UNIT) {
-              input.innerHTML = `                            
-                  <select id="${id}" name="${id}">
-                  </select>
-              `;
-  
-              let inputType = <HTMLInputElement>document.getElementById("input-type");
-  
-              let options = [
-                  ["on-off0", "On / Off", "on-off1", "Zapnuto / Vypnuto", "on-off2", "Sepnuto / Rozepnuto", "on-off3", "Zavřeno / Otevřeno"],  // digital
-                  ["c", "°C", "percentages", "%", "number", "číslo 0-1023 (Bez jednotky)"],  //analog                
-                  ["c", "°C", "percentages", "%", "number", "číslo 0-1023 (Bez jednotky)"]  //bus
-              ];
-  
-              this.initOptionsFromADSelect(options, inputType);
-          } else if (type == DETAIL_FIELD_TYPES.SELECT_INPUT_ICON_TYPE) { // Depends on input type
-              input.innerHTML = `                            
-                  <select id="${id}" name="${id}">
-                  </select>
-              `;
-  
-              let inputType = <HTMLInputElement>document.getElementById("input-type");
-  
-              let options = [
-                  ["switch", "Spínač", "-", "Bez ikony"],  // Digital
-                  ["temp", "Teploměr", "press", "Tlakoměr", "hum", "Vlhkost", "-", "Bez ikony"],  // Analog
-                  ["temp", "Teploměr", "bmp-temp", "Senzor BMP (teplota)", "sht-temp", "Senzor SHT (teplota)", "press", "Tlakoměr", "hum", "Vlhkost", "-", "Bez ikony"]  // Bus
-              ];
-  
-              this.initOptionsFromADSelect(options, inputType);
-          } else if (type == DETAIL_FIELD_TYPES.SELECT_OUTPUT_TYPE) {
-              input.innerHTML = `                            
-                  <select id="${id}" name="${id}">
-                      <option value="digital">Digitální (ON/OFF)</option>
-                      <option value="analog">Analogový (Plynulý)</option>
-                  </select>
-              `;
-          } else if (type == DETAIL_FIELD_TYPES.SELECT_DEVICE_OUTPUT) {
-              let selectedModule = <ListItem>document.querySelectorAll("list-component")[1].querySelector(".active");
-              let boardType = selectedModule.dbCopy.type;
-  
-              input.innerHTML = `                            
-                  <select id="${id}" name="${id}">
-                  </select>
-              `;
-  
-              let options = BoardsManager.mapToArrayForSelect("digital", boardType); // this select doesn't depend on output type (digital/analog) because every GPIO can be used as digital and analog for ESP8266
-              let selectElem = this.querySelector("select");
-  
-              for (let i = 0; i < options.length; i += 2) {
-                  let option = document.createElement("option");
-                  option.value = options[i];
-                  option.innerText = options[i + 1];
-                  selectElem.appendChild(option);
-              }
-          } else if (type == DETAIL_FIELD_TYPES.SELECT_OUTPUT_ICON_TYPE) { // Depends on output type
-              input.innerHTML = `                            
-                  <select id="${id}" name="${id}">
-                  </select>
-              `;
-  
-              let outputType = <HTMLInputElement>document.getElementById("output-type");
-  
-              let options = [
-                  ["light", "Světlo", "switch", "Spínač", "motor", "Motor"],  // digital
-                  ["dimmable-light", "Stmívatelné světlo"]  //analog
-              ];
-  
-              this.initOptionsFromADSelect(options, outputType);
-          } else if (type == DETAIL_FIELD_TYPES.SLIDER_FOR_IMG_PREV) {
-              input.innerHTML = `      
-                  <div id="${id}">
-                      <input type="range" min="0" max="1" step="0.01" value="0.8"  class="slider" id="${id}-input">
-                  </div>
-              `;
-          } else if (type == DETAIL_FIELD_TYPES.IMG_PREVIEW) {
-              AbstractComponent.appendComponentsToDOMElements(input, new SlidableImg("slider-for-image-input", "bg-img-src"));
-          }
-          this.type = type;
-          this.inputID = id;
-          this.input = this.querySelector("#" + id);*/
     }
     initializeRow(detailRowProps: IDetailRowProps) {
         let type = detailRowProps.type;
