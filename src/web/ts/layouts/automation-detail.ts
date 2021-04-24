@@ -16,8 +16,20 @@ export class AutomationDetail extends BaseDetail {
         let elementsToCreate = [];
         if (type == ListTypes.TIMEOUT) {
             elementsToCreate = [
-                ["timeout-name", "Název časovače", DETAIL_FIELD_TYPES.TEXT_FIELD],
-                ["time", "Doba za jakou akce nastane", DETAIL_FIELD_TYPES.TEXT_FIELD],
+                ["automation-name", "Název časovače", DETAIL_FIELD_TYPES.TEXT_FIELD],
+                ["time", "Doba za jakou má akce nastat (H:m:s)", DETAIL_FIELD_TYPES.TIME_SELECT],
+                ["controlled-output", "Nastavovaný výstup", DETAIL_FIELD_TYPES.SELECTBOX],
+                ["value-to-set", "Nastavovaná hodnota", DETAIL_FIELD_TYPES.SLIDER],
+                ["checkbox-active", "Po uložení časovač aktivovat", DETAIL_FIELD_TYPES.CHECKBOX]
+            ];
+        } else if (type == ListTypes.SENSORS_AUTOMATIONS) {
+            elementsToCreate = [
+                ["automation-name", "Název automatizace", DETAIL_FIELD_TYPES.TEXT_FIELD],
+                ["sensor-input", "Snímač vyvolávající změnu", DETAIL_FIELD_TYPES.SELECTBOX],
+                [undefined, undefined, DETAIL_FIELD_TYPES.THRESHOLD_INPUT],
+                ["controlled-output", "Měněný výstup", DETAIL_FIELD_TYPES.SELECTBOX],
+                ["value-to-set", "Nastavovaná hodnota", DETAIL_FIELD_TYPES.SLIDER],
+                ["checkbox-active", "Po uložení automatizaci aktivovat", DETAIL_FIELD_TYPES.CHECKBOX]
             ];
         } 
         return elementsToCreate;

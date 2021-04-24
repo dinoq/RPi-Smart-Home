@@ -1,7 +1,7 @@
 import { ARROWABLE_LISTS, DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
 import { RoomCard } from "../layouts/room-card.js";
 import { Config } from "../app/config.js";
-import { Firebase } from "../app/firebase.js";
+import { DatabaseData, Firebase } from "../app/firebase.js";
 import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
 import { LoginComponent } from "../components/forms/login-component.js";
 import { BasePage } from "./base-page.js";
@@ -106,15 +106,6 @@ export class SettingsPage extends AbstractConfigurationPage {
         } catch (err) {
             Loader.hide();
         }
-
-        document.addEventListener("click", async (e) => {
-            let path = (<any>e).path.map((element) => {
-                return (element.localName) ? element.localName : "";
-            })
-            if (path.includes("menu-icon") || path.includes("menu-item")) {
-                await this.showSaveDialog();
-            }
-        });
     }
 
     getOrderedINOUT = (dbCopy) => {
@@ -412,7 +403,7 @@ export class SettingsPage extends AbstractConfigurationPage {
     saveChanges = async (event) => {
         let path = "";
         let name = (<HTMLInputElement>document.getElementById("device-name")).value;
-        let update: any = { name: name };
+        let update: DatabaseData = {name: name};
         const listType = this.itemInDetail.parentListType;
         if (listType == ListTypes.ROOMS) {
             let imgSrc = (<HTMLInputElement>document.getElementById("bg-img-src")).value;
@@ -442,10 +433,8 @@ export class SettingsPage extends AbstractConfigurationPage {
             update.type = outputType;
             path = this.itemInDetail.item.dbCopy.path;
         }
-        if (Object.keys(update).length != 0) { // If is there something to update...
-            await Firebase.updateDBData(path, update);
-            await this.pageReinicialize();
-        }
+        await Firebase.updateDBData(path, update);
+        await this.pageReinicialize();
 
         this.detail.readyToSave = false;
     }
@@ -515,11 +504,6 @@ export class SettingsPage extends AbstractConfigurationPage {
      * Komentář viz. předek (AbstractConfigurationPage)
      */
      _itemClicked = async (parentList: List, event, item: ListItem, clickedElem?: string, clickedByUser?: boolean) => {
-
-        if (Utils.itemIsAnyFromEnum(item.type, ListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
-            this.saveNewlySelectedItemIDToSelectedItemsIDHierarchy(parentList, item);
-        }
-
         if (clickedElem == undefined || clickedElem == "edit") {
             if (parentList.type == ListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
                 await this.initModulesList(item);

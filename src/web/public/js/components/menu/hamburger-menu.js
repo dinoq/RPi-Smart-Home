@@ -84,7 +84,7 @@ export class HamburgerMenu {
         this.hamburgerIcon.addEventListener("click", () => {
             EventManager.waitIfUnsavedChanges()
                 .then(() => this.toggle(true))
-                .catch((err) => console.error(err));
+                .catch((err) => { });
         });
         window.addEventListener("resize", this.resize);
         //Add links

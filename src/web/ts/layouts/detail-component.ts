@@ -20,7 +20,7 @@ export abstract class BaseDetail extends AbstractComponent {
     private _readyToSave: boolean = false;
 
     abstract getElementsToCreate(type: ListTypes): any[];
-    
+
     set readyToSave(val) {
         if (val) {
             this._saveBtn.classList.add("blink");
@@ -46,7 +46,7 @@ export abstract class BaseDetail extends AbstractComponent {
 
     //blinkable: string[] = new Array(); // String array of blinkable elements (for query)
     constructor(saveCallback, cancelCallback, layoutProps?: IComponentProperties) {
-        super({...layoutProps, classList: "detail-component"});
+        super({ ...layoutProps, classList: "detail-component" });
         this.initialize(saveCallback, cancelCallback);
     }
 
@@ -190,12 +190,39 @@ export class DetailRow extends AbstractComponent {
             input.innerHTML = `        
                 <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value=""/>                   
             `;
+        } else if (type == DETAIL_FIELD_TYPES.TIME_SELECT) {
+            input.innerHTML = `        
+                <div class="time-select">
+                    <input type="number" id="${id}-h" value="0" min="0"><div class="colon">:</div>
+                    <input type="number" id="${id}-m" value="0" min="0"><div class="colon">:</div>
+                    <input type="number" id="${id}-s" value="0" min="0">
+                </div>
+            `;
+        } else if (type == DETAIL_FIELD_TYPES.CHECKBOX) {
+            input.innerHTML = `        
+                <div class="checkbox-container">
+                    <input type="checkbox" id="${id}" value="0">
+                </div>
+            `;
+            this.querySelector("label").style.left = "40px";
+            this.querySelector("label").style.top = "-18px";
+        } else if (type == DETAIL_FIELD_TYPES.SLIDER) {
+            input.innerHTML = `        
+                <div class="slider-container">
+                    <input type="range" step="1" id="${id}" value="0" min=0 max=1024>
+                </div>
+            `;
+            this.input = input.querySelector("input");
+        }else if (type == DETAIL_FIELD_TYPES.THRESHOLD_INPUT) {
+            this.innerHTML = "";
+            AbstractComponent.appendComponentsToDOMElements(this, new ThresholdInput());
         } else {
-            new BaseDialogError("Neznámá chyba při inicializaci detailu!", this);
+            new BaseDialogError("Neznámý typ komponenty v detailu!", this);
         }
 
-
-        this.input = this.querySelector("#" + id);
+        if (!this.input && id != undefined) {
+            this.input = this.querySelector("#" + id);
+        }
     }
 
     /**
@@ -223,8 +250,7 @@ export class DetailRow extends AbstractComponent {
 
     initializeValues(initObject: IDetailRowInitObject, onInputCallback, layoutChanged: boolean) {
         let val = (initObject && initObject.selectedValue != undefined) ? initObject.selectedValue.toString() : undefined;
-        this.input.addEventListener("input", onInputCallback);
-
+        let valueAlreadySet = false;
 
         if (this.type == DETAIL_FIELD_TYPES.DEPENDENT_SELECTBOX) {
             if (!("dependsOnProps" in initObject)) {
@@ -247,32 +273,32 @@ export class DetailRow extends AbstractComponent {
             this.input.innerHTML = allOptions[0];
 
             let parent: HTMLSelectElement = <HTMLSelectElement>document.getElementById(initObject.dependsOnProps.dependsOnID);
-            if(!parent || !(parent instanceof HTMLSelectElement)){
+            if (!parent || !(parent instanceof HTMLSelectElement)) {
                 new BaseDialogError("Chyba při inicializaci detailu!", this);
                 return;
             }
 
             let parentChangedHandler = () => {
                 let selectElem = this.querySelector("select");
-                if(!allOptions[parent.selectedIndex]){
+                if (!allOptions[parent.selectedIndex]) {
                     let parentLabelName = "";
                     let labelName = "";
                     try {
                         labelName = " (" + this.labelName + ")";
                         parentLabelName = " (" + parent.parentElement.parentElement.querySelector("label").innerText + ")";
                     } catch (error) {
-                        
+
                     }
                     new BaseDialogError(`Chyba při inicializaci detailu! Pro SELECT${labelName} nebyl specifikován seznam hodnot pro zvolenou hodnotu nadřazeného SELECTU${parentLabelName}`, this);
                     return;
                 }
-                if(selectElem.innerHTML != allOptions[parent.selectedIndex]){// Options se změní pouze pokud již nejsou aktuálně nastavené (jinak by se při inicializaci tohoto SELECTU v některých případech přepsala inicializační hodnota...)
-                    selectElem.innerHTML = allOptions[parent.selectedIndex];    
+                if (selectElem.innerHTML != allOptions[parent.selectedIndex]) {// Options se změní pouze pokud již nejsou aktuálně nastavené (jinak by se při inicializaci tohoto SELECTU v některých případech přepsala inicializační hodnota...)
+                    selectElem.innerHTML = allOptions[parent.selectedIndex];
                 }
             }
 
             parentChangedHandler();
-            if(layoutChanged){
+            if (layoutChanged) {
                 parent.addEventListener("input", parentChangedHandler);
                 parent.addEventListener("change", parentChangedHandler);
             }
@@ -288,6 +314,47 @@ export class DetailRow extends AbstractComponent {
             }
             //Vytvoří se jednotlivé option
             this.input.innerHTML = options;
+        } else if (this.type == DETAIL_FIELD_TYPES.TIME_SELECT) {
+            valueAlreadySet = true;
+            let time = Number.parseInt(val);
+            let hours = Math.floor(time / 3600);
+            time = time - hours * 3600;
+            let minutes = Math.floor(time / 60);
+            let seconds = time - minutes * 60;
+
+            let validateInput = (event)=>{
+                if(!Number.isSafeInteger(Number.parseInt(event.target.value))){
+                    event.target.value = "0";
+                }
+                if(Number.parseInt(event.target.value) < 0){
+                    event.target.value = "0";
+                }
+            }
+            let hoursInput = (<HTMLInputElement>this.querySelector("#" + this.inputID + "-h"));
+            let minutesInput = (<HTMLInputElement>this.querySelector("#" + this.inputID + "-m"));
+            let secondsInput = (<HTMLInputElement>this.querySelector("#" + this.inputID + "-s"));
+
+            hoursInput.value = hours.toString();
+            minutesInput.value = minutes.toString();
+            secondsInput.value = seconds.toString();
+
+            hoursInput.addEventListener("input", onInputCallback);
+            hoursInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
+            hoursInput.addEventListener("input", validateInput);
+            minutesInput.addEventListener("input", onInputCallback);
+            minutesInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
+            minutesInput.addEventListener("input", validateInput);
+            secondsInput.addEventListener("input", onInputCallback);
+            secondsInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
+            secondsInput.addEventListener("input", validateInput);
+        } else if (this.type == DETAIL_FIELD_TYPES.CHECKBOX) {
+            (<HTMLInputElement>this.input).checked = (val == "true" || val == true);
+            valueAlreadySet = true;
+
+        } else if (this.type == DETAIL_FIELD_TYPES.SLIDER) {
+
+        } else if (this.type == DETAIL_FIELD_TYPES.THRESHOLD_INPUT) {
+            valueAlreadySet = true;
         } else {
             if (val == undefined) {
                 new BaseDialogError("Chyba při inicializaci detailu!", this, true);
@@ -295,18 +362,20 @@ export class DetailRow extends AbstractComponent {
             }
 
         }
-        
-        (<HTMLInputElement>this.input).value = val;
-        if ((<HTMLInputElement>this.input).value != val) {
-            if (this.input instanceof HTMLSelectElement)
-                this.input.selectedIndex = 0;
-            else if (this.input instanceof HTMLInputElement)
-                this.input.value = "";
+        if (!valueAlreadySet) {
+            (<HTMLInputElement>this.input).value = val;
+            if ((<HTMLInputElement>this.input).value != val) {
+                if (this.input instanceof HTMLSelectElement)
+                    this.input.selectedIndex = 0;
+                else if (this.input instanceof HTMLInputElement)
+                    this.input.value = "";
 
-            new UnknownValueInDatabaseError(val, this.type);
-            onInputCallback(); // Call callback to set readyToSave btn active...
+                new UnknownValueInDatabaseError(val, this.type);
+                onInputCallback(); // Call callback to set readyToSave btn active...
+            }
+            this.input.addEventListener("input", onInputCallback);
+            this.input.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
         }
-        this.input.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
     }
 
 }
@@ -340,14 +409,7 @@ export class SlidableImg extends AbstractComponent {
             </div>   
         </div>   
         `;
-        /*
-                this.innerHTML = `          
-                    <div id="${sliderID}">
-                        <input type="range" min="0" max="1" step="0.01" value="0.8"  class="slider" id="${sliderID}-input">
-                    </div>   
-                    <div id="${imgID}" class="bordered-img">
-                    </div>   
-                `*/
+
         this.slider = this.querySelector("input");
         this.img = this.querySelector("#" + imgID);
 
@@ -400,11 +462,24 @@ export class SlidableImg extends AbstractComponent {
     }
 }
 
+export class ThresholdInput extends AbstractComponent{
+    static tagName = "threshold-input";
 
+    constructor(layoutProps?: IComponentProperties) {
+        super(layoutProps);
 
-
-
-
+        this.innerHTML = `        
+        <div class="form-label">
+            <label for="threshold-value-input" class="active-label first-label">Hodnota změny</label>
+            <div class="input-field">                     
+                <div id="threshold-value-container">
+                    <input type="text" id="threshold-value" value=""/> 
+                </div>   
+            </div>
+        </div>   
+        `;
+    }
+}
 
 
 export enum DETAIL_FIELD_TYPES {
@@ -412,7 +487,11 @@ export enum DETAIL_FIELD_TYPES {
     DISABLED_TEXT_FIELD,
     SELECTBOX,
     SLIDABLE_IMG_PREVIEW,
-    TEXT_FIELD
+    TEXT_FIELD,
+    TIME_SELECT,
+    CHECKBOX,
+    SLIDER,
+    THRESHOLD_INPUT
 }
 
 interface IDetailRowProps {
@@ -422,27 +501,9 @@ interface IDetailRowProps {
     data?: any
 }
 
-/*
-export type IDetailRowInitObject = IDetailRowInitObjectWithVal | IDetailRowInitObjectWithDependantSelectProps | IDetailRowInitObjectWithDependantImgProps;
-
-interface IDetailRowInitObjectWithVal {
-    value: string | number | null
-}
-
-interface IDetailRowInitObjectWithDependantSelectProps {
-    dependsOnProps: null | {
-        dependsOnID: string,
-        optionValues: Array<string>
-        optionTexts: Array<string>
-    }
-}
-
-interface IDetailRowInitObjectWithDependantImgProps {
-    dependsOnID: string
-}*/
 
 export interface IDetailRowInitObject {
-    selectedValue: string | number | null,
+    selectedValue: any,
     dependsOnProps?: null | {
         dependsOnID: string,
         optionValues: Array<Array<string>>

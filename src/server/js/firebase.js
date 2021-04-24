@@ -29,42 +29,6 @@ class Firebase {
         this._ignoredDBTimes = new Array(); // Obsahuje časy aktualizací z databáze, které jsou serverem ignorovány (protože změnu vyvolal sám, nechce tedy změny znovu zpracovávat)
         this.usedIPsByModules = new Array();
         this._firebaseHandlerActive = false; // Označuje, zda je aktivní posluchač události změny firebase databáze
-        /*
-        
-        
-        automations = {
-            asdf:{
-                type: "timeout",
-                time: 1,
-                expires: Math.round(Date.now()/1000)+5,
-                output: "rooms/q4dF4zAHFXDZUL1xZK6d/devices/-MYvEMsIx3BHl7w_MvVa/OUT/-MYvEOxuCNPahisdrsm-",
-                value: 500
-            }
-        }
-        */
-        this.automate = () => {
-            let automations = this.readFromLocalDB("automations", {});
-            if (!automations || typeof automations != "object") {
-                return;
-            }
-            for (const automationID in automations) {
-                let automation = automations[automationID];
-                if (!automation) {
-                    continue;
-                }
-                let actualTime = Math.round(Date.now() / 1000);
-                if (automation.type == "timeout" && automation.expires != -1) {
-                    if (actualTime > automation.expires) {
-                        if (actualTime < automation.expires + 10) { // Pouze pokud timeout vypršel před méně než 10ti vteřinami...
-                            this.clientUpdateInDB({ path: automation.output, data: { value: automation.value } });
-                        }
-                        automations[automationID].expires = -1;
-                        this.clientUpdateInDB({ path: "automations/" + automationID, data: { expires: -1 } });
-                    }
-                }
-            }
-            setTimeout(this.automate, 1000);
-        };
         /**
          * Funkce je volána pravidelně, aby kontrolovala připojení k internetu a v případě ztráty (či opětovném) připojení provede dané akce...
          */
@@ -275,10 +239,48 @@ class Firebase {
         setTimeout(this.connectionCheckInterval, this._onlineValidTimeout);
         this._communicationManager = new communication_manager_js_1.CommunicationManager();
         this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
-        setTimeout(this.automate, 1000);
+        this.timeoutAutomations = new Array();
     }
     get loggedIn() {
         return this._loggedIn;
+    }
+    resetAutomationTimeoutIfActive(automation) {
+        let oldTimeout = this.timeoutAutomations.find((a, index, array) => {
+            return a.automationID == automation.dbID;
+        });
+        if (oldTimeout && oldTimeout.timeout) {
+            clearTimeout(oldTimeout.timeout);
+            this.timeoutAutomations.splice(this.timeoutAutomations.indexOf(oldTimeout));
+        }
+        if (automation.controlledOutput == undefined || automation.controlledOutput == ""
+            || automation.type != "timeout" || automation.expires == -1) { // Pokud není zvolený žádný výstup/nejedná se o automatizaci typu timeout/nemá nastavenou expiraci (čas kdy vyprší), nemá smysl nastavovat nový timeout...
+            return;
+        }
+        let actualTime = Math.round(Date.now() / 1000);
+        let tolerationTime = 10;
+        if (actualTime < automation.expires + tolerationTime) { // Pouze pokud timeout vypršel před méně než X(tolerationTime) vteřinami (zahrnuje se zde jistá "tolerance")...
+            if (actualTime < automation.expires) { // K timeoutu ještě skutečně (zatím) nedošlo...
+                let timeDiff = automation.expires - actualTime;
+                let timeout = setTimeout(() => {
+                    console.log("set because of timeout: ", automation.controlledOutput, ":::", automation.value);
+                    this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.value } });
+                    this.clientUpdateInDB({ path: "automations/" + automation.dbID, data: { expires: -1 } });
+                    let thisTimeout = this.timeoutAutomations.find((a, index, array) => {
+                        return a.automationID == automation.dbID;
+                    });
+                    this.timeoutAutomations.splice(this.timeoutAutomations.indexOf(thisTimeout));
+                }, timeDiff * 1000);
+                this.timeoutAutomations.push({
+                    automationID: automation.dbID,
+                    timeout: timeout
+                });
+            }
+            else { //Timeout už vypršel, okamžitě  nastavit výstup
+                console.log("set HNED because of timeout: ", automation.path, ":::", automation.value);
+                this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.value } });
+                this.clientUpdateInDB({ path: "automations/" + automation.dbID, data: { expires: -1 } });
+            }
+        }
     }
     /**
      * Funkce přidá serveru posluchače události změny hodnot v databázi (na nejvyšší úrovni, registruje tedy každou změnu v databázi pro daného uživatele)
@@ -496,13 +498,43 @@ class Firebase {
             }
             return;
         }
+        this.checkRooms(oldData, newData);
+        this.checkAutomations(oldData, newData);
+        if (!comparingLocalDB) {
+            /*Pokud se proovnává Firebase s lokální datbází, tak se získá rozdíl nových dat (z Firebase databáze) oproti starým (lokálním).
+            Všechny změny se uloží lokálně, čímž se this._dbFile srovná s daty ve Firebase databázi*/
+            let diffs = diff(oldData, newData); // Získáme rozdíl nových dat oproti starým
+            if (diffs) {
+                diffs.forEach((diff, index, array) => {
+                    if (diff.kind == ObjectChangeTypes.NEW
+                        || diff.kind == ObjectChangeTypes.EDITED) {
+                        let pathArr = diff.path;
+                        let path = diff.path.join("/");
+                        let val = objectPath.get(newData, pathArr);
+                        let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
+                        this.writeToLocalDB(path, val, time);
+                    }
+                    else if (diff.kind == ObjectChangeTypes.DELETED) {
+                        let pathArr = diff.path;
+                        let path = diff.path.join("/");
+                        let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
+                        this.removeInLocalDB(path, time);
+                    }
+                    else {
+                        error_logger_js_1.ErrorLogger.log(null, {
+                            errorDescription: "Neznámý typ rozdílu nových dat z databáze...!",
+                            placeID: 26
+                        }, { diff: diff });
+                    }
+                });
+            }
+        }
+    }
+    checkRooms(oldData, newData) {
         // check rooms
         const newRooms = (newData) ? newData["rooms"] : undefined;
         const oldRooms = (oldData) ? oldData["rooms"] : undefined;
-        ;
-        let newRoomsIDs = new Array();
         for (const newRoomID in newRooms) {
-            newRoomsIDs.push(newRoomID);
             const newRoom = newRooms[newRoomID];
             const oldRoom = (oldRooms) ? oldRooms[newRoomID] : undefined;
             if (!oldRoom) { // Room added
@@ -616,33 +648,38 @@ class Firebase {
                 }
             }
         }
-        if (!comparingLocalDB) {
-            /*Pokud se proovnává Firebase s lokální datbází, tak se získá rozdíl nových dat (z Firebase databáze) oproti starým (lokálním).
-            Všechny změny se uloží lokálně, čímž se this._dbFile srovná s daty ve Firebase databázi*/
-            let diffs = diff(oldData, newData); // Získáme rozdíl nových dat oproti starým
-            if (diffs) {
-                diffs.forEach((diff, index, array) => {
-                    if (diff.kind == ObjectChangeTypes.NEW
-                        || diff.kind == ObjectChangeTypes.EDITED) {
-                        let pathArr = diff.path;
-                        let path = diff.path.join("/");
-                        let val = objectPath.get(newData, pathArr);
-                        let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
-                        this.writeToLocalDB(path, val, time);
-                    }
-                    else if (diff.kind == ObjectChangeTypes.DELETED) {
-                        let pathArr = diff.path;
-                        let path = diff.path.join("/");
-                        let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
-                        this.removeInLocalDB(path, time);
-                    }
-                    else {
-                        error_logger_js_1.ErrorLogger.log(null, {
-                            errorDescription: "Neznámý typ rozdílu nových dat z databáze...!",
-                            placeID: 26
-                        }, { diff: diff });
-                    }
-                });
+    }
+    checkAutomations(oldData, newData) {
+        const newAutomations = (newData) ? newData["automations"] : undefined;
+        const oldAutomations = (oldData) ? oldData["automations"] : undefined;
+        let newAutomationIDs = new Array();
+        for (const newAutomationID in newAutomations) {
+            newAutomationIDs.push(newAutomationID);
+            const newAutomation = newAutomations[newAutomationID];
+            const oldAutomation = (oldAutomations) ? oldAutomations[newAutomationID] : undefined;
+            if (!oldAutomation) { // Automation added
+                newAutomation.dbID = newAutomationID;
+                this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.TIMEOUT, data: newAutomation });
+            }
+            else {
+                let diffs = diff(oldAutomation, newAutomation);
+                if (diffs && diffs.some((d, index, array) => { return !(d.path[0] == "name" || d.path[0] == "type"); })) {
+                    newAutomation.dbID = newAutomationID;
+                    this._processDbChange({ type: ChangeMessageTypes.CHANGED, level: DevicesTypes.TIMEOUT, data: newAutomation });
+                }
+                /*if (newAutomation.expires != oldAutomation.expires) {
+                    this._processDbChange({ type: ChangeMessageTypes.CHANGED, level: DevicesTypes.TIMEOUT, data: { newAutomations } });
+                }*/
+            }
+        }
+        //Compare old saved DB with received in order to detect removed things
+        for (const oldAutomationID in oldAutomations) {
+            const newAutomation = (newAutomations) ? newAutomations[oldAutomationID] : undefined;
+            const oldAutomation = (oldAutomations) ? oldAutomations[oldAutomationID] : undefined;
+            if (!newAutomation) { // Automation was removed
+                oldAutomation.dbID = oldAutomationID;
+                oldAutomation.controlledOutput = ""; //Nasatavíme ovládaný výstup na "nic", aby se pouze odebral timeout, jestli existuje...
+                this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.TIMEOUT, data: oldAutomation });
             }
         }
     }
@@ -672,7 +709,7 @@ class Firebase {
                         this.usedIPsByModules.push(espIP);
                     }
                 }).catch((err) => {
-                    this.clientRemoveFromDB({ path: change.data.path });
+                    this.clientRemoveFromDB({ path: change.data.path, data: null });
                 });
             }
             else if (change.type == ChangeMessageTypes.REMOVED) { // Module was removed => reset module...
@@ -708,6 +745,12 @@ class Firebase {
                 if (change.data.ip && change.data.output)
                     this._communicationManager.putVal(change.data.ip, change.data.output, 0);
             }
+        }
+        else if (change.level == DevicesTypes.TIMEOUT) { // ZMĚNA NA ÚROVNI ČASOVAČŮ
+            this.resetAutomationTimeoutIfActive(change.data);
+        }
+        else if (change.level == DevicesTypes.SENSORS_AUTOMATIONS) { // ZMĚNA NA ÚROVNI AUTOMATIZACE SNÍMAČŮ
+            console.log("TODO ZMĚNA NA ÚROVNI AUTOMATIZACE SNÍMAČŮ");
         }
     }
     /**
@@ -981,7 +1024,6 @@ class Firebase {
             }
         }
         else {
-            console.log(this._loggedInPromise);
             console.log("zkontrolovat zda není problém s uid!!!!!!!!!!!!!!!");
             console.log("Zde možná můžu přímo získávat z lokálního souboru a konstrukce výše nebude potřeba...jelikož jsou obě DB v synchronizaci a aspon se usetri cas kdyz se to nebude tahat pres internet\n");
             return this.getDBPart(path);
@@ -1092,7 +1134,9 @@ var DevicesTypes;
     DevicesTypes[DevicesTypes["SENSOR"] = 2] = "SENSOR";
     DevicesTypes[DevicesTypes["DEVICE"] = 3] = "DEVICE";
     DevicesTypes[DevicesTypes["UNKNOWN"] = 4] = "UNKNOWN";
-    DevicesTypes[DevicesTypes["LAST_WRITE_TIME"] = 5] = "LAST_WRITE_TIME";
+    DevicesTypes[DevicesTypes["TIMEOUT"] = 5] = "TIMEOUT";
+    DevicesTypes[DevicesTypes["SENSORS_AUTOMATIONS"] = 6] = "SENSORS_AUTOMATIONS";
+    DevicesTypes[DevicesTypes["LAST_WRITE_TIME"] = 7] = "LAST_WRITE_TIME";
 })(DevicesTypes || (DevicesTypes = {}));
 var DataSources;
 (function (DataSources) {

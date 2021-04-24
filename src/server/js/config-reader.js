@@ -112,7 +112,6 @@ class ConfigReader {
 exports.ConfigReader = ConfigReader;
 ConfigReader.CONFIG_EXAMPLE = {
     "webAppPort": 80,
-    "NEW_MODULE_FIND_TIMEOUT": 10000,
     "username": "",
     "password": "",
     "saveUserCredentialsOnLogin": true,

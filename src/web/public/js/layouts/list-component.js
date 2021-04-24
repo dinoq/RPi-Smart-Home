@@ -177,10 +177,10 @@ export class ListItem extends AbstractComponent {
             this.components.push(new BaseComponent({ innerText: "▶", transform: "rotate(90deg)", classList: ["down", "list-item-button"] }));
             clickedElemsTitles.push("down");
         }
-        if (itemProps.enableCheckbox != undefined) {
+        if (itemProps.checkable != undefined) {
             this.checkbox = document.createElement("input");
             this.checkbox.type = "checkbox";
-            this.checkboxLabel = new BaseComponent({ innerText: "(aktivní)", marginLeft: "10px" });
+            this.checkboxLabel = new BaseComponent({ innerText: "(neaktivní)", marginLeft: "10px" });
             let stack = new HorizontalStack({ alignItems: "center", classList: "opaque" });
             AbstractComponent.appendComponentsToDOMElements(stack, [this.checkbox, this.checkboxLabel]);
             this.components.push(stack);
@@ -197,11 +197,16 @@ export class ListItem extends AbstractComponent {
                 this.layout.style.justifyContent = "center";
             }
             else {
-                this.components.push(new BaseComponent({
+                let textComponent = new BaseComponent({
                     innerText: this.expandableText, classList: "room-name", flexGrow: "1",
                     display: "flex", flexDirection: "column", justifyContent: "center", marginLeft: "15px"
-                }));
+                });
+                this.components.push(textComponent);
                 clickedElemsTitles.push(undefined);
+                if (itemProps.checkable != undefined) {
+                    textComponent.style.marginLeft = "0px";
+                    textComponent.style.paddingLeft = "10px";
+                }
             }
         }
         if (this.editable) {
@@ -225,24 +230,44 @@ export class ListItem extends AbstractComponent {
     addListeners(onClickCallback, clickedElemsTitles) {
         if (!onClickCallback)
             return;
-        if (Utils.itemIsAnyFromEnum(this.type, ListTypes, [...ARROWABLE_LISTS, "BTN_ONLY"])) {
-            for (const indexOfTitle in clickedElemsTitles) {
-                if (this.components[indexOfTitle])
-                    this.components[indexOfTitle].addEventListener("click", (event) => {
-                        //V případě že by bylo kliknuto na neaktivní tlačítko pro přidávání objektů, tak se nestane nic, jinak se zavolá onClickCallback()
-                        if (clickedElemsTitles[indexOfTitle] == "add" && Array.from(this.components[indexOfTitle].querySelector(".btn").classList).includes("disabled")) {
-                            return;
-                        }
-                        onClickCallback(event, this, clickedElemsTitles[indexOfTitle], true);
-                        event.stopPropagation();
-                    });
-            }
+        for (const indexOfTitle in clickedElemsTitles) {
+            if (this.components[indexOfTitle])
+                if (clickedElemsTitles[indexOfTitle] == "not-clickable") {
+                    continue;
+                }
+            this.components[indexOfTitle].addEventListener("click", (event) => {
+                //V případě že by bylo kliknuto na neaktivní tlačítko pro přidávání objektů, tak se nestane nic, jinak se zavolá onClickCallback()
+                if (clickedElemsTitles[indexOfTitle] == "add" && Array.from(this.components[indexOfTitle].querySelector(".btn").classList).includes("disabled")) {
+                    return;
+                }
+                onClickCallback(event, this, clickedElemsTitles[indexOfTitle], true);
+                event.stopPropagation();
+            });
         }
         if (this.type != ListTypes.BTN_ONLY) {
             this.addEventListener("click", (event) => {
                 onClickCallback(event, this);
             });
         }
+    }
+    resetTimeout(timeoutCallback, seconds, secondsCallback) {
+        if (this._timeout)
+            clearTimeout(this._timeout);
+        this._timeout = setTimeout(timeoutCallback, seconds * 1000);
+        this._secondsRemaining = seconds;
+        let tickTimeout = () => {
+            this._secondsRemaining--;
+            if (this._secondsRemaining > 0) {
+                secondsCallback(this._secondsRemaining);
+                setTimeout(tickTimeout, 1000);
+            }
+        };
+        setTimeout(tickTimeout, 1000);
+    }
+    clearTimeout() {
+        if (this._timeout)
+            clearTimeout(this._timeout);
+        this._secondsRemaining = 0;
     }
     updateArrows(upVisible, downVisible) {
         if (Utils.itemIsAnyFromEnum(this.type, ListTypes, ARROWABLE_LISTS)) {
@@ -287,8 +312,11 @@ export const DBTemplates = {
     get MODULES() {
         return {
             index: 0,
-            in: {},
-            out: {},
+            /*in: {
+
+            },
+            out: {
+            },*/
             name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase(),
             type: "wemosD1",
             IP: ""
@@ -316,20 +344,28 @@ export const DBTemplates = {
         };
     },
     get TIMEOUT() {
+        let time = 60 * 5;
         return {
             name: "Časovač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
             type: "timeout",
-            timeout: 1,
-            expires: Math.round(Date.now() / 1000) + 5,
-            output: "",
+            time: time,
+            expires: -1,
+            controlledOutput: "",
             value: 500
         };
     },
     get SENSORS_AUTOMATIONS() {
         return {
-            index: 0,
             name: "Automatizace " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            todo: "todo"
+            type: "automation",
+            watchedInput: "",
+            threshold: {
+                sign: ">",
+                value: 0
+            },
+            controlledOutput: "",
+            value: 500,
+            active: true
         };
     }
 };

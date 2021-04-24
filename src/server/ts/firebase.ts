@@ -93,49 +93,55 @@ export class Firebase {
         this._communicationManager = new CommunicationManager();
         this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
 
-        setTimeout(this.automate, 1000);
+        this.timeoutAutomations = new Array();
     }
-/*
+    timeoutAutomations: Array<{
+        automationID: string,
+        timeout: any
+    }>;
+    resetAutomationTimeoutIfActive(automation: DatabaseData) {
+        let oldTimeout = this.timeoutAutomations.find((a, index, array) => {
+            return a.automationID == automation.dbID;
+        });
+
+        if (oldTimeout && oldTimeout.timeout) {
+            clearTimeout(oldTimeout.timeout);
+            this.timeoutAutomations.splice(this.timeoutAutomations.indexOf(oldTimeout));
+        }
 
 
-automations = {
-    asdf:{
-        type: "timeout",
-        time: 1,
-        expires: Math.round(Date.now()/1000)+5,
-        output: "rooms/q4dF4zAHFXDZUL1xZK6d/devices/-MYvEMsIx3BHl7w_MvVa/OUT/-MYvEOxuCNPahisdrsm-",
-        value: 500
-    }
-}
-*/
-
-    automate= ()=>{
-        let automations = this.readFromLocalDB("automations", {});
-        if(!automations ||  typeof automations != "object"){
+        if (automation.controlledOutput == undefined || automation.controlledOutput == ""
+            || automation.type != "timeout" || automation.expires == -1) { // Pokud není zvolený žádný výstup/nejedná se o automatizaci typu timeout/nemá nastavenou expiraci (čas kdy vyprší), nemá smysl nastavovat nový timeout...
             return;
         }
-        for(const automationID in automations){
-            let automation =automations[automationID];
-            if(!automation){
-                continue;
-            }
-            let actualTime = Math.round(Date.now()/1000);
-            if(automation.type == "timeout" && automation.expires != -1){
-                if(actualTime > automation.expires){
-                    if(actualTime < automation.expires+10){ // Pouze pokud timeout vypršel před méně než 10ti vteřinami...
-                        this.clientUpdateInDB({path: automation.output, data: {value:automation.value}})
-                    }
-                    automations[automationID].expires = -1;
-                    this.clientUpdateInDB({path: "automations/"+automationID, data: {expires:-1}})
 
-                }
+        let actualTime = Math.round(Date.now() / 1000);
+        let tolerationTime = 10;
+        if (actualTime < automation.expires + tolerationTime) {// Pouze pokud timeout vypršel před méně než X(tolerationTime) vteřinami (zahrnuje se zde jistá "tolerance")...
+            if (actualTime < automation.expires) { // K timeoutu ještě skutečně (zatím) nedošlo...
+                let timeDiff = automation.expires - actualTime;
+                let timeout = setTimeout(() => {
+                    console.log("set because of timeout: ", automation.controlledOutput, ":::", automation.value);
+                    this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.value } })
+                    this.clientUpdateInDB({ path: "automations/" + automation.dbID, data: { expires: -1 } })
+                    let thisTimeout = this.timeoutAutomations.find((a, index, array) => {
+                        return a.automationID == automation.dbID;
+                    });
+                    this.timeoutAutomations.splice(this.timeoutAutomations.indexOf(thisTimeout));
+                }, timeDiff * 1000)
+                this.timeoutAutomations.push({
+                    automationID: automation.dbID,
+                    timeout: timeout
+                })
+            } else {//Timeout už vypršel, okamžitě  nastavit výstup
+                console.log("set HNED because of timeout: ", automation.path, ":::", automation.value);
+                this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.value } })
+                this.clientUpdateInDB({ path: "automations/" + automation.dbID, data: { expires: -1 } })
             }
         }
 
-
-
-        setTimeout(this.automate, 1000);
     }
+
     /**
      * Funkce je volána pravidelně, aby kontrolovala připojení k internetu a v případě ztráty (či opětovném) připojení provede dané akce...
      */
@@ -347,29 +353,29 @@ automations = {
                 this._communicationManager.setAllIO(moduleIP, IN + "&" + OUT);
             } else { // Module was probably deleted from database, when module was OFF => reset that module
                 this._communicationManager.resetModule(moduleIP);
-            } 
-        }else if(req.url == "/report-error"){
+            }
+        } else if (req.url == "/report-error") {
             let ip = req.rsinfo.address;
             let moduleInfo = {};
             let db = this.readFromLocalDB("/");
-            if(db && db["rooms"]){
-                for(const roomID in db["rooms"]){
+            if (db && db["rooms"]) {
+                for (const roomID in db["rooms"]) {
                     let room = db["rooms"][roomID];
-                    let modules = (room && room["devices"])? room["devices"]: undefined;
-                    for(const moduleID in modules){
+                    let modules = (room && room["devices"]) ? room["devices"] : undefined;
+                    for (const moduleID in modules) {
                         let module = modules[moduleID];
-                        if(module && module.IP){
+                        if (module && module.IP) {
                             moduleInfo = module;
                         }
                     }
                 }
             }
             ErrorLogger.log(null, {
-                errorDescription: "Přišla chyba z modulu: \n"+req.payload.toString(),
+                errorDescription: "Přišla chyba z modulu: \n" + req.payload.toString(),
                 placeID: 28,
                 type: ErrorTypes.MODULE_ERROR
-            }, {infoOModulu: moduleInfo})
-        }else{
+            }, { infoOModulu: moduleInfo })
+        } else {
             ErrorLogger.log(null, {
                 errorDescription: "Modul poslal požadavek na serverem nezpracováváné URL!",
                 placeID: 27,
@@ -538,12 +544,43 @@ automations = {
             return
         }
 
+        this.checkRooms(oldData, newData);
+        this.checkAutomations(oldData, newData);
+
+        if (!comparingLocalDB) {
+            /*Pokud se proovnává Firebase s lokální datbází, tak se získá rozdíl nových dat (z Firebase databáze) oproti starým (lokálním).
+            Všechny změny se uloží lokálně, čímž se this._dbFile srovná s daty ve Firebase databázi*/
+            let diffs = diff(oldData, newData); // Získáme rozdíl nových dat oproti starým
+            if (diffs) {
+                diffs.forEach((diff, index, array) => {
+                    if (diff.kind == ObjectChangeTypes.NEW
+                        || diff.kind == ObjectChangeTypes.EDITED) {
+                        let pathArr = diff.path;
+                        let path = diff.path.join("/");
+                        let val = objectPath.get(newData, pathArr);
+                        let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
+                        this.writeToLocalDB(path, val, time);
+                    } else if (diff.kind == ObjectChangeTypes.DELETED) {
+                        let pathArr = diff.path;
+                        let path = diff.path.join("/");
+                        let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
+                        this.removeInLocalDB(path, time);
+                    } else {
+                        ErrorLogger.log(null, {
+                            errorDescription: "Neznámý typ rozdílu nových dat z databáze...!",
+                            placeID: 26
+                        }, { diff: diff });
+                    }
+                })
+            }
+        }
+    }
+
+    checkRooms(oldData, newData) {
         // check rooms
         const newRooms = (newData) ? newData["rooms"] : undefined;
-        const oldRooms = (oldData) ? oldData["rooms"] : undefined;;
-        let newRoomsIDs = new Array();
+        const oldRooms = (oldData) ? oldData["rooms"] : undefined;
         for (const newRoomID in newRooms) {
-            newRoomsIDs.push(newRoomID);
             const newRoom = newRooms[newRoomID];
             const oldRoom = (oldRooms) ? oldRooms[newRoomID] : undefined;
             if (!oldRoom) { // Room added
@@ -611,7 +648,7 @@ automations = {
                             }
                         }
                         this._processDbChange({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: newModules[newModuleID]["IP"], output: output, value: val.toString() } });
-                        if(outputOrTypeChanged){
+                        if (outputOrTypeChanged) {
                             let oldOutput = (oldDevice.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
                             oldOutput += oldDevice.output.toString().substring(1);
                             this._processDbChange({ type: ChangeMessageTypes.VALUE_CHANGED, level: DevicesTypes.DEVICE, data: { ip: newModules[newModuleID]["IP"], output: oldOutput, value: 0 } });
@@ -663,37 +700,44 @@ automations = {
                 }
             }
         }
+    }
+
+    checkAutomations(oldData, newData) {
+        const newAutomations = (newData) ? newData["automations"] : undefined;
+        const oldAutomations = (oldData) ? oldData["automations"] : undefined;
+        let newAutomationIDs = new Array();
+        for (const newAutomationID in newAutomations) {
+            newAutomationIDs.push(newAutomationID);
+            const newAutomation = newAutomations[newAutomationID];
+            const oldAutomation = (oldAutomations) ? oldAutomations[newAutomationID] : undefined;
+            if (!oldAutomation) { // Automation added
+                newAutomation.dbID = newAutomationID;
+                this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.TIMEOUT, data: newAutomation });
+            } else {
+                let diffs = diff(oldAutomation, newAutomation);
+                if (diffs && diffs.some((d, index, array) => { return !(d.path[0] == "name" || d.path[0] == "type") })) {
+                    newAutomation.dbID = newAutomationID;
+                    this._processDbChange({ type: ChangeMessageTypes.CHANGED, level: DevicesTypes.TIMEOUT, data: newAutomation });
+                }
+                /*if (newAutomation.expires != oldAutomation.expires) {
+                    this._processDbChange({ type: ChangeMessageTypes.CHANGED, level: DevicesTypes.TIMEOUT, data: { newAutomations } });
+                }*/
+            }
 
 
-        if (!comparingLocalDB) {
-            /*Pokud se proovnává Firebase s lokální datbází, tak se získá rozdíl nových dat (z Firebase databáze) oproti starým (lokálním).
-            Všechny změny se uloží lokálně, čímž se this._dbFile srovná s daty ve Firebase databázi*/
-            let diffs = diff(oldData, newData); // Získáme rozdíl nových dat oproti starým
-            if (diffs) {
-                diffs.forEach((diff, index, array) => {
-                    if (diff.kind == ObjectChangeTypes.NEW
-                        || diff.kind == ObjectChangeTypes.EDITED) {
-                        let pathArr = diff.path;
-                        let path = diff.path.join("/");
-                        let val = objectPath.get(newData, pathArr);
-                        let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
-                        this.writeToLocalDB(path, val, time);
-                    } else if (diff.kind == ObjectChangeTypes.DELETED) {
-                        let pathArr = diff.path;
-                        let path = diff.path.join("/");
-                        let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
-                        this.removeInLocalDB(path, time);
-                    } else {
-                        ErrorLogger.log(null, {
-                            errorDescription: "Neznámý typ rozdílu nových dat z databáze...!",
-                            placeID: 26
-                        }, {diff: diff});
-                    }
-                })
+        }
+
+        //Compare old saved DB with received in order to detect removed things
+        for (const oldAutomationID in oldAutomations) {
+            const newAutomation = (newAutomations) ? newAutomations[oldAutomationID] : undefined;
+            const oldAutomation = (oldAutomations) ? oldAutomations[oldAutomationID] : undefined;
+            if (!newAutomation) { // Automation was removed
+                oldAutomation.dbID = oldAutomationID;
+                oldAutomation.controlledOutput = ""; //Nasatavíme ovládaný výstup na "nic", aby se pouze odebral timeout, jestli existuje...
+                this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.TIMEOUT, data: oldAutomation });
             }
         }
     }
-
     /**
      * Funkce zpracuje změnu v databázi (ve smyslu komunkace s moduly)
      * @param change Konkrétní změna, kterou je potřeba zpracovat
@@ -710,18 +754,18 @@ automations = {
                      * Pokud uživatel "zběsile" klikal na přidání modulů, tak se k modulu dostalo několik požadavků na přidání,
                      * v důsledku čehož i odeslal několik "kladných" odpovědí. Přidat jej však chceme jen jednou...
                      */
-                    if(this.usedIPsByModules.includes(espIP)){
+                    if (this.usedIPsByModules.includes(espIP)) {
                         throw new Error(); // Aby to "spadlo" do carch bloku a došlo k vymazání nového záznamu o modulu z databáze
-                    }else{                        
+                    } else {
                         this._communicationManager.sendESPItsID(espIP, change.data.id);
                         this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } })
                         this.usedIPsByModules.push(espIP);
                     }
                 }).catch((err) => {
-                    this.clientRemoveFromDB({ path: change.data.path });
+                    this.clientRemoveFromDB({ path: change.data.path, data: null });
                 })
             } else if (change.type == ChangeMessageTypes.REMOVED) {// Module was removed => reset module...
-                if (change.data.ip){
+                if (change.data.ip) {
                     this._communicationManager.resetModule(change.data.ip);
                     this.usedIPsByModules.splice(this.usedIPsByModules.indexOf(change.data.ip), 1);
                 }
@@ -749,6 +793,10 @@ automations = {
                 if (change.data.ip && change.data.output)
                     this._communicationManager.putVal(change.data.ip, change.data.output, 0);
             }
+        } else if (change.level == DevicesTypes.TIMEOUT) { // ZMĚNA NA ÚROVNI ČASOVAČŮ
+            this.resetAutomationTimeoutIfActive(change.data);
+        } else if (change.level == DevicesTypes.SENSORS_AUTOMATIONS) { // ZMĚNA NA ÚROVNI AUTOMATIZACE SNÍMAČŮ
+            console.log("TODO ZMĚNA NA ÚROVNI AUTOMATIZACE SNÍMAČŮ");
         }
     }
 
@@ -757,14 +805,14 @@ automations = {
      * @param newEspIP 
      * @returns 
      */
-    getModulesIPs(){        
+    getModulesIPs() {
         const rooms = this.readFromLocalDB("rooms");
         for (const roomID in rooms) {
             const room = rooms[roomID];
             const modules = room["devices"];
             for (const moduleID in modules) {
                 const module = modules[moduleID];
-                if (module.IP != undefined) { 
+                if (module.IP != undefined) {
                     this.usedIPsByModules.push(module.IP);
                 }
             }
@@ -867,7 +915,7 @@ automations = {
 
         let tmpDbFile = JSON.parse(JSON.stringify(this.readFromLocalDB("/", {}))); // Záloha lokální databáze pro pozdější vyhodnocení změn funkcí _checkDbChange() (viz níže ve funkci)
 
-        let processUpdate = ()=>{            
+        let processUpdate = () => {
             let pathArr = this.correctPath(path).split("/");
             let part = this.readFromLocalDB(path);
             if (typeof part == "object" && typeof val == "object") { // Pokud jsou v daném umístění objekty, uložíme deep merge těchto objektů
@@ -889,23 +937,23 @@ automations = {
                     objectPath.set(this._dbFile, "automation", merge(part, val.automation));
                 }
             } else { // Jinak víme, že přišla cesta "/"", a data ve formátu, který obsahuj cestu (např. 'rooms/-MYRjLerob8wpXvP4bxZ/devices/-MYTWRVGgRyE32PCruIi/IN/-MYTe9Otf3NLzkDHV65Z/value': 297). 
-                                
+
                 let updates = val;
                 let updatesObjectArray = new Array();
-                path = (Object.keys(updates)[0].startsWith("rooms") || Object.keys(updates)[0].startsWith("/rooms"))? "rooms" : "automation";
+                path = (Object.keys(updates)[0].startsWith("rooms") || Object.keys(updates)[0].startsWith("/rooms")) ? "rooms" : "automation";
                 for (const longPathName in updates) {
                     let pathArr = longPathName.split("/").slice(1);
                     let updateObject = {};
-                    updateObject[pathArr[pathArr.length-1]] = updates[longPathName];
-                    for(let i = pathArr.length-2; i >= 0; i--){
+                    updateObject[pathArr[pathArr.length - 1]] = updates[longPathName];
+                    for (let i = pathArr.length - 2; i >= 0; i--) {
                         let tmp = {};
                         tmp[pathArr[i]] = updateObject;
                         updateObject = tmp;
                     }
-                    updatesObjectArray.push(updateObject);            
+                    updatesObjectArray.push(updateObject);
                 }
                 val = merge.all(updatesObjectArray);
-        
+
                 processUpdate();
                 /*BLBOST:
                 let remapped;
@@ -979,7 +1027,7 @@ automations = {
      * Funkce aktualizuje lokální (a v případě připojení k internetu i Firebase) databázi. Funkce je volaná na základě požadavku webového klienta.
      * @param bodyData Data z těla POST požadavku, obsahují cestu v databázi, na kterou se klient "ptá" a aktualizovaná data.
      */
-    public async clientUpdateInDB(bodyData) {
+    public async clientUpdateInDB(bodyData: IFormData) {
         let path = this.correctPath(bodyData.path);
         let updates = bodyData.data;
 
@@ -1002,7 +1050,7 @@ automations = {
      * @param bodyData Data z těla POST požadavku, obsahují cestu v databázi, na kterou se klient "ptá" a nová data.
      * @returns Promise, která po resolvnutí vrací klíč/id nového záznamu
      */
-    public async clientPushToDB(bodyData) {
+    public async clientPushToDB(bodyData: IFormData) {
         let path = this.correctPath(bodyData.path);
         let data = bodyData.data;
         let randomKey = "";
@@ -1031,7 +1079,7 @@ automations = {
      * Funkce získá část lokální (resp. v případě připojení k internetu Firebase) databáze. Funkce je volaná na základě požadavku webového klienta.
      * @param bodyData Data z těla POST požadavku, obsahují cestu v databázi, na kterou se klient "ptá".
      */
-    public async clientGetFromDB(bodyData): Promise<object> {
+    public async clientGetFromDB(bodyData: IFormData): Promise<object> {
         let path = this.correctPath(bodyData.path);
 
         let uid = await this.userUID;
@@ -1043,7 +1091,6 @@ automations = {
                 return null;
             }
         } else {
-            console.log(this._loggedInPromise);
             console.log("zkontrolovat zda není problém s uid!!!!!!!!!!!!!!!");
             console.log("Zde možná můžu přímo získávat z lokálního souboru a konstrukce výše nebude potřeba...jelikož jsou obě DB v synchronizaci a aspon se usetri cas kdyz se to nebude tahat pres internet\n");
             return this.getDBPart(path);
@@ -1054,7 +1101,7 @@ automations = {
      * Funkce odstraní část lokální (resp. v případě připojení k internetu i Firebase) databáze. Funkce je volaná na základě požadavku webového klienta.
      * @param bodyData Data z těla POST požadavku, obsahují cestu v databázi, na kterou se klient "ptá".
      */
-    public async clientRemoveFromDB(bodyData) {
+    public async clientRemoveFromDB(bodyData: IFormData) {
         let path = this.correctPath(bodyData.path);
 
         let time = Date.now();
@@ -1158,6 +1205,8 @@ enum DevicesTypes {
     SENSOR,
     DEVICE,
     UNKNOWN,
+    TIMEOUT,
+    SENSORS_AUTOMATIONS,
     LAST_WRITE_TIME
 }
 
@@ -1171,4 +1220,34 @@ enum ObjectChangeTypes {
     DELETED = "D",
     EDITED = "E"
     //ADDED = "A"
+}
+
+
+
+export interface DatabaseData {
+    name: string, // Název objektu, např. název místnosti
+    dbID?: string, // Identifikátor objektu z databáze
+    index?: number | string, // Index objektu v databázi, pokud je potřeba je řadit (např. místnosti na domovské stránce)
+    path?: string, // Cesta k danému objektu, vč. vlastního identifikátoru
+    parentPath?: string, // Cesta k danému objektu, BEZ vlastního identifikátoru (tedy o úroveň výš)
+    type?: string,
+    icon?: string, // Typ ikony pro snímače a zařízení (např. temp pro teploměr)
+    input?: string, // Typ vstupu pro snímače, např D1
+    output?: string, // Typ výstupu pro zařízení, např D1
+    unit?: string, // U snímačů a zařízení typ (tzn. "analog"/"digital")
+    IP?: string, // IP adresa (používá se u modulu)
+    img?: {
+        src: string, // URL k obrázku
+        offset: string // Posun obrázku (v relativních hodnotách 0.0 až 1.0)
+    }
+
+    expires?: number, // časová známka, která určuje, kdy daný časovač vyprší. Pokud je časovač neaktivní, je rovna -1
+    time?: number, // Čas, po kterém dojde k timeoutu u časovače, pokud se znovu aktivuje
+    value?: string | number, // Hodnota, jaká se po vypršení časovače nastaví na výstupu
+    controlledOutput?: string, // Cesta k ovládanému výstupu
+}
+
+interface IFormData {
+    path: string;
+    data: any;
 }

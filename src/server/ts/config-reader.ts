@@ -11,7 +11,6 @@ export class ConfigReader {
     private _config: any;
     static CONFIG_EXAMPLE = {
         "webAppPort": 80, // Port, na kterém webový server funguje
-        "NEW_MODULE_FIND_TIMEOUT": 10000,
         "username": "", // Přihlašovací jméno k Firebase účtu
         "password": "", // heslo k Firebase účtu
         "saveUserCredentialsOnLogin": true, // Rozhoduje, zda ukládat přihlašovací údaje uživatele do Firebase při každém případném přihlášení ve webovém klientovi (pokud k němu uživatel přistupuje lokálně)

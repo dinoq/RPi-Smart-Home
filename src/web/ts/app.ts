@@ -15,7 +15,7 @@ import { SettingsPage } from "./pages/settings-page.js";
 import { List, ListItem } from "./layouts/list-component.js";
 import { Icon } from "./components/others/app-icon.js";
 import { TabLayout } from "./layouts/tab-layout.js";
-import { BaseDetail, DetailRow, SlidableImg } from "./layouts/detail-component.js";
+import { BaseDetail, DetailRow, SlidableImg, ThresholdInput } from "./layouts/detail-component.js";
 import { YesNoCancelDialog } from "./components/dialogs/yes-no-cancel-dialog.js";
 import { LoaderComponent } from "./components/others/loader.js";
 import { OneOptionDialog } from "./components/dialogs/cancel-dialog.js";
@@ -86,6 +86,7 @@ class AutoHomeApp {
             PairPage,
 
             ChoiceDialog,
+            ThresholdInput
             
         ];
 

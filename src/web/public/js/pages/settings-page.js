@@ -1,4 +1,4 @@
-import { ARROWABLE_LISTS, DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
+import { DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
 import { Firebase } from "../app/firebase.js";
 import { Utils } from "../app/utils.js";
 import { TabLayout } from "../layouts/tab-layout.js";
@@ -185,10 +185,8 @@ export class SettingsPage extends AbstractConfigurationPage {
                 update.type = outputType;
                 path = this.itemInDetail.item.dbCopy.path;
             }
-            if (Object.keys(update).length != 0) { // If is there something to update...
-                await Firebase.updateDBData(path, update);
-                await this.pageReinicialize();
-            }
+            await Firebase.updateDBData(path, update);
+            await this.pageReinicialize();
             this.detail.readyToSave = false;
         };
         /**
@@ -258,9 +256,6 @@ export class SettingsPage extends AbstractConfigurationPage {
          * Komentář viz. předek (AbstractConfigurationPage)
          */
         this._itemClicked = async (parentList, event, item, clickedElem, clickedByUser) => {
-            if (Utils.itemIsAnyFromEnum(item.type, ListTypes, ARROWABLE_LISTS) && clickedElem !== "delete") {
-                this.saveNewlySelectedItemIDToSelectedItemsIDHierarchy(parentList, item);
-            }
             if (clickedElem == undefined || clickedElem == "edit") {
                 if (parentList.type == ListTypes.ROOMS) { // We want to initialize sensors and devices only when click on room, not on sensor or device
                     await this.initModulesList(item);
@@ -478,14 +473,6 @@ export class SettingsPage extends AbstractConfigurationPage {
         catch (err) {
             Loader.hide();
         }
-        document.addEventListener("click", async (e) => {
-            let path = e.path.map((element) => {
-                return (element.localName) ? element.localName : "";
-            });
-            if (path.includes("menu-icon") || path.includes("menu-item")) {
-                await this.showSaveDialog();
-            }
-        });
     }
     initRoomsList(rooms) {
         let list = this.roomsList;

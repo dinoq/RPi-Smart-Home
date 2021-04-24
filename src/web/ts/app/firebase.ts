@@ -378,3 +378,33 @@ export var AuthPersistence = {
     LOCAL: "local",
     SESSION: "session"
 }
+
+export interface DatabaseData{
+    name: string, // Název objektu, např. název místnosti
+    dbID?: string, // Identifikátor objektu z databáze
+    index?: number | string, // Index objektu v databázi, pokud je potřeba je řadit (např. místnosti na domovské stránce)
+    path?: string, // Cesta k danému objektu, vč. vlastního identifikátoru
+    parentPath?: string, // Cesta k danému objektu, BEZ vlastního identifikátoru (tedy o úroveň výš)
+    type?: string,
+    icon?: string, // Typ ikony pro snímače a zařízení (např. temp pro teploměr)
+    input?: string, // Typ vstupu pro snímače, např D1
+    output?: string, // Typ výstupu pro zařízení, např D1
+    unit?: string, // U snímačů a zařízení typ (tzn. "analog"/"digital")
+    IP?: string, // IP adresa (používá se u modulu)
+    img?: {
+        src: string, // URL k obrázku
+        offset: number // Posun obrázku (v relativních hodnotách 0.0 až 1.0)
+    }
+
+    expires?: number, // časová známka, která určuje, kdy daný časovač vyprší. Pokud je časovač neaktivní, je rovna -1
+    time?: number, // Čas, po kterém dojde k timeoutu u časovače, pokud se znovu aktivuje
+    value?: string | number, // Hodnota, jaká se po vypršení časovače nastaví na výstupu
+    controlledOutput?: string, // Cesta k ovládanému výstupu
+    watchedInput?: string; // Cesta ke snímači u automatizace na základě hodnoty snímače
+    threshold?: {
+        value: number,
+        sign: string, // <, >, =
+        tolerance?: number // např. 0.2, 50, 120...udává se pouze pokud je sign "="
+    },
+    active?: boolean, // Pouze pro snímačové automatizace. Pro časovače se aktivnost vyhodnocuje na základě položky expires
+}

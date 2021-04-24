@@ -156,10 +156,42 @@ export class DetailRow extends AbstractComponent {
                 <input type="text" id="${id}" onfocusin="" onfocusout="" required autocomplete="off" value=""/>                   
             `;
         }
-        else {
-            new BaseDialogError("Neznámá chyba při inicializaci detailu!", this);
+        else if (type == DETAIL_FIELD_TYPES.TIME_SELECT) {
+            input.innerHTML = `        
+                <div class="time-select">
+                    <input type="number" id="${id}-h" value="0" min="0"><div class="colon">:</div>
+                    <input type="number" id="${id}-m" value="0" min="0"><div class="colon">:</div>
+                    <input type="number" id="${id}-s" value="0" min="0">
+                </div>
+            `;
         }
-        this.input = this.querySelector("#" + id);
+        else if (type == DETAIL_FIELD_TYPES.CHECKBOX) {
+            input.innerHTML = `        
+                <div class="checkbox-container">
+                    <input type="checkbox" id="${id}" value="0">
+                </div>
+            `;
+            this.querySelector("label").style.left = "40px";
+            this.querySelector("label").style.top = "-18px";
+        }
+        else if (type == DETAIL_FIELD_TYPES.SLIDER) {
+            input.innerHTML = `        
+                <div class="slider-container">
+                    <input type="range" step="1" id="${id}" value="0" min=0 max=1024>
+                </div>
+            `;
+            this.input = input.querySelector("input");
+        }
+        else if (type == DETAIL_FIELD_TYPES.THRESHOLD_INPUT) {
+            this.innerHTML = "";
+            AbstractComponent.appendComponentsToDOMElements(this, new ThresholdInput());
+        }
+        else {
+            new BaseDialogError("Neznámý typ komponenty v detailu!", this);
+        }
+        if (!this.input && id != undefined) {
+            this.input = this.querySelector("#" + id);
+        }
     }
     /**
      * Creates options from analog/digital select
@@ -183,7 +215,7 @@ export class DetailRow extends AbstractComponent {
     }
     initializeValues(initObject, onInputCallback, layoutChanged) {
         let val = (initObject && initObject.selectedValue != undefined) ? initObject.selectedValue.toString() : undefined;
-        this.input.addEventListener("input", onInputCallback);
+        let valueAlreadySet = false;
         if (this.type == DETAIL_FIELD_TYPES.DEPENDENT_SELECTBOX) {
             if (!("dependsOnProps" in initObject)) {
                 new BaseDialogError("Chyba při inicializaci detailu!", this);
@@ -244,22 +276,65 @@ export class DetailRow extends AbstractComponent {
             //Vytvoří se jednotlivé option
             this.input.innerHTML = options;
         }
+        else if (this.type == DETAIL_FIELD_TYPES.TIME_SELECT) {
+            valueAlreadySet = true;
+            let time = Number.parseInt(val);
+            let hours = Math.floor(time / 3600);
+            time = time - hours * 3600;
+            let minutes = Math.floor(time / 60);
+            let seconds = time - minutes * 60;
+            let validateInput = (event) => {
+                if (!Number.isSafeInteger(Number.parseInt(event.target.value))) {
+                    event.target.value = "0";
+                }
+                if (Number.parseInt(event.target.value) < 0) {
+                    event.target.value = "0";
+                }
+            };
+            let hoursInput = this.querySelector("#" + this.inputID + "-h");
+            let minutesInput = this.querySelector("#" + this.inputID + "-m");
+            let secondsInput = this.querySelector("#" + this.inputID + "-s");
+            hoursInput.value = hours.toString();
+            minutesInput.value = minutes.toString();
+            secondsInput.value = seconds.toString();
+            hoursInput.addEventListener("input", onInputCallback);
+            hoursInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
+            hoursInput.addEventListener("input", validateInput);
+            minutesInput.addEventListener("input", onInputCallback);
+            minutesInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
+            minutesInput.addEventListener("input", validateInput);
+            secondsInput.addEventListener("input", onInputCallback);
+            secondsInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
+            secondsInput.addEventListener("input", validateInput);
+        }
+        else if (this.type == DETAIL_FIELD_TYPES.CHECKBOX) {
+            this.input.checked = (val == "true" || val == true);
+            valueAlreadySet = true;
+        }
+        else if (this.type == DETAIL_FIELD_TYPES.SLIDER) {
+        }
+        else if (this.type == DETAIL_FIELD_TYPES.THRESHOLD_INPUT) {
+            valueAlreadySet = true;
+        }
         else {
             if (val == undefined) {
                 new BaseDialogError("Chyba při inicializaci detailu!", this, true);
                 return;
             }
         }
-        this.input.value = val;
-        if (this.input.value != val) {
-            if (this.input instanceof HTMLSelectElement)
-                this.input.selectedIndex = 0;
-            else if (this.input instanceof HTMLInputElement)
-                this.input.value = "";
-            new UnknownValueInDatabaseError(val, this.type);
-            onInputCallback(); // Call callback to set readyToSave btn active...
+        if (!valueAlreadySet) {
+            this.input.value = val;
+            if (this.input.value != val) {
+                if (this.input instanceof HTMLSelectElement)
+                    this.input.selectedIndex = 0;
+                else if (this.input instanceof HTMLInputElement)
+                    this.input.value = "";
+                new UnknownValueInDatabaseError(val, this.type);
+                onInputCallback(); // Call callback to set readyToSave btn active...
+            }
+            this.input.addEventListener("input", onInputCallback);
+            this.input.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
         }
-        this.input.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
     }
 }
 DetailRow.tagName = "detail-row";
@@ -279,14 +354,6 @@ export class SlidableImg extends AbstractComponent {
             </div>   
         </div>   
         `;
-        /*
-                this.innerHTML = `
-                    <div id="${sliderID}">
-                        <input type="range" min="0" max="1" step="0.01" value="0.8"  class="slider" id="${sliderID}-input">
-                    </div>
-                    <div id="${imgID}" class="bordered-img">
-                    </div>
-                `*/
         this.slider = this.querySelector("input");
         this.img = this.querySelector("#" + imgID);
         this._imgSourceID = imgSourceID;
@@ -332,6 +399,22 @@ export class SlidableImg extends AbstractComponent {
     }
 }
 SlidableImg.tagName = "slidable-img";
+export class ThresholdInput extends AbstractComponent {
+    constructor(layoutProps) {
+        super(layoutProps);
+        this.innerHTML = `        
+        <div class="form-label">
+            <label for="threshold-value-input" class="active-label first-label">Hodnota změny</label>
+            <div class="input-field">                     
+                <div id="threshold-value-container">
+                    <input type="text" id="threshold-value" value=""/> 
+                </div>   
+            </div>
+        </div>   
+        `;
+    }
+}
+ThresholdInput.tagName = "threshold-input";
 export var DETAIL_FIELD_TYPES;
 (function (DETAIL_FIELD_TYPES) {
     DETAIL_FIELD_TYPES[DETAIL_FIELD_TYPES["DEPENDENT_SELECTBOX"] = 0] = "DEPENDENT_SELECTBOX";
@@ -339,4 +422,8 @@ export var DETAIL_FIELD_TYPES;
     DETAIL_FIELD_TYPES[DETAIL_FIELD_TYPES["SELECTBOX"] = 2] = "SELECTBOX";
     DETAIL_FIELD_TYPES[DETAIL_FIELD_TYPES["SLIDABLE_IMG_PREVIEW"] = 3] = "SLIDABLE_IMG_PREVIEW";
     DETAIL_FIELD_TYPES[DETAIL_FIELD_TYPES["TEXT_FIELD"] = 4] = "TEXT_FIELD";
+    DETAIL_FIELD_TYPES[DETAIL_FIELD_TYPES["TIME_SELECT"] = 5] = "TIME_SELECT";
+    DETAIL_FIELD_TYPES[DETAIL_FIELD_TYPES["CHECKBOX"] = 6] = "CHECKBOX";
+    DETAIL_FIELD_TYPES[DETAIL_FIELD_TYPES["SLIDER"] = 7] = "SLIDER";
+    DETAIL_FIELD_TYPES[DETAIL_FIELD_TYPES["THRESHOLD_INPUT"] = 8] = "THRESHOLD_INPUT";
 })(DETAIL_FIELD_TYPES || (DETAIL_FIELD_TYPES = {}));

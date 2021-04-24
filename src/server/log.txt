@@ -1,3 +1,32 @@
+Čas vzniku chyby: 2021-4-24 18:55:45
+Číslo chyby od spuštění serveru: 1
+ID chyby: 8Zw0OjKjRsUwMEUOWHbNqqG1IxlxVf
+
+Chybová hláška:
+Zvolený port (80) již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!
+
+Číslo chyby (placeID) pro lokaci v kódu: 22
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: listen EADDRINUSE: address already in use :::80
+	Zásobník: 
+		Error: listen EADDRINUSE: address already in use :::80
+		    at Server.setupListenHandle [as _listen2] (net.js:1317:16)
+		    at listenInCluster (net.js:1365:12)
+		    at Server.listen (net.js:1451:7)
+		    at Function.listen (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\express\lib\application.js:618:24)
+		    at ServerApp.start (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\index.js:160:36)
+		    at Object.<anonymous> (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\index.js:288:17)
+		    at Module._compile (internal/modules/cjs/loader.js:1015:30)
+		    at Object.Module._extensions..js (internal/modules/cjs/loader.js:1035:10)
+		    at Module.load (internal/modules/cjs/loader.js:879:32)
+		    at Function.Module._load (internal/modules/cjs/loader.js:724:14)
+
+Chyba byla fatální, exit code aplikace:  5
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
 Čas vzniku chyby: 2021-4-23 22:16:09
 Číslo chyby od spuštění serveru: 1
 ID chyby: OK9BKbm1zvgBXKso7EpPUI5heQWBgC

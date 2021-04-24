@@ -120,6 +120,9 @@ export abstract class AbstractConfigurationPage extends BasePage {
             }
 
             let parentList: List = this.getItemsList(item);
+            if (Utils.itemIsAnyFromEnum(item.type, ListTypes, ["SENSORS", "DEVICES", "MODULES", "ROOMS", "TIMEOUT", "SENSORS_AUTOMATIONS"]) && clickedElem !== "delete") {
+                this.saveNewlySelectedItemIDToSelectedItemsIDHierarchy(parentList, item);
+            }
             if (clickedElem == undefined || clickedElem == "edit") {
                 /**
                  * Pokud se jedná o SettingsPage a typ seznamu pro snímače, nebo zařízení, tak chceme všechny nastavit jako neaktivní z obou seznamů, 
@@ -147,6 +150,7 @@ export abstract class AbstractConfigurationPage extends BasePage {
                     this.detail.blink(1);
                 }
             }
+            
             this._itemClicked(parentList, event, item, clickedElem, clickedByUser);
         }finally {
             if (this.clickPromiseResolver)
@@ -277,7 +281,7 @@ export abstract class AbstractConfigurationPage extends BasePage {
      * @param item Položka, které ID ukládáme
      */
     saveNewlySelectedItemIDToSelectedItemsIDHierarchy(parentList: List, item: ListItem) {
-        let index = 0;//default 0 = ROOMS
+        let index = 0;//default 0 = ROOMS/TIMEOUT/SENSORS_AUTOMATIONS
         switch (parentList.type) {
             case ListTypes.MODULES:
                 index = 1;
