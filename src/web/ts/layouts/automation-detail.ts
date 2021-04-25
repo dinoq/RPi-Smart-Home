@@ -25,7 +25,7 @@ export class AutomationDetail extends BaseDetail {
         } else if (type == ListTypes.SENSORS_AUTOMATIONS) {
             elementsToCreate = [
                 ["automation-name", "Název automatizace", DETAIL_FIELD_TYPES.TEXT_FIELD],
-                ["sensor-input", "Snímač vyvolávající změnu", DETAIL_FIELD_TYPES.SELECTBOX],
+                ["watched-input", "Snímač vyvolávající změnu", DETAIL_FIELD_TYPES.SELECTBOX],
                 [undefined, undefined, DETAIL_FIELD_TYPES.THRESHOLD_INPUT],
                 ["controlled-output", "Měněný výstup", DETAIL_FIELD_TYPES.SELECTBOX],
                 ["value-to-set", "Nastavovaná hodnota", DETAIL_FIELD_TYPES.SLIDER],

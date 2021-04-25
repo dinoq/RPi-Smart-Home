@@ -119,6 +119,19 @@ html .form-wrapper form .time-select .colon, html .form-wrapper .form .time-sele
   text-align: center;
 }
 
+html .form-wrapper form .threshold-value-container, html .form-wrapper .form .threshold-value-container {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+html .form-wrapper form .threshold-value-container select, html .form-wrapper .form .threshold-value-container select {
+  width: 10%;
+  min-width: 50px;
+  max-width: 100px;
+  text-align-last: center;
+}
+
 html .form-wrapper form .checkbox-container input[type="checkbox"], html .form-wrapper .form .checkbox-container input[type="checkbox"] {
   width: 24px;
   height: 24px;

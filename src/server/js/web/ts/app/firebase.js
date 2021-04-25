@@ -1,7 +1,10 @@
-import { ServerCommunicationErrorDialog } from "../components/dialogs/error-dialog.js";
-import { Config } from "./config.js";
-import { Singleton } from "./singleton.js";
-export class Firebase extends Singleton {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DBTemplates = exports.AuthPersistence = exports.Firebase = void 0;
+const error_dialog_js_1 = require("../components/dialogs/error-dialog.js");
+const config_js_1 = require("./config.js");
+const singleton_js_1 = require("./singleton.js");
+class Firebase extends singleton_js_1.Singleton {
     constructor() {
         super();
         this.loggedIn = false;
@@ -21,8 +24,8 @@ export class Firebase extends Singleton {
         }
         else {
             this.authInited = new Promise((resolve, reject) => { this.resolveAuthInited = resolve; });
-            this.database = firebase.database();
-            this.auth = firebase.auth();
+            this.database = exports.firebase.database();
+            this.auth = exports.firebase.auth();
             this.auth.onAuthStateChanged((user) => {
                 this.resolveAuthInited(user);
                 if (user) {
@@ -63,7 +66,7 @@ export class Firebase extends Singleton {
     static getInstance() {
         return super.getInstance();
     }
-    static login(username, pwd, persistence = AuthPersistence.LOCAL) {
+    static login(username, pwd, persistence = exports.AuthPersistence.LOCAL) {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
             //V lokální síti se nepřihlašuje pomocí této funkce...
@@ -180,11 +183,11 @@ export class Firebase extends Singleton {
                         headers: { "Content-Type": "application/json" }
                     }).then((resp) => {
                         if (!resp) {
-                            new ServerCommunicationErrorDialog();
+                            new error_dialog_js_1.ServerCommunicationErrorDialog();
                             source.close();
                         }
                     }).catch((err) => {
-                        new ServerCommunicationErrorDialog();
+                        new error_dialog_js_1.ServerCommunicationErrorDialog();
                         source.close();
                     });
                 };
@@ -198,7 +201,7 @@ export class Firebase extends Singleton {
                 return { off: off };
             }
             catch (error) {
-                new ServerCommunicationErrorDialog();
+                new error_dialog_js_1.ServerCommunicationErrorDialog();
                 source.close();
             }
         }
@@ -224,7 +227,7 @@ export class Firebase extends Singleton {
                 return (text.length) ? JSON.parse(text) : null;
             }
             catch (error) {
-                new ServerCommunicationErrorDialog();
+                new error_dialog_js_1.ServerCommunicationErrorDialog();
                 return null;
             }
         }
@@ -250,7 +253,7 @@ export class Firebase extends Singleton {
                 });
             }
             catch (error) {
-                new ServerCommunicationErrorDialog();
+                new error_dialog_js_1.ServerCommunicationErrorDialog();
                 return null;
             }
         }
@@ -276,7 +279,7 @@ export class Firebase extends Singleton {
                 return resp;
             }
             catch (error) {
-                new ServerCommunicationErrorDialog();
+                new error_dialog_js_1.ServerCommunicationErrorDialog();
                 return null;
             }
         }
@@ -303,7 +306,7 @@ export class Firebase extends Singleton {
                 return (text.length) ? { key: text } : { key: null };
             }
             catch (error) {
-                new ServerCommunicationErrorDialog();
+                new error_dialog_js_1.ServerCommunicationErrorDialog();
                 return null;
             }
         }
@@ -327,10 +330,10 @@ export class Firebase extends Singleton {
         let attemptCount;
         let fetchResolve;
         setTimeout(() => {
-            attemptCount = Config.checkConnectionMaxAttempts;
+            attemptCount = config_js_1.Config.checkConnectionMaxAttempts;
             fetchResolve(false);
-        }, Config.checkConnectionMaxTimeout);
-        for (attemptCount = 0; attemptCount < Config.checkConnectionMaxAttempts; attemptCount++) {
+        }, config_js_1.Config.checkConnectionMaxTimeout);
+        for (attemptCount = 0; attemptCount < config_js_1.Config.checkConnectionMaxAttempts; attemptCount++) {
             try {
                 let success = await new Promise((resolve, reject) => {
                     fetchResolve = resolve;
@@ -356,11 +359,12 @@ export class Firebase extends Singleton {
         return this._online;
     }
 }
-export var AuthPersistence = {
+exports.Firebase = Firebase;
+exports.AuthPersistence = {
     LOCAL: "local",
     SESSION: "session"
 };
-export const DBTemplates = {
+exports.DBTemplates = {
     get ROOMS() {
         return {
             index: 0,

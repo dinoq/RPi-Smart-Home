@@ -1,6 +1,6 @@
 import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
 import { Config } from "../app/config.js";
-import { Firebase } from "../app/firebase.js";
+import { DatabaseData, Firebase } from "../app/firebase.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
 import { Icon } from "../components/others/app-icon.js";
@@ -20,6 +20,10 @@ export class RoomCard extends AbstractComponent {
     slider: Slider;
     _sliderDbUpdateTimeout: any = undefined; // Timeout of sending values from slider to DB. We don't want to send every single value, but in time intervals (if value changes)...
     _sliderDbUpdateTimeoutTime: number = 1000; // Number of ms between sending values from slider to DB. See _sliderDbUpdateTimeout for more info.
+
+    private _sliderChangeableByDB = true;
+    private _setSliderChangeableByDBTimeout: any;
+
     private _sliderBbUpdateInfo: { path: string, val: string } = undefined; // path to update in database on slider value changed and actual val
 
     idOfSelectedDevices: string = "";
@@ -65,14 +69,14 @@ export class RoomCard extends AbstractComponent {
             const devIN = devices[espName].IN;
             for (const pin in devIN) {
                 devIN[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/IN/" + pin;
-                devIN[pin].id = pin;
+                devIN[pin].dbID = pin;
                 orderedIN.push(devIN[pin]);
             }
 
             const devOUT = devices[espName].OUT;
             for (const pin in devOUT) {
                 devOUT[pin].path = "/rooms/" + roomName + "/devices/" + espName + "/OUT/" + pin;
-                devOUT[pin].id = pin;
+                devOUT[pin].dbID = pin;
                 orderedOUT.push(devOUT[pin]);
             }
         }
@@ -124,8 +128,8 @@ export class RoomCard extends AbstractComponent {
 
         let devices = data.devices;
         let ordered = this.getOrderedINOUT(devices, this.roomName);
-        let orderedIN = ordered.orderedIN;
-        let orderedOUT = ordered.orderedOUT;
+        let orderedIN: DatabaseData[] = ordered.orderedIN;
+        let orderedOUT: DatabaseData[] = ordered.orderedOUT;
 
 
         let devicesRow = new HorizontalStack({
@@ -147,6 +151,11 @@ export class RoomCard extends AbstractComponent {
         this.devices = new Array();
         if (true/*this.devices.length == 0*/) {
             for (const device of orderedOUT) {
+                if (this.idOfSelectedDevices == device.dbID) { // Pokud se pro některý analogový výstup zobrazuje posuvník, aktualizuje se jeho hodnota
+                    if(this._sliderChangeableByDB){
+                        this.slider.sliderInput.value = device.value;
+                    }                    
+                }
                 let lamp = new RoomDevice({});
                 this.devices.push(lamp)
                 if ((devicesRow.childElementCount * RoomDevice.DEFAULT_DEVICE_WIDTH) > (<number>Utils.getWindowWidth()) * 0.7 - 10) { // -10px left padding
@@ -230,7 +239,19 @@ export class RoomCard extends AbstractComponent {
         }
     }
 
-    sliderChanged = (value) => {//Called when slider value changed by mouse/touch
+    /**
+     * Callback funkce, která se volá při pohybu posuvníku (ať už myší, nebo dotykem na dotykovém displeji)
+     * @param value Hodnota posuvníku (0 - 1023)
+     */
+    sliderChanged = (value) => {
+        this._sliderChangeableByDB = false;
+        if(this._setSliderChangeableByDBTimeout){
+            clearTimeout(this._setSliderChangeableByDBTimeout);
+        }
+        // Zamezí "problikávání" posuvníku, pokud jej uživatel aktuálně používá a zároveň příjde aktualizace z databáze
+        this._setSliderChangeableByDBTimeout = setTimeout(()=>{
+            this._sliderChangeableByDB = true;
+        }, 500)
         if (this.idOfSelectedDevices) {
             //this.sliderActiveFor.updateVal(value); NOT SET VALUE DIRECTLY, BUT CALL FIREBASE TO UPDATE VALUE, AND FIREBASE (BECAUSE OF VALUE LISTENER) WILL NOTICE DEVICE WHICH CHANGED
             let dev = this.getDeviceByDBID(this.idOfSelectedDevices);
@@ -255,17 +276,18 @@ export interface RoomCardProps extends IComponentProperties {
 export class Slider extends AbstractComponent {
     static tagName = "slider-component";
 
+    public sliderInput;
     constructor(layoutProps?: IComponentProperties) {
         super(layoutProps);
         this.innerHTML = `               
             <input type="range" min="1" max="1023" value="512" class="slider" style="visibility:hidden;">
         `;
+        this.sliderInput = this.querySelector("input");
     }
 
     initialize(sliderChanged) {
-        let element = this.querySelector("input");
-        element.oninput = () => {
-            sliderChanged(element.value);
+        this.sliderInput.oninput = () => {
+            sliderChanged(this.sliderInput.value);
         }
     }
 }
@@ -428,7 +450,7 @@ export class RoomDevice extends AbstractComponent {
         this.type = object[index].type;
         this.icon = object[index].icon;
         this.devicePath = object[index].path;
-        this.dbID = object[index].id;
+        this.dbID = object[index].dbID;
         this.initialized = true;
         this.addEventListener('click', () => {
             onClickCallback(this.value, this);

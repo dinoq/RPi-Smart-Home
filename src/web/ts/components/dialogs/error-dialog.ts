@@ -61,6 +61,7 @@ export class ServerCommunicationErrorDialog {
 
         btnWrapper.prepend(refreshBtn);
 
+        //Každých 5 vteřin se webový klient pokusí o znovunavázání spojení
         let interval = setInterval(()=>{ 
             fetch("alive", {
                 method: 'POST',
@@ -76,6 +77,11 @@ export class ServerCommunicationErrorDialog {
             }).catch((err)=>{
             })
         }, 5000);
+        
+        //Po 30ti vteřinách se klient přestane pokoušet server kontaktovat (kvůli zbytečnému zahlcování sítě) - tyto pokusy o znovunavázání spojení jsou určeny pouze ke kontrole krátkodobých výpadků spojení...
+        let timeout = setTimeout(()=>{
+            clearInterval(interval);
+        }, 30*1000)
                    
     }
 }

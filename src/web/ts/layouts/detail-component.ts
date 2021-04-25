@@ -215,7 +215,8 @@ export class DetailRow extends AbstractComponent {
             this.input = input.querySelector("input");
         }else if (type == DETAIL_FIELD_TYPES.THRESHOLD_INPUT) {
             this.innerHTML = "";
-            AbstractComponent.appendComponentsToDOMElements(this, new ThresholdInput());
+            console.log("p c");
+            AbstractComponent.appendComponentsToDOMElements(this, new ThresholdInput(id));
         } else {
             new BaseDialogError("Neznámý typ komponenty v detailu!", this);
         }
@@ -223,29 +224,6 @@ export class DetailRow extends AbstractComponent {
         if (!this.input && id != undefined) {
             this.input = this.querySelector("#" + id);
         }
-    }
-
-    /**
-     * Creates options from analog/digital select
-     * options is array in format: ["optionValue1", "optionInnerText1", "optionValue2", "optionInnerText2", ...]
-     */
-    initOptionsFromADSelect(options, ADSelect) {
-        let outputTypeChangedHandler = () => {
-            let optionsArrayIndex = (ADSelect.value == "digital") ? 0 : (ADSelect.value == "analog") ? 1 : 2;
-            let selectElem = this.querySelector("select");
-            selectElem.innerHTML = ""; // Clear options
-
-            for (let i = 0; i < options[optionsArrayIndex].length; i += 2) {
-                let option = document.createElement("option");
-                option.value = options[optionsArrayIndex][i];
-                option.innerText = options[optionsArrayIndex][i + 1];
-                selectElem.appendChild(option);
-            }
-
-        }
-        ADSelect.addEventListener("input", outputTypeChangedHandler);
-        ADSelect.addEventListener("change", outputTypeChangedHandler);
-        outputTypeChangedHandler();
     }
 
     initializeValues(initObject: IDetailRowInitObject, onInputCallback, layoutChanged: boolean) {
@@ -323,7 +301,7 @@ export class DetailRow extends AbstractComponent {
             let seconds = time - minutes * 60;
 
             let validateInput = (event)=>{
-                if(!Number.isSafeInteger(Number.parseInt(event.target.value))){
+                if(!(event.target.value=="" || Number.isSafeInteger(Number.parseInt(event.target.value)))){
                     event.target.value = "0";
                 }
                 if(Number.parseInt(event.target.value) < 0){
@@ -339,22 +317,22 @@ export class DetailRow extends AbstractComponent {
             secondsInput.value = seconds.toString();
 
             hoursInput.addEventListener("input", onInputCallback);
-            hoursInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
             hoursInput.addEventListener("input", validateInput);
             minutesInput.addEventListener("input", onInputCallback);
-            minutesInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
             minutesInput.addEventListener("input", validateInput);
             secondsInput.addEventListener("input", onInputCallback);
-            secondsInput.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
             secondsInput.addEventListener("input", validateInput);
         } else if (this.type == DETAIL_FIELD_TYPES.CHECKBOX) {
             (<HTMLInputElement>this.input).checked = (val == "true" || val == true);
             valueAlreadySet = true;
+            this.input.addEventListener("input", onInputCallback);
 
         } else if (this.type == DETAIL_FIELD_TYPES.SLIDER) {
 
         } else if (this.type == DETAIL_FIELD_TYPES.THRESHOLD_INPUT) {
             valueAlreadySet = true;
+            console.log('p initObject: ', initObject);
+            (<ThresholdInput>this.querySelector("threshold-input")).initializeValues(initObject, onInputCallback, layoutChanged);
         } else {
             if (val == undefined) {
                 new BaseDialogError("Chyba při inicializaci detailu!", this, true);
@@ -374,7 +352,9 @@ export class DetailRow extends AbstractComponent {
                 onInputCallback(); // Call callback to set readyToSave btn active...
             }
             this.input.addEventListener("input", onInputCallback);
-            this.input.dispatchEvent(new Event('change')); // We must dispatch event programmatically to get new value immediately
+        }
+        if(this.input){            
+            this.input.dispatchEvent(new Event('change')); // Vyvolání události na dané položce kvůli ostatním položkám, které na ni jsou případně závislé (např. SlidableImg vyžaduje událost change na slideru i kvůli počátečnímu nastavení obrázku...)
         }
     }
 
@@ -464,20 +444,38 @@ export class SlidableImg extends AbstractComponent {
 
 export class ThresholdInput extends AbstractComponent{
     static tagName = "threshold-input";
+    selectBox: HTMLSelectElement;
+    input: HTMLInputElement;
 
-    constructor(layoutProps?: IComponentProperties) {
+    constructor(id, layoutProps?: IComponentProperties) {
         super(layoutProps);
-
         this.innerHTML = `        
         <div class="form-label">
-            <label for="threshold-value-input" class="active-label first-label">Hodnota změny</label>
+            <label for="threshold-value-input" class="active-label first-label">Hodnota, při které dojde ke změně</label>
             <div class="input-field">                     
-                <div id="threshold-value-container">
+                <div class="threshold-value-container">
+                    <select id="threshold-sign">
+                        <option value="<">&lt;</option>
+                        <option value=">">&gt;</option>
+                    </select>
                     <input type="text" id="threshold-value" value=""/> 
                 </div>   
             </div>
         </div>   
         `;
+
+        this.selectBox = this.querySelector("select");
+        this.input = this.querySelector("input");
+    }
+
+    initializeValues(initObject: IDetailRowInitObject, onInputCallback, layoutChanged: boolean) {
+        this.selectBox.value = initObject.selectedValue.sign;
+        this.selectBox.dispatchEvent(new Event('change')); // Vyvolání události na dané položce kvůli ostatním položkám, které na ni jsou případně závislé (např. SlidableImg vyžaduje událost change na slideru i kvůli počátečnímu nastavení obrázku...)
+        this.selectBox.addEventListener("input", onInputCallback);
+
+        this.input.value = initObject.selectedValue.val;
+        this.input.dispatchEvent(new Event('change')); // Vyvolání události na dané položce kvůli ostatním položkám, které na ni jsou případně závislé (např. SlidableImg vyžaduje událost change na slideru i kvůli počátečnímu nastavení obrázku...)
+        this.input.addEventListener("input", onInputCallback);
     }
 }
 

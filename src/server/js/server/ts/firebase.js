@@ -23,6 +23,7 @@ class Firebase {
         this._onlineValidTimeout = 2000;
         this._lastConnCheck = 0;
         this._loggedIn = false;
+        this._sensors = new Array();
         this._sensorsUpdates = {};
         this._updateSensorsInDBTimeout = undefined;
         this._ignoredDBTimes = new Array(); // Obsahuje časy aktualizací z databáze, které jsou serverem ignorovány (protože změnu vyvolal sám, nechce tedy změny znovu zpracovávat)
@@ -161,13 +162,13 @@ class Firebase {
         };
         this._updateSensor = async (sensorInfo, moduleIP) => {
             let moduleFoundedInDB = false;
-            this._getSensors().forEach((sensor, index, array) => {
+            this._sensors.forEach((sensor, index, array) => {
                 if (moduleIP == sensor.IP) {
                     moduleFoundedInDB = true;
                     if (sensorInfo.val != sensor.value
                         && sensorInfo.getInput() == sensor.input) { // If value changed and sensor input record exists in this_sensors, save change to DB
                         this._sensorsUpdates[sensor.pathToValue] = sensorInfo.val;
-                        //sensor.value = sensorInfo.val;
+                        sensor.value = sensorInfo.val;
                     }
                 }
             });
@@ -183,8 +184,14 @@ class Firebase {
         this._updateSensorsInDB = async () => {
             this._updateSensorsInDBTimeout = undefined;
             if (this._sensorsUpdates && Object.keys(this._sensorsUpdates).length != 0) {
-                for (const updatePath in this._sensorsUpdates) { // Pro 
-                    this._checkSensorAutomation(updatePath);
+                console.log((Math.floor(Date.now() / 1000) - 1616084626) + '| updates: ', this._sensorsUpdates);
+                console.log('this._online: ', this._online);
+                if (await this.online) {
+                    for (const updatePath in this._sensorsUpdates) {
+                        //this._dbFile.set(updatePath.split("/").join("."), this._sensorsUpdates[updatePath]);
+                        //TODO!!!
+                    }
+                    //await firebase.database().ref().update(this._sensorsUpdates);
                 }
                 this.clientUpdateInDB({ path: "/", data: this._sensorsUpdates });
                 this._sensorsUpdates = {};
@@ -192,28 +199,6 @@ class Firebase {
         };
         this.clientDBListeners = new Array(); // Pole posluchačů (webových klientů) události změny databáze
         // Načtení lokální databáze
-        this._loadLocalDBFromFile();
-        this.getModulesIPs();
-        // Vytvoření Promise, která se resolvne při přihlášení. Využívá se, pokud je někde potřeba čekat na přihlášení do Firebase.
-        this._loggedInPromise = new Promise((resolve, reject) => { this._loggedInResolve = resolve; });
-        this.online.then((online) => {
-            if (online) {
-                this.initFirebase();
-            }
-            else {
-                console.log("Server je offline, až do připojení k internetu bude pracovat lokálně...");
-            }
-        });
-        // Nastaví se timeout na kontrolu připojení k internetu. Ten se znovu nastavuje opět ve funkci this.connectionCheckInterval()
-        setTimeout(this.connectionCheckInterval, this._onlineValidTimeout);
-        this._communicationManager = new communication_manager_js_1.CommunicationManager();
-        this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
-        this.timeoutAutomations = new Array();
-    }
-    get loggedIn() {
-        return this._loggedIn;
-    }
-    _loadLocalDBFromFile() {
         if (fs.existsSync(dbFilePath)) { // Pokud existuje soubor s lokální databází, načte se.
             try {
                 this._dbFile = jsonManager.readFileSync(dbFilePath);
@@ -238,6 +223,26 @@ class Firebase {
             fs.writeFileSync(dbFilePath, '{}');
             this._dbFile = {};
         }
+        this._getSensors(this.readFromLocalDB("/", {}));
+        this.getModulesIPs();
+        // Vytvoření Promise, která se resolvne při přihlášení. Využívá se, pokud je někde potřeba čekat na přihlášení do Firebase.
+        this._loggedInPromise = new Promise((resolve, reject) => { this._loggedInResolve = resolve; });
+        this.online.then((online) => {
+            if (online) {
+                this.initFirebase();
+            }
+            else {
+                console.log("Server je offline, až do připojení k internetu bude pracovat lokálně...");
+            }
+        });
+        // Nastaví se timeout na kontrolu připojení k internetu. Ten se znovu nastavuje opět ve funkci this.connectionCheckInterval()
+        setTimeout(this.connectionCheckInterval, this._onlineValidTimeout);
+        this._communicationManager = new communication_manager_js_1.CommunicationManager();
+        this._communicationManager.initCoapServer(this._CoAPIncomingMsgCallback);
+        this.timeoutAutomations = new Array();
+    }
+    get loggedIn() {
+        return this._loggedIn;
     }
     resetAutomationTimeoutIfActive(automation) {
         let oldTimeout = this.timeoutAutomations.find((a, index, array) => {
@@ -257,8 +262,8 @@ class Firebase {
             if (actualTime < automation.expires) { // K timeoutu ještě skutečně (zatím) nedošlo...
                 let timeDiff = automation.expires - actualTime;
                 let timeout = setTimeout(() => {
-                    console.log("set because of timeout: ", automation.controlledOutput, ":::", automation.valueToSet);
-                    this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.valueToSet } });
+                    console.log("set because of timeout: ", automation.controlledOutput, ":::", automation.j);
+                    this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.value } });
                     this.clientUpdateInDB({ path: "automations/" + automation.dbID, data: { expires: -1 } });
                     let thisTimeout = this.timeoutAutomations.find((a, index, array) => {
                         return a.automationID == automation.dbID;
@@ -272,7 +277,7 @@ class Firebase {
             }
             else { //Timeout už vypršel, okamžitě  nastavit výstup
                 console.log("set HNED because of timeout: ", automation.path, ":::", automation.valueToSet);
-                this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.valueToSet } });
+                this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.value } });
                 this.clientUpdateInDB({ path: "automations/" + automation.dbID, data: { expires: -1 } });
             }
         }
@@ -386,34 +391,6 @@ class Firebase {
             });
         }
     }
-    _checkSensorAutomation(updatePath) {
-        let oldVal = this.readFromLocalDB(updatePath, 0);
-        let newVal = this._sensorsUpdates[updatePath];
-        Object.values(this.readFromLocalDB("automations", {})).forEach((automation) => {
-            if (automation.type == "automation" && automation.active && updatePath.includes(automation.watchedInput)) { // druhý typ (timeout - časovače zde nevyhodnocujeme); updatePath končí vlastností value, proto je zde porovnání na include...
-                if (objectPath.has(this._dbFile, this.correctPath(automation.watchedInput).split("/"))
-                    && objectPath.has(this._dbFile, this.correctPath(automation.controlledOutput).split("/"))) { // Kontrola, zda existuje snímač a výstup v databázi (zda nebyl odstraněn)
-                    if (automation.thresholdSign == "<") {
-                        if (oldVal >= automation.thresholdVal && newVal < automation.thresholdVal) {
-                            this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.valueToSet } });
-                        }
-                    }
-                    else if (automation.thresholdSign == ">") {
-                        if (oldVal <= automation.thresholdVal && newVal > automation.thresholdVal) {
-                            this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.valueToSet } });
-                        }
-                    }
-                    else {
-                        let errorDescription = (automation.thresholdVal && automation.thresholdVal.toString().length) ? `Nepodporovaný typ porovnávacího operátoru (${automation.thresholdSign}) v databázi!` : `V databázi se vyskytuje automatizace s nenastaveným porovnávacím operátorem!`;
-                        error_logger_js_1.ErrorLogger.log(null, {
-                            errorDescription: errorDescription,
-                            placeID: 32
-                        }, { errorAutomation: automation, database: this.readFromLocalDB("/", {}) });
-                    }
-                }
-            }
-        });
-    }
     /**
      * Vrací Promise, který po vyhodnocení vrací, zda je server připojen k internetu
      */
@@ -460,10 +437,10 @@ class Firebase {
     async _rewriteFireBaseDatabase(time) {
         this._ignoredDBTimes.push(time);
         let uid = await this.userUID;
-        /*let snapshot = await this._fb.database().ref(uid + "/").once('value');
+        let snapshot = await this._fb.database().ref(uid + "/").once('value');
         let data = snapshot.val();
         this._checkDbChange(data, this.readFromLocalDB("/")); // Tohle je potřeba, aby v případě, že jsou změny na serveru bez připojení k internetu, tak aby i tak server zpracoval změny
-*/
+        await this._fb.database().ref(uid).update({ lastWriteTime: time });
         this._fb.database().ref(uid).remove();
         let updates = { lastWriteTime: time };
         if (this.readFromLocalDB("rooms")) {
@@ -488,9 +465,11 @@ class Firebase {
      * @param data data z databáze
      * @returns Void
      */
-    _getSensors() {
-        let _sensors = new Array();
-        const rooms = this.readFromLocalDB("rooms", undefined);
+    _getSensors(data) {
+        if (!data)
+            return;
+        this._sensors = new Array();
+        const rooms = data["rooms"];
         for (const roomID in rooms) {
             const modules = rooms[roomID]["devices"];
             for (const moduleID in modules) {
@@ -498,11 +477,10 @@ class Firebase {
                 for (const sensorID in sensors) {
                     sensors[sensorID]["IP"] = modules[moduleID]["IP"];
                     sensors[sensorID]["pathToValue"] = `rooms/${roomID}/devices/${moduleID}/IN/${sensorID}/value`;
-                    _sensors.push(sensors[sensorID]);
+                    this._sensors.push(sensors[sensorID]);
                 }
             }
         }
-        return _sensors;
     }
     /**
      * Zkontroluje změny v jedné databázi databázi oproti druhé databázi. Na základě těchto změn se následně (ve funkci this._processDbChanges()) například komunikuje s ESP moduly.
@@ -572,7 +550,7 @@ class Firebase {
                     if (newModule.index != undefined) { // If module.index is undefined => module was actually deleted from db and only updated by server with ip and type
                         let path = "rooms/" + newRoomID + "/devices/" + newModuleID;
                         console.log('new module path: ', path);
-                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: newModuleID, path: path, ip: newModule.IP } });
+                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: newModuleID, path: path } });
                     }
                 }
                 // check sensors
@@ -583,8 +561,20 @@ class Firebase {
                     const oldSensor = (oldSensors) ? oldSensors[newSensorID] : undefined;
                     if (!oldSensor) { // Sensor added
                         this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], input: newSensor.input.toString() } });
+                        //Add also to sensors in order to update in DB
+                        newSensor["IP"] = newModules[newModuleID]["IP"];
+                        newSensor["pathToValue"] = `rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`;
+                        this._sensors.push(newSensor);
                     }
                     else if (newSensor.input != oldSensor.input) { // sensor changed
+                        //find old sensor in this._sensors
+                        let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; });
+                        let sIdx = sensorsPaths.indexOf(`rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`);
+                        if (sIdx != -1) {
+                            newSensor["IP"] = newModules[newModuleID]["IP"];
+                            newSensor["pathToValue"] = `rooms/${newRoomID}/devices/${newModuleID}/IN/${newSensorID}/value`;
+                            this._sensors[sIdx] = newSensor;
+                        }
                         this._processDbChange({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], oldInput: oldSensor.input.toString(), newInput: newSensor.input.toString(), type: newSensors[newSensorID].type.toString() } });
                     }
                 }
@@ -639,6 +629,12 @@ class Firebase {
                 for (const oldSensorID in oldSensors) {
                     const newSensor = (newSensors) ? newSensors[oldSensorID] : undefined;
                     if (!newSensor) { // SENSOR was removed
+                        //find old sensor in this._sensors and remove it
+                        let sensorsPaths = this._sensors.map((s, index, array) => { return s["pathToValue"]; });
+                        let sIdx = sensorsPaths.indexOf(`rooms/${oldRoomID}/devices/${oldModuleID}/IN/${oldSensorID}/value`);
+                        if (sIdx != -1) {
+                            this._sensors.splice(sIdx, 1);
+                        }
                         this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: oldModule.IP, input: oldSensors[oldSensorID].input.toString() } });
                     }
                 }
@@ -699,26 +695,22 @@ class Firebase {
         }
         else if (change.level == DevicesTypes.MODULE) { // ZMĚNA NA ÚROVNI MODULU
             if (change.type == ChangeMessageTypes.ADDED) { // Module was added => init communication
-                if (change.data.ip == undefined || change.data.ip == "") { //Pokud nebylo nastaven 
-                    this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
-                        /**
-                         * Pokud uživatel "zběsile" klikal na přidání modulů, tak se k modulu dostalo několik požadavků na přidání,
-                         * v důsledku čehož i odeslal několik "kladných" odpovědí. Přidat jej však chceme jen jednou...
-                         */
-                        if (this.usedIPsByModules.includes(espIP)) {
-                            throw new Error(); // Aby to "spadlo" do carch bloku a došlo k vymazání nového záznamu o modulu z databáze
-                        }
-                        else {
-                            this._communicationManager.sendESPItsID(espIP, change.data.id);
-                            this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } });
-                            this.usedIPsByModules.push(espIP);
-                        }
-                    }).catch((err) => {
-                        this.clientRemoveFromDB({ path: change.data.path, data: null });
-                    });
-                }
-                else { //Jinak byl přidán modul již s IP adresou - ale zřejmě by se nemělo stávat
-                }
+                this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
+                    /**
+                     * Pokud uživatel "zběsile" klikal na přidání modulů, tak se k modulu dostalo několik požadavků na přidání,
+                     * v důsledku čehož i odeslal několik "kladných" odpovědí. Přidat jej však chceme jen jednou...
+                     */
+                    if (this.usedIPsByModules.includes(espIP)) {
+                        throw new Error(); // Aby to "spadlo" do carch bloku a došlo k vymazání nového záznamu o modulu z databáze
+                    }
+                    else {
+                        this._communicationManager.sendESPItsID(espIP, change.data.id);
+                        this.clientUpdateInDB({ path: change.data.path, data: { IP: espIP, type: boardType } });
+                        this.usedIPsByModules.push(espIP);
+                    }
+                }).catch((err) => {
+                    this.clientRemoveFromDB({ path: change.data.path, data: null });
+                });
             }
             else if (change.type == ChangeMessageTypes.REMOVED) { // Module was removed => reset module...
                 if (change.data.ip) {
@@ -863,11 +855,10 @@ class Firebase {
      * @param val Zapisovaná hodnota
      * @param time Čas, který se má zapsat jako poslední změny
      */
-    async writeToLocalDB(path, val, time) {
+    writeToLocalDB(path, val, time) {
         if (time == undefined) {
             time = Date.now();
         }
-        await this._loadLocalDBFromFile();
         let tmpDbFile = JSON.parse(JSON.stringify(this.readFromLocalDB("/", {}))); // Záloha lokální databáze pro pozdější vyhodnocení změn funkcí _checkDbChange() (viz níže ve funkci)
         let processUpdate = () => {
             let pathArr = this.correctPath(path).split("/");
@@ -929,11 +920,10 @@ class Firebase {
      * @param path Cesta, na které se má mazat
      * @param time Čas, který se má zapsat jako poslední změny
      */
-    async removeInLocalDB(path, time) {
+    removeInLocalDB(path, time) {
         if (time == undefined) {
             time = Date.now();
         }
-        await this._loadLocalDBFromFile();
         let tmpDbFile = JSON.parse(JSON.stringify(this.readFromLocalDB("/", {}))); // Záloha lokální databáze pro pozdější vyhodnocení změn funkcí _checkDbChange() (viz níže ve funkci)
         if (path.length == 0 || path == "/") {
             fs.writeFileSync(dbFilePath, '{}');
@@ -1090,14 +1080,13 @@ class Firebase {
         let firebaseLastWriteTime = (data && data.lastWriteTime) ? data.lastWriteTime : 0;
         if (serverLastWriteTime < firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno do firebase, přepíše se lokální verze databáze
             console.log("Internetová verze (Firebase) databáze je aktuálnější. Přepíše lokální databázi...");
-            /*this.removeInLocalDB("/", firebaseLastWriteTime);
+            this.removeInLocalDB("/", firebaseLastWriteTime);
             if (data && data.rooms) {
                 this.writeToLocalDB("rooms", data.rooms, firebaseLastWriteTime);
             }
             if (data && data.automation) {
                 this.writeToLocalDB("automation", data.automation, firebaseLastWriteTime);
-            }*/
-            this._checkDbChange(this.readFromLocalDB("/", {}), data);
+            }
         }
         else if (serverLastWriteTime > firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno lokálně, přepíše se firebase databáze
             console.log("Lokální verze databáze je aktuálnější. Přepíše databázi na internetu (Firebase databázi)...");

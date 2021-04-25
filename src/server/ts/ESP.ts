@@ -12,6 +12,7 @@ enum IN_TYPE {
     BMP280_PRESS,
     SHT21_TEMP,
     SHT21_HUM,
+    BH1750
 
 };
 
@@ -65,3 +66,4 @@ SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_TEMP] = "BMP280-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_PRESS] = "BMP280-tlak";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_TEMP] = "SHT21-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_HUM] = "SHT21-vlhkost";
+SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BH1750] = "BH1750-intenzita-svetla";

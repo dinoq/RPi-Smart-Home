@@ -16,6 +16,7 @@ var IN_TYPE;
     IN_TYPE[IN_TYPE["BMP280_PRESS"] = 21] = "BMP280_PRESS";
     IN_TYPE[IN_TYPE["SHT21_TEMP"] = 22] = "SHT21_TEMP";
     IN_TYPE[IN_TYPE["SHT21_HUM"] = 23] = "SHT21_HUM";
+    IN_TYPE[IN_TYPE["BH1750"] = 24] = "BH1750";
 })(IN_TYPE || (IN_TYPE = {}));
 ;
 /**
@@ -60,3 +61,4 @@ SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_TEMP] = "BMP280-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BMP280_PRESS] = "BMP280-tlak";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_TEMP] = "SHT21-teplota";
 SensorInfo.IN_TYPE_TO_STR[IN_TYPE.SHT21_HUM] = "SHT21-vlhkost";
+SensorInfo.IN_TYPE_TO_STR[IN_TYPE.BH1750] = "BH1750-intenzita-svetla";

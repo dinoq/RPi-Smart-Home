@@ -1,5 +1,8 @@
-import { BaseDialog } from "./base-dialog.js";
-export class ErrorDialog extends BaseDialog {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ServerAgainOnlineDialog = exports.ServerCommunicationErrorDialog = exports.SingletonErrorDialog = exports.ErrorDialog = void 0;
+const base_dialog_js_1 = require("./base-dialog.js");
+class ErrorDialog extends base_dialog_js_1.BaseDialog {
     constructor(errorMsg, componentProps) {
         super(componentProps);
         let errorDiv = document.createElement("div");
@@ -23,8 +26,9 @@ export class ErrorDialog extends BaseDialog {
         });
     }
 }
+exports.ErrorDialog = ErrorDialog;
 ErrorDialog.tagName = "error-dialog";
-export class SingletonErrorDialog {
+class SingletonErrorDialog {
     constructor(errorMsg, componentProps) {
         let allDialogs = document.querySelectorAll(ErrorDialog.tagName);
         let exists = Array.from(allDialogs).some((dialog, index, array) => {
@@ -35,7 +39,8 @@ export class SingletonErrorDialog {
         }
     }
 }
-export class ServerCommunicationErrorDialog {
+exports.SingletonErrorDialog = SingletonErrorDialog;
+class ServerCommunicationErrorDialog {
     constructor(componentProps) {
         let dialog = new SingletonErrorDialog("Při komunikaci se serverem došlo k chybě, zkontrolujte, zda server běží.<br>Pokud server běží, zkuste aktualizovat stránku.").dialog;
         let btnWrapper = dialog.querySelector(".dialog-btn-group");
@@ -48,7 +53,6 @@ export class ServerCommunicationErrorDialog {
             location.reload();
         });
         btnWrapper.prepend(refreshBtn);
-        //Každých 5 vteřin se webový klient pokusí o znovunavázání spojení
         let interval = setInterval(() => {
             fetch("alive", {
                 method: 'POST',
@@ -64,13 +68,10 @@ export class ServerCommunicationErrorDialog {
             }).catch((err) => {
             });
         }, 5000);
-        //Po 30ti vteřinách se klient přestane pokoušet server kontaktovat (kvůli zbytečnému zahlcování sítě) - tyto pokusy o znovunavázání spojení jsou určeny pouze ke kontrole krátkodobých výpadků spojení...
-        let timeout = setTimeout(() => {
-            clearInterval(interval);
-        }, 30 * 1000);
     }
 }
-export class ServerAgainOnlineDialog {
+exports.ServerCommunicationErrorDialog = ServerCommunicationErrorDialog;
+class ServerAgainOnlineDialog {
     constructor(componentProps) {
         let dialog = new SingletonErrorDialog("Server opět online!<br>Pro správnou funkci webového klienta doporučujeme aktualizovat stránku.").dialog;
         let btnWrapper = dialog.querySelector(".dialog-btn-group");
@@ -91,3 +92,4 @@ export class ServerAgainOnlineDialog {
         closeBtn.classList.add("btn-primary");
     }
 }
+exports.ServerAgainOnlineDialog = ServerAgainOnlineDialog;

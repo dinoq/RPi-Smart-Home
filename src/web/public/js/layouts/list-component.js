@@ -4,7 +4,7 @@ import { Icon } from "../components/others/app-icon.js";
 import { HorizontalStack } from "./horizontal-stack.js";
 import { VerticalStack } from "./vertical-stack.js";
 export class List extends AbstractComponent {
-    constructor(listProps, layoutProps) {
+    constructor(hierarchyLevel, listProps, layoutProps) {
         super({
             ...layoutProps, ...{
                 //maxHeight: "25%",
@@ -16,6 +16,7 @@ export class List extends AbstractComponent {
             }
         });
         this.FLItems = new Array();
+        this.hierarchyLevel = hierarchyLevel;
         this.layout = new VerticalStack();
         this.listItemsContainer = new VerticalStack();
         this.addBtnContainer = new BaseComponent({});
@@ -180,12 +181,25 @@ export class ListItem extends AbstractComponent {
         if (itemProps.checkable != undefined) {
             this.checkbox = document.createElement("input");
             this.checkbox.type = "checkbox";
-            this.checkboxLabel = new BaseComponent({ innerText: "(neaktivní)", marginLeft: "10px" });
-            let stack = new HorizontalStack({ alignItems: "center", classList: "opaque" });
-            AbstractComponent.appendComponentsToDOMElements(stack, [this.checkbox, this.checkboxLabel]);
-            this.components.push(stack);
+            this.checkbox.style.alignSelf = "center";
+            this.checkboxLabel = new BaseComponent({ innerText: "(neaktivní)", marginLeft: "10px", classList: "opaque", alignSelf: "center" });
+            //let stack = new HorizontalStack({ alignItems: "center", classList: "opaque" });
+            this.components.push(this.checkbox);
             clickedElemsTitles.push("checkbox");
+            this.components.push(this.checkboxLabel);
+            clickedElemsTitles.push("not-clickable");
         }
+        /*
+                if (itemProps.checkable != undefined) {
+                    this.checkbox = document.createElement("input");
+                    this.checkbox.type = "checkbox";
+                    this.checkboxLabel = new BaseComponent({ innerText: "(neaktivní)", marginLeft: "10px" });
+                    let stack = new HorizontalStack({ alignItems: "center", classList: "opaque" });
+                    AbstractComponent.appendComponentsToDOMElements(stack, [this.checkbox, this.checkboxLabel]);
+        
+                    this.components.push(stack);
+                    clickedElemsTitles.push("checkbox");
+                }*/
         if (this.expandableText != undefined) {
             if (this.expandableText.endsWith("undefined")) {
                 this.expandableText = this.expandableText.substring(0, this.expandableText.lastIndexOf("undefined"));
@@ -298,74 +312,3 @@ export var ListTypes;
     ListTypes[ListTypes["TIMEOUT"] = 7] = "TIMEOUT";
     ListTypes[ListTypes["SENSORS_AUTOMATIONS"] = 8] = "SENSORS_AUTOMATIONS";
 })(ListTypes || (ListTypes = {}));
-export const DBTemplates = {
-    get ROOMS() {
-        return {
-            index: 0,
-            img: {
-                src: "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg",
-                offset: 0
-            },
-            name: "Místnost " + Math.random().toString(36).substring(2, 6).toUpperCase()
-        };
-    },
-    get MODULES() {
-        return {
-            index: 0,
-            /*in: {
-
-            },
-            out: {
-            },*/
-            name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "wemosD1",
-            IP: ""
-        };
-    },
-    get SENSORS() {
-        return {
-            type: "analog",
-            index: 0,
-            name: "Snímač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            unit: "percentages",
-            value: 0,
-            input: "A17",
-            icon: "temp"
-        };
-    },
-    get DEVICES() {
-        return {
-            index: 0,
-            name: "Zařízení " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            output: "D1",
-            type: "digital",
-            value: 0,
-            icon: "light"
-        };
-    },
-    get TIMEOUT() {
-        let time = 60 * 5;
-        return {
-            name: "Časovač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "timeout",
-            time: time,
-            expires: -1,
-            controlledOutput: "",
-            value: 500
-        };
-    },
-    get SENSORS_AUTOMATIONS() {
-        return {
-            name: "Automatizace " + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            type: "automation",
-            watchedInput: "",
-            threshold: {
-                sign: ">",
-                value: 0
-            },
-            controlledOutput: "",
-            value: 500,
-            active: true
-        };
-    }
-};

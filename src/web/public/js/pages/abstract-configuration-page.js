@@ -4,7 +4,6 @@ import { Utils } from "../app/utils.js";
 import { YesNoCancelDialog } from "../components/dialogs/yes-no-cancel-dialog.js";
 import { DialogResponses } from "../components/dialogs/base-dialog.js";
 import { EventManager } from "../app/event-manager.js";
-import { SettingsPage } from "./settings-page.js";
 export class AbstractConfigurationPage extends BasePage {
     //##############################
     // Konec abstraktních funkcí
@@ -47,19 +46,25 @@ export class AbstractConfigurationPage extends BasePage {
                      * Pokud se jedná o SettingsPage a typ seznamu pro snímače, nebo zařízení, tak chceme všechny nastavit jako neaktivní z obou seznamů,
                      * protože jsou (hierarchicky) na stejné úrovni a nechceme položky v tom "druhém" listu nechávat aktivní
                      */
-                    if (this instanceof SettingsPage && Utils.itemIsAnyFromEnum(parentList.type, ListTypes, ["SENSORS", "DEVICES"])) {
+                    /*if (this instanceof SettingsPage && Utils.itemIsAnyFromEnum(parentList.type, ListTypes, ["SENSORS", "DEVICES"])) {
                         this.sensorsList.getItems().items.forEach(listItem => {
-                            listItem.active = false;
+                            (<ListItem>listItem).active = false
                         });
                         this.devicesList.getItems().items.forEach(listItem => {
-                            listItem.active = false;
+                            (<ListItem>listItem).active = false
                         });
-                    }
-                    else { // Jinak ve všech ostatních případech chceme odstarnit aktivní stav pouze ze všech položek aktuálního seznamu
+                    } else {// Jinak ve všech ostatních případech chceme odstarnit aktivní stav pouze ze všech položek aktuálního seznamu
                         parentList.getItems().items.forEach(listItem => {
-                            listItem.active = false;
+                            (<ListItem>listItem).active = false
                         });
-                    }
+                    }*/
+                    this.allListComponents.forEach((list, index, array) => {
+                        if (list.hierarchyLevel >= parentList.hierarchyLevel) {
+                            list.getItems().items.forEach((listItem, index, array) => {
+                                listItem.active = false;
+                            });
+                        }
+                    });
                     item.active = true; // Samozřejmě nakonec aktuálně zvolenou položku opět přepneme na aktivní
                     this.itemInDetail = { item: item, parentListType: parentList.type };
                     this.initDetail();
@@ -204,16 +209,7 @@ export class AbstractConfigurationPage extends BasePage {
      * @param item Položka, které ID ukládáme
      */
     saveNewlySelectedItemIDToSelectedItemsIDHierarchy(parentList, item) {
-        let index = 0; //default 0 = ROOMS/TIMEOUT/SENSORS_AUTOMATIONS
-        switch (parentList.type) {
-            case ListTypes.MODULES:
-                index = 1;
-                break;
-            case ListTypes.SENSORS:
-            case ListTypes.DEVICES:
-                index = 2;
-                break;
-        }
+        let index = parentList.hierarchyLevel;
         this.selectedItemsIDHierarchy[index] = item.dbCopy.dbID;
         if (index < 2) //remove subordinate active items from selectedItemsIDHierarchy - eg. if we save new room, we don't want to keep old modules, sensors and devices list...
             this.selectedItemsIDHierarchy.splice(index + 1);

@@ -1,25 +1,12 @@
-import { ARROWABLE_LISTS, DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
-import { RoomCard } from "../layouts/room-card.js";
-import { Config } from "../app/config.js";
-import { Firebase } from "../app/firebase.js";
-import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
-import { LoginComponent } from "../components/forms/login-component.js";
+import { List, ListItem, ListTypes } from "../layouts/list-component.js";
+import { IComponentProperties } from "../components/component.js";
 import { BasePage } from "./base-page.js";
 import { Utils } from "../app/utils.js";
-import { HorizontalStack } from "../layouts/horizontal-stack.js";
-import { TabLayout } from "../layouts/tab-layout.js";
-import { BaseDetail, IDetailRowInitObject } from "../layouts/detail-component.js";
+import { BaseDetail } from "../layouts/detail-component.js";
 import { YesNoCancelDialog } from "../components/dialogs/yes-no-cancel-dialog.js";
 import { DialogResponses } from "../components/dialogs/base-dialog.js";
 import { EventManager } from "../app/event-manager.js";
-import { URLManager } from "../app/url-manager.js";
-import { PageManager } from "../app/page-manager.js";
-import { BaseLayout } from "../layouts/base-layout.js";
-import { Loader } from "../components/others/loader.js";
-import { OneOptionDialog } from "../components/dialogs/cancel-dialog.js";
-import { Board, BoardsManager } from "../app/boards-manager.js";
-import { SettingsDetail } from "../layouts/settings-detail.js";
-import { SettingsPage } from "./settings-page.js";
+
 export abstract class AbstractConfigurationPage extends BasePage {
     static tagName = "settings-page";
 
@@ -91,7 +78,7 @@ export abstract class AbstractConfigurationPage extends BasePage {
             }
         });
     }
-    
+
     /**
      * Obsluha události kliknutí na FrameListItem. Funkce slouží pouze jako "obálka" společné funkcionality při kliknutí na FrameListItem, 
      * ale volá dále funkci _itemClicked(), kterou si už každý předek musí implementovat sám.
@@ -105,7 +92,7 @@ export abstract class AbstractConfigurationPage extends BasePage {
             this.clickPromise = new Promise((resolve, reject) => { this.clickPromiseResolver = resolve; });
         }
 
-        try {            
+        try {
             let cancelChanges = await this.showSaveDialog();
             if (cancelChanges) {
                 if (this.clickPromiseResolver)
@@ -128,7 +115,7 @@ export abstract class AbstractConfigurationPage extends BasePage {
                  * Pokud se jedná o SettingsPage a typ seznamu pro snímače, nebo zařízení, tak chceme všechny nastavit jako neaktivní z obou seznamů, 
                  * protože jsou (hierarchicky) na stejné úrovni a nechceme položky v tom "druhém" listu nechávat aktivní
                  */
-                if (this instanceof SettingsPage && Utils.itemIsAnyFromEnum(parentList.type, ListTypes, ["SENSORS", "DEVICES"])) {
+                /*if (this instanceof SettingsPage && Utils.itemIsAnyFromEnum(parentList.type, ListTypes, ["SENSORS", "DEVICES"])) {
                     this.sensorsList.getItems().items.forEach(listItem => {
                         (<ListItem>listItem).active = false
                     });
@@ -139,20 +126,28 @@ export abstract class AbstractConfigurationPage extends BasePage {
                     parentList.getItems().items.forEach(listItem => {
                         (<ListItem>listItem).active = false
                     });
-                }
+                }*/
+                this.allListComponents.forEach((list, index, array) => {
+                    if (list.hierarchyLevel >= parentList.hierarchyLevel) {
+                        list.getItems().items.forEach((listItem, index, array) => {
+                            listItem.active = false;
+                        })
+                    }
+                })
+
                 item.active = true; // Samozřejmě nakonec aktuálně zvolenou položku opět přepneme na aktivní
 
                 this.itemInDetail = { item: item, parentListType: parentList.type };
                 this.initDetail();
-    
+
                 if (this._focusDetail) {
                     this.detail.scrollIntoView();
                     this.detail.blink(1);
                 }
             }
-            
+
             this._itemClicked(parentList, event, item, clickedElem, clickedByUser);
-        }finally {
+        } finally {
             if (this.clickPromiseResolver)
                 this.clickPromiseResolver();
         }
@@ -281,16 +276,7 @@ export abstract class AbstractConfigurationPage extends BasePage {
      * @param item Položka, které ID ukládáme
      */
     saveNewlySelectedItemIDToSelectedItemsIDHierarchy(parentList: List, item: ListItem) {
-        let index = 0;//default 0 = ROOMS/TIMEOUT/SENSORS_AUTOMATIONS
-        switch (parentList.type) {
-            case ListTypes.MODULES:
-                index = 1;
-                break;
-            case ListTypes.SENSORS:
-            case ListTypes.DEVICES:
-                index = 2;
-                break;
-        }
+        let index = parentList.hierarchyLevel;
         this.selectedItemsIDHierarchy[index] = item.dbCopy.dbID;
         if (index < 2)//remove subordinate active items from selectedItemsIDHierarchy - eg. if we save new room, we don't want to keep old modules, sensors and devices list...
             this.selectedItemsIDHierarchy.splice(index + 1);

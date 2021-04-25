@@ -1,27 +1,14 @@
-import { ARROWABLE_LISTS, DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
-import { RoomCard } from "../layouts/room-card.js";
-import { Config } from "../app/config.js";
-import { DatabaseData, Firebase } from "../app/firebase.js";
-import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
-import { LoginComponent } from "../components/forms/login-component.js";
-import { BasePage } from "./base-page.js";
+import { List, ListItem, ListTypes } from "../layouts/list-component.js";
+import { DatabaseData, DBTemplates, Firebase } from "../app/firebase.js";
+import { IComponentProperties } from "../components/component.js";
 import { Utils } from "../app/utils.js";
-import { HorizontalStack } from "../layouts/horizontal-stack.js";
 import { TabLayout } from "../layouts/tab-layout.js";
 import { BaseDetail, IDetailRowInitObject } from "../layouts/detail-component.js";
-import { YesNoCancelDialog } from "../components/dialogs/yes-no-cancel-dialog.js";
-import { DialogResponses } from "../components/dialogs/base-dialog.js";
-import { EventManager } from "../app/event-manager.js";
-import { URLManager } from "../app/url-manager.js";
-import { PageManager } from "../app/page-manager.js";
-import { BaseLayout } from "../layouts/base-layout.js";
 import { Loader } from "../components/others/loader.js";
-import { OneOptionDialog } from "../components/dialogs/cancel-dialog.js";
-import { Board, BoardsManager } from "../app/boards-manager.js";
-import { SettingsDetail } from "../layouts/settings-detail.js";
 import { AutomationDetail } from "../layouts/automation-detail.js";
 import { AbstractConfigurationPage } from "./abstract-configuration-page.js";
 import { BaseDialogError } from "../errors/base-errors.js";
+
 export class AutomationsPage extends AbstractConfigurationPage {
     static tagName = "automations-page";
 
@@ -54,14 +41,14 @@ export class AutomationsPage extends AbstractConfigurationPage {
         this.timeoutAutomationsTabPanel = new TabLayout(null);
         this.sensorAutomationsTabPanel = new TabLayout(null);
 
-        this.timeoutAutomationsList = new List({
+        this.timeoutAutomationsList = new List(0, {
             type: ListTypes.TIMEOUT,
             addBtnCallback: this.itemClicked
         });
         this.timeoutAutomationsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.TIMEOUT));
         this.allListComponents.push(this.timeoutAutomationsList)
 
-        this.sensorAutomationsList = new List({
+        this.sensorAutomationsList = new List(0, {
             type: ListTypes.SENSORS_AUTOMATIONS,
             addBtnCallback: this.itemClicked
         });
@@ -303,6 +290,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
         this.initTimeoutList(timeoutAutomations);
         this.timeoutAutomations = timeoutAutomations;
 
+        sensorAutomations.reverse();
         this.initSensorAutomationsList(sensorAutomations);
 
         this.detail.readyToSave = false;
@@ -315,34 +303,47 @@ export class AutomationsPage extends AbstractConfigurationPage {
     saveChanges = async (event) => {
 
         let path = "";
-        let name = (<HTMLInputElement>document.getElementById("automation-name")).value;
+        let name = (<HTMLInputElement>this.querySelector("#automation-name")).value;
         let update: DatabaseData = { name: name };
         const listType = this.itemInDetail.parentListType;
         if (listType == ListTypes.TIMEOUT) {
-            let timeHours = Number.parseInt((<HTMLInputElement>document.getElementById("time-h")).value);
+            let timeHours = Number.parseInt((<HTMLInputElement>this.querySelector("#time-h")).value);
             timeHours = (Number.isSafeInteger(timeHours)) ? timeHours : 0;
             timeHours = (timeHours >= 0) ? timeHours : 0;
-            let timeMinutes = Number.parseInt((<HTMLInputElement>document.getElementById("time-m")).value);
+            let timeMinutes = Number.parseInt((<HTMLInputElement>this.querySelector("#time-m")).value);
             timeMinutes = (Number.isSafeInteger(timeMinutes)) ? timeMinutes : 0;
             timeMinutes = (timeMinutes >= 0) ? timeMinutes : 0;
-            let timeSeconds = Number.parseInt((<HTMLInputElement>document.getElementById("time-s")).value);
+            let timeSeconds = Number.parseInt((<HTMLInputElement>this.querySelector("#time-s")).value);
             timeSeconds = (Number.isSafeInteger(timeSeconds)) ? timeSeconds : 0;
             timeSeconds = (timeSeconds >= 0) ? timeSeconds : 0;
             let time = timeSeconds + 60 * timeMinutes + 3600 * timeHours;
-            let checked = (<HTMLInputElement>document.getElementById("checkbox-active")).checked;
-            let controlledOutput = (<HTMLInputElement>document.getElementById("controlled-output")).value;
-            let valueToSet = Number.parseInt((<HTMLInputElement>document.getElementById("value-to-set")).value);
+            let checked = (<HTMLInputElement>this.querySelector("#checkbox-active")).checked;
+            let controlledOutput = (<HTMLInputElement>this.querySelector("#controlled-output")).value;
+            let valueToSet = Number.parseInt((<HTMLInputElement>this.querySelector("#value-to-set")).value);
 
             update.type = "timeout";
             update.time = time;
             update.controlledOutput = controlledOutput;
             update.expires = (checked) ? Math.round(Date.now() / 1000) + time : -1;
-            update.value = valueToSet;
+            update.valueToSet = valueToSet;
 
             path = this.itemInDetail.item.dbCopy.path;
         } else if (listType == ListTypes.SENSORS_AUTOMATIONS) {
-            console.log("TODO save SENSORS_AUTOMATIONS");
+            let watchedInput = (<HTMLInputElement>this.querySelector("#watched-input")).value;
+            let thresholdSign = (<HTMLInputElement>this.querySelector("#threshold-sign")).value;
+            let thresholdVal = Number.parseFloat((<HTMLInputElement>this.querySelector("#threshold-value")).value); // Number.parseFloat()
+            let controlledOutput = (<HTMLInputElement>this.querySelector("#controlled-output")).value;
+            let valueToSet = Number.parseFloat((<HTMLInputElement>this.querySelector("#value-to-set")).value);
+            let active = (<HTMLInputElement>this.querySelector("#checkbox-active")).checked;
 
+            update.watchedInput = watchedInput;
+            update.thresholdSign = thresholdSign;
+            update.thresholdVal = thresholdVal;
+            update.controlledOutput = controlledOutput;
+            update.valueToSet = valueToSet;
+            update.active = active;
+
+            path = this.itemInDetail.item.dbCopy.path;
         }
         await Firebase.updateDBData(path, update);
         await this.pageReinicialize();
@@ -390,7 +391,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
             INtexts.push("Nejprve v nastavení přidejte nějaké snímače!");
             INvalues.push("");
         } else {
-            INtexts.unshift("Vyberte snámač, jehož hodnota bude řídit výstup...");
+            INtexts.unshift("Vyberte snímač, jehož hodnota bude řídit výstup...");
             INvalues.unshift("");
         }
 
@@ -410,7 +411,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
      * Komentář viz. předek (AbstractConfigurationPage)
      */
     initDetail = async () => {
-
+        let ioforSelectBox = (await this.getAllIOForSelectbox());
         let item = this.itemInDetail.item;
         let parentListType = this.itemInDetail.parentListType;
         let title = this.getTitleForEditingFromItem(item, item.dbCopy.name);
@@ -422,34 +423,44 @@ export class AutomationsPage extends AbstractConfigurationPage {
                 {
                     selectedValue: item.dbCopy.controlledOutput,
                     options: {
-                        optionTexts: (await this.getAllIOForSelectbox()).out.texts,
-                        optionValues: (await this.getAllIOForSelectbox()).out.values
+                        optionTexts: ioforSelectBox.out.texts,
+                        optionValues: ioforSelectBox.out.values
                     }
                 },
-                { selectedValue: item.dbCopy.value },
+                { selectedValue: item.dbCopy.valueToSet },
                 { selectedValue: (item.dbCopy.expires > Math.round(Date.now() / 1000)) }
             ]
         } else if (parentListType == ListTypes.SENSORS_AUTOMATIONS) {
+            let watchedInput = item.dbCopy.watchedInput;
+            if (!ioforSelectBox.in.values.includes(item.dbCopy.watchedInput)) { // Pokud již dříve uložený snimač byl smazán, resetovat hodnotu selectboxu a ukázat chybu v dialogu
+                watchedInput = "";
+                new BaseDialogError("Zdá se, že snímač, který daná automatizace používala již neexistuje, nastavte nový!", this);
+            }
+            let controlledOutput = item.dbCopy.controlledOutput;
+            if (!ioforSelectBox.out.values.includes(item.dbCopy.controlledOutput)) { // Pokud již dříve uložený snimač byl smazán, resetovat hodnotu selectboxu a ukázat chybu v dialogu
+                controlledOutput = "";
+                new BaseDialogError("Zdá se, že výstup, který daná automatizace používala již neexistuje, nastavte nový!", this);
+            }
             console.log("TODO SENSORS_AUTOMATIONS initDetail");
             values = [
                 { selectedValue: item.dbCopy.name },
                 {
-                    selectedValue: item.dbCopy.watchedInput,
+                    selectedValue: watchedInput,
                     options: {
-                        optionTexts: (await this.getAllIOForSelectbox()).in.texts,
-                        optionValues: (await this.getAllIOForSelectbox()).in.values
+                        optionTexts: ioforSelectBox.in.texts,
+                        optionValues: ioforSelectBox.in.values
                     }
                 },
-                { selectedValue: item.dbCopy.threshold },
+                { selectedValue: { val: item.dbCopy.thresholdVal, sign: item.dbCopy.thresholdSign } },
                 {
-                    selectedValue: item.dbCopy.controlledOutput,
+                    selectedValue: controlledOutput,
                     options: {
-                        optionTexts: (await this.getAllIOForSelectbox()).out.texts,
-                        optionValues: (await this.getAllIOForSelectbox()).out.values
+                        optionTexts: ioforSelectBox.out.texts,
+                        optionValues: ioforSelectBox.out.values
                     }
                 },
-                { selectedValue: item.dbCopy.value },
-                { selectedValue: true }
+                { selectedValue: item.dbCopy.valueToSet },
+                { selectedValue: item.dbCopy.active }
             ]
 
         }
@@ -460,10 +471,6 @@ export class AutomationsPage extends AbstractConfigurationPage {
      * Komentář viz. předek (AbstractConfigurationPage)
      */
     _itemClicked = async (parentList: List, event, item: ListItem, clickedElem?: string, clickedByUser?: boolean) => {
-        console.log('clickedByUser: ', clickedByUser);
-        console.log('clickedElem: ', clickedElem);
-        console.log('item.dbCopy: ', item.dbCopy);
-
         if (clickedElem == "add") {// Add item to database
             if (!Utils.itemIsAnyFromEnum(parentList.type, ListTypes, ["TIMEOUT", "SENSORS_AUTOMATIONS"])) {
                 if (this.clickPromiseResolver)
@@ -496,21 +503,27 @@ export class AutomationsPage extends AbstractConfigurationPage {
             await this.pageReinicialize();
         } else if (clickedElem == "checkbox") {
             let checked: boolean = event.target.checked;
-            let expires = -1;
-            if (!checked) { // Vypnutí dané automatizace
-                item.clearTimeout();
-            } else {//Zapnutí dané automatizace
-                expires = Math.round(Date.now() / 1000) + item.dbCopy.time;
-                item.dbCopy.expires = expires;
-                this.setRemainingTimeTextForItem(item);
-                item.resetTimeout(() => {
-                    item.checkbox.checked = false;
+            let updates: DatabaseData = {};
+            if (item.dbCopy.type == "timeout") {
+                let expires = -1;
+                if (!checked) { // Vypnutí dané automatizace
+                    item.clearTimeout();
+                } else {//Zapnutí dané automatizace
+                    expires = Math.round(Date.now() / 1000) + item.dbCopy.time;
+                    item.dbCopy.expires = expires;
                     this.setRemainingTimeTextForItem(item);
-                }, item.dbCopy.time, (secondsRemaining) => {
-                    item.checkboxLabel.innerText = this.secondsToRemainingStr(secondsRemaining);
-                });
+                    item.resetTimeout(() => {
+                        item.checkbox.checked = false;
+                        this.setRemainingTimeTextForItem(item);
+                    }, item.dbCopy.time, (secondsRemaining) => {
+                        item.checkboxLabel.innerText = this.secondsToRemainingStr(secondsRemaining);
+                    });
+                }
+                updates.expires = expires;
+            } else if (item.dbCopy.type == "automation") {
+                updates.active = checked;
             }
-            await Firebase.updateDBData(item.dbCopy.path, { expires: expires });
+            await Firebase.updateDBData(item.dbCopy.path, updates);
             await this.pageReinicialize();
         }
     }

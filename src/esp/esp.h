@@ -6,6 +6,7 @@
 #include <ESP8266WiFi.h>
 //#include "user_interface.h"
 #include <Wire.h>
+#include <BH1750.h>
 //#include <Adafruit_Sensor.h>
 
 #include <Adafruit_BMP280.h> // BMP280 sensor library
@@ -91,6 +92,9 @@ void beginWireIfNotBegun();
 boolean beginBMP(boolean forceBegin);
 boolean beginBMP();
 
+void beginBH1750(boolean forceBegin);
+void beginBH1750();
+
 void sendErrorReportToServer(char errorMsg[], const char funcName[]);
 
 void pinWrite(byte pinNumber, int value, String pinType);
@@ -103,7 +107,7 @@ const byte WATCHED_IN_LIMIT = 20;
 
 const float INVALID_SENSOR_VALUE = -2000000000.0;       // "Random" value, which will probably not be used in any sensor as valid value
 const float UNITIALIZED_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
-const int SENSOR_CHECK_TIME = 500;                     // How often check for sensors values (in ms). Must be > 180 if sensor BH1750 is used.
+const int SENSOR_CHECK_TIME = 2000;                     // How often check for sensors values (in ms). Must be > 180 if sensor BH1750 is used.
 
 const byte ID_MEM_ADDR = 7;       // Address of beginning of SensorInfos in flash memory. It is saved after string "IP:????" => 7
 const byte ID_MEM_DATA_ADDR = 10;          // "IP:????ID:" => 7+3
@@ -126,6 +130,7 @@ typedef enum
     BMP280_PRESS,
     SHT21_TEMP,
     SHT21_HUM,
+    BH1750_LUX,
 
 } IN_TYPE;
 

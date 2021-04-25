@@ -18,6 +18,9 @@ bool wireBegun = false;
 
 int usedOutputPins[30];
 
+BH1750 BH1750Sensor;
+bool BH1750Begun = false;
+
 int watchedINIndex = 0;
 SensorInfo watched[WATCHED_IN_LIMIT];
 Memory mem;
@@ -53,13 +56,7 @@ void setup()
         delay(500);
         Serial.print(".");
     }
-    byte a = -1;
-    byte b = 255;
-
-    Serial.println("aaaaaaaaaa");
-    Serial.println(a==b);
-    Serial.println(a);
-    Serial.println(b);
+    
     Serial.printf("\nWiFi connected, IP: %s\n", WiFi.localIP().toString().c_str());
 
     Serial.println("Setup CoAP callbacks");
@@ -150,11 +147,12 @@ void checkRPiConn()
  */
 bool checkIO_Inited(){
     if(IO_Inited) //  or IO is already inited, then return true
-        return true;
+        return true;    
     else if(!RpiIP.isSet() || moduleID.length() == 0 ) // If RPiIP or module id is not inited, return false
         return false;  
 
         
+    delay(3000); //ať se zbytečně nezahlcuje síť...
     Serial.println("Init IO (send coap msg to server)");
     int msgid = coap.send(RpiIP, CoAPPort, "get-all-IO-state", COAP_NONCON, COAP_GET, NULL, 0, NULL, 0, COAP_TEXT_PLAIN);
     return false;  
@@ -198,10 +196,10 @@ void checkInValues()
                 }
                 
 
+                watched[i].val = newVal;
                 COAP_TYPE confirmable = (watched[i].val == UNITIALIZED_SENSOR_VALUE)? COAP_CON : COAP_NONCON; // If sensor value was uninitialized, send msg as confirmable!
                 int msgid = coap.send(RpiIP, CoAPPort, "new-value", confirmable, COAP_PUT, NULL, 0, (uint8_t *)&payload, strlen(payload), COAP_TEXT_PLAIN);
 
-                watched[i].val = newVal;
             }
         }
     }
@@ -255,6 +253,14 @@ float getI2CVal(byte IN)
         if(val == 0.00){ // sensor is not properly connected
             val = INVALID_SENSOR_VALUE;
         }
+    }else if(IN == BH1750_LUX){
+        beginWireIfNotBegun();
+        beginBH1750();
+        val = (float)BH1750Sensor.readLightLevel();
+        TODO - vyřešit vadný stav... (při odpojení, resp. pokud vubec senzor nezapojim před spustenim modulu)
+        if(val == 0.00){ // sensor is not properly connected
+            val = INVALID_SENSOR_VALUE;
+        }
     }else
     {
         Serial.printf("-CHYBA: Neznámý vstup sběrnice I2C (%d) ve funkci getI2CVal(byte IN). Přidejte konstatu do výčtu IN_TYPE a upravte funkci!\n", IN);
@@ -279,6 +285,9 @@ bool isDifferentEnough(float newVal, float oldVal, SensorInfo sInfo)
     else if (valueIsIn(sInfo.IN, noDecimal))
     {
         return (diff >= 1);
+    }
+    else if(sInfo.IN == BH1750_LUX){
+        return (diff >= 5);
     }
     else if (sInfo.IN >= 0 && sInfo.IN < BMP280_TEMP)
     {
@@ -317,7 +326,6 @@ bool valueIsIn(byte val, byte arr[])
 */
 void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port)
 {
-    Serial.println("callbackHelloClienttttttttt");
     if (RpiIP.isSet()) // If RPi IP is set, we don't want to init communication again (or with another server)
         return;
 
@@ -335,7 +343,6 @@ void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port)
 */
 void callbackSetID(CoapPacket &packet, IPAddress ip, int port)
 {
-    Serial.println("callbackHelloClienttttttttt2222222");
     if (moduleID.length() > 0 || RpiIP.isSet()) // If module ID or RPi IP is set, we don't want to init communication again (or with another server)
         return;
 
@@ -817,6 +824,12 @@ SensorInfo getSensorInfo(char input[])
             IN = (strlen(input) >= 17 && !strncmp(input + 10, t, strlen(t))) ? SHT21_TEMP : SHT21_HUM; //temp or press (temperature/pressure)
             beginWireIfNotBegun();
         }
+        else if (!strncmp(input + 4, "BH1750", strlen("BH1750"))) //eg. "I2C-BH1750-intenzita-svetla"
+        {
+            IN = BH1750_LUX; //intenzita světla
+            beginWireIfNotBegun();
+            beginBH1750();
+        }
         else
         {
             Serial.println("-CHYBA: Neznámý vstup sběrnice I2C ve funkci getSensorInfo(char input[]). Přidejte konstatu do výčtu IN_TYPE a upravte funkci!");
@@ -1034,6 +1047,16 @@ boolean beginBMP(boolean forceBegin){
 boolean beginBMP(){   
     return beginBMP(false);
 }
+void beginBH1750(boolean forceBegin){
+    if(forceBegin || !BH1750Begun){    
+        BH1750Begun = true;
+        BH1750Sensor.begin();
+    }
+}
+
+void beginBH1750(){   
+    beginBH1750(false);
+}
 
 /**
  * do func name by se mělo vždy přiřazovat __PRETTY_FUNCTION__! 
@@ -1060,18 +1083,10 @@ void pinWrite(byte pinNumber, int value, String pinType){
     }else{
         digitalWrite(pinNumber, value);
     }
-            Serial.println("jdu na cyklus:");
+    
     for (int i = 0; i < (sizeof(usedOutputPins)/sizeof(usedOutputPins[0])); i++){ // Nainicializuje se pole používaných výstupních pinů. Toto pole se používá pro reset modulu.
-        Serial.println("hele pin:");
-        Serial.println( usedOutputPins[i]);
         int pinNum = usedOutputPins[i];
-        Serial.println("hele pin2:");
-        Serial.println(pinNum);
         if(pinNum == -1){
-            Serial.println("save pin:");
-            Serial.println(pinNumber);
-            Serial.println("at i:");
-            Serial.println(i);
             usedOutputPins[i] = pinNumber;
             break;
         }

@@ -234,6 +234,8 @@ export class CommunicationManager {
      * @param ip IP adresa modulu.
      */
     public resetModule(ip: string) {
+        console.log("RESET! STACK:");
+        console.log(new Error().stack);
         this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, true);
     }
 

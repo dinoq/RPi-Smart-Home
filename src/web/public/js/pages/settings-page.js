@@ -1,5 +1,5 @@
-import { DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
-import { Firebase } from "../app/firebase.js";
+import { List, ListItem, ListTypes } from "../layouts/list-component.js";
+import { DBTemplates, Firebase } from "../app/firebase.js";
 import { Utils } from "../app/utils.js";
 import { TabLayout } from "../layouts/tab-layout.js";
 import { DialogResponses } from "../components/dialogs/base-dialog.js";
@@ -154,12 +154,12 @@ export class SettingsPage extends AbstractConfigurationPage {
          */
         this.saveChanges = async (event) => {
             let path = "";
-            let name = document.getElementById("device-name").value;
+            let name = this.querySelector("#device-name").value;
             let update = { name: name };
             const listType = this.itemInDetail.parentListType;
             if (listType == ListTypes.ROOMS) {
-                let imgSrc = document.getElementById("bg-img-src").value;
-                let imgOffset = parseFloat(document.getElementById("slider-for-image").value);
+                let imgSrc = this.querySelector("#bg-img-src").value;
+                let imgOffset = parseFloat(this.querySelector("#slider-for-image").value);
                 imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
                 update.img = { src: imgSrc, offset: imgOffset };
                 path = "rooms/" + this.itemInDetail.item.dbCopy.dbID;
@@ -168,18 +168,18 @@ export class SettingsPage extends AbstractConfigurationPage {
                 path = this.itemInDetail.item.dbCopy.path;
             }
             else if (listType == ListTypes.SENSORS) {
-                let iconType = document.getElementById("icon-type").value;
-                let input = document.getElementById("input").value;
-                let unit = document.getElementById("unit").value;
+                let iconType = this.querySelector("#icon-type").value;
+                let input = this.querySelector("#input").value;
+                let unit = this.querySelector("#unit").value;
                 update.icon = iconType;
                 update.input = input;
                 update.unit = unit;
                 path = this.itemInDetail.item.dbCopy.path;
             }
             else if (listType == ListTypes.DEVICES) {
-                let iconType = document.getElementById("icon-type").value;
-                let output = document.getElementById("output").value;
-                let outputType = document.getElementById("output-type").value;
+                let iconType = this.querySelector("#icon-type").value;
+                let output = this.querySelector("#output").value;
+                let outputType = this.querySelector("#output-type").value;
                 update.icon = iconType;
                 update.output = output;
                 update.type = outputType;
@@ -431,27 +431,27 @@ export class SettingsPage extends AbstractConfigurationPage {
         this.mainTabPanel = new TabLayout(null);
         this.modulesTabPanel = new TabLayout(null);
         this.sensorsDevicesTabPanel = new TabLayout(null);
-        this.roomsList = new List({
+        this.roomsList = new List(0, {
             type: ListTypes.ROOMS,
             addBtnCallback: this.itemClicked
         });
         this.roomsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.ROOMS));
         this.allListComponents.push(this.roomsList);
-        this.modulesList = new List({
+        this.modulesList = new List(1, {
             type: ListTypes.MODULES,
             addBtnCallback: this.itemClicked
         });
         this.modulesList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.MODULES), true);
         this.modulesList.disableAddBtn();
         this.allListComponents.push(this.modulesList);
-        this.sensorsList = new List({
+        this.sensorsList = new List(2, {
             type: ListTypes.SENSORS,
             addBtnCallback: this.itemClicked
         });
         this.sensorsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.SENSORS), true);
         this.sensorsList.disableAddBtn();
         this.allListComponents.push(this.sensorsList);
-        this.devicesList = new List({
+        this.devicesList = new List(2, {
             type: ListTypes.DEVICES,
             addBtnCallback: this.itemClicked
         });

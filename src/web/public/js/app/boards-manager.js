@@ -41,9 +41,18 @@ export class BoardsManager {
                 for (const bus of buses) {
                     for (const busDevice of BusDevices[bus]) {
                         //let sensorName = busDevice.substring(0, busDevice.indexOf(""))
-                        let sensorName = busDevice.replace(" ", "-");
+                        let sensorName = busDevice.replaceAll(" ", "-");
                         sensorName = sensorName.replace("(", "");
                         sensorName = sensorName.replace(")", "");
+                        sensorName = sensorName.replaceAll("ě", "e");
+                        sensorName = sensorName.replaceAll("š", "s");
+                        sensorName = sensorName.replaceAll("č", "c");
+                        sensorName = sensorName.replaceAll("ř", "r");
+                        sensorName = sensorName.replaceAll("ž", "z");
+                        sensorName = sensorName.replaceAll("ý", "y");
+                        sensorName = sensorName.replaceAll("á", "a");
+                        sensorName = sensorName.replaceAll("í", "i");
+                        sensorName = sensorName.replaceAll("é", "e");
                         if (type == "value")
                             optionArr.push(`${bus}-${sensorName}`);
                         else
@@ -79,7 +88,7 @@ Board.wemosD1R1 = {
         SCL: "D3",
         SDA: "D4"
     },
-    bus: ["SPI", "I2C"]
+    bus: ["I2C"]
 };
 Board.NodeMCU = {
     analogPins: {
@@ -101,7 +110,7 @@ Board.NodeMCU = {
         SCL: "D1",
         SDA: "D2"
     },
-    bus: ["SPI", "I2C"]
+    bus: ["I2C"]
 };
 Board.esp01 = {
     analogPins: {},
@@ -115,5 +124,4 @@ Board.esp01 = {
 };
 class BusDevices {
 }
-BusDevices.I2C = ["BMP280 (teplota)", "BMP280 (tlak)", "SHT21 (teplota)", "SHT21 (vlhkost)"];
-BusDevices.SPI = [];
+BusDevices.I2C = ["BMP280 (teplota)", "BMP280 (tlak)", "SHT21 (teplota)", "SHT21 (vlhkost)", "BH1750 (intenzita světla)"];

@@ -380,7 +380,7 @@ export var AuthPersistence = {
 }
 
 export interface DatabaseData{
-    name: string, // Název objektu, např. název místnosti
+    name?: string, // Název objektu, např. název místnosti
     dbID?: string, // Identifikátor objektu z databáze
     index?: number | string, // Index objektu v databázi, pokud je potřeba je řadit (např. místnosti na domovské stránce)
     path?: string, // Cesta k danému objektu, vč. vlastního identifikátoru
@@ -394,17 +394,86 @@ export interface DatabaseData{
     img?: {
         src: string, // URL k obrázku
         offset: number // Posun obrázku (v relativních hodnotách 0.0 až 1.0)
-    }
+    },
+    value?: number,//Hodnota, na snímači/výstupu
 
     expires?: number, // časová známka, která určuje, kdy daný časovač vyprší. Pokud je časovač neaktivní, je rovna -1
     time?: number, // Čas, po kterém dojde k timeoutu u časovače, pokud se znovu aktivuje
-    value?: string | number, // Hodnota, jaká se po vypršení časovače nastaví na výstupu
+    valueToSet?: string | number, // Hodnota, jaká se po vypršení časovače nastaví na výstupu
     controlledOutput?: string, // Cesta k ovládanému výstupu
     watchedInput?: string; // Cesta ke snímači u automatizace na základě hodnoty snímače
-    threshold?: {
-        value: number,
-        sign: string, // <, >, =
-        tolerance?: number // např. 0.2, 50, 120...udává se pouze pokud je sign "="
-    },
+    thresholdSign?: string,
+    thresholdVal?: number,
     active?: boolean, // Pouze pro snímačové automatizace. Pro časovače se aktivnost vyhodnocuje na základě položky expires
 }
+
+
+export const DBTemplates = {
+    get ROOMS(): DatabaseData {
+        return {
+            index: 0,
+            img: {
+                src: "https://houseandhome.com/wp-content/uploads/2018/03/kitchen-trends-16_HH_KB17.jpg",
+                offset: 0
+            },
+            name: "Místnost " + Math.random().toString(36).substring(2, 6).toUpperCase()
+        }
+    },
+    get MODULES(): DatabaseData {
+        return {
+            index: 0,
+            /*in: {
+
+            },
+            out: {
+            },*/
+            name: "Modul " + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            type: "wemosD1",
+            IP: ""
+        }
+    },
+    get SENSORS(): DatabaseData {
+        return {
+            type: "analog",
+            index: 0,
+            name: "Snímač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            unit: "percentages",
+            valueToSet: 0,
+            input: "A17",
+            icon: "temp"
+        }
+    },
+    get DEVICES(): DatabaseData {
+        return {
+            index: 0,
+            name: "Zařízení " + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            output: "D1",
+            type: "digital",
+            valueToSet: 0,
+            icon: "light"
+        }
+    },
+    get TIMEOUT(): DatabaseData {
+        let time = 60 * 1;
+        return {
+            name: "Časovač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            type: "timeout",
+            time: time, // Timeout v sekundách
+            expires: -1, //Math.round(Date.now() / 1000) + time,
+            controlledOutput: "", //např: "rooms/q4dF4zAHFXDZUL1xZK6d/devices/-MYvEMsIx3BHl7w_MvVa/OUT/-MYvEOxuCNPahisdrsm-",
+            valueToSet: 500
+        }
+    },
+    get SENSORS_AUTOMATIONS(): DatabaseData {
+        return {
+            name: "Automatizace " + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            type: "automation",
+            watchedInput: "",
+            thresholdSign: ">",
+            thresholdVal: 0,
+            controlledOutput: "", //např: "rooms/q4dF4zAHFXDZUL1xZK6d/devices/-MYvEMsIx3BHl7w_MvVa/OUT/-MYvEOxuCNPahisdrsm-",
+            valueToSet: 500,
+            active: true
+        }
+    }
+};

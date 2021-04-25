@@ -1,19 +1,10 @@
-import { ARROWABLE_LISTS, DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
-import { RoomCard } from "../layouts/room-card.js";
-import { Config } from "../app/config.js";
-import { DatabaseData, Firebase } from "../app/firebase.js";
-import { AbstractComponent, BaseComponent, IComponentProperties } from "../components/component.js";
-import { LoginComponent } from "../components/forms/login-component.js";
-import { BasePage } from "./base-page.js";
+import { List, ListItem, ListTypes } from "../layouts/list-component.js";
+import { DatabaseData, DBTemplates, Firebase } from "../app/firebase.js";
+import { IComponentProperties } from "../components/component.js";
 import { Utils } from "../app/utils.js";
-import { HorizontalStack } from "../layouts/horizontal-stack.js";
 import { TabLayout } from "../layouts/tab-layout.js";
 import { BaseDetail, IDetailRowInitObject } from "../layouts/detail-component.js";
-import { YesNoCancelDialog } from "../components/dialogs/yes-no-cancel-dialog.js";
 import { DialogResponses } from "../components/dialogs/base-dialog.js";
-import { EventManager } from "../app/event-manager.js";
-import { URLManager } from "../app/url-manager.js";
-import { PageManager } from "../app/page-manager.js";
 import { BaseLayout } from "../layouts/base-layout.js";
 import { Loader } from "../components/others/loader.js";
 import { OneOptionDialog } from "../components/dialogs/cancel-dialog.js";
@@ -59,14 +50,14 @@ export class SettingsPage extends AbstractConfigurationPage {
         this.modulesTabPanel = new TabLayout(null);
         this.sensorsDevicesTabPanel = new TabLayout(null);
 
-        this.roomsList = new List({
+        this.roomsList = new List(0, {
             type: ListTypes.ROOMS,
             addBtnCallback: this.itemClicked
         });
         this.roomsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.ROOMS));
         this.allListComponents.push(this.roomsList)
 
-        this.modulesList = new List({
+        this.modulesList = new List(1, {
             type: ListTypes.MODULES,
             addBtnCallback: this.itemClicked
         });
@@ -74,7 +65,7 @@ export class SettingsPage extends AbstractConfigurationPage {
         this.modulesList.disableAddBtn();
         this.allListComponents.push(this.modulesList)
 
-        this.sensorsList = new List({
+        this.sensorsList = new List(2, {
             type: ListTypes.SENSORS,
             addBtnCallback: this.itemClicked
         });
@@ -82,7 +73,7 @@ export class SettingsPage extends AbstractConfigurationPage {
         this.sensorsList.disableAddBtn();
         this.allListComponents.push(this.sensorsList)
 
-        this.devicesList = new List({
+        this.devicesList = new List(2, {
             type: ListTypes.DEVICES,
             addBtnCallback: this.itemClicked
         });
@@ -402,12 +393,12 @@ export class SettingsPage extends AbstractConfigurationPage {
      */
     saveChanges = async (event) => {
         let path = "";
-        let name = (<HTMLInputElement>document.getElementById("device-name")).value;
+        let name = (<HTMLInputElement>this.querySelector("#device-name")).value;
         let update: DatabaseData = {name: name};
         const listType = this.itemInDetail.parentListType;
         if (listType == ListTypes.ROOMS) {
-            let imgSrc = (<HTMLInputElement>document.getElementById("bg-img-src")).value;
-            let imgOffset = parseFloat((<HTMLInputElement>document.getElementById("slider-for-image")).value);
+            let imgSrc = (<HTMLInputElement>this.querySelector("#bg-img-src")).value;
+            let imgOffset = parseFloat((<HTMLInputElement>this.querySelector("#slider-for-image")).value);
             imgOffset = (isNaN(imgOffset)) ? 0 : imgOffset;
 
             update.img = { src: imgSrc, offset: imgOffset };
@@ -415,18 +406,18 @@ export class SettingsPage extends AbstractConfigurationPage {
         } else if (listType == ListTypes.MODULES) {
             path = this.itemInDetail.item.dbCopy.path;
         } else if (listType == ListTypes.SENSORS) {
-            let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
-            let input = (<HTMLInputElement>document.getElementById("input")).value;
-            let unit = (<HTMLInputElement>document.getElementById("unit")).value;
+            let iconType = (<HTMLInputElement>this.querySelector("#icon-type")).value;
+            let input = (<HTMLInputElement>this.querySelector("#input")).value;
+            let unit = (<HTMLInputElement>this.querySelector("#unit")).value;
 
             update.icon = iconType;
             update.input = input;
             update.unit = unit;
             path = this.itemInDetail.item.dbCopy.path;
         } else if (listType == ListTypes.DEVICES) {
-            let iconType = (<HTMLInputElement>document.getElementById("icon-type")).value;
-            let output = (<HTMLInputElement>document.getElementById("output")).value;
-            let outputType = (<HTMLInputElement>document.getElementById("output-type")).value;
+            let iconType = (<HTMLInputElement>this.querySelector("#icon-type")).value;
+            let output = (<HTMLInputElement>this.querySelector("#output")).value;
+            let outputType = (<HTMLInputElement>this.querySelector("#output-type")).value;
 
             update.icon = iconType;
             update.output = output;

@@ -1,10 +1,11 @@
-import { DBTemplates, List, ListItem, ListTypes } from "../layouts/list-component.js";
-import { Firebase } from "../app/firebase.js";
+import { List, ListItem, ListTypes } from "../layouts/list-component.js";
+import { DBTemplates, Firebase } from "../app/firebase.js";
 import { Utils } from "../app/utils.js";
 import { TabLayout } from "../layouts/tab-layout.js";
 import { Loader } from "../components/others/loader.js";
 import { AutomationDetail } from "../layouts/automation-detail.js";
 import { AbstractConfigurationPage } from "./abstract-configuration-page.js";
+import { BaseDialogError } from "../errors/base-errors.js";
 export class AutomationsPage extends AbstractConfigurationPage {
     constructor(componentProps) {
         super(defaultItemTypesIndexes, AutomationsPage.DEFAULT_ITEMS_STRING, componentProps);
@@ -89,32 +90,44 @@ export class AutomationsPage extends AbstractConfigurationPage {
          */
         this.saveChanges = async (event) => {
             let path = "";
-            let name = document.getElementById("automation-name").value;
+            let name = this.querySelector("#automation-name").value;
             let update = { name: name };
             const listType = this.itemInDetail.parentListType;
             if (listType == ListTypes.TIMEOUT) {
-                let timeHours = Number.parseInt(document.getElementById("time-h").value);
+                let timeHours = Number.parseInt(this.querySelector("#time-h").value);
                 timeHours = (Number.isSafeInteger(timeHours)) ? timeHours : 0;
                 timeHours = (timeHours >= 0) ? timeHours : 0;
-                let timeMinutes = Number.parseInt(document.getElementById("time-m").value);
+                let timeMinutes = Number.parseInt(this.querySelector("#time-m").value);
                 timeMinutes = (Number.isSafeInteger(timeMinutes)) ? timeMinutes : 0;
                 timeMinutes = (timeMinutes >= 0) ? timeMinutes : 0;
-                let timeSeconds = Number.parseInt(document.getElementById("time-s").value);
+                let timeSeconds = Number.parseInt(this.querySelector("#time-s").value);
                 timeSeconds = (Number.isSafeInteger(timeSeconds)) ? timeSeconds : 0;
                 timeSeconds = (timeSeconds >= 0) ? timeSeconds : 0;
                 let time = timeSeconds + 60 * timeMinutes + 3600 * timeHours;
-                let checked = document.getElementById("checkbox-active").checked;
-                let controlledOutput = document.getElementById("controlled-output").value;
-                let valueToSet = Number.parseInt(document.getElementById("value-to-set").value);
+                let checked = this.querySelector("#checkbox-active").checked;
+                let controlledOutput = this.querySelector("#controlled-output").value;
+                let valueToSet = Number.parseInt(this.querySelector("#value-to-set").value);
                 update.type = "timeout";
                 update.time = time;
                 update.controlledOutput = controlledOutput;
                 update.expires = (checked) ? Math.round(Date.now() / 1000) + time : -1;
-                update.value = valueToSet;
+                update.valueToSet = valueToSet;
                 path = this.itemInDetail.item.dbCopy.path;
             }
             else if (listType == ListTypes.SENSORS_AUTOMATIONS) {
-                console.log("TODO save SENSORS_AUTOMATIONS");
+                let watchedInput = this.querySelector("#watched-input").value;
+                let thresholdSign = this.querySelector("#threshold-sign").value;
+                let thresholdVal = Number.parseFloat(this.querySelector("#threshold-value").value); // Number.parseFloat()
+                let controlledOutput = this.querySelector("#controlled-output").value;
+                let valueToSet = Number.parseFloat(this.querySelector("#value-to-set").value);
+                let active = this.querySelector("#checkbox-active").checked;
+                update.watchedInput = watchedInput;
+                update.thresholdSign = thresholdSign;
+                update.thresholdVal = thresholdVal;
+                update.controlledOutput = controlledOutput;
+                update.valueToSet = valueToSet;
+                update.active = active;
+                path = this.itemInDetail.item.dbCopy.path;
             }
             await Firebase.updateDBData(path, update);
             await this.pageReinicialize();
@@ -124,6 +137,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
          * Komentář viz. předek (AbstractConfigurationPage)
          */
         this.initDetail = async () => {
+            let ioforSelectBox = (await this.getAllIOForSelectbox());
             let item = this.itemInDetail.item;
             let parentListType = this.itemInDetail.parentListType;
             let title = this.getTitleForEditingFromItem(item, item.dbCopy.name);
@@ -135,35 +149,45 @@ export class AutomationsPage extends AbstractConfigurationPage {
                     {
                         selectedValue: item.dbCopy.controlledOutput,
                         options: {
-                            optionTexts: (await this.getAllIOForSelectbox()).out.texts,
-                            optionValues: (await this.getAllIOForSelectbox()).out.values
+                            optionTexts: ioforSelectBox.out.texts,
+                            optionValues: ioforSelectBox.out.values
                         }
                     },
-                    { selectedValue: item.dbCopy.value },
+                    { selectedValue: item.dbCopy.valueToSet },
                     { selectedValue: (item.dbCopy.expires > Math.round(Date.now() / 1000)) }
                 ];
             }
             else if (parentListType == ListTypes.SENSORS_AUTOMATIONS) {
+                let watchedInput = item.dbCopy.watchedInput;
+                if (!ioforSelectBox.in.values.includes(item.dbCopy.watchedInput)) { // Pokud již dříve uložený snimač byl smazán, resetovat hodnotu selectboxu a ukázat chybu v dialogu
+                    watchedInput = "";
+                    new BaseDialogError("Zdá se, že snímač, který daná automatizace používala již neexistuje, nastavte nový!", this);
+                }
+                let controlledOutput = item.dbCopy.controlledOutput;
+                if (!ioforSelectBox.out.values.includes(item.dbCopy.controlledOutput)) { // Pokud již dříve uložený snimač byl smazán, resetovat hodnotu selectboxu a ukázat chybu v dialogu
+                    controlledOutput = "";
+                    new BaseDialogError("Zdá se, že výstup, který daná automatizace používala již neexistuje, nastavte nový!", this);
+                }
                 console.log("TODO SENSORS_AUTOMATIONS initDetail");
                 values = [
                     { selectedValue: item.dbCopy.name },
                     {
-                        selectedValue: item.dbCopy.watchedInput,
+                        selectedValue: watchedInput,
                         options: {
-                            optionTexts: (await this.getAllIOForSelectbox()).in.texts,
-                            optionValues: (await this.getAllIOForSelectbox()).in.values
+                            optionTexts: ioforSelectBox.in.texts,
+                            optionValues: ioforSelectBox.in.values
                         }
                     },
-                    { selectedValue: item.dbCopy.threshold },
+                    { selectedValue: { val: item.dbCopy.thresholdVal, sign: item.dbCopy.thresholdSign } },
                     {
-                        selectedValue: item.dbCopy.controlledOutput,
+                        selectedValue: controlledOutput,
                         options: {
-                            optionTexts: (await this.getAllIOForSelectbox()).out.texts,
-                            optionValues: (await this.getAllIOForSelectbox()).out.values
+                            optionTexts: ioforSelectBox.out.texts,
+                            optionValues: ioforSelectBox.out.values
                         }
                     },
-                    { selectedValue: item.dbCopy.value },
-                    { selectedValue: true }
+                    { selectedValue: item.dbCopy.valueToSet },
+                    { selectedValue: item.dbCopy.active }
                 ];
             }
             this.detail.updateDetail(title, parentListType, values);
@@ -172,9 +196,6 @@ export class AutomationsPage extends AbstractConfigurationPage {
          * Komentář viz. předek (AbstractConfigurationPage)
          */
         this._itemClicked = async (parentList, event, item, clickedElem, clickedByUser) => {
-            console.log('clickedByUser: ', clickedByUser);
-            console.log('clickedElem: ', clickedElem);
-            console.log('item.dbCopy: ', item.dbCopy);
             if (clickedElem == "add") { // Add item to database
                 if (!Utils.itemIsAnyFromEnum(parentList.type, ListTypes, ["TIMEOUT", "SENSORS_AUTOMATIONS"])) {
                     if (this.clickPromiseResolver)
@@ -200,35 +221,42 @@ export class AutomationsPage extends AbstractConfigurationPage {
             }
             else if (clickedElem == "checkbox") {
                 let checked = event.target.checked;
-                let expires = -1;
-                if (!checked) { // Vypnutí dané automatizace
-                    item.clearTimeout();
-                }
-                else { //Zapnutí dané automatizace
-                    expires = Math.round(Date.now() / 1000) + item.dbCopy.time;
-                    item.dbCopy.expires = expires;
-                    this.setRemainingTimeTextForItem(item);
-                    item.resetTimeout(() => {
-                        item.checkbox.checked = false;
+                let updates = {};
+                if (item.dbCopy.type == "timeout") {
+                    let expires = -1;
+                    if (!checked) { // Vypnutí dané automatizace
+                        item.clearTimeout();
+                    }
+                    else { //Zapnutí dané automatizace
+                        expires = Math.round(Date.now() / 1000) + item.dbCopy.time;
+                        item.dbCopy.expires = expires;
                         this.setRemainingTimeTextForItem(item);
-                    }, item.dbCopy.time, (secondsRemaining) => {
-                        item.checkboxLabel.innerText = this.secondsToRemainingStr(secondsRemaining);
-                    });
+                        item.resetTimeout(() => {
+                            item.checkbox.checked = false;
+                            this.setRemainingTimeTextForItem(item);
+                        }, item.dbCopy.time, (secondsRemaining) => {
+                            item.checkboxLabel.innerText = this.secondsToRemainingStr(secondsRemaining);
+                        });
+                    }
+                    updates.expires = expires;
                 }
-                await Firebase.updateDBData(item.dbCopy.path, { expires: expires });
+                else if (item.dbCopy.type == "automation") {
+                    updates.active = checked;
+                }
+                await Firebase.updateDBData(item.dbCopy.path, updates);
                 await this.pageReinicialize();
             }
         };
         this.detail = new AutomationDetail(this.saveChanges, this.initDetail);
         this.timeoutAutomationsTabPanel = new TabLayout(null);
         this.sensorAutomationsTabPanel = new TabLayout(null);
-        this.timeoutAutomationsList = new List({
+        this.timeoutAutomationsList = new List(0, {
             type: ListTypes.TIMEOUT,
             addBtnCallback: this.itemClicked
         });
         this.timeoutAutomationsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.TIMEOUT));
         this.allListComponents.push(this.timeoutAutomationsList);
-        this.sensorAutomationsList = new List({
+        this.sensorAutomationsList = new List(0, {
             type: ListTypes.SENSORS_AUTOMATIONS,
             addBtnCallback: this.itemClicked
         });
@@ -374,6 +402,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
         timeoutAutomations.reverse();
         this.initTimeoutList(timeoutAutomations);
         this.timeoutAutomations = timeoutAutomations;
+        sensorAutomations.reverse();
         this.initSensorAutomationsList(sensorAutomations);
         this.detail.readyToSave = false;
         Loader.hide();
@@ -420,7 +449,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
             INvalues.push("");
         }
         else {
-            INtexts.unshift("Vyberte snámač, jehož hodnota bude řídit výstup...");
+            INtexts.unshift("Vyberte snímač, jehož hodnota bude řídit výstup...");
             INvalues.unshift("");
         }
         return {
