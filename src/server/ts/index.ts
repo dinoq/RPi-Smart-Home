@@ -18,6 +18,7 @@ class ServerApp {
 
     private _serverStartedPromiseResolver;
     private _serverStartedPromise = new Promise((resolve, reject) => { this._serverStartedPromiseResolver = resolve; }) // Slouží pro čekání na spuštění serveru (např některé informace je potřeba vypsat až po úspěšném spuštění serveru...)
+    devicePairedWithAccount: boolean = false;
 
     constructor() {
         this._clearLogFiles();
@@ -62,6 +63,8 @@ class ServerApp {
             if (ConfigReader.getValue("debugLevel", 0) > 0) {
                 console.log("Požadavek od klienta na: " + req.url);
             }
+            this.devicePairedWithAccount = ConfigReader.getValue("username", "").length>0 && ConfigReader.getValue("username", "").length>0;
+            
             if (req.url.includes("/alive")) {// Dotaz, na server pro ověření, že funguje spojení mezi (webovým) klientem a serverem
                 res.sendStatus(200);
             } else if (req.url.includes("/updateData")) {// Požadavek na aktualizaci dat v databázi
@@ -107,6 +110,7 @@ class ServerApp {
                 if (uName != undefined && pwd != undefined) {
                     ConfigReader.setValue("username", uName);
                     ConfigReader.setValue("password", pwd);
+                    this.devicePairedWithAccount = true;
                     console.log("Přihlašovací údaje uloženy do konfiguračního souboru.");
                     this._firebase.login(uName, pwd);
                 }
@@ -114,11 +118,10 @@ class ServerApp {
             }
         });
 
-        let devicePairedWithAccount = ConfigReader.getValue("username") && ConfigReader.getValue("username").toString().length
-            && ConfigReader.getValue("password") && ConfigReader.getValue("password").toString().length;
+        
         this._app.get('/*', (req, res, next) => {
             if (req.url.includes("paired")) { // Požadavek od klienta na získání informace, zda je zařízení spárováno s uživ. účtem Firebase (jinými slovy, zda má v configu přihl. údaje)
-                res.send({ paired: devicePairedWithAccount });
+                res.send({ paired: this.devicePairedWithAccount });
             } else {
                 next();
             }

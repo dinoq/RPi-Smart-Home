@@ -41,8 +41,8 @@ export class Firebase extends Singleton {
         let fb = Firebase.getInstance();
         if (fb.localAccess) {
             if (fb._paired == undefined) {
-                return this.serverCall("GET", "/paired").then(async (value) => {
-                    fb._paired = (value == "true");
+                return fb.serverCall("GET", "/paired", true).then(async (pairedObj) => {
+                    fb._paired = pairedObj.paired;
                 }).catch((value) => {
                     fb._paired = false;
                 }).then((value) => {

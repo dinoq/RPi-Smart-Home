@@ -47,3 +47,4 @@ techreport- není na FIT zmíněný, je to ok? (RFC7252)
 
 Dotazy na později:
 Jak přesně citovat obrázky?
+musí tam být seznam zkratek a obrázků? Známý říkal, že jo, spolužák je tam neměl (a ani v dokumentu o bp nejsou)

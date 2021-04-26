@@ -65,7 +65,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
         try {
             Loader.show();
             this.initPageFromDB().then((value) => {
-                Firebase.addDBListener("/automations", this.updateTimeoutCheckboxes)
+                Firebase.addDBListener("automations", this.updateTimeoutCheckboxes)
             })
         } catch (err) {
             Loader.hide();

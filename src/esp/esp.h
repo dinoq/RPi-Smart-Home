@@ -88,6 +88,7 @@ bool checkIO_Inited();
 
 void blinkIfNotConnectedAndDelay();
 
+void beginWireIfNotBegun(boolean forceBegin);
 void beginWireIfNotBegun();
 boolean beginBMP(boolean forceBegin);
 boolean beginBMP();

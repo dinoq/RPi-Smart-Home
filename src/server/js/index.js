@@ -14,6 +14,7 @@ class ServerApp {
     constructor() {
         this._app = express();
         this._serverStartedPromise = new Promise((resolve, reject) => { this._serverStartedPromiseResolver = resolve; }); // Slouží pro čekání na spuštění serveru (např některé informace je potřeba vypsat až po úspěšném spuštění serveru...)
+        this.devicePairedWithAccount = false;
         this._clearLogFiles();
         if (communication_manager_js_1.CommunicationManager.getAddressInfos().length == 0) {
             error_logger_js_1.ErrorLogger.log(null, {
@@ -49,6 +50,7 @@ class ServerApp {
             if (config_reader_js_1.ConfigReader.getValue("debugLevel", 0) > 0) {
                 console.log("Požadavek od klienta na: " + req.url);
             }
+            this.devicePairedWithAccount = config_reader_js_1.ConfigReader.getValue("username", "").length > 0 && config_reader_js_1.ConfigReader.getValue("username", "").length > 0;
             if (req.url.includes("/alive")) { // Dotaz, na server pro ověření, že funguje spojení mezi (webovým) klientem a serverem
                 res.sendStatus(200);
             }
@@ -101,17 +103,16 @@ class ServerApp {
                 if (uName != undefined && pwd != undefined) {
                     config_reader_js_1.ConfigReader.setValue("username", uName);
                     config_reader_js_1.ConfigReader.setValue("password", pwd);
+                    this.devicePairedWithAccount = true;
                     console.log("Přihlašovací údaje uloženy do konfiguračního souboru.");
                     this._firebase.login(uName, pwd);
                 }
                 res.redirect("http://" + req.hostname + "/domu"); // Po přihlášení a případném uložení přihl. údajů do configu dojde k přesměrování klienta na domovskou stránku.
             }
         });
-        let devicePairedWithAccount = config_reader_js_1.ConfigReader.getValue("username") && config_reader_js_1.ConfigReader.getValue("username").toString().length
-            && config_reader_js_1.ConfigReader.getValue("password") && config_reader_js_1.ConfigReader.getValue("password").toString().length;
         this._app.get('/*', (req, res, next) => {
             if (req.url.includes("paired")) { // Požadavek od klienta na získání informace, zda je zařízení spárováno s uživ. účtem Firebase (jinými slovy, zda má v configu přihl. údaje)
-                res.send({ paired: devicePairedWithAccount });
+                res.send({ paired: this.devicePairedWithAccount });
             }
             else {
                 next();

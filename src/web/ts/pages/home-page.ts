@@ -12,7 +12,7 @@ export class HomePage extends BasePage {
     constructor(componentProps?: IComponentProperties) {
         super(componentProps);
         Loader.show();
-        Firebase.addDBListener("/rooms/", (data)=>{      
+        Firebase.addDBListener("rooms/", (data)=>{      
             Loader.hide();      
             if(!data){       
                 this.roomsCards = new Array();

@@ -43,7 +43,7 @@ void setup()
     Serial.begin(115200);
     Serial.println();
     randomSeed(micros());
-    delay(200); // Sleep little bit after reset to wait for Serial init...
+    delay(random(1000, 2000)); // Na chvíli se modul uspí. Náhodná doba kvůli možnému současnému připojení více senzorů (aby všechny nekomunikovali s AP ve stejný okamžik - způsobuje problémy)
 
 
     for (int i = 0; i < (sizeof(usedOutputPins)/sizeof(usedOutputPins[0])); i++){ // Nainicializuje se pole používaných výstupních pinů. Toto pole se používá pro reset modulu.
@@ -53,7 +53,7 @@ void setup()
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED)
     {
-        delay(500);
+        delay(1000);
         Serial.print(".");
     }
     
@@ -245,21 +245,33 @@ float getI2CVal(byte IN)
         beginWireIfNotBegun();
         val = SHT2x.GetTemperature();
         if(val == -273.00){ // sensor is not properly connected
-            val = INVALID_SENSOR_VALUE;
+            beginWireIfNotBegun(true);
+            val = SHT2x.GetTemperature();
+            if(val == -273.00){ // sensor is not properly connected
+                val = INVALID_SENSOR_VALUE;
+            }
         }
     }else if(IN == SHT21_HUM){
         beginWireIfNotBegun();
         val = SHT2x.GetHumidity();
         if(val == 0.00){ // sensor is not properly connected
-            val = INVALID_SENSOR_VALUE;
+            beginWireIfNotBegun(true);
+            val = SHT2x.GetHumidity();
+            if(val == 0.00){ // sensor is not properly connected
+                val = INVALID_SENSOR_VALUE;
+            }
         }
     }else if(IN == BH1750_LUX){
         beginWireIfNotBegun();
         beginBH1750();
         val = (float)BH1750Sensor.readLightLevel();
-        TODO - vyřešit vadný stav... (při odpojení, resp. pokud vubec senzor nezapojim před spustenim modulu)
-        if(val == 0.00){ // sensor is not properly connected
-            val = INVALID_SENSOR_VALUE;
+        if(val <= 0.00){ // sensor is not properly connected
+            beginWireIfNotBegun(true);
+            beginBH1750(true);
+            val = (float)BH1750Sensor.readLightLevel();            
+            if(val <= 0.00){ // sensor is not properly connected
+                val = INVALID_SENSOR_VALUE;
+            }
         }
     }else
     {
@@ -1021,11 +1033,14 @@ void callback_response(CoapPacket &packet, IPAddress ip, int port) {
   //This function must be here in order to send CoAP messages to CoAP server
 }
 
-void beginWireIfNotBegun(){    
-    if(!wireBegun){
+void beginWireIfNotBegun(boolean forceBegin){    
+    if(forceBegin || !wireBegun){
         Wire.begin();
         wireBegun = true;
     }
+}
+void beginWireIfNotBegun(){    
+    beginWireIfNotBegun(false);
 }
 
 boolean beginBMP(boolean forceBegin){

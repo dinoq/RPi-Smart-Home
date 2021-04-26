@@ -344,7 +344,7 @@ export class SettingsPage extends AbstractConfigurationPage {
                         let dbListenerReference = null;
                         if (IDs.length >= 2) {
                             let firstIteration = true;
-                            dbListenerReference = await Firebase.addDBListener("/rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
+                            dbListenerReference = await Firebase.addDBListener("rooms/" + IDs[0] + "/devices/" + IDs[1], async (data) => {
                                 if (firstIteration) { // Firebase.addDBListener gets data for first time without "event" emitted...
                                     firstIteration = false;
                                     return;

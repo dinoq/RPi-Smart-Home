@@ -186,7 +186,7 @@ class Firebase {
                 for (const updatePath in this._sensorsUpdates) { // Pro 
                     this._checkSensorAutomation(updatePath);
                 }
-                this.clientUpdateInDB({ path: "/", data: this._sensorsUpdates });
+                this.clientUpdateInDB({ path: "/", data: this._sensorsUpdates }, false);
                 this._sensorsUpdates = {};
             }
         };
@@ -239,7 +239,7 @@ class Firebase {
             this._dbFile = {};
         }
     }
-    resetAutomationTimeoutIfActive(automation) {
+    _setAutomationTimeoutIfActive(automation) {
         let oldTimeout = this.timeoutAutomations.find((a, index, array) => {
             return a.automationID == automation.dbID;
         });
@@ -671,9 +671,6 @@ class Firebase {
                     newAutomation.dbID = newAutomationID;
                     this._processDbChange({ type: ChangeMessageTypes.CHANGED, level: DevicesTypes.TIMEOUT, data: newAutomation });
                 }
-                /*if (newAutomation.expires != oldAutomation.expires) {
-                    this._processDbChange({ type: ChangeMessageTypes.CHANGED, level: DevicesTypes.TIMEOUT, data: { newAutomations } });
-                }*/
             }
         }
         //Compare old saved DB with received in order to detect removed things
@@ -755,7 +752,7 @@ class Firebase {
             }
         }
         else if (change.level == DevicesTypes.TIMEOUT) { // ZMĚNA NA ÚROVNI ČASOVAČŮ
-            this.resetAutomationTimeoutIfActive(change.data);
+            this._setAutomationTimeoutIfActive(change.data);
         }
         else if (change.level == DevicesTypes.SENSORS_AUTOMATIONS) { // ZMĚNA NA ÚROVNI AUTOMATIZACE SNÍMAČŮ
             console.log("TODO ZMĚNA NA ÚROVNI AUTOMATIZACE SNÍMAČŮ");
@@ -863,7 +860,7 @@ class Firebase {
      * @param val Zapisovaná hodnota
      * @param time Čas, který se má zapsat jako poslední změny
      */
-    async writeToLocalDB(path, val, time) {
+    async writeToLocalDB(path, val, time, rewriteLastWriteTime = true) {
         if (time == undefined) {
             time = Date.now();
         }
@@ -913,7 +910,9 @@ class Firebase {
         else {
             processUpdate();
         }
-        this._dbFile["lastWriteTime"] = time;
+        if (rewriteLastWriteTime) {
+            this._dbFile["lastWriteTime"] = time;
+        }
         for (let i = 0; i < this.clientDBListeners.length; i++) {
             if (path.includes(this.clientDBListeners[i].path)) { // Aktualizace je v cestě, na které klient naslouchá
                 let DBPart = this.getDBPart(this.clientDBListeners[i].path);
@@ -959,21 +958,24 @@ class Firebase {
     /**
      * Funkce aktualizuje lokální (a v případě připojení k internetu i Firebase) databázi. Funkce je volaná na základě požadavku webového klienta.
      * @param bodyData Data z těla POST požadavku, obsahují cestu v databázi, na kterou se klient "ptá" a aktualizovaná data.
+     * @param rewriteLastWriteTime Rozhoduje, zda se má v databázi přepsat čas poslední změny. Při zápisu hodnoty snímačů musí být false, jinak true.
      */
-    async clientUpdateInDB(bodyData) {
+    async clientUpdateInDB(bodyData, rewriteLastWriteTime = true) {
         let path = this.correctPath(bodyData.path);
         let updates = bodyData.data;
         let time = Date.now();
         let uid = await this.userUID;
         if (uid && await this.online && await this.firebaseInited) {
             this._ignoredDBTimes.push(time);
-            await this._fb.database().ref(uid + "/").update({ lastWriteTime: time });
+            if (rewriteLastWriteTime) {
+                await this._fb.database().ref(uid + "/").update({ lastWriteTime: time });
+            }
             await this._fb.database().ref(uid + "/" + path).update(updates);
         }
         else {
             console.log("zkontrolovat zda není problém s uid");
         }
-        this.writeToLocalDB(path, updates, time);
+        this.writeToLocalDB(path, updates, time, rewriteLastWriteTime);
     }
     /**
      * Funkce vloží nová data do lokální (a v případě připojení k internetu i Firebase) databázi. Funkce je volaná na základě požadavku webového klienta.
@@ -1090,13 +1092,6 @@ class Firebase {
         let firebaseLastWriteTime = (data && data.lastWriteTime) ? data.lastWriteTime : 0;
         if (serverLastWriteTime < firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno do firebase, přepíše se lokální verze databáze
             console.log("Internetová verze (Firebase) databáze je aktuálnější. Přepíše lokální databázi...");
-            /*this.removeInLocalDB("/", firebaseLastWriteTime);
-            if (data && data.rooms) {
-                this.writeToLocalDB("rooms", data.rooms, firebaseLastWriteTime);
-            }
-            if (data && data.automation) {
-                this.writeToLocalDB("automation", data.automation, firebaseLastWriteTime);
-            }*/
             this._checkDbChange(this.readFromLocalDB("/", {}), data);
         }
         else if (serverLastWriteTime > firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno lokálně, přepíše se firebase databáze
