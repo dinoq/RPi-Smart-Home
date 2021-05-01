@@ -1,6 +1,0 @@
-Je možné vyzkoušet aplikaci pro Jablotron 100 bez zakoupeného zboží?
-Co přesně jsou PG výstupy a jak fungují?
-Je možné ústřednu nějak rozšířovat a případně jak? Loxone má moduly...
-16 K4 na den?!?!?!? Zeptat se jak to myslí!!!:https://www.jablotron.com/cz/produkty/alarmy/alarm-do-bytu/
-Je možné využívat jablotron zdarma? A co aplikaci?
-Autorizace se musí provádět vždy. I v případě ovládání programovatelných výstupů? I v aplikaci?
