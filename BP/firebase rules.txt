@@ -1,0 +1,7 @@
+https://medium.com/@juliomacr/10-firebase-realtime-database-rule-templates-d4894a118a98
+
+https://firebase.google.com/docs/database/security
+
+
+ziskani db tabulky:
+https://home-automation-80eec.firebaseio.com/users/L5OgXZdACAXucDju7AWP4Mr8Uso2.json?auth=dlooooooouheeeeee id (2048bit)
