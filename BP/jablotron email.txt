@@ -1,5 +1,0 @@
-Dobrý den,
-jsem studentem na VŠ VUT, oboru informační technologie a dělám bakalářskou práci na téma automatizace domácnosti. Chtěl bych v něm popsat dostupné systémy a mezi nimi i vaše řešení chytré domácnosti. Mohu však citovat jen seriózní zdroje, a tak by mě zajímalo - existuje nějaký ucelený magazín/časopis (ideálně v online podobě) o vašem systému? Z internetových článků bohužel čerpat nemohu. Nebo případně existují nějaké technické listy/dokumentace/datasheety?
-
-Předem děkuji za odpověď,
-Petr Marek
