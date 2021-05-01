@@ -1,0 +1,811 @@
+% Tento soubor nahraďte vlastním souborem s obsahem práce.
+%=========================================================================
+% Autoři: Michal Bidlo, Bohuslav Křena, Jaroslav Dytrych, Petr Veigend a Adam Herout 2019
+\chapter{Úvod}
+Nacházíme se v době rychlého vývoje techniky, který pronikl i do našich domácností. Každým dnem roste počet zařízení denní potřeby, která jsou připojená do celosvětové sítě internet. A spolu s tímto trendem roste také komfort a možnosti bydlení, které z toho plynou. Díky tak rychlému rozvoji automatizace je možné provádět úkoly, které by dříve ani nebyli možné. Internet věcí lidem umožňuje vykonávat úkony jako vypínat spotřebiče při opuštění domácnosti, nastavit efektivní režim vytápění před příjezdem domů, či například zajistit zabezpečení celé domácnosti. 
+
+Na trhu se nachází nejrůznější typy systémů domácí automatizace. V závislosti na ceně je možné pořídit jednoduchá zařízení, jako jednotlivé zásuvky či světla až po různá komplexní řešení určená k zabudování do rozvaděčů domácnosti za účelem ovládání celé domácnosti. Komplexní řešení mohou pokrývat řadu různých snímačů a zařízení, které spolu mohou vytvořit opravdu automatizovaný dům. Přestože jde vývoj rychle dopředu, tak u komplexnějších systémů je cena velmi vysoká a většina domácností se tak bude muset bez chytrých zařízení obejít. 
+
+A právě kvůli zajímavosti těchto systémů a jejich doposud vysoké ceně jsem se i já rozhodl v této práci zabývat možnostmi ovládání zařízení na dálku, potažmo možností jejich automatizace. V rámci práce bych chtěl vyvinout takový komplexní systém, který by byl použitelný v praxi a zároveň příliš nezatížil kapsu uživatele. Systém bude postaven na platformách Raspberry Pi a ESP8266, protože jsou cenově velmi dostupné a kromě toho se rychle vyvíjí, nebude tedy chybět podpora. Ke komunikaci mezi sebou budou tyto platformy využívat Wi-Fi, jelikož již samy o sobě mají potřebné prostředky a protokol CoAP, který je k podobným aplikacím určený. Systém bude sice využívat Raspberry Pi (jelikož se jedná o levné a energeticky relativně nenáročné zařízení), ale budu jej realizovat tak, aby byl multiplatformní (alespoň tam kde to bude mít smysl). Grafické rozhraní pro komunikaci s uživatelem bude mít responzivní design. Kromě toho bude bude systém fungovat jak v rámci sítě internet (bude jej tedy možné ovládat na dálku, například z práce), tak i v lokální síti. Nebude tedy bezprostředně závislý na internetovém připojení. Veškerý kód, který v rámci práce vytvořím bych chtěl uvolnit jako open source a nadále jej vyvíjet.
+
+
+\chapter{Automatizace domácnosti}
+Následující část je shrnutím současného stavu v oblasti automatizace domácnosti a chytrých domovů. Není encyklopedickým výkladem problematiky, ale souhrnem informací, které mají k práci bezprostřední vztah. Nejprve je zde popis automatizace domácnosti, co to je, jaké jsou dnes možnosti jejího využití, přínosy a používané principy.
+
+\section{Automatizace domácnosti a chytrý dům}
+Automatizace domácnosti spočívá v automatizování činností, které řídí domácnost, normálně vykonávané člověkem. Můžeme ji definovat jako mechanismus, který nahrazuje lidskou námahu (při ovládání domácnosti), natolik, nakolik je to jen možné [U]. V souvislosti s tím někdy hovoříme o inteligentní, řízené či chytré domácnosti. Jedná se o kolekci zařízení a (pod)systémů, které jsou schopny spolu komunikovat či fungovat nezávisle. Automatizovaný „dům budoucnosti“ slibují výrobci domácích zařízení prakticky již téměř od počátku minulého století [1]. Chytrý dům (či smart home) je pak definován jako dům, vybavený výpočetní a informační technologií, které předvídá uživatelovi potřeby a odpovídá na ně, a přitom dbá na jeho pohodlí, bezpečnost a zábavu [13]. Často se tedy tyto dva pojmy (automatizovaný a chytrý dům) zaměňují, ačkoli \todo{Z nějakého nového zdroje rozvést, viz odkaz}
+\begin{verbatim}
+https://www.google.com/search?q=smart+home+vs+home+automation&rlz=1C1AVFC_enCZ780CZ780&oq=smart+home+vs+hom&aqs=chrome.0.0i19j69i57j0i19i22i30j0i5i13i19i30l5.7375j0j7&sourceid=chrome&ie=UTF-8
+\end{verbatim}
+
+
+
+
+\subsection*{Možnosti využití automatizace v domácnosti}
+Automatizace v mnohém usnadňuje život a umožňuje provádění akcí, které by jinak byli prakticky nemožné (například zabezpečení domu, efektivní řízení vytápění domácnosti a spotřeby energie). V současné době patří automatizace domácnosti mezi rychle se rozvíjející technologie \todo{Dopsat zdroj, viz  odkaz} []. 
+\begin{verbatim}
+https://www.google.com/search?q=home+automation+is+fast+developing&rlz=1C1AVFC_enCZ780CZ780&oq=home+automation+is+fast+deveopin&aqs=chrome.1.69i57j33i10i160.14343j0j7&sourceid=chrome&ie=UTF-8
+\end{verbatim} 
+Mezi typické aplikace automatizace domácnosti patří například:
+\begin{itemize}
+\item Zabezpečovací systém
+\item Systém pro inteligentní vytápění a ventilaci (HVAC)
+\item Zábava a multimédia
+\item Komunikace
+\item Osvětlení [3]
+\item Ovládání spotřebičů [T]
+\item Samo zavlažovací systémy [U]
+\item A mnoho dalšího
+\end{itemize}
+
+\begin{figure}[hbt]
+	\centering
+	\includegraphics{obrazky/automation-example.jpg}
+	\caption{Příklad možností automatizované domácnosti[U]}
+	\label{asd}
+\end{figure}
+Nejaky text, mozna spise az sem o tom, že "V současné době patří automatizace domácnosti mezi rychle se rozvíjející technologie".
+
+
+\newpage
+\subsection*{Přínosy automatizace domácnosti}
+Přidání inteligence do domácnosti přináší do života lidí řadu přínosů. Jde zejména o:
+
+\begin{itemize}
+\item Bezpečí – Chytré domy mohou používat různé senzory, které detekují nebezpečí a v souvislostí s nimi provést patřičné akce k jejich zabránění, případně minimalizaci škod. Příkladem mohou být záplavové a kouřové senzory a v neposlední řadě také zabezpečovací systém domácnosti.
+\item Komfort – Chytré domácnosti svými funkcemi nabízejí různé způsoby, jak jejich uživatelům zpříjemnit různé rutinní akce. Mohou se postarat o automatické nastavování žaluzií dle intenzity venkovního světla, přes dotykový displej na dálku ztlumit světlo či hlasovým pokynem uvést celý byt do jiného světelného režimu. 
+\item Přehled o provozu – Systémy pro automatizaci domácnosti zahrnují i displeje s přehledem o stavu jednotlivých zařízení a čidel. Také je v některých systémech možné tyto informace sledovat i z chytrých telefonů, tabletů či počítačů (a to i vzdáleně). V některých komplexnějších systémech, které například zahrnují komunikaci přes mobilní sítě je možné získávat přehled o provozu dokonce pomocí SMS zprávy (hodí se třeba při absenci internetového připojení) [15]
+\item Úspora – V chytrých domácnostech je možné použít inteligentní vytápění domu založené na údajích z teplotních čidel, denní doby, případně nastaveném režimu domácnosti. Společnost ELKO EP odhaduje, že díky bezdrátové regulaci topení je možné ušetřit až 30 \% nákladů na energii [17]. Úsporu rovněž zajistí automatizovaná světla, o kterých je možné mít v automatizované domácnosti vždy přehled, na dálku je zapínat/vypínat dle potřeby a rovněž je napojit na senzory, které je budou ovládat například na základě přítomnosti osob v místnosti.
+\end{itemize}
+    
+
+\subsection*{Základní klasifikace chytré domácnosti}
+Chytrou domácnost můžeme rozdělit dle kabeláže:
+
+\begin{itemize}
+\item Drátovou
+\item Bezdrátovou 
+\item Kombinovanou
+\end{itemize}
+Pokud má být domácnost komplexně automatizovaná, je často vhodnější mít celý systém propojený pomocí kabelů, jelikož takový systém bude spolehlivější a v případě potřeby nabízí rychlejší přenos dat (například pokud mají být součástí systému multimédia). Bezdrátové systémy se hodí zejména tam, kde není žádané zasahovat do elektroinstalace, či pokud uživatel potřebuje pouze jednodušší systém (například s ovládáním několika málo zařízení). Připravená kabeláž pro automatizaci domácnosti rovněž přináší výhodu snadnějšího řešení napájení jednotlivých chytrých zařízení, které se tak může rozvádět po bytě spolu s datovými kabely. Přitom pro propojení jednotlivých chytrých zařízení mezi sebou je možné využít různé typy kabelů (např. ethernetový) [15]. Systémy s kombinovanou kabeláží pak vycházejí z klasické kabelové instalace s možností použití některých bezdrátových prvků (např. snímačů).
+
+
+\subsection*{Mechanismy používané v chytrých domovech}
+V chytrém domě se při automatizaci obvykle používají následující principy:
+
+\begin{itemize}
+\item Přímé ovládání spotřebičů
+\item Nastavení scény
+\item Podmínky [16, pokud neseženu lepší]
+\end{itemize}
+Přímé ovládání spotřebičů se obvykle provádí dálkovým ovládáním, používá-li spotřebič pro komunikaci technologii rádiového přenosu na frekvencích 443 MHz. Příkladem takového zařízení může být „bla bla bla“ od společnosti...Jiný způsob ovládání rovněž zahrnuje použití jiného chytrého zařízení (například chytrého telefonu), pokud ovládané zařízení umí komunikovat pomocí stejné technologie (např. WiFi). Ovládání pomocí telefonu či podobného chytrého zařízení je možné i v případě, že ovládané zařízení neumí komunikovat stejnou technologií, ale v domácnosti existuje centrální prvek (hub), který podporuje obě technologie a funguje zde jako prostředník mezi oběma zařízeními. \newline
+V chytrých domovech je rovněž často možné použít rovněž nastavení některé předem definované scény. Tato scéna sdružuje několik příkazů přímého ovládání. Může se například jednat o scénu odchodu z domu, která vypne všechna světla, odpojí spotřebiče od elektrické sítě a aktivuje zabezpečovací systém.\newline
+Dalším principem uplatňovaným v chytrém domě jsou nastavené podmínky. Ty způsobí, že při určité akci systém zareaguje nějakým předem nastaveným způsobem. Například se může jednat o podmínku, aby v případě že s….\newline
+
+\subsection*{Komponenty chytré domácnosti}
+Na trhu dnes existuje nepřeberné množství různých systémů. Typická automatizovaná domácnost využívá některé (či všechny) z následujících komponent: \newline
+
+\begin{itemize}
+\item Vstupní prvky (různá čidla, tlačítka, dotykové displeje…)
+\item Výstupní prvky (Světla, spotřebiče a různá zařízení)
+\item Virtuální (hlasový) asistent
+\item Centrální jednotka
+\item Aplikace pro řízení domácnosti z chytrých zařízení (telefonu, tabletu, počítače…)
+\end{itemize}
+
+\subsection*{Chytrá zařízení a IoT}
+\todo{todo}
+
+\subsection*{Protokoly používané v automatizaci domácnosti}
+\todo{todo - MQTT atd...}
+\todo{Možná změnit uplně kapitolu technol. bezdrátového přenosu na Protokoly a tam radši dát MQTT atd?}
+
+
+\section{Virtuální hlasoví asistenti a centrální prvky chytré domácnosti}
+Virtuální osobní asistent (VPA) je osobní asistent, který zajišťuje interakci mezi uživatelem chytré domácnosti a zařízeními v ní. Jako jiné označení se rovněž používá inteligentní či digitální osobní asistent, či mobilní asistent. Je-li ovládaný hlasem, pak se někdy označuje jako hlasový asistent [6]. Dále v textu této kapitoly je vždy asistentem míněn právě hlasový asistent, nebude-li specifikováno jinak. Jedná se o software, jehož úlohou je asistovat uživateli při nejrůznějších příležitostech, mezi jinými i při ovládání domácnosti. Hlasoví asistenti běží na některém zařízení s reproduktorem a mikrofony nebo mobilním zařízení. Dnes jich existuje na trhu veliké množství (zejména pro chytré telefony), mezi jejich nejznámější představitele v současné době patří:
+\begin{itemize}
+\item Apple Siri
+\item Amazon Alexa
+\item Microsoft Cortana
+\item Google Assistant [2]
+\item Samsung S voice
+\item Facebook M
+\item Nuance dragon [6]
+\end{itemize}
+V současné době žádný z výše uvedených hlasových systémů nepodporuje češtinu, nicméně Assistant od společnosti Google by ji v dohledné době mohl podporovat [14]. Amazon Alexa pak sice nerozumí česky, ale již dokáže číst některé knihy v češtině []ttt. Pro českého uživatele jsou tak pouze 2 možnosti – buďto používat asistenta v angličtině a spokojit se s případnou absencí některých funkcí, které nejsou v česku podporované (UVÉST KTERÉ A CITOVAT ZDROJ – NAPŘÍKLAD VOLÁNÍ JEN V USA, BEZTAK I NAKUPOVÁNÍ???), nebo použít některého českého virtuálního asistenta, ovšem s omezenou funkcionalitou oproti jejich „něco“ protějškům. Mezi české hlasové asistenty patří například:
+\begin{itemize}
+\item Emma
+\item Intelli
+\end{itemize}
+Zmínit se o českých asistentech (EMMA, INTELLI) a najít další
+\ subsection*{Použití virtuálních asistentů}
+Každý z virtuálních asistentů má své vlastní specifikace, ovšem jsou typy úloh, které vykonávají více méně všichni asistenti:
+\begin{itemize}
+\item Číst a psát SMS a emailové zprávy, uskutečňovat hovory
+\item Nastavovat časové a kalendářové akce (časovače, upomínky…)
+\item Odpovídat na některé základní informativní otázky (počasí, čas, převody jednotek…)
+\item Ovládat média jako televizi či připojené reproduktory (pouštět filmy, hudbu)
+\item Vyprávět vtipy a příběhy
+\item Konečně ovládat prvky chytré domácnosti [2]
+\end{itemize}
+Používání virtuálních osobních asistentů nejen, že umožňuje přistupovat k různým úkolům inovativním a interaktivním způsobem, ale v mnoha případech i zjednodušuje jinak relativně zdlouhavou činnost. Dobrým příkladem je například manuální nastavení budíku (bez použití VPA). Na mobilním telefonu (Nexus 5) je potřeba vykonat následující akce:
+\begin{enumerate}
+\item Kliknout na tlačítko pro návrat na domovskou obrazovku (pokud se tam uživatel nenachází)
+\item Kliknout na ikonu hodin
+\item V otevřené aplikaci najít ikonu budíku a kliknout na ni 
+\item Kliknout na tlačítko „+“ pro přidání budíku
+\item Nastavit hodinu, překliknout na volbu minuty a nastavit minuty
+\item Potvrdit kliknutím na tlačítko „OK“
+\end{enumerate}
+Při použití hlasového asistenta je celá úloha značně zredukována pouze na aktivování asistenta a vyslovení požadovaného úkolu [6]. \newline
+Bez použití VPA je dokonce řada úkolů nerealizovatelná. Například připomenout či udělat něco v okamžiku, kdy se uživatel vrátí domů, což je funkce, kterou někteří virtuální asistenti podporují [16]. Interaktivitu zajišťují virtuální asistenti i při automatizaci domácnosti, pro její řízení není potřeba otevírat k tomu určené (a mnohdy jednoúčelové) aplikace, ale stačí vyslovit žádost, třeba i s jistou vzdáleností od zařízení s hlasovým asistentem a ten se již o vše postará [DOLOŽIT!!!]. Kromě toho, virtuální asistenti v sobě mohou nést i funkce sloužící přímo pro automatizaci domácnosti. Například nastavení podmínek, scénářů atd [Rozveď to a uved nejaky zdroj!!!]. \newline
+Virtuální asistenti díky svým funkcím a vlastnostem k chytré domácnosti neodmyslitelně patří, ovšem je nutné si uvědomit, že zde nejsou nutností. Spíše často fungují jako prostředník mezi uživatelem a chytrými zařízeními, který usnadňuje řízení domácnosti. Často pak bývají zabudováni do chytrého zařízení, plnící funkci centrálního prvku (hubu), jako například v případě zařízení Echo od společnosti Amazon. [DOLOŽIT NĚJAK!!!] \newline
+\ subsection*{Amazon}
+\ subsection*{Google}
+\ subsection*{Microsoft}
+\ subsection*{Apple}
+\ subsection*{Emma}
+
+Emma je český hlasový asistent, kterého vytvořil David Beck pomocí aplikace Zkratky (na systému iOS). Jak již bylo zmíněno, nativním virtuálním asistentem pro iPhone je Siry, ta však neumí česky, a to se rozhodl David Beck změnit [20]. Nejedná se o samostatnou aplikaci, ale o zkratku v aplikaci Zkratky na systému iOS. Tato aplikace zkratky umožňuje uživatelům sloučit různé akce do jedné zkratky. Celkově pro zkratku Emma nastavil 7 tisíc akcí a další se chystá přidávat. Systém v současné době již podporuje češtinu, částečně slovenštinu a polštinu. Plánuje také přidat maďarštinu, řečtinu a rumunštinu [21]. 
+
+\section{Existující řešení chytrých domů}
+Dnes je na trhu nepřeberné množství systémů, lišících se v ceně, komplexnosti, způsobem komunikace a podobně. Jednou z nejčastějších aplikací automatizace, kterou různé společnosti nabízejí je ovládání světel a zásuvek. Mezi další aplikace patří ovládání hlavic radiátorů, chytré termostaty, ovládání ventilátorů, stínící techniky, alarm a podobně. Mezi konkrétní systémy, které jsou dostupné na českém trhu patří:
+\begin{itemize}
+\item Loxone
+\item Jablotron
+\item Apple HomeKit
+\item Sonoff
+\item Fibaro
+\item Homeconnect
+\item A mnoho dalších
+\end{itemize}
+Kromě komerčně prodávaných systémů je k dispozici rovněž open source řešení, mezi známější patří například:
+\begin{itemize}
+\item Home Assistant
+\item A další
+\end{itemize}
+
+\subsection*{Loxone}
+Loxone je společnost, zaměřující se na automatizaci budov, v rozsahu od malých bytů, přes hotely až po rozsáhlé budovy a výrobní haly. Zaměřují se na širokou škálu aplikací, v oblasti automatizace domácnosti jde zejména o:
+\begin{itemize}
+\item Bezpečnost (Pohybové senzory, dveřní a okenní senzory)
+\item Přístup do budovy (Přístup kódem zadávaným na klávesnici, NFC přívěškem či iButtonem, kamera)
+\item Řízení filtrace bazénu
+\item Větrání (Automatické řízení ventilace, například na základě přítomnosti osoby, vlhkosti, teplotě…)
+\item Regulace teploty (Loxone je možné připojit k jakémukoli zdroji teploty i chlazení)
+\item Úspora energie (Ovládání budovy k úsporám energie – například automatické stínění jako ochrana přetopení ze slunečního tepla)
+\item Osvětlení (ovládání bodového světla, LED pásků či Loxone závěsných světel)
+\item Multimédia (Ovládání audia, TV…)
+\item Stínění (Ovládání stínící techniky pomáhá při vytápění a chlazení v domě)
+\item A díky rozšířením také mnoho dalšího [32]
+\end{itemize}
+Systém loxone se skládá z několika různých prvků:
+
+\begin{itemize}
+\item Miniserver
+\item Rozšíření
+\item Příslušenství (Loxone Tree zařízení)
+\item Loxone Tree a Loxone Link kabeláž
+\item Aplikace Loxone App a Loxone Config
+\end{itemize}
+Loxone prvky ke své činnosti potřebují tzv. miniserver. Ten v systému funguje jako centrální řídící jednotka, která se stará o automatizaci domácnosti. Loxone nabízí celkem 3 různé verze miniserveru:
+
+\begin{itemize}
+\item Miniserver Gen. 1
+\item Miniserver Gen. 2
+\item Miniserver Go
+\end{itemize}
+
+Miniserver 1. i 2. generace mají oba 8 digitálních a 4 analogové vstupy a 8 digitálních výstupů (relé spínající max 250VAC/30VDC). Miniserver 1. generace má ještě navíc 4 analogové výstupy [27]. Obě generace miniserveru slouží pro kabelovou komunikaci a jsou určené k instalaci na DIN lištu. Také jsou obě generace vybaveny rozhraním Loxone Link (pro kabelové připojení až 30 tzv. rozšíření) a LAN port (Fast ethernet). Pouze první generace obsahuje KNX rozhraní, naopak pouze druhá generace a verze Go obsahují již integrované rozhraní Loxone Tree (K první generaci je pro komunikaci po Loxone Tree sběrnici dodat rozšiřující modul) [28]. \newline
+Pokud si uživatel přeje využívat bezdrátové komunikace mezi prvky systému Loxone (zejména Pro bezdrátové ovládání pak Loxone nabízí 3. verzi miniserveru – Miniserver Go. Ten komunikuje s bezdrátovými periferiemi (rozšířeními a příslušenstvím) rádiovou komunikací na frekvenci 868MHz pro SRD pásmo pro Evropu (na 4 kanálech), případně 915MHz pro ITU region 2 (10 kanálů), s maximálním výkonem 3.16 mW [26]. Obsahuje také LAN port (Fast ethernet) a rozhraní Loxone Link. K této verzi miniserveru je možné bezdrátově připojit až 128 periferií [31].
+
+\begin{figure}[hbt]
+	\centering
+	\includegraphics{obrazky/loxone-miniserver.png}
+	\includegraphics{obrazky/loxone-miniserver-go.jpg}
+	\caption{Loxone Miniserver gen. 1 a Miniserver Go. Převzato z Loxone web}
+	\label{miniserver}
+\end{figure}
+
+
+Všechny verze Miniserveru v sobě obsahují Loxone OS s integrovaný webový server, jsou konfigurovatelné z programu Loxone Config a ovladatelné přes mobilní aplikaci (Loxone App) [33]. Všechny miniservery obsahují slot pro SD kartu (s firmwarem). 
+
+\begin{figure}[hbt]
+	\centering
+	\includegraphics{obrazky/loxone-app.jpg}
+	\caption{Loxone App. Převzato z Loxone web}
+	\label{loxone-app}
+\end{figure}
+
+Loxone Extensions (rozšíření) slouží pro rozšíření funkcí Miniserveru. K Miniserveru se připojují pomocí sběrnice Loxone Link (kterou obsahují všechny verze Miniserveru). Tato sběrnice může být až 500 m dlouhá. Díky rozšířením může uživatel zakoupit systém pouze s těmi technologiemi, které chce opravdu využívat a nemusí tak platit za zbytečné vlastnosti systému. Příkladem rozšíření mohou být Tree Extension (pro připojení až 100 Tree zařízení; zejména pro doplnění Miniserveru 1. generace, který neobsahuje rozhraní pro komunikaci přes tree sběrnici) [36], Air Base Extension (Pro doplnění Miniserverů 1. a 2. gen – k bezdrátové komunikaci) [37], Dimmer Extension (pro stmívání světel) [38] a mnoho dalších.\newline
+Loxone nabízí pro automatizaci domácnosti více než 400 produktů [33].
+Loxone pro propojení prvků v systému vyvinulo tzv. Loxone Tree technologii. Jedná se o sběrnici, na kterou je možné připojit až 50 prvků, a Loxone uvádí, že díky tomu je možné ušetřit až 80\% kabeláže [DOLOŽIT!]. Podobně jako Loxone Link, i Loxone Tree může sahat až 500 m daleko. \newline
+
+V oblasti inteligentního vytápění nabízí Loxone souhru technologií pro vytápění, chlazení, rekuperaci, a automatizovanou stínící techniku, což přináší do regulace vytápění vysokou efektivitu [34]. \newline
+Z hlediska regulace teploty nabízí tzv. „zónové“ vytápění. Jedná se o inteligentní topení, které na rozdíl od klasického inteligentního vytápění (zahrnující obvykle nějaký bezdrátový termostat, wifi termostatické hlavice apod.) umožňuje inteligentněji řídit teplotu – tím že uživatel zvolí, ve které místnosti (případně i ve který čas) má být jaká teplota. Uživatel chytrého domu s tímto systémem si tak může navolit například větší teplo v koupelně oproti například místnosti kde spí. Tento systém tak umožňuje mít větší kontrolu nad vytápěnými místnostmi, potažmo vyšší efektivitu. \newline
+Inteligentní vytápění Loxone podporuje režim učení, systém se tedy na základě předchozích zkušeností spustí vytápění tak, aby byla v dané místnosti požadovaná teplota ve správný čas. Uživatel si tak může nastavit například to, aby měl v 7:00 vyhřátou koupelnu na 23 °C. \newline
+Loxone vytápění má dle oficiálních stránek [25] následující výhodné vlastnosti:
+\begin{itemize}
+    \item Inteligentní řízení teploty – využití již zmíněného režimu učení k dosažení požadované teploty v žádaný čas. Loxone rovněž při regulaci zohledňuje venkovní teplotu.
+    \item Úspora nákladů – Loxone dokáže inteligentně rozhodovat o nejefektivnějším řešení. Například energeticky náročnou klimatizaci může nahradit energeticky výhodnějším stínění
+    \item Režim nepřítomnosti – Systém od loxone podporuje úsporný režim pro chvíle, kdy uživatel není doma
+    \item Ochrana budovy – Loxone dokáže reagovat na různá nebezpečí, například v případně vzniku požáru vypnout ventilaci i rekuperaci
+    \item Loxone aplikace a statistiky – Loxone nabízí zdarma aplikaci na zařízení s androidem přes které uživatel může sledovat i nastavovat teplotu v domě vzdáleně
+    \item Notifikace – V případě problému s některou technologií Loxone upozorní uživatele
+    \item Státní svátky – Na základě znalosti státních svátků může Loxone adekvátně upravovat svoji činnost
+    \item Údržba – Loxone uživatele upozorňuje na termín pravidelné údržby
+\end{itemize}
+Z hlediska automatizace domácnosti v porovnání s dříve uvedenými systémy je rovněž důležitá přítomnost ovládané chytré zásuvky. Ta s Miniserverem komunikuje technologií Loxone Air. Má v sobě teplotní čidlo a rovněž elektroměr s vyhodnocením výkonu a spotřeby \newline
+//ještě zmínit loxone touch a tlačítko na stul \newline
+
+\subsection*{Jablotron}
+Jablotron je česká firma, která se od svého založení zaměřuje především na zabezpečovací systémy [40]. Kromě nich se také zabývá zabezpečením a monitoringem vozidel, topením a ventilací, monitoringem dechu a rovněž ovládáním a automatizací domácnosti [39]. \newline
+Jablotron nabízí několik různých systémů. Dva nejnovější jsou Jablotron 100 a Jablotron 100+ [40]. Primárním úkolem obou systémů je zabezpečení budov, ovšem je možné je využít i v oblasti automatizace (zejména díky programovatelným výstupům). Samotné zabezpečení je možné využít v rámci automatizace (Například automatické zapnutí světel při odkódování alarmu) [43]. \newline
+Na své systémy poskytuje Jablotron při splnění podmínek až 7letou záruku [42]. \newline
+Pro odjištění/zajištění systému se vždy musí provést nejprve autorizace uživatele. Systém totiž uchovává informaci o oprávnění jednotlivých uživatelů. Každému z uživatelů je možné pro účely autorizace přiřadit jeden kód (4,6 nebo 8místný) a až dva RFID čipy [44]. \newline
+ Typy automatizace, které je možné v těchto systémech použít jsou:
+ \begin{itemize}
+     \item Zapínání a vypínání
+     \item Akce v kalendáři 
+     \item Automatické akce [47]
+ \end{itemize}
+Mezi akce, které lze automatizovat v systému Jablotron patří zejména ovládání světel, ovládání žaluzií, chytrá termoregulace (řízení vytápění a klimatizace) [48] či ovládání jiných zařízení pomocí programovatelných výstupů. \newline
+Systém od Jablotronu je možné rozdělit na tyto různé části:
+\begin{itemize}
+    \item Ústředna
+    \item Různé vstupní či výstupní prvky
+    \item Aplikace MyJablotron
+    \item Program J-Link
+\end{itemize}
+Ústředna v systémech Jablotron slouží jako centrální prvek, který shromažďuje informace ze snímačů a patřičně na ně reaguje. Komunikace mezi prvky systému a ústřednou může probíhat podobně jako u systému Loxone buď pomocí kabelů, nebo bezdrátově. Zařízení, která komunikují pomocí kabelu se zde nazývají sběrnicové [43].\newline
+Mezi produkty firmy Jablotron pro automatizaci domácnosti můžeme najít například:
+
+\begin{itemize}
+    \item Záplavový detektor
+    \item Snímač teploty
+    \item Magnetický detektor (detekce otevření dvěří/okna)
+    \item Termoelektrická hlavice
+    \item Relé na DIN lištu 
+    \item A další [41]
+\end{itemize}
+
+Systém Jablotron 100+ je možné ovládat celkem 4 způsoby a to:
+\begin{itemize}
+    \item Přístupovým modulem
+    \item Mobilní aplikací pro chytré telefony (MyJABLOTRON)
+    \item Webovou aplikací (rovněž MyJABLOTRON)
+    \item Či klíčenkou [46]
+\end{itemize}
+
+Přístupový modul slouží pro rychlé odjištění/zajištění objektu, případně k dalším funkcím automatizace. Jablotron nabízí celkem 3 typy těchto modulů:
+
+\begin{itemize}
+    \item Čtečka RFID karet
+    \item Klávesnice se čtečkou RFID karet
+    \item Klávesnice s displejem a čtečkou RFID karet
+\end{itemize}
+
+Ke každému z modulů je možné připojit až 20 segmentů. Ty obsahují popisek a dvě prosvětlená tlačítka. Jejich funkcí může být buďto zajištění/odjištění, signalizace stavu (například signalizace otevření garážových vrat) nebo ovládání zařízení v rámci automatizace (například žaluzií) [44]. Barvy prosvětlení odpovídají semaforu, kde červená odpovídá stavům jako zajištěno/zapnuto, žlutá zajištěno částečně a zelená znamená odjištěno/vypnuto. \newline
+Jak již bylo zmíněno, systém od Jablotronu lze ovládat rovněž mobilní aplikací MyJablotron. Je k dispozici jak na Google Play (pro zařízení s androidem), tak i na App Store (pro iOS zařízení). Kromě toho existuje i její webová verze. Jablotron tak nabízí rychlý přehled o tom co se děje v domácnosti. Ovládání domácnosti přes aplikaci funguje podobným způsobem jako přístupový modul – pomocí tlačítek s barvami semaforu. \newline
+Klíčenka k ovládání systému je dostupná ve dvou verzích – jednosměrný a obousměrný ovladač. Ten druhý má výhodu v tom, že provedení akce je potvrzeno kontrolkou na ovladači. V případě chyby tak ví, že je například mimo dosah ústředny a akce se neprovedla [43]. \newline
+K nastavení uživatelských parametrů v systému (jako oprávnění) slouží program J-Link. V něm je možné definovat uživatele i s jejich přístupovými oprávněními, provádět diagnostiku systému, kontrolu programovatelných výstupů a vytvářet či upravovat kalendář akcí (pro ovládání automatizovaných funkcí) [47]. \newline
+
+\subsection*{Apple HomeKit}
+Apple HomeKit je systém, který umožňuje uživateli bezdrátově ovládat nejrůznější chytrá zařízení v domácnosti. Na rozdíl od systémů jako je Loxone je HomeKit určen výhradně pro bezdrátovou komunikaci. Podporuje technologie Bluetooth a Wifi. V systému tvořeném HomeKitem je potřeba nějakého centrálního prvku (hubu). Výhodou zde je, že není vždy nutné mít nějaké „mimořádné“ zařízení – jako centrální prvek zde může posloužit 
+
+
+\subsection*{Sonoff}
+Sonoff je bla bla…
+
+
+\subsection*{homeconnect}
+
+Zcela jiný přístup k chytré domácnosti přináší systém homeconnect…
+\newpage
+
+\chapter{Protokoly a technologie používané v automatizované domácnosti}
+Následující část je shrnutím protokolů a technologií, používaných systémy automatizace domácnosti. Není encyklopedickým výkladem problematiky, ale souhrnem informací, které mají k práci bezprostřední vztah. První část se věnuje protokolům pro přenos dat, následuje obecný úvod k technologii bezdrátového přenosu a nakonec uvádím krátké seznámení s technologiemi Wifi, Bluetooth a ZigBee.
+
+\section{Protokoly pro přenos dat}
+\todo{TODO / Protokoly MQTT, XMPP, CoAP, SSE a HTTP...}
+
+\section{Bezdrátový přenos dat a signálů}
+Pro přenos dat či řídících signálů je vždy potřeba zvolit vhodné médium, přes které se budou tyto informace přenášet. V některých situacích není pro přenos vhodné (a někdy dokonce ani možné) používat kabely (ať už metalické nebo optické). V těchto případech je potřeba přenášet informace bezdrátově, tj. za využití jiných médií, jako je vzduch. 
+Podobně jako je nutné u kabelového spojení využít vhodný způsob komunikace (například zvolit vhodnou sběrnici a nastavit ji správné parametry) je potřeba se způsobem komunikace zabývat rovněž u bezdrátového přenosu. Zde je nutné zejména zvolit vhodnou technologii (jako je Wifi, Bluetooth či ZigBee) a její parametry [A].
+
+\subsection*{Výhody bezdrátového přenosu}
+Bezdrátová komunikace má oproti kabelové řadu výhod. Zejména se jedná o následující:
+
+\begin{itemize}
+    \item Jednodušší připojení – zařízení není potřeba připojovat kabelem, a dokonce nemusí být ani vybaveno konektorem pro toto připojení (pozn. pro dálkový přenos prostřednictvím světla je však stále potřeba mít nějaký přijímající port). Z toho rovněž plyne, že není potřeba měnit strukturu sítě kvůli změnám v místnosti a rovněž není potřeba myslet na konkrétní strukturu sítě ještě před budováním.
+    \item Větší spolehlivost – Častým zdrojem problémů s kabelovým připojením jsou chyby na straně kabelů – jejich poškození. Použitím bezdrátových technologií se lze vyhnout tomuto typu chyb.
+    \item Snadná rozšiřitelnost sítě – U kabelového připojení je potřeba řešit způsob rozšíření sítě a v případě, že stávající struktura sítě rozšíření nepodporuje, tak je potřeba ji celou pozměnit. Bezdrátové sítě tento problém eliminují.
+    \item Nižší cena – Použitím bezdrátových technologií se značně sníží pořizovací cena sítě – není potřeba kupovat drahou kabeláž. Rovněž instalace kabelů do starých budov může být velmi nákladná a problémová.
+\end{itemize}
+
+\subsection*{Nevýhody bezdrátového přenosu}
+Kromě množství výhod, které bezdrátová komunikace představuje jsou zde rovněž některé nevýhody tohoto typu komunikace:
+
+\begin{itemize}
+    \item Rušení signálu – zařízení, využívající bezdrátové technologie může způsobovat rušení ostatních zařízení a rovněž opačně – dané zařízení může být rušeno od ostatních zařízení, pracujících na podobném principu
+    \item Bezpečnost – bezdrátová komunikace často vysílá (a přijímá) signály do relativně rozsáhlého otevřeného prostoru, tudíž jsou takto vysílaná data často daleko méně chráněná než u kabelového přenosu (kde je k získávání dat potřeba mít fyzické připojení k síti, ve které se data přenáší) [A] [Q, str. 5-6] [R, str. 406]. Je tedy nutné zabezpečit přenos dat.
+\end{itemize}
+
+
+\subsection*{Princip komunikace}
+V případě bezdrátových technologií se využívá některého pásma elektromagnetického vlnění. Rychlost šíření tohoto záření je ve vakuu rovno konstantě c (přibližně 3 x 108), v médiu jako je vzduch se pak šíří rychlostí c, podělenou indexem lomu (konkrétně pro vzduch je tento index blízký 1, takže můžeme uvažovat prakticky stejnou rychlost jako pro vakuum) [M] [N, str 2-3] [O, str.24] [P, kap 8.2].\newline
+V současnosti se na trhu s elektronikou zařízení, využívající především dva různé principy dálkového přenosu informací, první je založen na využití světla, druhý pak využívá rádiové vlny. [A]
+
+\section{Technologie bezdrátového přenosu WiFi}
+
+Wifi je technologie, využívající standardů z rodiny IEEE 802.11. První verze tohoto standardu byla organizací IEEE schválena v roce 1977 [A, s.6]. Od té doby vyšlo mnoho dalších verzí standardů. Jednotlivé verze se od sebe mohou odlišovat různými parametry, například frekvenčním pásmem, šířkou pásma jednotlivých kanálů, maximální rychlostí přenosu atd. Organizace Wi-Fi Alliance rozlišuje některé standardy IEEE 802.11 číslem generace WiFi, nejnovější je prozatím zatím 6. generace (založená na standardu 802.11ax). 
+
+\begin{figure}[hbt]
+	\centering
+	\includegraphics{obrazky/wifi-standards.png}
+	\caption{Některé důležité verze standardu IEEE 802.11 a jejich parametry. Převzato z \url{https://www.grandmetric.com/2018/05/29/wi-fi-standards-evolution/}}
+	\label{wifi-standards}
+\end{figure}
+Wifi funguje na principu vysílání a přijímání rádiových vln. Organizace IEEE rozhodla využít pro technologii Wi-Fi frekvence z pásma ISM [B, str.2]. Wifi standardně využívá frekvencí 2,4Ghz a 5Ghz. Nejprve byla zařízení Wi-Fi schopná pracovat pouze v jednom z těchto dvou frekvenčních pásem, ale 4. generace (IEEE 802.11n) přidává možnost práce v obou zmíněných pásmech. Moderní zařízení s wifi si tak mohou vybrat (a dokonce během své činnosti měnit) frekvenci, na které budou spolu komunikovat.
+Obě pásma mají svá pro i proti. Mezi výhody pásma 2.4Ghz patří zejména větší pokrytí signálu a rovněž větší kompatibilita (platí spíše pro starší zařízení). Na druhou stranu pásmo 5Ghz nabízí podstatně vyšší přenosové rychlosti a dále větší množství komunikačních kanálů [D].
+
+\subsection*{Režim sítě}
+Wifi nachází uplatnění v (bezdrátových) lokálních sítích. V nich pak rozlišujeme 3 režimy na základě toho, jak se Wifi zařízení v síti mezi sebou navzájem spojují (jakou plní roli):
+\begin{itemize}
+    \item Režim infrastruktury
+    \item Ad hoc režim
+    \item Smíšený režim
+\end{itemize}
+V režimu infrastruktury je v sítí přítomen minimálně jeden centrální prvek (tzv. přístupový bod), který zprostředkovává komunikaci mezi jednotlivými prvky (klienty) sítě, případně poskytuje připojení do jiné sítě přes distribuční systém (DS). V tomto režimu sítě je výhoda, že je snadné připojit do stávající infrastruktury nový prvek. \newline
+Ad hoc je režim bezdrátové sítě, ve které není přítomen žádný centrální prvek (přístupový bod) se kterým by prvky sítě komunikovali, ani zde není žádné spojení se pevnou sítí přes distribuční systém. Jedná se tedy o decentralizovanou síť. Jednotlivé prvky tedy mezi sebou navzájem komunikují přímo (toto spojení se někdy označuje jako tzv. peer-to-peer). V tomto režimu má síť rovněž SSID identifikátor, kterým je možné síť identifikovat. [A][B] \newline
+
+\subsection*{Bezpečnost v síti Wi-Fi}
+\todo{Todo...}
+\section{Ostatní technologie bezdrátového přenosu}
+\subsection*{Technologie Bluetooth}
+Bluetooth je standard, definovaný v IEEE 802.15.1. Vytvořila jej firma Ericsson v roce 1994 a od té doby vyšlo několik nových verzí [A]. Podobně jako WiFi pracuje v ISM pásmu 2,4 GHz. Na rozdíl od Wi-Fi však není definován pouze na prvních dvou vrstvách ISO/OSI, ale definuje protokoly na všech sedmi vrstvách tohoto modelu. Na nejnižší úrovni, kde definuje způsob přenosu jednotlivých bitů využívá metodu FHSS, která zajišťuje, že při přenosu bitů vysílač přeskakuje mezi několika frekvencemi [AD].\newline
+Zařízením, které jej využívají, umožňuje vytvořit tzv. PAN (osobní síť). V těchto sítích má každé zařízení přiřazeno unikátní 48bitovou adresu BD\_ADDR (BlueTooth Device Address) – jedná se o obdobu MAC adresy u ethernetu. Tu používá pro komunikaci s ostatními zařízeními. Jedno zařízení může být v roli master (řídící), slave (podřízená) nebo obojího [AB, str.4]. K jedné řídící stanici se připojuje jedno a více podřízených zařízení (používá se pouze adhoc komunikace mezi master a slave stanicí). Zde hovoříme o tzv. piconetu (pikosíti). Maximální počet zařízení v jedné pikosíti je 8 (jedna řídící stanice a až 7 podřízených). Stanice náležící do jedné pikosítě může zároveň patřit do jiné pikosítě. Jedná se tedy o rozšíření sítě mezi zařízeními. Takto vytvořenou síť nazýváme tzv. scatternet (rozprostřená síť). V každé rozprostřené síti má každá pikosíť unikátní identifikátor – je jím BD\_ADDR její řídící stanice. Díky rozlišení jednotlivých pikosítí pak může každá tato síť využívat jiné skokové sekvence (frekvenčních kanálů na kterých se vysílají/přijímají data) [AC, str. 20].
+
+\subsection*{Technologie ZigBee}
+Zigbee je bezdrátová technologie, založená na standardu IEEE 802.15.4. Je určená pro vytváření sítě PAN (osobní síť) a pracuje v pásmu ISM 868 MHz, 902-928 MHz a 2,4 GHz [A]. 
+
+\subsection*{Zařízení v ZigBee síti}
+ZigBee standard specifikuje 2 typy zařízení – FFL (Full Function Device) a RFD (Reduced Function Device). FFL zařízení je obvykle schopné mnoha funkcí a je stále aktivní, zatímco RFD se nachází většinu času v režimu spánku, ze kterého se občas probudí, například aby odeslalo hodnoty neměřené na nějakém senzoru.\newline
+V síti pak každé ze zařízení plní některou ze 3 funkcí:
+
+\begin{itemize}
+    \item Koordinátor
+    \item Koncové zařízení
+    \item Směrovač
+\end{itemize}
+
+\subsection*{Topologie ZigBee sítě}
+Na základě definovaných zařízení pak existují 3 možné topologie ZigBee sítě:
+
+\begin{itemize}
+    \item Hvězda
+    \item Strom
+    \item Mesh síť [AG, str.5]
+\end{itemize}
+
+\subsection*{ZigBee Model}
+ZigBee podobně jako Bluetooth definuje komunikaci na všech úrovních modelu ISO/OSI, nekopíruje však přesně jednotlivé vrstvy. První 3 vrstvy modelů ISO/OSI a ZigBee si odpovídají, ale vrstvy L4-L7 jsou spojené do vrstev APS (Application Support) a ZDO (ZigBee Device Object). [AH, str. 42]\newline
+
+Thread, WeMo, ZigBee and Z-Wave (https://www.tomsguide.com/us/smart-home-wireless-network-primer,news-21085.html)
+
+\chapter{Vestavné systémy a vývojové prostředky}
+\label{vestavne-systemy}
+Následující část je shrnutím současného stavu v oblasti vestavných systémů a Python knihoven pro vývoj GUI aplikací. Není encyklopedickým výkladem problematiky, ale souhrnem informací, které mají k práci bezprostřední vztah. Nejprve je zde úvod do vestavných systému, následně je pojednáno o platformě Raspberry Pi, modulech ESP8266 a ESP32 a nakonec o možnostech programování GUI pomocí Python knihoven.
+
+\section{Vestavné systémy, mikropočítače a mikrokontrolery}
+
+Vestavný systém můžeme definovat jako software spolu s počítačem, zabudovaným do nějakého zařízení takovým způsobem, že jej uživatel nevidí jako počítač [E, str.3]. Tento počítač je většinou jednoúčelový, určený pro předem navržené použití. Tím se liší od univerzálních počítačů, které mohou poskytovat různé funkce a jejichž uplatnění se může měnit (například osobní počítač) [F, str. 3].
+
+\todo{Definovat mikropočítač, jednodeskový počítač, mikrokontrolér, mikroprocesor... (možná kapitola něco jako základní pojmy u vestavných systémů??}
+\todo{Zkusit něco vytvořit z nějakého takového souhrnu: https://www.guru99.com/embedded-systems-tutorial.html}
+\todo{https://jayconsystems.com/blog/microprocessor-vs-microcontroller-vs-microcomputer}
+\todo{Historie smazána, vrátit ji? (Ale upravit!)}
+
+
+\subsection*{Architektura řídícího zařízení}
+
+Při návrhu systému se využívá jedna ze dvou architektur:
+
+\begin{itemize}
+    \item Von Neumannova architektura
+    \item Harvardská architektura
+\end{itemize}
+
+Hlavním rozdílem je způsob práce s pamětí. Ve Von Neumannově architektuře je paměť pro program i data spojená do jedné paměti, v Harvardské architektuře je pak rozdělena. \newline
+Mikroprocesor (CPU) je programovatelné elektronické výpočetní zařízení, určené pro všestranné použití. Jedná se o čip, obsahující 3 základní součásti:
+\begin{itemize}
+    \item Aritmeticko-logickou jednotku
+    \item Řídící jednotku
+    \item Registry [I, str. 18–19]
+\end{itemize}
+
+Mikroprocesor sám o sobě je z hlediska vestavěných systémů relativně jednoduché zařízení, které pro funkci systému potřebuje připojit některé další součásti, jako jsou paměti (RAM a ROM), čítače, časovač a podobně. Návrhář tedy musí tyto součásti přidat externě, aby zařízení fungovalo správně. Systémy, zahrnující mikroprocesory jsou obvykle založeny na Von Neumannově architektuře [J].\newline
+Mikrokontrolér je zařízení, které na rozdíl od mikroprocesoru má již všechny součásti, potřebné pro svoji činnost v sobě. Obvykle využívá Harvardské architektury [J]. 
+
+\section{Jednodeskový počítač Raspberry Pi}
+Zařízení Raspberry Pi je levný univerzální počítač malých rozměrů. Poskytuje široké možnosti v oblasti multimédií a 3D grafiky, předpokládá se, že bude časem využíván i jako herní platforma.\newline
+Název Raspberry Pi vytvořila komise dozorčí rady. Slovo Raspberry je vzato jako název ovoce (malina), jak už je u počítačových systémů zvykem nazývat podle ovoce. Slovo “Pi” označuje zkráceně “Python” - programovací jazyk, který měl být původně jediným programovacím jazykem dostupným na platformě Raspberry Pi [AA].
+
+\subsection*{Historie}
+Raspberry Pi vzniklo v r. 2006 za přispění studijního ředitele pro informatiku na Cambridgeské univerzitě za účelem lokálních potřeb. Měl to být nástroj, který by poskytl prvotní impuls studentů k nějakému z univerzitních kurzů.
+
+\section{Ostatní mikropočítače}
+
+\section{Moduly ESP8266, ESP32 a ESP32-S2}
+\todo{https://maker.pro/esp8266/tutorial/a-comparison-of-the-new-esp32-s2-to-the-esp32}
+Jedná se o levný mikročip, disponující Wi-Fi stackem, schopný provozu RTOS (realtime operačního systému). Je založen na 32bitovém procesoru s architekturou RISC [AE]. \newline
+ESP32 je nástupce ESP8266. Kromě komunikace přes Wi-Fi umožňuje rovněž komunikaci pomocí Bluetooth, díky hybridnímu Wi-Fi/Bluetooth čipu [AF]. 
+
+\todo{Další moduly, viz: https://www.cnx-software.com/2020/01/17/realtek-rtl8720dn-dual-band-wifi-bluetooth-5-0-iot-module/}
+
+\begin{figure}[hbt]
+	\centering
+	\includegraphics{obrazky/ESP.png}
+	\caption{Srovnání specifikace modulů ESP8266 a ESP32. Převzato z \url{https://www.cnx-software.com/2016/03/25/esp8266-and-esp32-differences-in-one-single-table/}}
+	\label{ESP-srovnani}
+\end{figure}
+
+\section{Ostatní mikrokontrolery a vývojové desky}
+\todo{Popsat arduino (jakožto nejznámější),STM32 a dále nějaké wifi/bluetooth, např: https://www.cnx-software.com/2020/01/17/realtek-rtl8720dn-dual-band-wifi-bluetooth-5-0-iot-module/}
+\todo{Tady ty nejsou s ESP: https://www.microchip.com/design-centers/wireless-connectivity/embedded-wi-fi}
+\section{Možnosti bezdrátového přenosu ve vestavných systémech}
+\todo{Wifi, bluetooth, 433mht, 2,4GH, zigbee}
+
+\chapter{Zhodnocení současného stavu a plán práce}
+V této kapitole se věnuji zhodnocení již existujících řešení automatizace domácnosti. Následně uvádím můj návrh řešení na základě nastudovaných řešení a vhodného rozsahu práce. Nakonec v bodech stanovuji cíle vyplývající z návrhu řešení, které se v práci snažím splnit.
+\section{Zhodnocení současného stavu v oblasti automatizace domácnosti}
+
+Na trhu se v současné době nachází velké množství systémů. Z těch, které jsem popsal v části o existujících řešení je nejrozvinutějším systémem ten od společnosti Loxone. Zabírá opravdu širokou škálu možností a jen stěží by se hledala aplikace, pro kterou by nebyl vhodný. Kromě komplexnosti u něj oceňuji rovněž českou jazykovou lokalizaci. V češtině je k dispozici jak aplikace na ovládání (Loxone App), tak rovněž program pro konfiguraci systému (Loxone Config). Čím mě Loxone mile překvapilo je, že jsem si jejich aplikaci Loxone App mohl vyzkoušet v demoverzi i bez zakoupených komponent.\newline
+Jako nevýhodu Loxone vidím příliš vysokou cenu. Uživatel, který si chce nainstalovat pár chytrých zařízení bude zřejmě překvapen cenou. Například při pořízení 3 chytrých zásuvek a miniserveru (který je k ovládání zásuvek potřebný) zaplatí přibližně 15 000 kč. Přitom adekvátní řešení od jiných firem, jako sonoff bude stát necelé 3000 kč, což je velký rozdíl – a při rozšiřování domácnosti o další prvky tento rozdíl znatelně roste. Na druhou stranu, pokud uživatel staví nový dům, může řešení od Loxone stát srovnatelnou cenu, jako konkurenční „neinteligentní“ instalace. Jako další nevýhodu vidím to, že celkově je instalace systému orientovaná spíše pro profesionální montáž pro pracovníky s příslušnou klasifikací (většina produktů je určena k zabudování do rozvaděče, příp. ke komunikaci s moduly v něm). Celkově je však řešení od Loxone na hodně vysoké úrovni.\newline
+
+Řešení od firmy Jablotron je jistě zajímavé jejich dvoutlačítkovými (rozšiřitelnými) segmenty. Zdá se mi však nepraktické spojovat přístupovou klávesnici do domu s prvky automatizace domácnosti. Působí to poněkud omezeně. Navíc rozhraní pro ovládání domácnosti a alarmu v aplikaci MyJablotron se snaží napodobovat onu klávesnici, což příliš k přehlednosti nepřispívá. Na druhou stranu pro uživatele, jehož hlavní požadavek je zabezpečení objektu a pouze doplňková automatizace domácnosti (jako rozsvícení světel při odjištění domu) budou systémy od firmy Jablotron ideální.  \newline
+
+Systém HomeKit je zajímavý v tom, že zde není potřeba žádný „speciální“ centrální prvek – pokud již uživatel vlastní například iPhone (či jiný produkt, který zastoupí funkci centrálního prvku). Nevýhodou je to, že aby byl systém ovladatelný globálně, tak je potřeba přeci jen mít v domácnosti nějaký prvek, co bude domácnost řídit. A pokud uživatel již nějaký nevlastní, tak se stává další investicí. Co je na systému HomeKit pozitivní je jeho nízká cena – ve srovnání se systémy od společnosti Loxone či Jablotron. Systém HomeKit se stále rozrůstá a má velkou podporu v rozmanitosti produktů. A na rozdíl od předchozích zmíněných systémů je více orientovaný na běžné uživatele. Jednou z nevýhod je zde to, že je systém orientovaný zejména na bezdrátovou komunikace, která samozřejmě někdy může být méně spolehlivá. Tím spíše že mnoho produktů komunikuje pouze pomocí Bluetooth, takže si uživatelé musejí hlídat dosah zařízení.\newline
+
+Systém HomeConnect vnáší do automatizace domácnosti zajímavý koncept. Zatímco některé systémy umožňuji automatizovat domácnosti například chytrými zásuvkami či spínači, HomeConnect ve spolupráci s jinými společnostmi vyvíjí přímo spotřebiče s prvky chytré domácnosti, čímž tyto spotřebiče obsahují mnohem více „inteligence“, na rozdíl od pouhého „zapínání/vypínání“. Nicméně nevýhodou je zde příliš malý sortiment produktů, a tudíž jednoúčelová aplikace navíc, kterou stejně musejí uživatelé doplnit o další aplikace, chtějí-li například rovněž ovládat zásuvky, světla či rolety. Kromě toho je rovněž cena produktů dost vysoká.\newline
+...
+
+\section{Návrh technického řešení}
+Na základě výzkumu dostupných řešení a jejich zhodnocení jsem se rozhodl vyvinout systém, který bude mít některé spíše základní funkce automatizace. Především zde bude řešeno dálkové ovládání jednoho zařízení druhým, jelikož je to zadání mé bakalářské práce. V systému tedy bude figurovat nějaký ovladač a dále ovládané prvky. 
+
+V práci tudíž bude nutné zvolit vhodné vestavné zařízení, které bude sloužit jako ovládací část systému a také zařízení, která budou přijímat povely. Rozhodl jsem se, že ovládaný prvek zde nebude žádné konkrétní zařízení (jako zásuvka, spínač, či lampička) ale spíše obecný modul se vstupně výstupními porty, přes které bude možné ovládat jiná, už konkrétnější zařízení. Pro plnohodnotnou funkci systému bude tento modul nutné opatřit dalšími přídavnými součástkami. Půjde zejména o relé pro možnost ovládání zapnutí a vypnutí zařízení připojeného k tomuto modulu (tímto způsobem bude možné například ovládat LED pásek, či vytvořit bezdrátovou zásuvku). K modulu budou připojeny rovněž tranzistory pro možnost použití pulzně šířkové modulace na výstupu - takový výstup pak bude sloužit pro stmívání světel, zejména LED pásku či bodových LED světel na 12 V. Ovládat tak bude možné rovněž servo motory, které se standardně řídí signálem pulzně šířkové modulace.
+
+Aby bylo ovládání systému co nejjednodušší, bude zde možnost ovládání na dotykovém displeji. Ovládání systému jen z jednoho místa však není v oblasti automatizace úplně nejlepším a efektivním řešením (například uživatel sice nemusí dojít k vypínači světla, aby zhasl, ale stejně musí dojít někam k ovládacímu zařízení systému). Rozhodl jsem se tedy, že bude možnost ovládání i z telefonu, počítače a dalších zařízení (požadavky na zařízení budou definovaná později v části 6.1 Celkový návrh systému) \todo{Zmínit v implementaci požadavky}. Aby byl plněji využit potenciál displejů (ať už připojeného k ovládacímu zařízení, či ostatním zařízením, ze kterých bude možné moduly ovládat), rozhodl jsem se, že do systému bude možné zapojit i některé snímače.
+
+Půjde o tyto snímače:
+\begin{itemize}
+    \item teploty
+    \item vlhkosti vzduchu
+    \item tlaku vzduchu
+    \item intenzity světla
+    \item pohybu
+    \item sepnutí (kontaktu/tlačítka)
+\end{itemize}
+
+Jde o typické představitele analogových i digitálních senzorů. Pro účely práce budou použity jen tyto, nicméně řešení chci pojmout jako open source (a s ohledem na tento fakt se budu snažit o co největší rozšiřitelnost systému), a další senzory bude možné přidat v budoucnu. Všechny senzory budou mít v systému pouze informativní charakter pro uživatele, tzn. bude si moci například zobrazit teplotu v konkrétní místnosti, zda se v ní někdo nachází, či zda byl sepnut nějaký kontakt (např. k detekci otevření okna). V základu (tedy v rámci této práce) nebude možné přímo systém pomocí senzorů řídit, ale opět nic nebrání tomu, aby byla tato funkce implementována v budoucnu. Nebude zde tedy nějaká automatizace například rozsvícení světel na základě detekce pohybu. U modulů s výhodou využiji, že budou mít více vstupů/výstupů a jeden modul tak může sdružovat více různých funkcí (mít připojeno několik snímačů a výstupních zařízení, místo jednoho).
+
+Mým řešením bych chtěl doplnit existující open source řešení o takové, které bude svými vlastnostmi určeno spíše pro nadšence v oblasti elektroniky a bude obsahovat česky lokalizované texty. Bude poskytovat jednoduchý systém pro ovládání mnoha zařízení pomocí jednoho vestavného zařízení s připojeným displejem. Svou prací bych si chtěl rovněž vyzkoušet celý návrh a realizaci systému automatizace domácnosti, který bych následně mohl sám využívat. Vylepšením oproti některým již existujícím systémům bude možnost sdružení několika přijímajících zařízení do jednoho (jak jsem zmínil v předchozím odstavci). Také bych chtěl klást důraz zejména na nízkou cenu, která by u pár ovládaných zařízení (bez ceny těchto koncových zařízení) neměla přesáhnout 2000 kč.
+
+Při práci budu využívat již existující moduly a mikropočítač (který bude sloužit jako „mozek“ systému), které však naprogramuji a vhodným způsobem doplním o některé elektronické součástky (jako zmíněné relé, či tranzistor). Práce se však nebude zabývat konstrukčním návrhem prvků systému, ani návrhem DPS pro hotový systém. Pro případné propojení součástek a zařízení systému budou použita nepájivá pole.
+
+\section{Požadované vlastnosti navrhovaného systému}
+Na základě předchozích úvah jsem se rozhodl, že vytvořím systém, který bude splňovat následující vlastnosti:
+
+\begin{itemize}
+    \item Bude zvolen vhodný mikropočítač, který bude sloužit jako ovládací část systému
+    \item Pro ovládací část bude zvolen dotykový displej patřičných rozměrů, aby byl systém přehledný a mohl sloužit pro ovládání zařízení
+    \item Displej by měl být rovněž vybrán s ohledem na možnost zobrazení přehledu o stavu zařízení v systému (například. zobrazení, které zařízení jsou zapnutá, či jaké hodnoty se nacházejí na PWM výstupu)
+    \item K implementaci bude zvolen vhodný programovací jazyk
+    \item Bude podporována funkce přímého ovládání výstupů ovládaných modulů
+    \item Také zde bude funkce zobrazení dat ze senzorů
+    \item Systém bude obsahovat českou jazykovou lokalizaci
+    \item V systému budou fungovat uživatelské účty, přičemž z jednoho účtu bude možné ovládat jen jednu domácnost
+    \item Bude zvolena vhodná technologie bezdrátového přenosu tak, aby byl systém co nejjednodušší na implementaci a případné rozšiřování
+    \item Projekt bude uvolněn jako open source, čímž bude cena systému jako takového pro potenciální uživatele minimální (daná pouze cenou použitých součástek a zařízení)
+    \item Součástky a zařízení budou v systému voleny s ohledem na co nejnižší cenu.
+\end{itemize}
+
+\chapter{Realizace a testování}
+V této kapitole se věnuji vlastní realizaci řešení a následnému testování a vyhodnocení. V první podkapitole uvádím celkový návrh systému - tedy z jakých aplikací a zařízení se bude skládat, jak mezi sebou budou komunikovat apod. Následně se věnuji návrhu grafického uživatelského rozhraní pro aplikaci, ke kterým uživatel bude přistupovat. Dále vysvětluji jakým způsobem se v systému ukládají data a jak jsem vyřešil autentizaci uživatelů v systému. V dalších kapitolách již rozebírám implementaci konkrétních aplikací. Nejprve klientské aplikace, která přímo komunikuje jen s databází a potom v samostatné podkapitole popisuji spolu aplikaci pro Raspberry Pi a moduly ESP8266 (jelikož tyto dvě aplikace spolu přímo komunikují a jsou na sobě závislé). Nakonec uvádím jak jsem systém testoval a k jakým výsledkům jsem došel.
+
+\todo{Někde vymezit pojmy...klient, klientská aplikace, (koncový) modul...}
+\section{Celkový návrh systému}
+Systém bude tvořen třemi aplikacemi a několika zařízeními (každé zde bude mít svou roli). 
+Na obrázku \ref{architektura} je možné vidět celkovou koncepci systému. 
+
+\begin{figure}[!hbt]
+	\centering
+	\includegraphics[scale=0.4]{obrazky/navrh-architektura.png}
+	\caption{Architektura systému pro automatizaci domácnosti}
+	\label{architektura}
+\end{figure}
+
+Pro uživatele zde budou klíčovými různá zařízení s displejem (notebook, mobilní telefon, Raspberry Pi s displejem...), přes který bude systém konfigurovat, ovládat a přes který bude informován o naměřených hodnotách na snímačích. Prostřednictvím grafické aplikace na těchto zařízeních bude vlastně upravovat databázi. Bude se jednat o webovou aplikaci, která bude generována webovým serverem (ať již přístupným na internetu přes webhosting, tak i lokálně z Rapsberry Pi). Jak je naznačeno na obrázku, databáze bude přístupná v síti internet, ovšem s nastavenými přístupovými pravidly, aby bylo minimalizováno riziko napadení systému. Mikropočítač Raspberrry Pi bude v systému mít roli nejen lokálního webového serveru, ale také řídící jednotky. Ta bude naslouchat změnám v databázi a pokud k nějakým dojde, tak patřičným způsobem zareaguje (např. odešle pokyn k nastavení výstupu na modulu ESP8266). Mezi webovou aplikací (spuštěnou např. v prohlížeči mobilního telefonu) a aplikací na Raspberry Pi nebude probíhat žádná přímá komunikace (pouze skrze změny v databázi).
+Dalším zařízením v systému budou moduly ESP8266 (resp. některé vývojové desky, obsahující tento modul). Ty mohou mít ke svým vstupům připojeny snímače a k výstupům pomocné součástky (jako relé či tranzistory) a k nim dále již výstupní ovládaná zařízení, např. světla.
+
+
+\subsection*{Zařízení}
+Jak tedy vyplývá z předchozího popisu koncepce systému, budou v systému tato zařízení:
+\begin{itemize}
+    \item Centrální (řídící) prvek (s připojeným displejem)
+    \item Koncové moduly
+    \item Snímače
+    \item Ovládaná zařízení
+    \item Ostatní zařízení, přes která bude možné systém ovládat (klienti)
+\end{itemize}
+
+Centrální jednotka bude mít na starosti celý systém řídit. Pokud například uživatel zadá pokyn ke změně hodnoty na některém výstupu modulu, bude to právě Centrální jednotka, kdo tuto žádost zpracuje a pošle ji dále jako příkaz na konkrétní koncový modul. 
+Jelikož k centrální jednotce bude potřeba připojit (dotykový) displej, musí mít dostatečný výkon pro vykreslování na něj a zpracování dat. Bylo tedy potřeba zvolit vhodný mikropočítač (protože mikrokontrolery mívají obecně daleko menší výkon) opatřený portem pro přenos obrazového signálu. Jedním z nejpoužívanějších mikropočítačů je Raspberry Pi. Je relativně levné (ve verzi 3 se dá sehnat do jednoho tisíce kč, verzi Zero W je dokonce možné na českém trhu sehnat za přibližně 300 kč) a tedy i snadno dostupné. Nadto je použití Raspberry Pi doporučeno v zadání mé práce. Pro účely práce budu používat právě zmíněnou verzi 3.
+
+Koncový modul (dále již jen modul) bude zařízení, které bude mít vstupy a výstupy. Modul bude měnit hodnoty na svých výstupech dle instrukcí, přicházejících z centrální jednotky. K těmto výstupů pak budou dále připojeny příslušné součástky (jako relé, či tranzistor) a k nim dále již reálná zařízení, ve kterých budou nějakým způsobem spínat kontakt. Rovněž bude v pravidelných intervalech číst hodnoty na svých vstupech (ke kterým budou připojeny snímače). Jako koncový modul je potřeba vybrat zařízení s nízkou cenou, jelikož těchto zařízení v systému bude obecně více. Kromě toho bude modul přijímat pouze jednoduché příkazy od Raspberry Pi, může se tedy klidně jednat o nějaký mikrokontroler s omezeným výpočetním výkonem. Je však potřeba, aby byl tento mikrokontroler schopný komunikovat po síti (tento požadavek vyplývá ze zadání mé bakalářské práce). Buďto je možné vybrat nějaký mikrokontroler a k němu připojit modul, který jej o funkci komunikace po síti doplní (například vývojovou desku Arduino a nějaký WiFi modul), nebo zvolit takový, který již v sobě obsahuje prostředky nutné k bezdrátové komunikaci. Já jsem se rozhodl pro druhou možnost. Na trhu existuje spoustu takových mikrokontrolerů, mezi nejznámější (a zároveň relativně levný) patří ESP8266 a novější ESP32. Jelikož je pak ESP8266 levnější (a výpočetní výkon pro danou aplikaci dostatečný), tak použiji právě tento modul.
+
+Jako snímače jsem pro demonstraci vybral následující:
+\begin{itemize}
+    \item BMP280 (snímač tlaku a teploty)
+    \item SHT21 (snímač teploty a vlhkosti)
+    \item BH1750 (snímač intenzity světla)
+    \item HC - SR501 (PIR pohybové čidlo)
+    \item tlačítko
+\end{itemize}
+
+Ovládanými zařízeními zde myslím ta, která budou připojena na některý z výstupů modulu. Půjde tedy například o LED pásek, či zařízení, u kterého se bude spínat nějaký kontakt.
+
+Klientská zařízení budou libovolná zařízení s displejem, přes která bude uživatel moci ovládat systém. Jedinými požadavky na tato zařízení jsou zde vzhledem k implementaci (viz dále) následující:
+\begin{itemize}
+    \item Přístup k internetu
+    \item Dostatečně velký displej (ideálně 5´´ a více)
+\end{itemize}
+
+\subsection*{Aplikace}
+Dále se systém bude skládat z následujících tří aplikací:
+\begin{itemize}
+    \item Aplikace s grafickým rozhraním pro uživatele k ovládání systému
+    \item Server, který bude od od výše zmíněné grafické aplikace získávat instrukce a vykonávat je
+    \item Aplikace pro moduly (v následujícím textu jako klientská aplikace)
+\end{itemize}
+
+Po úvaze jsem dospěl k názoru, že nejvhodnější bude, když bude první zmíněná aplikace implementována jako jednostránková webová aplikace. A to z několika důvodů:
+\begin{itemize}
+    \item Webové aplikace jsou obecně vzato multiplatformní (pokud mají alespoň trochu responzivní design), čehož vhodně využiji v rámci možnosti ovládat domácnost z různých zařízení (a navíc na dálku)
+    \item K přístupu k aplikaci tak bude stačit mít zařízení s přístupem k internetu (a obrazovkou pochopitelně)
+    \item Webové technologie patří mezi rychle se rozvíjející, což přispívá ke snadnému budoucímu rozvoji systému
+    \item Jazyk Typescript (který budu používat) je jeden z vůbec nejpoužívanějších a nejznámějších programovacích jazyků, pokud se tedy najde programátor, který by chtěl v budoucnu systém rozšířit, je velká pravděpodobnost se nebude muset učit nic nového.
+\end{itemize}
+Tato aplikace tedy bude běžet v internetovém prohlížeči. Mezi zařízení, která budou k aplikaci přistupovat bude i Raspberry Pi (díky připojenému dotykovému displeji). 
+
+
+Druhá aplikace (server) pak bude běžet na Raspberry Pi jako server zpracující požadavky od klientů (sem patří i případ displeje Rasbperry Pi). Na základě těchto požadavků bude server dále komunikovat s jednotlivými koncovými moduly. Nebude-li explicitně řečeno jinak, je V dalším textu pod pojmem server vždy myšlena právě tato aplikace, běžící na Raspberry Pi.
+
+Jako alternativu těchto prvních dvou aplikací bylo možné vytvořit jen jednu desktopovou aplikaci, běžící na Raspberry Pi. Přes tu by se systém ovládal pouze z připojeného displeje, nicméně uživatelé by tak přišli o možnost ovládat systém i vzdáleně, resp. i z dalších zařízení, což by bylo neefektivní a mnohdy nepříjemné. Zvolil jsem tedy řešení dvou aplikací.
+
+Poslední uvedená aplikace poběží na jednotlivých koncových modulech. Jejím úkolem bude přijímat pokyny od serveru a na jejich základě ovládat své výstupy. Rovněž bude aplikace v pravidelných intervalech serveru posílat naměřené hodnoty od připojených senzorů.
+
+Kromě těchto třech aplikací bude součástí systému (i když nepřímou) rovněž vzdálený webový server a databáze. Nebudou sice nějakým způsobem u uživatele (že by si je uživatel musel nějak pořizovat), nicméně jedná se rovněž o nepostradatelnou součást systému. Pro webhosting a databázi jsem se rozhodl použít služby Firebase od společnosti Google. Více se této volbě věnuji v části  \ref{subsec:firebase}.
+
+\section{Grafický návrh webové aplikace}
+Aplikaci jsem rozdělil na několik samostatných částí (oken), mezi kterými může uživatel přecházet. Jelikož se jedná o jedno stránkovou aplikaci, nejde v případě jednotlivých částí o klasické stránky (v tom smyslu, že by každá měla vlastní html dokument, který ji generuje). V následujícím textu se však pro jednoduchost budu odkazovat ke každému takovému samostatnému oknu, jako k jedné stránce.
+\subsection*{Přihlašovací stránka a registrace}
+Na úvod při spuštění aplikace se zobrazí stránka, na které se uživatel bude moci přihlásit (pomocí emailu a hesla). Rovněž zde bude možnost přejít k registraci nového účtu.
+
+\subsection*{Menu}
+V aplikaci se přihlášenému uživateli bude zobrazovat ikona menu. Po kliknutí na tuto ikonu se zobrazí vysouvací menu, kterým se bude moci přepínat mezi jednotlivými stránkami (jako domovská stránka či nastavení). V menu také bude možnost přepnutí na celoobrazovkový režim a odhlášení. Opětovným kliknutím na ikonu menu se menu uživateli skryje.
+
+\subsection*{Domovská stránka}
+Za domovskou stránku považuji tu, na kterou se uživatel dostane ihned po přihlášení do systému. Tato stránka bude sloužit i jako výchozí pro ovládání jednotlivých zařízení. Bude zde také přehled hodnot na snímačích. Tuto stránku bude mít uživatel zobrazenou většinu času na displeji Raspberry Pi, pokud jej bude chtít používat jako takový rychlý přehled o stavech ovládaných zařízení (a snímačích).
+Jak vidíme na obrázku XYZ bude tato stránka rozvržena na jednotlivé místnosti. Pro každou zde bude pod sebou vyhrazené místo a v něm pro každou místnost se stejným rozvržením - název místnosti, seznam hodnot na senzorech a ovládaná zařízení (ze kterých bude možné vyčíst jejich stav i ovládat je). Pokud bude chtít uživatel ovládat nějaký výstup (zařízení), klikne na něj. V případě, že je výstup digitálního type (tedy s hodnotami vypnuto/zapnuto) okamžitě se změní stav zařízení. V případě výstupů, řízených pomocí PWM se zobrazí nad zařízeními posuvník (nastavený na aktuální hodnotu), kterým bude možné okamžitě měnit hodnotu na výstupu modulu (a tedy stav zařízení).
+
+\subsection*{Nastavení}
+\label{subsec:firebase}
+V aplikaci bude také stránka s nastavením. Bude zde možnost přidávat nová zařízení a konfigurovat ta stávající. Stránka je navržena jako hierarchie do sebe vnořených seznamů, ve kterých uživatel může zvolit místnost, koncový modul a snímač/zařízení. Pod seznamy je detail, ve kerém může uživatel u aktuálně zvoleného prvku (místnosti/modulu/snímače/zařízení) konfigurovat některé vlastnosti, jako je název, typ vstupu/výstupu apod. 
+
+\section{Databáze, autentizace v systému a webhosting}
+V systému je potřeba nějakým způsobem ukládat data a to ze dvou důvodů. Prvním je, že některé části systému (zejména server) nemusejí být vždy v provozu a po opětovném uvedení do provozu je potřeba systém uvést do stavu před vypnutím. Druhým důvodem je, že se v s
+\todo{Popsat proč jsem zvolil Firebase}
+
+\section{Implementace klientské aplikace}
+\todo{Zmínit že spárování uživ. účtu s RPi bude tím, že se přihlásí uživatel na lokálním serveru}
+\todo{Zmínit alternativy hierarchické vs postupné nastavení a proč jsem zvolil hierarchii}
+\todo{Zmínit přidávání modulu (dialogové okno)}
+
+
+
+Pro implementaci klientské aplikace jsem se rozhodl použít porgramovací jazyk Typescript, jak jsem již odůvodnil v podkapitole 6.1. Oproti Javascript (který bude výstupem) má tu výhodu, že umožňuje psát staticky typovaný kód, což napomůže k eliminaci chyb a rovněž některá vývojová prostředí pro Typescript poskytují funkci našeptávání. 
+
+\subsection*{Vlastní komponenty}
+Aplikace využívá možnosti definování vlastních komponent (tzv. custom components). Za tímto účelem jsem vytvořil třídu AbstractComponent. Tato třída není určená k inicializaci objektů, ale k vytváření nových tříd zděděním této třídy. Každá třída, která z ní dědí musí přepsat vlastnost tagName, která definuje název značky, pod jakým se komponenta bude zobrazovat v html dokumentu. Je zde pravidlem, že se v názvu musí vyskytovat alespoň jedna pomlčka.
+Kromě této vlastnosti existuje několik metod, které je možné v potomcích implementovat:
+\begin{itemize}
+    \item addListeners() - slouží pro inicializaci posluchačů událostí
+    \item connectedCallback() - je volaná po připojení komponenty do DOM stromu
+    \item disconnectedCallback() - je volaná po odstranění komponenty z DOM stromu
+    \item attributeChangedCallback() - je volaná při změně některého atributu komponenty
+    \item disconnectComponent() - slouží pro odstranění komponenty z DOM stromu
+\end{itemize}
+
+Ve skutečnosti opomenutá implementace některé z těchto metod aktuálně vede k vyvolání vyjímky, ale toto chování je možné vypnout v třídě Config.
+
+Dále se ve funkci nachází několik funkci pro přidávání jiných komponent k dané komponentě a metoda initializeFromProps(), která se volá z konstruktoru pro nastavení komponenty (a případně je možné ji kdykoliv volat znovu odjinud - v případě že se nějak změní žádané vlastnosti a chceme komponentu reinicializovat). Zmíněná metoda přijímá jako parametr rozhraní IComponentProperties, které obsahuje několik vlastností, kterými je možné komponentu nastavit (např. komponenty, které se připojí jako dceřinné prvky v HTML dokumentu) a dále všechny CSS vlastnosti (je tak možné již při vytváření komponenty nadefinovat její výchozí vzhled). Samozřejmě CSS vlastnosti jsou uloženy v patřičném CSS souboru, ale díky rozhraní IComponentProperties je možné udržet CSS kód bez zbytečných detailů a může tak obsahovat pouze obecné styly. ??V dalším textu používám frázi komponenta a instance třídy (dědící z AbstractComponent) jako synonymum??.
+
+\subsection*{Životní cyklus aplikace ???}
+Vstupní třída aplikace je AutoHomeApp. Zde se nainicializují Firebase funkce, nadefinují všechny vlastní komponenty a nakonec se vytvoří instance třídy PageCreator. Ta je, jak vyplývá z jejího názvu zodpovědná za celkové sestavení HTML dokumentu. Ústřední metoda této funkce se nazývá renderPage(). V konstruktoru třídy PageCreator se zmíněná metoda zaregistruje v instanci třídy URLManager, na kterou se posílá požadavek na změnu stránky (zejm. při kliknutí na položku menu) a ta vždy následně volá zaregistrovanou metodu renderPage().
+
+V renderPage() se získá (z instance třídy AppRouter) informace, která stránka se má aktuálně vytvořit. Není-li definovaná, tak se pošle požadavek (instanci třídy URLManager) na přesměrování na domovskou stránku. V opačném případě se vytvoří a přidá do správce stránek (instance třídy PageManager) požadovaná stránka (pokud se tam již nenachází) a následně se aktivuje. 
+
+Stránky, které se přidávají do správce stránek jsou vlastní komponenty, které dědí třídu BasePage. Jejich vlastností je, že jsou pozicovány absolutně a jejich šířka je rovna šířce okna prohlížeče. Veškerá logika, která není implementovaná přímo v jednotlivých komponentách je řešena právě v jednotlivých potomcích třídy BasePage.
+
+Celkem se v aplikaci vyskytují 3 stránky:
+\begin{itemize}
+    \item Přihlášení
+    \item Registrace nového uživatele
+    \item Domovská stránka
+    \item Nastavení
+\end{itemize}
+
+\subsection*{implementace jednotlivých stránek}
+Na stránkách s přihlášením a registrací není vcelku nic zajímavého, nachází se tam jen formulář pro přihlášení, resp. registraci. 
+Domovská stránka (komponenta HomePage) je sestavena z komponent RoomCard (karet místností). V konstruktoru domovské stránky se registruje posluchač události změny databáze (konkrétně změny v místnostech). Při vyvolání této události se vyhodnotí, zda se změnilo pořadí místností (v tomto případě se znovu sestaví celé rozložení domovské stránky). Dále se (nezávisle na změně pořadí místností) aktualizují jednotlivé karty místností voláním metody updateCard() na těchto komponentách. 
+
+Nastavení (komponenta SettingsPage) se skládá z několika komponent ListFrame (editovatelný seznam), TabLayout (rozložení se záložkami) a jednoho DetailFrame (editovatelného detailu). Z TabLayout komponent je vytvořena hierarchie seznamů pro výběr položky k editaci. V aplikaci je TabLayout pro místnosti, moduly a pak společný pro snímače a zařízení. Z praktického hlediska má využití jen pro dvojici snímače a zařízení, ale použil jsem ho i pro místnosti a moduly, protože snadno (jako název záložky) zobrazuje o co v dané úrovni jde.
+Detail slouží pro editaci posledně zvolené položky v některém ze seznamu.
+
+
+
+\section{Implementace serveru na Raspberry Pi a aplikace pro koncové moduly}
+Podobně jako webový klient je i server napsaný v programovacím jazyce Typescript. Aby bylo možné na Raspberry Pi spustit Javascript (který je výstupem Typescriptu) mimo internetový prohlížeč, nainstaloval jsem na něj Javascriptové běhové prostředí NodeJS.
+
+Aplikaci pro koncové moduly jsem implementoval v jazyce Wiring a C++. Při spuštění modulu se provede základní vstupní nastavení aplikace. Zejména se nastaví sériová komunikace, modul se připojí k Wi-Fi, spustí se server, naslouchající v CoAP multicastové skupině, CoAP serveru se přidají callback funkce a spustí se CoAP server.
+
+
+
+\subsection*{Komunikační protokol}
+Pro implementaci komunikace mezi zařízeními bylo potřeba vybrat vhodný aplikační protokol. Mezi možnosti, které jsem zvažoval patří HTTP, MQTT a CoAP. 
+Vzhledem k tomu, že bude na jedné straně komunikace figurovat relativně nevýkonný modul (ESP8266) a navíc modul může být vzdálený od přístupového bodu (a připojení může kolísat), rozhodl jsem se nepoužít pro tento účel poněkud těžkopádný protokol HTTP. Zbylé 2 protokoly vyhovují malou strukturou přenášených zpráv, nicméně nakonec jsem zvolil CoAP. Vedli mě k tomu 2 důvody:
+
+\begin{itemize}
+    \item U MQTT protokolu se předpokládá, že centrální prvek bude fungovat jen jako směrovač zpráv a celková zodpovědnost za interpretaci dat bude na jednotlivých koncových zařízeních (což je v mém systému nežádané, jak jsem naznačil dříve)
+    \item Protokol CoAP se v jistém směru chová, jako odlehčená verze protokolu HTTP, který má pro komunikaci některé výhodné mechanismy
+\end{itemize}
+Pro server na Raspberry Pi jsem využil dostupnou knihovnu coap \footnote{https://www.npmjs.com/package/coap} a pro moduly knihovnu CoAP simple. \footnote{https://www.arduino.cc/reference/en/libraries/coap-simple-library/} 
+
+\subsection*{Komunikace mezi Raspberry Pi a ESP8266}
+Před kompilací a uložením kódu pro ESP8266 do paměti je potřeba upravit konfigurační část kódu, ve které je potřeba zapsat správný SSID a heslo k Wi-Fi síti, ve které má systém fungovat. Nastavování údajů o síti se sice může zdát jako zbytečný krok (systém by se o výměnu těchto informací mohl postarat sám), nicméně v rámci bakalářské práce nebylo řešeno šifrování přenášených dat, které by zde bylo nutnou podmínkou a další komunikace (po úspěšném připojení modulu do sítě) bude komunikace probíhat výhradně v rámci lokální sítě. Předpokládám tedy jisté zabezpečení na této úrovni. Při nasazení na produkci by bylo samozřejmě vhodné i tento aspekt bezpečnosti dořešit. V případě potřeby je v konfigurační části možné změnit typ vývojové desky, který je standardně nastaven na NodeMCU.
+
+
+Na počátku komunikace mezi Raspberry Pi a jednotlivými moduly stojí přidání nového modulu do databáze (typicky v nastavení systému klientské aplikace). Server neustále naslouchá změnám v databázi a pokud zaregistruje přidání modulu, tak se pokusí kontaktovat nový modul CoAP zprávy. V tuto chvíli ještě není známá IP adresa potenciálního modulu, bylo tedy potřeba zvolit vhodný mechanismus, jakým způsobem modul kontaktovat. Server pošle zmíněnou zprávu tzv. "All CoAP Nodes" multicastové skupině (IP adresa 224.0.1.187). Použitá knihovna CoAP simple (kterou využívají moduly) nepodporuje přijímání multicastových CoAP zpráv, bylo tedy nutné nastavit UDP server, který bude na dané multicastové skupině naslouchat (spuštěný server se přihláší do dané multicastové skupiny pomocí IGMP zprávy, díky čemuž následně modul může komunikovat v této skupině jako by se jednalo o jeho vlastní IP adresu). Nové, dosud nepřidané moduly v této multicastové skupině naslouchají a v případě příchozí zprávy odpoví opět CoAP zprávou, v rámci které posílají informaci o tom, o jaký typ vývojové desky se jedná (toho následně využívá webový klient, když uživateli nabízí možné V/V piny v nastavení systému na základě typu vývojové desky, kterou uživatel konfiguruje). 
+Pokud server získá odpověď, aktualizuje záznam o modulu v databázi (vloží IP adresu modulu a typ vývojové desky). Následně pošle modulu jeho ID záznamu z databáze. Klient si až v tuto chvíli uloží IP adresu serveru (zpráva je totiž již posílána jako unicast na konkrétní modul). Ten od tohoto okamžiku přestane naslouchat multicastovým CoAP zprávám.
+
+K již přidaným modulům lze přes klientskou aplikaci přidávat snímače a výstupní zařízení. Do databáze se vloží příslušný záznam a v reakci na tento nový záznam se daný snímač/ výstupní zařízení objeví na domovské stránce ve webové aplikaci. Server zaznamená změnu v databázi a jako reakci pošle zprávu příslušnému modulu. 
+V případě nového snímače odešle modulu žádost o sledování hodnoty na daném vstupu. Od této chvíle modul kontroluje v pravidelných intervalech daný vstup a v případě dostatečné změny pošle informaci na server, který změny uloží do databáze. Pro jednotlivé snímače je v kódu definovaný minimální rozdíl hodnot, která se odešle oproti posledně odeslané a to z toho důvodu, aby nebyla síť zbytečně zahlcovaná a pak také aby server nebyl tak zaneprázdněn přijímáním zbytečných zpráv. Některé snímače totiž mění naměřené hodnoty i v řádu několika desetinných míst, což například u teploty v místnosti nemá smysl sledovat. Kromě toho se tyto informace posílají jako nepotvrditelné zprávy, jelikož jich může z modulů přicházet relativně velké množství a ve většině případů není nijak kritické, pokud server nějakou zprávu občas nezachytí. Při návrhu jsem váhal, zda nebude vhodnější mechanismus takový, že se v pravidelných intervalech bude server sám dotazovat modulů na hodnoty na jejich vstupech. Tím by se šetřili zdroje modulů. Nicméně za cenu velkého zahlcování sítě a zbytečného zaneprázdnění serveru. Také naměřené hodnoty by nebyli k dispozici "okamžitě", protože by bylo nevhodné posílat dotaz například každých 500 ms. Navíc použité moduly nemají zas tak žalostný výkon, rozhodl jsem se tedy pro popsané řešení.
+Dále pokud se přidává nové výstupní zařízení, odešle se na modul zpráva o nastavení daného pinu jako výstup a hodnotu, kterou má modul na výstup nastavit. Při přidání nového výstupního zařízení je tato hodnota 0 (tedy vypnuto). Pokud následně uživatel ovládá hodnotu na daném výstupu (z domovské stránky klientské aplikace), odešle se stejná zpráva, jako při přidávání zařízení s tím rozdílem, že tentokrát se přenáší jiná hodnota. Ovládání výstupů je v systému poněkud citlivější záležitost (uživatel chce mít jistotu, že například světla, která vypnul jsou skutečně vypnutá) a proto se tyto zprávy posílají jako potvrditelná CoAP zpráva. Server tedy po odeslání zprávy čeká na potvrzení a pokud jej v daném časovém limitu neobdrží (pokud nepřekročil maximální počet pokusů), tak se pokusí požadavek poslat znovu.
+TODO-po inicializaci se nastavují všechny vstupy a výstupy - popsat
+
+
+IP adresy jednotlivých modulů jsou uchovávány v databázi. Je však potřeba řešit případ, kdy se změní IP adresa modulu. Např. pokud se ...
+
+
+\subsection*{Formát přenášených zpráv mezi Raspberry Pi a ESP8266}
+Jak již bylo zmíněno dříve, ke komunikaci mezi Raspberry Pi a ESP8266 jsem se rozhodl použít CoAP protokol. CoAP zpráva 
+/*OLD:
+V systému bude několik typů zpráv.
+Zprávy přenášené po síti budou mít V/V pin, či sběrnici specifikovanou jako cestu ke zdroji a v samotném datovém obsahu (payload) přenášenou hodnotu. Příklad získání hodnoty senzoru na pinu A0 může Raspberry Pi získat následujícím GET požadavkem:
+
+coap://192.168.5.1/A0
+
+V případě posílání se pak pošle POST žádost s příslušným datovým obsahem, což bude číslo od 0 do 1024. To jsou totiž hodnoty, ve kterých je ESP8266 modul schopný převádět digitální hodnoty na analogové (jak bylo zmíněno již dříve).
+
+Přidání nového modulu do systému
+Jelikož systém není uzavřený, ale je možné jej rozšiřovat o nové moduly (nová ovládaná zařízení), musel jsem vytvořit mechanismus, kterým se do systému budou přidávat nové moduly.......
+Postup při přidávání modulu do systému je následující:
+
+- Uživatel upraví v kódu pro ESP8266 SSID a heslo k WiFi síti, ve které bude modul operovat.
+- Program zkompiluje a načte do ESP8266.
+- Spustí modul. Ten se přihlásí k multicastové skupině 224.0.1.187 (All CoAP Nodes skupina)
+- V konfiguraci systému (v klientské aplikaci) klikne na tlačítko pro přidání modulu (pro požadovanou místnost)
+- Tím se ve všech aktuálně spuštěných klientských aplikacích, které jsou připojené k internetu zobrazí dialogové okno s informací o čekání na přidání nového modulu do systému. Tímto oknem se zablokují jakékoliv akce v klientské aplikaci dokud se nepřidá nový modul. Dialogové okno bude obsahovat tlačítko na zrušení akce.
+- Raspberry Pi v reakci na žádost o přidání modulu vyšle dotaz na multicastovou skupinu, přes který nově přidávanému modulu sdělí svou IP*/
+
+\section{Testování a vyhodnocení systému}
+
+
+\subsection*{Provedené testy}
+*/Proč jsem testoval...
+V rámci testování jsem provedl tyto testy:
+\begin{itemize}
+    \item Test "multiplaformnosti" klientské aplikace
+    \item Test multiplatfomnosti serveru
+    \item Test responzitivity
+    \item Test podporovaných prohlížečů
+    \item Test reaktivity
+    \item Test intuitivnosti uživatelského prostředí
+    \item Test stability při potížemi s připojením k internetu
+    \item Test autonomie?
+\end{itemize}
+
+Test Test "multiplaformnosti" klientské aplikace probíhal takto...
+
+Systém jako takový byl vytvořen s ohledem na běh (serveru) na Raspberry Pi. Implementoval jsem jej však tak aby běželo v prostředí Node.js, které je možné spustit na mnoha různých zařízeních a bylo vhodné otestovat funkčnost systému. Jelikož jsem funkce serveru navrhoval s ohledem na monost běhu i na méně výkoných zařízeních (které však umožňují běh Node.js), rozhodl jsem se otestovat běh systému na dalších zařízeních. Konkrétně šlo o notebook HP (s technickými parametry 4GB RAM, Intel Core i5-7200U) a chytrý telefon (s OS Android verze 8). Test multiplatfomnosti serveru pak probíhal takto......Chytré telefony nemají nativní podporu pro Node.js, musel jsem to tedy obejít. Na telefon jsem nainstaloval aplikaci Termux (která funguje jako emulátor terminálu pro Android a Linuxové prostředí)
+
+Test responzitivity...
+
+Test podporovaných prohlížečů....
+
+
+Test reaktivity (neboli odezvy systému na podněty v reálném čase) probíhal takto...
+
+Test intuitivnosti uživatelského prostředí probíhal takto...
+
+Test Test stability při potížemi s připojením k internetu probíhal takto...
+
+Test autonomie (funkce systému bez lidského zásahu) probíhal takto...
+
+\subsection*{Testy které nebyli provedeny}
+\label{neprovedene-testy}
+Kromě testů, které jsem už provedl by bylo vhodné provést ještě dále zmíněné. V případě absence prvních dvou nedojde k žádným potížím (jen systém možná nebude fungovat na jiných zařízeních). Problémy, které by se otestovali zbylými dvěma testy by však mohli být kritické. Alespoň u čtvrtého testu ale věřím, že nejsou obavy na místě, přeci jen je konkurence velká a systém by neměl být zahlcený. V rámci mé práce tyto testy vykonány nebyli, zejména z finančních a časových důvodů.
+Testy které by bylo vhodné provést:
+\begin{itemize}
+    \item Funkčnost systému na alternativních mikropočítačích 
+    \item Funkčnost systému na jiných verzích Raspberry Pi
+    \item Stabilita systému v průběhu několika let chodu
+    \item Test spolehlivosti systému při velkém množství uživatelů
+    \item Test limitů Firebase služby free plan
+\end{itemize}
+Raspberry Pi je jedním z nejpoužívanějších a nejznámějších mikroprocesorů, nicméně na trhu se nacházejí další, u kterých by bylo vhodné otestovat, zda bude server i webový klient (na připojeném displeji) plně funkční. Zejména mikropočítače uvedené v kapitole \ref{vestavne-systemy} (tam jsem totiž popisoval rovněž nejpopulárnější mikropočítače)
+
+Funkčnost systému na jiných verzích Raspberry Pi je potřeba otestovat zejména z toho důvodu, že se jedná o poměrně rychle se rozvíjející platformu a někteří potenciální uživatelé tak mohou mít starší model s nižším výkonem. Zvláště zajímavý by byl test na verzi Zero W, jelikož tuto verzi Raspberry Pi je možné pořídit za přibližně 300 kč. V případě bezproblémového chodu by byl projekt velmi zajímavou alternativou k některým velmi drahým systémům jako je \todo{XYZ}. Je možné, že by například nebyla tato verze Raspberry Pi dostatečně výkoná na ovládání systému z připojeného displeje, ale zvládala by na běh aplikace serveru, pak by bylo možné systém prostě ovládat z klientů (například chytrých telefonů). Případně kdyby tato verze nezvládala bezproblémový běh serveru s poskytováním statické stránky, tak by bylo možné tuto část serveru upravit (odstranit) a pak by se klienti připojovali pouze na vzdálený server a úloha Raspberry Pi by se zredukovala pouze na kontrolu (resp. naslouchání) změn v databázi a komunikaci s koncovými moduly, což by snad mělo opravdu bez jakýchkoli potíží fungovat. Pak by se samozřejmě muselo vyřešit spárování Raspberry Pi s uživatelským účtem, protože aktuálně to funguje právě na principu, který vyžaduje, aby se uživatel (alespoň poprvé) přihlásil na poskytované statické stránce z Raspberry Pi.
+
+Test stability systému by pak spočíval v tom, že by systém pravidelně po dobu několika let využívalo jisté množství lidí (například 100 domácností) a pozorovalo, zda se systém v průběhu času chová stále stejně, nezpomaluje se a podobně.
+
+Test spolehlivosti systému při velkém množství uživatelů by bylo provést hlavně z toho důvodu, že v systému funguje jedna veřejná databáze. Vylo by vhodné otestovat, jak se systém bude chovat při velké zátěži databáze (ve chvíli, kdy bude k databázi aktivně současně přistupovat mnoho uživatelů).
+
+Test limitů Firebase služby free plan.....
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Závěr}
+\label{zaver}
+
+Nápady na pokračování práce:
+\begin{itemize}
+    \item Úspornější řešení - jestli má arduino nižší spotřebu, mohlo by číst senzory a vzbouzet ESP pouze kvůli komunikaci po síti...zjistit jak to mají tyto dva čipy se spotřebou...!
+    \item ovládání hlasem
+    \item přidání podmínek
+    \item přidání módů (scén) - v podstatě by se jednalo o sdružení více akcí ovládání do jedné
+    \item vývoj by mohl směřovat i na odlehčení serveru tak, že bude pouze kontrolovat databázi a komunikovat s moduly (jak bylo polemizováno v testování) => a mohla by se vytvořit verze pro ESP8266 v režimu Centrální jednotky => velice levný systém...Bylo by však pravděpodobně potřeba přepsat server...do C? Pythonu...?
+\end{itemize}
+
+Moje odkazy \cite{4technologie} \cite{BezdratoveSite} \cite{DesigningEmbeddedSystems} \cite{EmbeddedSystems}
+\cite{EmbeddedSystemsCircuits}
+\cite{ITURegulations} \cite{MicroprocessorAndInterfaces} \cite{WifiFrequencyBands} \cite{uCvsCPU} \cite{arduino} \cite{ArduinoProgramming} \cite{whatIsIR} \cite{optics} \cite{physics} \cite{HomeAutomationRPI} \cite{Everything2_4GHZ} \cite{microwave} \cite{materials} \cite{wirelessComunication} \cite{NetworkSecurity} \cite{RPiPrirucka} \cite{BluetoothGuide} \cite{WirelessPersonalCommunications} \cite{GettingStartedBluetooth} \cite{Why2_4GHz} \cite{ESP8266} \cite{ESP32} \cite{HandsOnZigBee} \cite{ZigbeeWirelessNetworking} \cite{HomeAutomationAndWiring} \cite{VoiceAssistantsIntro} \cite{TalkingToSmartDevices} \cite{ClassificationOfFunctionsInSmartHome} \cite{IoTNeedsInternet} \cite{GoogleAssistantVPraxi} \cite{SmartHomeSupportOfProjecting} \cite{TopteSRozumem} \cite{HlasovyAsistentiPruzkum} \cite{WhatIsIoT} \cite{HelloEmma} \cite{HelloEmmaSiri} \cite{AplikaceZkratky} \cite{AlexaCzech} \cite{LoxoneVize} \cite{LoxoneRegulaceTeploty} \cite{MiniserverDokumentace} \cite{FunkceChytrehoDomuLoxone} \cite{LoxonePresentMiniserverGo} \cite{ReseniLoxone} \cite{MiniserverGo} \cite{RizeniKlimaLoxone} \cite{NaseChytraReseniJablotron} \cite{OJablotronu} \cite{KatalogJablotron} \cite{JablotronVasDum} \cite{ChytraFirma} \cite{HomeKit}
+
+
+%===============================================================================
