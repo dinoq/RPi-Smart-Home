@@ -111,6 +111,7 @@ html .form-wrapper form .time-select, html .form-wrapper .form .time-select {
 
 html .form-wrapper form .time-select input[type="number"], html .form-wrapper .form .time-select input[type="number"] {
   width: 30%;
+  text-align: center;
 }
 
 html .form-wrapper form .time-select .colon, html .form-wrapper .form .time-select .colon {
@@ -621,14 +622,19 @@ page-manager .btns-stack .btn:enabled:hover {
   background-color: #d5d5d5;
 }
 
-page-manager .form-wrapper form, page-manager .form-wrapper .form {
+page-manager .detail-component .form-wrapper form, page-manager .detail-component .form-wrapper .form, page-manager .detail-component .form-wrapper form, page-manager .detail-component .form-wrapper .form {
   max-width: initial;
   width: 100%;
   padding: 5px;
   margin: 5px;
+  /*input:not([type="checkbox"]),
+                select,
+                slidable-img {
+                    //max-width: 500px;
+                }*/
 }
 
-page-manager .form-wrapper form slidable-img .bordered-img, page-manager .form-wrapper .form slidable-img .bordered-img {
+page-manager .detail-component .form-wrapper form slidable-img .bordered-img, page-manager .detail-component .form-wrapper .form slidable-img .bordered-img, page-manager .detail-component .form-wrapper form slidable-img .bordered-img, page-manager .detail-component .form-wrapper .form slidable-img .bordered-img {
   border: 1px solid grey;
 }
 

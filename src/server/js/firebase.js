@@ -20,7 +20,7 @@ class Firebase {
         this._firebaseInited = false; // Slouží pro informaci, zda byly již nainicializovány služby Firebase (v případě, že je server spuštěn bez přístupu k internetu, tak je nutné je po připojení k internetu nainicializovat)
         this._previousOnline = undefined;
         this._online = false;
-        this._onlineValidTimeout = 2000;
+        this._onlineValidTimeout = 5000;
         this._lastConnCheck = 0;
         this._loggedIn = false;
         this._sensorsUpdates = {};
@@ -1011,21 +1011,18 @@ class Firebase {
      */
     async clientGetFromDB(bodyData) {
         let path = this.correctPath(bodyData.path);
-        let uid = await this.userUID;
+        return this.getDBPart(path);
+        /*let uid = await this.userUID;
         if (uid && (await this.online) && (await this.firebaseInited)) {
             try {
                 let snapshot = await this._fb.database().ref(uid + "/" + path).once('value');
                 return snapshot.val();
-            }
-            catch (error) {
+            } catch (error) {
                 return null;
             }
-        }
-        else {
-            console.log("zkontrolovat zda není problém s uid!!!!!!!!!!!!!!!");
-            console.log("Zde možná můžu přímo získávat z lokálního souboru a konstrukce výše nebude potřeba...jelikož jsou obě DB v synchronizaci a aspon se usetri cas kdyz se to nebude tahat pres internet\n");
+        } else {
             return this.getDBPart(path);
-        }
+        }*/
     }
     /**
      * Funkce odstraní část lokální (resp. v případě připojení k internetu i Firebase) databáze. Funkce je volaná na základě požadavku webového klienta.

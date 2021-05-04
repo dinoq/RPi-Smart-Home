@@ -49,7 +49,11 @@ void setup()
     for (int i = 0; i < (sizeof(usedOutputPins)/sizeof(usedOutputPins[0])); i++){ // Nainicializuje se pole používaných výstupních pinů. Toto pole se používá pro reset modulu.
         usedOutputPins[i] = -1;
     }
-
+    if (moduleStaticIP.isSet()){
+        if (!WiFi.config(moduleStaticIP, gateway, subnet)) {
+            Serial.println("Konfigurace statické adresy se nezdařila!");
+        }
+    }
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED)
     {

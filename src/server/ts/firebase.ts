@@ -23,7 +23,7 @@ export class Firebase {
 
     private _previousOnline: boolean = undefined;
     private _online = false;
-    private _onlineValidTimeout: number = 2000;
+    private _onlineValidTimeout: number = 5000;
     private _lastConnCheck: number = 0;
 
     private _loggedIn: boolean = false;
@@ -1076,8 +1076,9 @@ export class Firebase {
      */
     public async clientGetFromDB(bodyData: IFormData): Promise<object> {
         let path = this.correctPath(bodyData.path);
-
-        let uid = await this.userUID;
+        
+        return this.getDBPart(path);
+        /*let uid = await this.userUID;
         if (uid && (await this.online) && (await this.firebaseInited)) {
             try {
                 let snapshot = await this._fb.database().ref(uid + "/" + path).once('value');
@@ -1086,10 +1087,8 @@ export class Firebase {
                 return null;
             }
         } else {
-            console.log("zkontrolovat zda není problém s uid!!!!!!!!!!!!!!!");
-            console.log("Zde možná můžu přímo získávat z lokálního souboru a konstrukce výše nebude potřeba...jelikož jsou obě DB v synchronizaci a aspon se usetri cas kdyz se to nebude tahat pres internet\n");
             return this.getDBPart(path);
-        }
+        }*/
     }
 
     /**

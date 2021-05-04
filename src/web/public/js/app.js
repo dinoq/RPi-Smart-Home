@@ -28,12 +28,20 @@ import { ChoiceDialog } from "./components/dialogs/choice-dialog.js";
 import { SettingsDetail } from "./layouts/settings-detail.js";
 import { AutomationDetail } from "./layouts/automation-detail.js";
 import { AutomationsPage } from "./pages/automations-page.js";
+import { Firebase } from "./app/firebase.js";
 export var app = null;
-class AutoHomeApp {
+class App {
     constructor() {
         this.initFirebase();
         this.registerAllComponents();
         this.pageCreator = new PageCreator();
+        let a = async () => {
+            console.time("fb");
+            await Firebase.pushNewDBData("smazat/a", { a: 55.125, b: "ASF" });
+            console.log(await Firebase.getDBData("smazat/a"));
+            console.timeEnd("fb");
+        };
+        a();
     }
     registerAllComponents() {
         let components = [
@@ -97,5 +105,5 @@ class AutoHomeApp {
     }
 }
 window.addEventListener('load', () => {
-    app = new AutoHomeApp();
+    app = new App();
 });

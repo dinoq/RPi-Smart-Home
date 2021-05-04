@@ -28,11 +28,12 @@ import { ChoiceDialog } from "./components/dialogs/choice-dialog.js";
 import { SettingsDetail } from "./layouts/settings-detail.js";
 import { AutomationDetail } from "./layouts/automation-detail.js";
 import { AutomationsPage } from "./pages/automations-page.js";
+import { Firebase } from "./app/firebase.js";
 
 export declare var firebase: any;
 
-export var app: null | AutoHomeApp = null;
-class AutoHomeApp {
+export var app: null | App = null;
+class App {
     private pageCreator: PageCreator;
     constructor() {
         this.initFirebase();
@@ -40,6 +41,15 @@ class AutoHomeApp {
 
         this.pageCreator = new PageCreator();
 
+        let a = async ()=>{
+            console.time("fb");
+            await Firebase.pushNewDBData("smazat/a", {a:55.125, b: "ASF"})
+            console.log(await Firebase.getDBData("smazat/a"));
+            console.timeEnd("fb");
+
+        }
+
+        a();
     }
     registerAllComponents() {
         let components: Array<any> = [
@@ -113,5 +123,5 @@ class AutoHomeApp {
     }
 }
 window.addEventListener('load', () => {
-    app = new AutoHomeApp();
+    app = new App();
 });

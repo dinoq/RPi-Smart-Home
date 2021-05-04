@@ -45,12 +45,12 @@ class ServerApp {
                 next();
             }
         });
+        this.devicePairedWithAccount = config_reader_js_1.ConfigReader.getValue("username", "").length > 0 && config_reader_js_1.ConfigReader.getValue("username", "").length > 0;
         // Zpracování všechPOST požadavků od klientů
         this._app.post('/*', (req, res) => {
             if (config_reader_js_1.ConfigReader.getValue("debugLevel", 0) > 0) {
                 console.log("Požadavek od klienta na: " + req.url);
             }
-            this.devicePairedWithAccount = config_reader_js_1.ConfigReader.getValue("username", "").length > 0 && config_reader_js_1.ConfigReader.getValue("username", "").length > 0;
             if (req.url.includes("/alive")) { // Dotaz, na server pro ověření, že funguje spojení mezi (webovým) klientem a serverem
                 res.sendStatus(200);
             }
@@ -119,7 +119,7 @@ class ServerApp {
             }
         });
         let portStr = (this._port == 80) ? "" : ":" + this._port;
-        if (devicePairedWithAccount) {
+        if (this.devicePairedWithAccount) {
             this._firebase.login(config_reader_js_1.ConfigReader.getValue("username"), config_reader_js_1.ConfigReader.getValue("password")).then((value) => {
                 if (config_reader_js_1.ConfigReader.getValue("openBrowserOnStart", true)) { // Po startu serveru
                     this._serverStartedPromise.then((value) => {

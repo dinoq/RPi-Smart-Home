@@ -23,6 +23,10 @@
 String boardType = "NodeMCU"; // Any from [wemosD1R1, NodeMCU, esp01]
 const char *ssid = "sprintel_antlova";
 const char *password = "netis111";
+IPAddress moduleStaticIP(192, 168, 1, 80); // module static IP
+//IPAddress moduleStaticIP; // Pokud nechceme používat statickou IP...
+IPAddress gateway(192, 168, 1, 1);   //IP address of gateway
+IPAddress subnet(255, 255, 255, 0); // Subnet addr
 /**
  * CONFIG PART END
  */

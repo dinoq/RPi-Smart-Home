@@ -593,21 +593,25 @@ page-manager {
         }
     }
 
-    .form-wrapper form, .form-wrapper .form {
-        max-width: initial;
-        width: 100%;
-        padding: 5px;
-        margin: 5px;
-
-        input:not([type="checkbox"]),
-        select,
-        slidable-img {
-            //max-width: 500px;
-        }
-
-        slidable-img {
-            .bordered-img{
-                border: 1px solid grey;
+    .detail-component {
+        .form-wrapper, .form-wrapper{
+            form, .form{
+                max-width: initial;
+                width: 100%;
+                padding: 5px;
+                margin: 5px;
+        
+                /*input:not([type="checkbox"]),
+                select,
+                slidable-img {
+                    //max-width: 500px;
+                }*/
+        
+                slidable-img {
+                    .bordered-img{
+                        border: 1px solid grey;
+                    }
+                }
             }
         }
     }

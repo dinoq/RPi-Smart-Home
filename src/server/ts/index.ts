@@ -58,12 +58,13 @@ class ServerApp {
             }
         });
 
+        this.devicePairedWithAccount = ConfigReader.getValue("username", "").length>0 && ConfigReader.getValue("username", "").length>0;
+        
         // Zpracování všechPOST požadavků od klientů
         this._app.post('/*', (req, res) => {
             if (ConfigReader.getValue("debugLevel", 0) > 0) {
                 console.log("Požadavek od klienta na: " + req.url);
             }
-            this.devicePairedWithAccount = ConfigReader.getValue("username", "").length>0 && ConfigReader.getValue("username", "").length>0;
             
             if (req.url.includes("/alive")) {// Dotaz, na server pro ověření, že funguje spojení mezi (webovým) klientem a serverem
                 res.sendStatus(200);
@@ -127,7 +128,7 @@ class ServerApp {
             }
         });
         let portStr = (this._port == 80) ? "" : ":" + this._port;
-        if (devicePairedWithAccount) {
+        if (this.devicePairedWithAccount) {
             this._firebase.login(ConfigReader.getValue("username"), ConfigReader.getValue("password")).then((value) => {
                 if (ConfigReader.getValue("openBrowserOnStart", true)) {// Po startu serveru
                     this._serverStartedPromise.then((value) => { // Pokud je v to v configu nastavené (vlastností openBrowserOnStart), otevře se automaticky domovská stránka webové aplikace v internetovém prohlížeči.
