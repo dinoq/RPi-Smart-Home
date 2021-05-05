@@ -72,7 +72,7 @@ export class Firebase {
         this.timeoutAutomations = new Array();
     }
 
-    _loadLocalDBFromFile(){        
+    _loadLocalDBFromFile() {
         if (fs.existsSync(dbFilePath)) {// Pokud existuje soubor s lokální databází, načte se.
             try {
                 this._dbFile = jsonManager.readFileSync(dbFilePath);
@@ -246,9 +246,9 @@ export class Firebase {
         try {
             let inited = await this.firebaseInited;
             if (inited) {
-                if (this.loggedIn) {
+                /*if (this.loggedIn) {
                     return;
-                }
+                }*/
                 try {
                     let user = await firebase.auth().signInWithEmailAndPassword(username, pwd);
                     this._loggedIn = true;
@@ -265,9 +265,9 @@ export class Firebase {
                         });
                     } else {
                         ErrorLogger.log(error, {
-                            errorDescription: "Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!",
+                            errorDescription: "Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě! Zřejmě jsou špatně zadány uživ. údaje, vymažte je z configu.",
                             placeID: 0
-                        });
+                        }, {}, 5);
                     }
                 }
             } else {
@@ -422,27 +422,27 @@ export class Firebase {
         }
     }
 
-    _checkSensorAutomation(updatePath: string){   
+    _checkSensorAutomation(updatePath: string) {
         let oldVal = this.readFromLocalDB(updatePath, 0);
-        let newVal = this._sensorsUpdates[updatePath];     
+        let newVal = this._sensorsUpdates[updatePath];
         Object.values(this.readFromLocalDB("automations", {})).forEach((automation: DatabaseData) => {
             if (automation.type == "automation" && automation.active && updatePath.includes(automation.watchedInput)) { // druhý typ (timeout - časovače zde nevyhodnocujeme); updatePath končí vlastností value, proto je zde porovnání na include...
-                if(objectPath.has(this._dbFile, this.correctPath(automation.watchedInput).split("/"))
-                    && objectPath.has(this._dbFile, this.correctPath(automation.controlledOutput).split("/"))){ // Kontrola, zda existuje snímač a výstup v databázi (zda nebyl odstraněn)
+                if (objectPath.has(this._dbFile, this.correctPath(automation.watchedInput).split("/"))
+                    && objectPath.has(this._dbFile, this.correctPath(automation.controlledOutput).split("/"))) { // Kontrola, zda existuje snímač a výstup v databázi (zda nebyl odstraněn)
                     if (automation.thresholdSign == "<") {
                         if (oldVal >= automation.thresholdVal && newVal < automation.thresholdVal) {
-                            this.clientUpdateInDB({ path: automation.controlledOutput, data: {value: automation.valueToSet} });
+                            this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.valueToSet } });
                         }
                     } else if (automation.thresholdSign == ">") {
                         if (oldVal <= automation.thresholdVal && newVal > automation.thresholdVal) {
-                            this.clientUpdateInDB({ path: automation.controlledOutput, data: {value: automation.valueToSet} });
+                            this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.valueToSet } });
                         }
                     } else {
                         let errorDescription = (automation.thresholdVal && automation.thresholdVal.toString().length) ? `Nepodporovaný typ porovnávacího operátoru (${automation.thresholdSign}) v databázi!` : `V databázi se vyskytuje automatizace s nenastaveným porovnávacím operátorem!`;
                         ErrorLogger.log(null, {
                             errorDescription: errorDescription,
                             placeID: 32
-                        }, {errorAutomation: automation, database: this.readFromLocalDB("/", {})})
+                        }, { errorAutomation: automation, database: this.readFromLocalDB("/", {}) })
                     }
                 }
             }
@@ -618,7 +618,7 @@ export class Firebase {
                     if (newModule.index != undefined) { // If module.index is undefined => module was actually deleted from db and only updated by server with ip and type
                         let path = "rooms/" + newRoomID + "/devices/" + newModuleID;
                         console.log('new module path: ', path);
-                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: newModuleID, path: path, ip:newModule.IP } });
+                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: newModuleID, path: path, ip: newModule.IP } });
                     }
                 }
 
@@ -629,9 +629,13 @@ export class Firebase {
                     const newSensor = (newSensors) ? newSensors[newSensorID] : undefined;
                     const oldSensor = (oldSensors) ? oldSensors[newSensorID] : undefined;
                     if (!oldSensor) {// Sensor added
-                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], input: newSensor.input.toString() } });
+                        let inpt = (newSensor && newSensor.input != undefined) ? newSensor.input.toString() : "";
+                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], input: inpt } });
                     } else if (newSensor.input != oldSensor.input) { // sensor changed
-                        this._processDbChange({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], oldInput: oldSensor.input.toString(), newInput: newSensor.input.toString(), type: newSensors[newSensorID].type.toString() } });
+                        let oldInpt = (oldSensor && oldSensor.input != undefined) ? oldSensor.input.toString() : "";
+                        let newInpt = (newSensor && newSensor.input != undefined) ? newSensor.input.toString() : "";
+                        let tp = (newSensors[newSensorID] && newSensors[newSensorID].type != undefined) ? newSensors[newSensorID].type.toString() : "";
+                        this._processDbChange({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], oldInput: oldInpt, newInput: newInpt, type: tp } });
                     }
                 }
 
@@ -687,7 +691,8 @@ export class Firebase {
                 for (const oldSensorID in oldSensors) {
                     const newSensor = (newSensors) ? newSensors[oldSensorID] : undefined;
                     if (!newSensor) {// SENSOR was removed
-                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: oldModule.IP, input: oldSensors[oldSensorID].input.toString() } });
+                        let inpt = (oldSensors[oldSensorID] && oldSensors[oldSensorID].input != undefined) ? oldSensors[oldSensorID].input.toString() : "";
+                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: oldModule.IP, input: inpt } });
                     }
                 }
 
@@ -696,7 +701,8 @@ export class Firebase {
                 for (const oldDeviceID in oldDevices) {
                     const newDevice = (newDevices) ? newDevices[oldDeviceID] : undefined;
                     if (!newDevice) {// DEVICE was removed
-                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: oldModule.IP, output: oldDevices[oldDeviceID].output.toString() } });
+                        let outpt = (oldDevices[oldDeviceID] && oldDevices[oldDeviceID].output != undefined) ? oldDevices[oldDeviceID].output.toString() : "";
+                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: oldModule.IP, output: outpt } });
                     }
                 }
             }
@@ -747,7 +753,7 @@ export class Firebase {
             }
         } else if (change.level == DevicesTypes.MODULE) { // ZMĚNA NA ÚROVNI MODULU
             if (change.type == ChangeMessageTypes.ADDED) {// Module was added => init communication
-                if(change.data.ip == undefined || change.data.ip == ""){//Pokud nebylo nastaven 
+                if (change.data.ip == undefined || change.data.ip == "") {//Pokud nebylo nastaven 
                     this._communicationManager.initCommunicationWithESP().then(({ espIP, boardType }) => {
                         /**
                          * Pokud uživatel "zběsile" klikal na přidání modulů, tak se k modulu dostalo několik požadavků na přidání,
@@ -761,9 +767,9 @@ export class Firebase {
                             this.usedIPsByModules.push(espIP);
                         }
                     }).catch((err) => {
-                        this.clientRemoveFromDB({ path: change.data.path, data: null });
+                        //this.clientRemoveFromDB({ path: change.data.path, data: null });
                     })
-                }else{//Jinak byl přidán modul již s IP adresou - ale zřejmě by se nemělo stávat
+                } else {//Jinak byl přidán modul již s IP adresou - ale zřejmě by se nemělo stávat
                 }
             } else if (change.type == ChangeMessageTypes.REMOVED) {// Module was removed => reset module...
                 if (change.data.ip) {
@@ -961,7 +967,7 @@ export class Firebase {
         } else {
             processUpdate();
         }
-        if(rewriteLastWriteTime){
+        if (rewriteLastWriteTime) {
             this._dbFile["lastWriteTime"] = time;
         }
 
@@ -1028,7 +1034,7 @@ export class Firebase {
         let uid = await this.userUID;
         if (uid && await this.online && await this.firebaseInited) {
             this._ignoredDBTimes.push(time);
-            if(rewriteLastWriteTime){
+            if (rewriteLastWriteTime) {
                 await this._fb.database().ref(uid + "/").update({ lastWriteTime: time });
             }
             await this._fb.database().ref(uid + "/" + path).update(updates);
@@ -1076,7 +1082,7 @@ export class Firebase {
      */
     public async clientGetFromDB(bodyData: IFormData): Promise<object> {
         let path = this.correctPath(bodyData.path);
-        
+
         return this.getDBPart(path);
         /*let uid = await this.userUID;
         if (uid && (await this.online) && (await this.firebaseInited)) {
@@ -1157,7 +1163,7 @@ export class Firebase {
 
         if (serverLastWriteTime < firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno do firebase, přepíše se lokální verze databáze
             console.log("Internetová verze (Firebase) databáze je aktuálnější. Přepíše lokální databázi...");
-            this._checkDbChange(this.readFromLocalDB("/", {}),data);
+            this._checkDbChange(this.readFromLocalDB("/", {}), data);
         } else if (serverLastWriteTime > firebaseLastWriteTime) { // Pokud bylo naposledy zapisováno lokálně, přepíše se firebase databáze
             console.log("Lokální verze databáze je aktuálnější. Přepíše databázi na internetu (Firebase databázi)...");
             this._rewriteFireBaseDatabase(serverLastWriteTime);

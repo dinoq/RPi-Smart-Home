@@ -339,9 +339,9 @@ class Firebase {
         try {
             let inited = await this.firebaseInited;
             if (inited) {
-                if (this.loggedIn) {
+                /*if (this.loggedIn) {
                     return;
-                }
+                }*/
                 try {
                     let user = await firebase.auth().signInWithEmailAndPassword(username, pwd);
                     this._loggedIn = true;
@@ -359,9 +359,9 @@ class Firebase {
                     }
                     else {
                         error_logger_js_1.ErrorLogger.log(error, {
-                            errorDescription: "Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!",
+                            errorDescription: "Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě! Zřejmě jsou špatně zadány uživ. údaje, vymažte je z configu.",
                             placeID: 0
-                        });
+                        }, {}, 5);
                     }
                 }
             }
@@ -582,10 +582,14 @@ class Firebase {
                     const newSensor = (newSensors) ? newSensors[newSensorID] : undefined;
                     const oldSensor = (oldSensors) ? oldSensors[newSensorID] : undefined;
                     if (!oldSensor) { // Sensor added
-                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], input: newSensor.input.toString() } });
+                        let inpt = (newSensor && newSensor.input != undefined) ? newSensor.input.toString() : "";
+                        this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], input: inpt } });
                     }
                     else if (newSensor.input != oldSensor.input) { // sensor changed
-                        this._processDbChange({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], oldInput: oldSensor.input.toString(), newInput: newSensor.input.toString(), type: newSensors[newSensorID].type.toString() } });
+                        let oldInpt = (oldSensor && oldSensor.input != undefined) ? oldSensor.input.toString() : "";
+                        let newInpt = (newSensor && newSensor.input != undefined) ? newSensor.input.toString() : "";
+                        let tp = (newSensors[newSensorID] && newSensors[newSensorID].type != undefined) ? newSensors[newSensorID].type.toString() : "";
+                        this._processDbChange({ type: ChangeMessageTypes.REPLACED, level: DevicesTypes.SENSOR, data: { ip: newModules[newModuleID]["IP"], oldInput: oldInpt, newInput: newInpt, type: tp } });
                     }
                 }
                 // check devices
@@ -639,7 +643,8 @@ class Firebase {
                 for (const oldSensorID in oldSensors) {
                     const newSensor = (newSensors) ? newSensors[oldSensorID] : undefined;
                     if (!newSensor) { // SENSOR was removed
-                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: oldModule.IP, input: oldSensors[oldSensorID].input.toString() } });
+                        let inpt = (oldSensors[oldSensorID] && oldSensors[oldSensorID].input != undefined) ? oldSensors[oldSensorID].input.toString() : "";
+                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.SENSOR, data: { ip: oldModule.IP, input: inpt } });
                     }
                 }
                 const newDevices = (newModule && newModule["OUT"]) ? newModule["OUT"] : undefined;
@@ -647,7 +652,8 @@ class Firebase {
                 for (const oldDeviceID in oldDevices) {
                     const newDevice = (newDevices) ? newDevices[oldDeviceID] : undefined;
                     if (!newDevice) { // DEVICE was removed
-                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: oldModule.IP, output: oldDevices[oldDeviceID].output.toString() } });
+                        let outpt = (oldDevices[oldDeviceID] && oldDevices[oldDeviceID].output != undefined) ? oldDevices[oldDeviceID].output.toString() : "";
+                        this._processDbChange({ type: ChangeMessageTypes.REMOVED, level: DevicesTypes.DEVICE, data: { ip: oldModule.IP, output: outpt } });
                     }
                 }
             }
@@ -711,7 +717,7 @@ class Firebase {
                             this.usedIPsByModules.push(espIP);
                         }
                     }).catch((err) => {
-                        this.clientRemoveFromDB({ path: change.data.path, data: null });
+                        //this.clientRemoveFromDB({ path: change.data.path, data: null });
                     });
                 }
                 else { //Jinak byl přidán modul již s IP adresou - ale zřejmě by se nemělo stávat

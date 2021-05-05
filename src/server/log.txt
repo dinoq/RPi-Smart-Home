@@ -1,3 +1,338 @@
+Čas vzniku chyby: 2021-5-5 17:03:33
+Číslo chyby od spuštění serveru: 1
+ID chyby: j3JBoEWx69aU1ecYzSD5uX08uDA0Ll
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě! Zřejmě jsou špatně zadány uživ. údaje, vymažte je z configu.
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba byla fatální, exit code aplikace:  5
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:57:55
+Číslo chyby od spuštění serveru: 1
+ID chyby: 5pzn3M4UAjDKZKPKiZ4h0XBPwvePpd
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:57:34
+Číslo chyby od spuštění serveru: 11
+ID chyby: qdu8knbvvutE32x7wzVVuh8bqVjLe2
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:57:29
+Číslo chyby od spuštění serveru: 10
+ID chyby: rNp7lEYRMPkYdOErVXJTJ2WDXPzWjP
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:57:23
+Číslo chyby od spuštění serveru: 9
+ID chyby: kcHeFaw2Z81dAL82lYkGkk4olVxlFQ
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:57:18
+Číslo chyby od spuštění serveru: 8
+ID chyby: cvYWkVOPsuxra7pyfRx80JvqGFaNPu
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:57:13
+Číslo chyby od spuštění serveru: 7
+ID chyby: qyeA1ach3XV9IoJqYbF465kJCN5pvv
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:57:07
+Číslo chyby od spuštění serveru: 6
+ID chyby: 6gWvOy3WY96JS9F9ZZnSbwU8SR1AkJ
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:57:02
+Číslo chyby od spuštění serveru: 5
+ID chyby: OmjxRuIjjp4M6iz3qwP962z5eJ1cuS
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:56:55
+Číslo chyby od spuštění serveru: 4
+ID chyby: Lvs4mDzLyr2aVqBLQlk5dsd2A88uLP
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:56:50
+Číslo chyby od spuštění serveru: 3
+ID chyby: 1LmapaKoUN4VIyhgm4svStBF0RA8Rb
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:56:44
+Číslo chyby od spuštění serveru: 2
+ID chyby: vVwgcpy9jZYO1AGrztPVwBVHWP90b6
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 16:56:38
+Číslo chyby od spuštění serveru: 1
+ID chyby: x4Wfu4cxtiYBDv9WT5UTYwYwxc1lIg
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě!
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: There is no user record corresponding to this identifier. The user may have been deleted.
+	Zásobník: 
+Informace o zásobníku chybí
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 14:38:04
+Číslo chyby od spuštění serveru: 2
+ID chyby: pBuoupmXmS1qnilGkF3zva3qvds98H
+
+Chybová hláška:
+Modul poslal požadavek na serverem nezpracováváné URL!
+
+Číslo chyby (placeID) pro lokaci v kódu: 27
+
+Kompletní výpis původní chyby:
+	Typ chyby: Typ chyby chybí
+	Zpráva: Zpráva o chybě chybí
+	Zásobník: 
+		Error
+		    at ErrorLogger.logToFile (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:116:25)
+		    at ErrorLogger._log (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:185:30)
+		    at Function.log (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:214:22)
+		    at Firebase._CoAPIncomingMsgCallback (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\firebase.js:155:47)
+		    at CoAPServer.<anonymous> (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\communication-manager.js:51:13)
+		    at CoAPServer.emit (events.js:314:20)
+		    at CoAPServer._handle (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\coap\lib\server.js:423:10)
+		    at Object.handleServerRequest (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\coap\lib\middlewares.js:30:20)
+		    at makeCallTwo (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\fastseries\series.js:150:3)
+		    at release (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\fastseries\series.js:138:7)
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 14:37:36
+Číslo chyby od spuštění serveru: 1
+ID chyby: EDyojGfaNFAYR1nRWhgh1dCf0PcCRb
+
+Chybová hláška:
+Modul poslal požadavek na serverem nezpracováváné URL!
+
+Číslo chyby (placeID) pro lokaci v kódu: 27
+
+Kompletní výpis původní chyby:
+	Typ chyby: Typ chyby chybí
+	Zpráva: Zpráva o chybě chybí
+	Zásobník: 
+		Error
+		    at ErrorLogger.logToFile (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:116:25)
+		    at ErrorLogger._log (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:185:30)
+		    at Function.log (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:214:22)
+		    at Firebase._CoAPIncomingMsgCallback (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\firebase.js:155:47)
+		    at CoAPServer.<anonymous> (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\communication-manager.js:51:13)
+		    at CoAPServer.emit (events.js:314:20)
+		    at CoAPServer._handle (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\coap\lib\server.js:423:10)
+		    at Object.handleServerRequest (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\coap\lib\middlewares.js:30:20)
+		    at makeCallTwo (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\fastseries\series.js:150:3)
+		    at release (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\fastseries\series.js:138:7)
+
+Chyba nebyla fatální (nezpůsobila pád aplikace).
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-5 12:50:23
+Číslo chyby od spuštění serveru: 1
+ID chyby: AJpjd1G0yzBywPCrmsBblmOLzkuxYE
+
+Chybová hláška:
+Došlo k neznámé chybě při startu aplikace! Server pravděpodobně není připojený k žádnému AP! 
+Pro funkci systému není nutné mít připojení k internetu, ale je nezbytné, aby bylo zařízení, na kterém poběží server připojeno do lokální sítě (k AP)!
+
+Číslo chyby (placeID) pro lokaci v kódu: 6
+
+Kompletní výpis původní chyby:
+	Typ chyby: Typ chyby chybí
+	Zpráva: Zpráva o chybě chybí
+	Zásobník: 
+		Error
+		    at ErrorLogger.logToFile (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:116:25)
+		    at ErrorLogger._log (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:185:30)
+		    at Function.log (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:214:22)
+		    at new ServerApp (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\index.js:20:43)
+		    at Object.<anonymous> (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\index.js:289:1)
+		    at Module._compile (internal/modules/cjs/loader.js:1015:30)
+		    at Object.Module._extensions..js (internal/modules/cjs/loader.js:1035:10)
+		    at Module.load (internal/modules/cjs/loader.js:879:32)
+		    at Function.Module._load (internal/modules/cjs/loader.js:724:14)
+		    at Function.executeUserEntryPoint [as runMain] (internal/modules/run_main.js:60:12)
+
+Chyba byla fatální, exit code aplikace:  5
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
 Čas vzniku chyby: 2021-4-24 18:55:45
 Číslo chyby od spuštění serveru: 1
 ID chyby: 8Zw0OjKjRsUwMEUOWHbNqqG1IxlxVf
@@ -17340,7 +17675,7 @@ Kompletní výpis původní chyby:
 		    at makeCallTwo (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\fastseries\series.js:150:3)
 		    at release (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\fastseries\series.js:138:7)
 
-Chyba nebyla fatální (nezpůsobila pád aplikace).
+Chyba nebyla fatáln�� (nezpůsobila pád aplikace).
 
 Error logger nesleduje k dané chybě stav žádného objektu.
 ________________________________________________________________________

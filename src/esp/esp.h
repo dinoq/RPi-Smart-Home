@@ -17,48 +17,38 @@
 
 
 /**
- * CONFIG PART BEGIN (recommended to change)
+ * ZAČÁTEK KONFIGURAČNÍ ČÁSTI (doporučeno změnit)
  */
 
-String boardType = "NodeMCU"; // Any from [wemosD1R1, NodeMCU, esp01]
+String boardType = "NodeMCU"; // Cokoli z [wemosD1R1, NodeMCU, esp01]
 const char *ssid = "sprintel_antlova";
 const char *password = "netis111";
-IPAddress moduleStaticIP(192, 168, 1, 80); // module static IP
-//IPAddress moduleStaticIP; // Pokud nechceme používat statickou IP...
-IPAddress gateway(192, 168, 1, 1);   //IP address of gateway
-IPAddress subnet(255, 255, 255, 0); // Subnet addr
+IPAddress moduleStaticIP(192, 168, 1, 100); // statická IP modulu, pokud ji uživatel chce používat
+//IPAddress moduleStaticIP; // Pokud uživatel nechce používat statickou IP, odkomentovat tento řídek a zakomentovat ten výše...
+IPAddress gateway(192, 168, 1, 1);   //IP adresa výchozí brány (pro použití statické IP)
+IPAddress subnet(255, 255, 255, 0); // Maska podsítě (pro použití statické IP)
 /**
- * CONFIG PART END
+ * KONEC KONFIGURAČNÍ ČÁSTI 
  */
 
-/**
- * OPTIONAL CONFIG PART BEGIN
- */
-
-int withoutConnTimeLimit = 180; // Max number of seconds without connection to Raspberry Pi. After this time will module try to listen on "all CoAP nodes" multicast group.
 
 /**
- * OPTIONAL CONFIG PART END
- */
-
-/**
- * TYPEDEF PART BEGIN
+ * TYPEDEF
  */
 typedef struct SInfo SensorInfo;
 
 /**
- * TYPEDEF PART END
+ * TYPEDEF
  */
 
 /**
- * Function prototypes PART BEGIN
+ * ZAČÁTEK PROTOTYPŮ FUNKCÍ
  * */
 
 void setup();
 
 void loop();
 
-void checkRPiConn();
 void checkMulticast();
 void checkInValues();
 float getSensorVal(SensorInfo sInfo);
@@ -74,7 +64,6 @@ void setRPiIP(IPAddress ip);
 void callbackHelloClient(CoapPacket &packet, IPAddress ip, int port);
 void setModuleID(char ID[], byte idLen);
 void resetSensorInfos();
-void callbackServerHasBeenReset(CoapPacket &packet, IPAddress ip, int port);
 void callbackResetModule(CoapPacket &packet, IPAddress ip, int port);
 void resetModule();
 void callbackSetAllIO(CoapPacket &packet, IPAddress ip, int port);
@@ -105,12 +94,12 @@ void sendErrorReportToServer(char errorMsg[], const char funcName[]);
 void pinWrite(byte pinNumber, int value, String pinType);
 
 /**
- * Function prototypes PART END
+ * KONEC PROTOTYPŮ FUNKCÍ
  * */
 
 const byte WATCHED_IN_LIMIT = 20;
 
-const float INVALID_SENSOR_VALUE = -2000000000.0;       // "Random" value, which will probably not be used in any sensor as valid value
+const float INVALID_SENSOR_VALUE = -2000000000.0;       // hodnota, kterou žádný snímač nebu"Random" value, which will probably not be used in any sensor as valid value
 const float UNITIALIZED_SENSOR_VALUE = -1000000000.0; // "Random" value, which will probably not be used in any sensor as valid value
 const int SENSOR_CHECK_TIME = 2000;                     // How often check for sensors values (in ms). Must be > 180 if sensor BH1750 is used.
 

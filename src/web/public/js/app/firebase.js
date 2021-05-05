@@ -11,7 +11,7 @@ export class Firebase extends Singleton {
         this._lastConnCheck = 0;
         this._paired = undefined; // Značka, zda je server spárovaný s uživatelským účtem
         this.localAccess = false; // Označuje, zda uživatel k webové aplikaci přistupuje z lokální sítě, nebo domény auto-home.web.app. Na základě toho buď webová aplikace komunikuje přímo s databází, nebo pouze se serverem (v případě komunikace v lokální síti), který později přeposílá do databáze data, pokud má server přístup k internetu
-        this.localAccess = !(window.location.hostname.includes("auto-home.web.app"));
+        this.localAccess = !(window.location.hostname.includes(".web.app"));
         if (this.localAccess) { // V případě lokální aplikace nechceme využívat firebase (v případě offline by navíc došlo k vyjímce)            
             this.serverCall("GET", "/paired", true).then(async (pairedObj) => {
                 this._paired = (pairedObj && pairedObj.paired) ? true : false;
@@ -20,22 +20,22 @@ export class Firebase extends Singleton {
             });
         }
         else {
-            this.authInited = new Promise((resolve, reject) => { this.resolveAuthInited = resolve; });
-            this.database = firebase.database();
-            this.auth = firebase.auth();
-            this.auth.onAuthStateChanged((user) => {
-                this.resolveAuthInited(user);
-                if (user) {
-                    this.loggedIn = true;
-                    this.uid = user.uid;
-                }
-                else {
-                    this.loggedIn = false;
-                    this.uid = null;
-                    this.auth.signOut();
-                }
-            });
         }
+        this.authInited = new Promise((resolve, reject) => { this.resolveAuthInited = resolve; });
+        this.database = firebase.database();
+        this.auth = firebase.auth();
+        this.auth.onAuthStateChanged((user) => {
+            this.resolveAuthInited(user);
+            if (user) {
+                this.loggedIn = true;
+                this.uid = user.uid;
+            }
+            else {
+                this.loggedIn = false;
+                this.uid = null;
+                this.auth.signOut();
+            }
+        });
     }
     static get paired() {
         let fb = Firebase.getInstance();
@@ -65,8 +65,7 @@ export class Firebase extends Singleton {
     }
     static login(username, pwd, persistence = AuthPersistence.LOCAL) {
         let fb = Firebase.getInstance();
-        if (fb.localAccess) {
-            //V lokální síti se nepřihlašuje pomocí této funkce...
+        if (false && fb.localAccess) {
         }
         else {
             return new Promise((resolve, reject) => {
@@ -74,7 +73,7 @@ export class Firebase extends Singleton {
                     .then(() => {
                     fb.auth.signInWithEmailAndPassword(username, pwd)
                         .then((user) => {
-                        fb.uid = user.uid;
+                        fb.uid = user.user.uid;
                         fb.loggedIn = true;
                         resolve(user);
                     }).catch((error) => {
@@ -96,8 +95,7 @@ export class Firebase extends Singleton {
     }
     static register(username, pwd) {
         let fb = Firebase.getInstance();
-        if (fb.localAccess) {
-            //V lokální síti se neregistruje pomocí této funkce...
+        if (false && fb.localAccess) {
         }
         else {
             return new Promise((resolve, reject) => {
@@ -390,7 +388,7 @@ export const DBTemplates = {
             index: 0,
             name: "Snímač " + Math.random().toString(36).substring(2, 6).toUpperCase(),
             unit: "percentages",
-            valueToSet: 0,
+            value: 0,
             input: "A17",
             icon: "temp"
         };
@@ -401,7 +399,7 @@ export const DBTemplates = {
             name: "Zařízení " + Math.random().toString(36).substring(2, 6).toUpperCase(),
             output: "D1",
             type: "digital",
-            valueToSet: 0,
+            value: 0,
             icon: "light"
         };
     },

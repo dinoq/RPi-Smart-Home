@@ -28,20 +28,12 @@ import { ChoiceDialog } from "./components/dialogs/choice-dialog.js";
 import { SettingsDetail } from "./layouts/settings-detail.js";
 import { AutomationDetail } from "./layouts/automation-detail.js";
 import { AutomationsPage } from "./pages/automations-page.js";
-import { Firebase } from "./app/firebase.js";
 export var app = null;
 class App {
     constructor() {
         this.initFirebase();
         this.registerAllComponents();
         this.pageCreator = new PageCreator();
-        let a = async () => {
-            console.time("fb");
-            await Firebase.pushNewDBData("smazat/a", { a: 55.125, b: "ASF" });
-            console.log(await Firebase.getDBData("smazat/a"));
-            console.timeEnd("fb");
-        };
-        a();
     }
     registerAllComponents() {
         let components = [
@@ -91,14 +83,14 @@ class App {
     }
     initFirebase() {
         var firebaseConfig = {
-            apiKey: "AIzaSyCCtm2Zf7Hb6SjKRxwgwVZM5RfD64tODls",
-            authDomain: "home-automation-80eec.firebaseapp.com",
-            databaseURL: "https://home-automation-80eec.firebaseio.com",
-            projectId: "home-automation-80eec",
-            storageBucket: "home-automation-80eec.appspot.com",
-            messagingSenderId: "970359498290",
-            appId: "1:970359498290:web:a43e83568b9db8eb783e2b",
-            measurementId: "G-YTRZ79TCJJ"
+            apiKey: "AIzaSyAMNdGufrEtSQzUw09i0KxiQG9NjP0hjR4",
+            authDomain: "homeautomation-55256.firebaseapp.com",
+            databaseURL: "https://homeautomation-55256-default-rtdb.firebaseio.com",
+            projectId: "homeautomation-55256",
+            storageBucket: "homeautomation-55256.appspot.com",
+            messagingSenderId: "98237875458",
+            appId: "1:98237875458:web:7508e37bd1ebf7e3552e1b",
+            measurementId: "G-KVWKXNKSRF"
         };
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);

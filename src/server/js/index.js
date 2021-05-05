@@ -88,7 +88,7 @@ class ServerApp {
             else { // Jinak je POST požadavek na po úspěšném přihlášení (resp. spárování s účtem Firebase) či registraci (Firebase)
                 let uName;
                 let pwd;
-                if (req.header('Referer').includes("login")) { // Přihlášení (resp. spárování s účtem Firebase)
+                if (req.header('Referer').includes("login") || req.header('Referer').includes("sparovat_ucet")) { // Přihlášení (resp. spárování s účtem Firebase)
                     let saveUserCredentialsOnLogin = config_reader_js_1.ConfigReader.getValue("saveUserCredentialsOnLogin", true);
                     saveUserCredentialsOnLogin = saveUserCredentialsOnLogin == true || saveUserCredentialsOnLogin == "true";
                     if (saveUserCredentialsOnLogin) {

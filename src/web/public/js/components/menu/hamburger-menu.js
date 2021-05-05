@@ -9,9 +9,6 @@ import { MenuItem } from "./menu-item.js";
 import { EventManager } from "../../app/event-manager.js";
 export class HamburgerMenu {
     constructor(componentProps) {
-        /*super(Utils.mergeObjects(componentProps, {
-            "z-index": Config.defaultMenuDepth.toString()
-        }));*/
         this.componentConnected = false;
         this.resize = () => {
             new MethodNotImplementedError("resize", this, true);
@@ -29,16 +26,16 @@ export class HamburgerMenu {
         }
         this.hamburgerIcon = new MenuIcon();
         this.addListeners();
-        let getPairedPromise = Firebase.paired;
+        /*let getPairedPromise = Firebase.paired;
         getPairedPromise.then((paired) => {
-            if (paired) {
-                let itemsContainerChildren = (this.itemsContainer && this.itemsContainer.children) ? Array.from(this.itemsContainer.children) : undefined;
-                if (itemsContainerChildren) {
-                    let itemToRemove = itemsContainerChildren.find((item, index, array) => { return item.innerText.includes("Spárovat"); });
+            if(paired){
+                let itemsContainerChildren = (this.itemsContainer && this.itemsContainer.children)? Array.from(this.itemsContainer.children) : undefined;
+                if(itemsContainerChildren){
+                    let itemToRemove = itemsContainerChildren.find((item: HTMLElement, index, array) => {return item.innerText.includes("Spárovat")});
                     itemToRemove.remove();
                 }
             }
-        });
+        })*/
     }
     disconnectComponent() {
         this.componentConnected = false;
@@ -138,7 +135,7 @@ HamburgerMenu.localMenu = {
         "Nastavení",
         "Automatizace",
         "Maximalizovat okno",
-        "Spárovat server s účtem"
+        "Spárovat server s (jiným) účtem"
     ]
 };
 HamburgerMenu.globalMenu = {

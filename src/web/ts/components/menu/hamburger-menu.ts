@@ -16,10 +16,6 @@ export class HamburgerMenu{
     componentConnected: boolean = false;
 
     constructor(componentProps?: IComponentProperties) {
-        /*super(Utils.mergeObjects(componentProps, {
-            "z-index": Config.defaultMenuDepth.toString()
-        }));*/
-
         this.itemsContainer = new MenuItemsContainer();
         let titles =  HamburgerMenu.globalMenu.MENU_TITLES;     
         let hrefs =  HamburgerMenu.globalMenu.MENU_HREFS;     
@@ -36,7 +32,7 @@ export class HamburgerMenu{
         this.addListeners();
 
         
-        let getPairedPromise = Firebase.paired;
+        /*let getPairedPromise = Firebase.paired;
         getPairedPromise.then((paired) => {
             if(paired){
                 let itemsContainerChildren = (this.itemsContainer && this.itemsContainer.children)? Array.from(this.itemsContainer.children) : undefined;
@@ -45,7 +41,7 @@ export class HamburgerMenu{
                     itemToRemove.remove();
                 }
             }
-        })
+        })*/
     }
 
     disconnectComponent() {
@@ -72,7 +68,7 @@ export class HamburgerMenu{
             "Nastavení",
             "Automatizace",
             "Maximalizovat okno",
-            "Spárovat server s účtem"
+            "Spárovat server s (jiným) účtem"
         ]
     }
     static globalMenu = {

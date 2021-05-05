@@ -68,7 +68,11 @@ export class PairComponent extends AbstractComponent {
         let password: string = (<HTMLInputElement>document.getElementById("password")).value;
         try {
             let user = await Firebase.login(username, password, "none");
-            let choiceServer = "Lokální verze (server)";
+            if(!user){
+                throw new Error();
+            }
+            this.querySelector("form").submit();
+            /*let choiceServer = "Lokální verze (server)";
             let choiceFirebase = "Verze z internetu";
             let dialog = new ChoiceDialog("Server byl úspěšně spárován s uživatelským účtem. Zvolte, která databáze má být zachovaná: ", [choiceFirebase, choiceServer]);
             let resp = await dialog.show();
@@ -76,9 +80,8 @@ export class PairComponent extends AbstractComponent {
                 await Firebase.serverCall("POST", "CopyDatabaseToFirebase");
             }else{
                 await Firebase.serverCall("POST", "CopyDatabaseFromFirebase");
-            }
+            }*/
             
-            //this.querySelector("form").submit();
         } catch (error) {
             let errorCode = error.code;
             let alert: HTMLDivElement = (<HTMLDivElement>document.getElementById("form-alert"));

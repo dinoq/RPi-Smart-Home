@@ -70,7 +70,6 @@ void setup()
     coap.server(callbackStopInputObservation, "stop-input-observation");
     coap.server(callbackChangeObservedInput, "change-observed-input");
     coap.server(callbackResetModule, "reset-module");
-    coap.server(callbackServerHasBeenReset, "server-has-been-reset");
     coap.server(callbackHelloClient, "hello-client");
     coap.server(callbackSetID, "set-id");
     
@@ -98,7 +97,6 @@ void setup()
 void loop()
 {
     blinkIfNotConnectedAndDelay();
-    //checkRPiConn();
     coap.loop();
     if(checkIO_Inited()){
         checkInValues();
@@ -130,18 +128,6 @@ void blinkFast(){
         delay(blinkDelay);
         pinWrite(LED_BUILTIN, LED_BUILTIN_LOW, "digital");
         delay(blinkDelay);
-    }
-}
-
-void checkRPiConn()
-{
-    if (!RpiIP.isSet())
-        return;
-
-    lastConnectedToRPi++;
-    if (lastConnectedToRPi >= withoutConnTimeLimit)
-    { // Get connection to Raspberry Pi again
-        RpiIP = IPAddress();
     }
 }
 
@@ -432,24 +418,11 @@ void resetSensorInfos()
 // CoAP server endpoint URL for complete reset of module
 void callbackResetModule(CoapPacket &packet, IPAddress ip, int port)
 {
-    if (!RpiIP.isSet())
-        return;
-
     Serial.println("callbackResetModule");
     resetModule(); // Parameters packet, ip and port are not need when reseting module
     coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen); // Send response back to ip, because RPiIP is no longer set!
 }
 
-// CoAP server endpoint URL for 
-void callbackServerHasBeenReset(CoapPacket &packet, IPAddress ip, int port)
-{
-    if (!RpiIP.isSet())
-        return;
-
-    Serial.println("callbackServerHasBeenReset");
-    //TODO!
-    coap.sendResponse(ip, port, packet.messageid, NULL, 0, COAP_CHANGED, COAP_TEXT_PLAIN, (packet.token), packet.tokenlen); // Send response back to ip, because RPiIP is no longer set!
-}
 
 void resetModule()
 {
@@ -806,9 +779,13 @@ SensorInfo getSensorInfo(char input[])
     if (analog || digital)
     {
         char pinStr[3]; // eg. 11\0
-
-        byte pinNumber = (byte)atoi(strncpy(pinStr, input + 1, strlen(input) - 1)); //Here we use pin number directly (without constants like A0, D5 etc...)
-        Serial.println("pinNumber");
+//strncpy(pinStr, input + 1, strlen(input) - 1)
+        byte pinNumber = (byte) (String(input).substring(1).toInt()); //Here we use pin number directly (without constants like A0, D5 etc...)
+        Serial.println("pinNumberrr1");
+        Serial.println(String(input));
+        Serial.println(String(input).substring(1));
+        Serial.println(String(input).substring(1).toInt());
+        Serial.println("pinNumberrr");
         Serial.println(pinNumber);
         Serial.println("Analog? " + String(analog));
         //Serial.println(pinStr);
