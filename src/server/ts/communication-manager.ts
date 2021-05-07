@@ -5,14 +5,12 @@ const dgram = require("dgram");
 export class CommunicationManager {
     private _server: any;
     constructor() { 
-
-        //TODO upravit coapTiming
         //Nastavení časování CoAP zpráv
         var coapTiming = {
-            ackTimeout: 0.5,
+            ackTimeout:0.25,
             ackRandomFactor: 1.0,
-            maxRetransmit: 5,
-            maxLatency: 5,
+            maxRetransmit: 3,
+            maxLatency: 3,
             piggybackReplyMs: 10
         };
         coap.updateTiming(coapTiming);

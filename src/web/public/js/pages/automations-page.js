@@ -33,58 +33,6 @@ export class AutomationsPage extends AbstractConfigurationPage {
                 item.checkboxLabel.style.paddingRight = (widerLen - shorterLen) + "px";
             }
         };
-        this.updateTimeoutCheckboxes = (newAutomations) => {
-            if (!newAutomations) {
-                return;
-            }
-            return;
-            let timeoutAutomations = new Array();
-            for (const automationID in newAutomations) {
-                let automation = newAutomations[automationID];
-                if (automation && automation.type == "timeout") {
-                    timeoutAutomations.push(automation);
-                    timeoutAutomations[timeoutAutomations.length - 1]["path"] = "automations/" + automationID;
-                    timeoutAutomations[timeoutAutomations.length - 1]["dbID"] = automationID;
-                }
-            }
-            let timeoutListItems = this.timeoutAutomationsList.getItems().items;
-            for (let item of timeoutListItems) {
-                let newAutomation = (item.dbCopy.dbID != undefined) ? newAutomations[item.dbCopy.dbID] : undefined;
-                if (!newAutomation) {
-                    continue;
-                }
-                if (newAutomation.expires > -1) {
-                }
-            }
-            /*
-            let timeoutListItems = this.timeoutAutomationsList.getItems().items;
-            let oldAutomationIDs = timeoutListItems.map(list => (<ListItem>list).dbCopy.dbID)
-            let oldAutomationVals = timeoutListItems.map(list => (<ListItem>list).dbCopy)
-            var oldAutomations = {};
-            oldAutomationIDs.forEach((dbID, i) => oldAutomations[dbID] = oldAutomationVals[i]);
-            for (const automationID in newAutomations) {
-                let newAutomation = newAutomations[automationID];
-                let oldAutomation = oldAutomations[automationID];
-                if (newAutomation && newAutomation.type == "timeout"
-                    && oldAutomation && oldAutomation.type == "timeout") {
-                        if(oldAutomation.expires != newAutomation.expires){
-                            if(oldAutomation.expires > -1 && newAutomation.expires > -1){ //Oba časovače aktivní, ale změnila se doba časovače
-                                if(oldAutomation.timeout != undefined){
-                                    clearTimeout(oldAutomation.timeout)
-                                }
-                                oldAutomation.expires = newAutomation.expires;
-                                oldAutomation.value=600;
-                                let timeDiff = Number.parseInt(oldAutomation.expires) - Math.round(Date.now() / 1000);
-                                oldAutomation.timeout =
-                                oldAutomation.timeout = setTimeout(() => {
-                                    item.checkbox.checked = false;
-                                    setTextAndRemainingPadding();
-                                }, timeDiff * 1000)
-                            }
-                        }
-                }
-            }*/
-        };
         /**
          * Komentář viz. předek (AbstractConfigurationPage)
          */
@@ -168,7 +116,6 @@ export class AutomationsPage extends AbstractConfigurationPage {
                     controlledOutput = "";
                     new BaseDialogError("Zdá se, že výstup, který daná automatizace používala již neexistuje, nastavte nový!", this);
                 }
-                console.log("TODO SENSORS_AUTOMATIONS initDetail");
                 values = [
                     { selectedValue: item.dbCopy.name },
                     {
@@ -267,9 +214,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
         this.appendComponents([this.timeoutAutomationsTabPanel, this.sensorAutomationsTabPanel, this.detail]);
         try {
             Loader.show();
-            this.initPageFromDB().then((value) => {
-                Firebase.addDBListener("automations", this.updateTimeoutCheckboxes);
-            });
+            this.initPageFromDB();
         }
         catch (err) {
             Loader.hide();

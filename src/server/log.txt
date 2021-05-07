@@ -1,3 +1,80 @@
+Čas vzniku chyby: 2021-5-6 13:45:20
+Číslo chyby od spuštění serveru: 1
+ID chyby: yaFI0fwqcr1LXXL26LDca6TrnuJ8Af
+
+Chybová hláška:
+Zvolený port (80) již využívá jiná aplikace. Zvolte jiný port v souboru server/config.json!
+
+Číslo chyby (placeID) pro lokaci v kódu: 22
+
+Kompletní výpis původní chyby:
+	Typ chyby: Error
+	Zpráva: listen EADDRINUSE: address already in use :::80
+	Zásobník: 
+		Error: listen EADDRINUSE: address already in use :::80
+		    at Server.setupListenHandle [as _listen2] (net.js:1317:16)
+		    at listenInCluster (net.js:1365:12)
+		    at Server.listen (net.js:1451:7)
+		    at Function.listen (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\express\lib\application.js:618:24)
+		    at ServerApp.start (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\index.js:160:36)
+		    at Object.<anonymous> (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\index.js:288:17)
+		    at Module._compile (internal/modules/cjs/loader.js:1015:30)
+		    at Object.Module._extensions..js (internal/modules/cjs/loader.js:1035:10)
+		    at Module.load (internal/modules/cjs/loader.js:879:32)
+		    at Function.Module._load (internal/modules/cjs/loader.js:724:14)
+
+Chyba byla fatální, exit code aplikace:  5
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-6 13:01:11
+Číslo chyby od spuštění serveru: 1
+ID chyby: M2mqhcFqKtqzh0Jc5ZBawimlhWKdX1
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě! Zřejmě jsou špatně zadány uživ. údaje, vymažte je z configu.
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: TypeError
+	Zpráva: pathString.replace is not a function
+	Zásobník: 
+		TypeError: pathString.replace is not a function
+		    at validateRootPathString (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\@firebase\database\dist\index.node.cjs.js:1542:33)
+		    at Reference.child (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\@firebase\database\dist\index.node.cjs.js:13596:17)
+		    at Database.ref (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\@firebase\database\dist\index.node.cjs.js:14186:48)
+		    at Firebase.login (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\firebase.js:349:45)
+		    at processTicksAndRejections (internal/process/task_queues.js:97:5)
+
+Chyba byla fatální, exit code aplikace:  5
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
+Čas vzniku chyby: 2021-5-6 12:59:36
+Číslo chyby od spuštění serveru: 1
+ID chyby: N4l5zxtQHI1kxiLQ27wuA63q6tkMbj
+
+Chybová hláška:
+Během přihlašování serveru k uživatelskému účtu došlo k neznámé chybě! Zřejmě jsou špatně zadány uživ. údaje, vymažte je z configu.
+
+Číslo chyby (placeID) pro lokaci v kódu: 0
+
+Kompletní výpis původní chyby:
+	Typ chyby: TypeError
+	Zpráva: pathString.replace is not a function
+	Zásobník: 
+		TypeError: pathString.replace is not a function
+		    at validateRootPathString (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\@firebase\database\dist\index.node.cjs.js:1542:33)
+		    at Reference.child (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\@firebase\database\dist\index.node.cjs.js:13596:17)
+		    at Database.ref (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\node_modules\@firebase\database\dist\index.node.cjs.js:14186:48)
+		    at Firebase.login (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\firebase.js:349:45)
+		    at processTicksAndRejections (internal/process/task_queues.js:97:5)
+
+Chyba byla fatální, exit code aplikace:  5
+
+Error logger nesleduje k dané chybě stav žádného objektu.
+________________________________________________________________________
 Čas vzniku chyby: 2021-5-5 17:03:33
 Číslo chyby od spuštění serveru: 1
 ID chyby: j3JBoEWx69aU1ecYzSD5uX08uDA0Ll
@@ -18832,7 +18909,7 @@ Došlo k chybě: pokus. Ve funkci: void checkInValues().
 Kompletní výpis původní chyby:
 	Typ chyby: Typ chyby chybí
 	Zpráva: Zpráva o chybě chybí
-	Zásobník: 
+	Zásobn��k: 
 		Error
 		    at ErrorLogger.logToFile (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:116:25)
 		    at ErrorLogger._log (C:\Users\dinok\Documents\GitHub\RPi-Smart-Home\src\server\js\error-logger.js:182:30)

@@ -128,14 +128,16 @@ export abstract class BaseDetail extends AbstractComponent {
         Array.from(this.rows.children).forEach((row: HTMLElement, index) => {
             let element: HTMLElement = (<HTMLElement>row.querySelector(".input-field").children[0]);
             let className = (count == 1) ? "blink-once" : "blinking";
-            element?.classList.add(className);
+            if(element)
+                element.classList.add(className);
         })
 
         setTimeout(() => {
             Array.from(this.rows.children).forEach((row: HTMLElement, index) => {
                 let element: HTMLElement = (<HTMLElement>row.querySelector(".input-field").children[0]);
                 let className = (count == 1) ? "blink-once" : "blinking";
-                element?.classList.remove(className);
+                if(element)
+                    element.classList.remove(className);
             })
         }, count * 1000);
     }

@@ -74,7 +74,6 @@ class ServerApp {
                 })
             } else if (req.url.includes("/pushData")) { // Požadavek na vložení nových dat do databáze
                 this._firebase.clientPushToDB(req.body).then((key) => {
-                    console.log('sending key: ', key);
                     res.send(key);
                 })
             } else if (req.url.includes("/getData")) { // Požadavek na získání dat z databáze

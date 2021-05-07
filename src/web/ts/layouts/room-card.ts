@@ -90,7 +90,7 @@ export class RoomCard extends AbstractComponent {
 
     updateBGImg = (data: any) => {
         //Does img changed?
-        let newSrc = (data.img.src.startsWith("https://")) ? `url("${data.img.src}")` : `url(img/"${data.img.src}")`;
+        let newSrc = (data.img.src.startsWith("https://") || data.img.src.startsWith("http://") || data.img.src.startsWith("www.")) ? `url("${data.img.src}")` : `url(img/"${data.img.src}")`;
         if (newSrc != this.style.backgroundImage) { // Don't reload if it is not needed!
             this.style.backgroundImage = newSrc;
             this.style.backgroundSize = "cover";
@@ -185,8 +185,7 @@ export class RoomCard extends AbstractComponent {
         }
     }
 
-    resize = () => {
-        //TODO - zatím se nikde "nevolá"
+    resize = () => {//zatím se nikde "nevolá"
         let deviceRow = new HorizontalStack({
             justifyContent: "space-between"
         });
@@ -436,7 +435,7 @@ export class RoomDevice extends AbstractComponent {
                 `;
                 break;
         }
-        let img = this.iconWrapper?.querySelector("img");
+        let img = (this.iconWrapper)? this.iconWrapper.querySelector("img") : undefined;
         if (img) {
             img.addEventListener('load', (event) => {
                 this.imgLoaded = true;

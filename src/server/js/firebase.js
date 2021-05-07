@@ -343,6 +343,11 @@ class Firebase {
                     return;
                 }*/
                 try {
+                    if (this._firebaseHandlerActive) {
+                        let prevUID = await this.userUID;
+                        this._firebaseHandlerActive = false;
+                        this._fb.database().ref(prevUID).off(); // Je potřeba odstranit posluchače na změnu databáze
+                    }
                     let user = await firebase.auth().signInWithEmailAndPassword(username, pwd);
                     this._loggedIn = true;
                     this._loggedInResolve(); // Pokud se někde v kódu čeká na přihlášení, tímto se "pustí" provádění kódu dále.
@@ -534,7 +539,7 @@ class Firebase {
                         let path = diff.path.join("/");
                         let val = objectPath.get(newData, pathArr);
                         let time = (newData.lastWriteTime) ? newData.lastWriteTime : Date.now();
-                        this.writeToLocalDB(path, val, time);
+                        this.writeToLocalDB(path, val, time, true, false);
                     }
                     else if (diff.kind == ObjectChangeTypes.DELETED) {
                         let pathArr = diff.path;
@@ -717,7 +722,7 @@ class Firebase {
                             this.usedIPsByModules.push(espIP);
                         }
                     }).catch((err) => {
-                        //this.clientRemoveFromDB({ path: change.data.path, data: null });
+                        this.clientRemoveFromDB({ path: change.data.path, data: null });
                     });
                 }
                 else { //Jinak byl přidán modul již s IP adresou - ale zřejmě by se nemělo stávat
@@ -866,7 +871,7 @@ class Firebase {
      * @param val Zapisovaná hodnota
      * @param time Čas, který se má zapsat jako poslední změny
      */
-    async writeToLocalDB(path, val, time, rewriteLastWriteTime = true) {
+    async writeToLocalDB(path, val, time, rewriteLastWriteTime = true, checkAndProcessDbChanges = true) {
         if (time == undefined) {
             time = Date.now();
         }
@@ -926,8 +931,9 @@ class Firebase {
             }
         }
         jsonManager.writeFileSync(dbFilePath, this.readFromLocalDB("/"), { spaces: 2 });
-        //Ještě uložit zkontrolovat a zpracovat změny z pohledu modulů...
-        this._checkDbChange(tmpDbFile, this.readFromLocalDB("/"), true);
+        if (checkAndProcessDbChanges) { //Ještě uložit zkontrolovat a zpracovat změny z pohledu modulů...
+            this._checkDbChange(tmpDbFile, this.readFromLocalDB("/"), true);
+        }
     }
     /**
      * Funkce smaže záznam na dané cestě (parametr path) z lokální databáze.
