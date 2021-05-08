@@ -107,7 +107,7 @@ class ServerApp {
                     uName = (req && req.body) ? req.body["registration-username"] : undefined;
                     pwd = (req && req.body) ? req.body["registration-pwd"] : undefined;
                 }
-                
+
                 if (uName != undefined && pwd != undefined) {
                     ConfigReader.setValue("username", uName);
                     ConfigReader.setValue("password", pwd);
@@ -244,13 +244,11 @@ class ServerApp {
                     errorDescription: "Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!",
                     placeID: 18
                 });
-                process.exit(5);
             } else {
                 ErrorLogger.log(err, {
                     errorDescription: "Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!", 
                     placeID: 5
                 });
-                process.exit(5);
             }
         }
     }

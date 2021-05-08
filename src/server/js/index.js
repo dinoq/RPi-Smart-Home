@@ -238,14 +238,12 @@ class ServerApp {
                     errorDescription: "Špatně zvolený port (" + this._port + ")! " + tooHighPortNumberMsg + " Zvolte jiný port v souboru server/config.json!",
                     placeID: 18
                 });
-                process.exit(5);
             }
             else {
                 error_logger_js_1.ErrorLogger.log(err, {
                     errorDescription: "Došlo k neznámé chybě při pokusu o vytvoření serveru na portu " + this._port + "!",
                     placeID: 5
                 });
-                process.exit(5);
             }
         }
     }
