@@ -107,6 +107,7 @@ class ServerApp {
                     uName = (req && req.body) ? req.body["registration-username"] : undefined;
                     pwd = (req && req.body) ? req.body["registration-pwd"] : undefined;
                 }
+                
                 if (uName != undefined && pwd != undefined) {
                     ConfigReader.setValue("username", uName);
                     ConfigReader.setValue("password", pwd);

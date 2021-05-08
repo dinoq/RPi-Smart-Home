@@ -189,6 +189,12 @@ export class AutomationsPage extends AbstractConfigurationPage {
                 }
                 else if (item.dbCopy.type == "automation") {
                     updates.active = checked;
+                    if (checked) {
+                        item.checkboxLabel.innerText = "(aktivní)";
+                    }
+                    else {
+                        item.checkboxLabel.innerText = "(neaktivní)";
+                    }
                 }
                 await Firebase.updateDBData(item.dbCopy.path, updates);
                 await this.pageReinicialize();
@@ -300,6 +306,9 @@ export class AutomationsPage extends AbstractConfigurationPage {
                 });
                 list.addItems(item);
                 item.checkbox.checked = automations[i].active;
+                if (automations[i].active) {
+                    item.checkboxLabel.innerText = "(aktivní)";
+                }
             }
             list.updatedOrderHandler();
         }

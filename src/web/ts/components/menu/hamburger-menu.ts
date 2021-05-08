@@ -104,12 +104,18 @@ export class HamburgerMenu{
             containerStyle.transition = "left 1s";
         }
         if (show) {
+            Array.from(this.itemsContainer.children).forEach((item: HTMLElement, index, array) => {
+                item.style.whiteSpace = "normal";
+            })
             this.hamburgerIcon.src = "img/icons/close.png";
             containerStyle.left = "0px";
         } else {
+            Array.from(this.itemsContainer.children).forEach((item: HTMLElement, index, array) => {
+                item.style.whiteSpace = "nowrap";
+            })
+
             this.hamburgerIcon.src = "img/icons/menu.png";
-            containerStyle.left = -this.itemsContainer.clientWidth -
-                Utils.pxToNumber(getComputedStyle(this.itemsContainer).left) + "px";
+            containerStyle.left = -this.itemsContainer.clientWidth - 5 + "px";
         }
         if (animate) {
             this.itemsContainer.addEventListener("transitionend", () => {

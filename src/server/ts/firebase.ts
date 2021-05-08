@@ -192,9 +192,11 @@ export class Firebase {
         let firstCycle = true;
         this._fb.database().ref(await this.userUID).on('value', (snapshot) => {
             const data = snapshot.val();
-            //console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
-            this._firebaseDatabaseUpdateHandler(data, firstCycle);
-            firstCycle = false;
+            if(data){
+                //console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
+                this._firebaseDatabaseUpdateHandler(data, firstCycle);
+                firstCycle = false;
+            }
         });
     }
 
@@ -644,7 +646,7 @@ export class Firebase {
                     const newDevice = (newDevices) ? newDevices[newDeviceID] : undefined;
                     const oldDevice = (oldDevices) ? oldDevices[newDeviceID] : undefined;
                     const outputOrTypeChanged = oldDevice && ((newDevice.output != oldDevice.output) || (newDevice.type != oldDevice.type));
-                    if (!oldDevice || (newDevice.value != oldDevice.value) || outputOrTypeChanged) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
+                    if ((!oldDevice || (newDevice.value != oldDevice.value) || outputOrTypeChanged) && newDevice.output!= undefined) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
                         let output = (newDevice.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
                         output += newDevice.output.toString().substring(1);
                         let val = Number.parseInt(newDevices[newDeviceID].value);

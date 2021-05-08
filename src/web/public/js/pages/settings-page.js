@@ -314,9 +314,10 @@ export class SettingsPage extends AbstractConfigurationPage {
                         const activeModuleType = document.querySelectorAll("settings-page list-component")[1].querySelector(".active").dbCopy.type;
                         if (Board[activeModuleType] && Board[activeModuleType].digitalPins) {
                             let dPins = Board[activeModuleType].digitalPins;
-                            for (let i = 0; i < 5; i++) { //Try to set one of first 5 GPIO, BUT WHICH IS FOR GIVEN MODULE ACCESSIBLE as first option in select.
-                                if (dPins["D" + i]) {
+                            for (let i = 0; i < 10; i++) { //Try to set one of first 10 GPIO, BUT WHICH IS FOR GIVEN MODULE ACCESSIBLE as first option in select.
+                                if (dPins["D" + i] != undefined) {
                                     data.output = "D" + dPins["D" + i];
+                                    break;
                                 }
                             }
                         }

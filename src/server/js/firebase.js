@@ -33,7 +33,7 @@ class Firebase {
          */
         this.connectionCheckInterval = async () => {
             let online = await this.online;
-            let fbInited = await this.firebaseInited;
+            //let fbInited = await this.firebaseInited;
             if (!this.loggedIn && online && this._loginInfo) { // Server je online, ale dosud nepřihlášený ve Firebase. Je to případ pokud se z nějakého důvodu nepodařilo přihlásit (ověřit) uživatele ve firebase (např. server v době spuštění nebyl online).
                 await this.login(this._loginInfo.username, this._loginInfo.pwd); // Přihlásí uživatele
                 if (this._previousOnline === false) {
@@ -288,9 +288,11 @@ class Firebase {
         let firstCycle = true;
         this._fb.database().ref(await this.userUID).on('value', (snapshot) => {
             const data = snapshot.val();
-            //console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
-            this._firebaseDatabaseUpdateHandler(data, firstCycle);
-            firstCycle = false;
+            if (data) {
+                //console.log("Aktualizace z Firebase databáze..." + ((data) ? data.lastWriteTime : data));
+                this._firebaseDatabaseUpdateHandler(data, firstCycle);
+                firstCycle = false;
+            }
         });
     }
     /**
@@ -308,7 +310,6 @@ class Firebase {
                 return true;
             }
             else {
-                //console.warn("Možná zde bude nutné vracet false a ne this._firebaseInited. Needs work (zamyslet se!)...TODO")
                 return this._firebaseInited;
             }
         });
@@ -518,13 +519,6 @@ class Firebase {
      * @returns
      */
     _checkDbChange(oldData, newData, comparingLocalDB = false) {
-        if (!newData) {
-            if (this.readFromLocalDB("/")) { // everything was deleted
-                //TODO!!! (resetovat všechny moduly atd...)
-                //TODO!!! smazat vše i z lokální db (_dbFile)
-            }
-            return;
-        }
         this.checkRooms(oldData, newData);
         this.checkAutomations(oldData, newData);
         if (!comparingLocalDB) {
@@ -604,7 +598,7 @@ class Firebase {
                     const newDevice = (newDevices) ? newDevices[newDeviceID] : undefined;
                     const oldDevice = (oldDevices) ? oldDevices[newDeviceID] : undefined;
                     const outputOrTypeChanged = oldDevice && ((newDevice.output != oldDevice.output) || (newDevice.type != oldDevice.type));
-                    if (!oldDevice || (newDevice.value != oldDevice.value) || outputOrTypeChanged) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
+                    if ((!oldDevice || (newDevice.value != oldDevice.value) || outputOrTypeChanged) && newDevice.output != undefined) { // Device was added (send "new" value to ESP) OR Device value changed OR pin changed
                         let output = (newDevice.type == "analog") ? "A" : "D"; //Map device type (analog/digital) and output pin number to *TYPE*PIN_NUMBER* (eg. A5, D2...)
                         output += newDevice.output.toString().substring(1);
                         let val = Number.parseInt(newDevices[newDeviceID].value);
@@ -701,8 +695,7 @@ class Firebase {
      */
     _processDbChange(change) {
         if (change.level == DevicesTypes.ROOM) { // ZMĚNA NA ÚROVNI MÍSTNOSTI
-            if (change.type == ChangeMessageTypes.REMOVED) { // ROOM was removed => reset all modules from that room...
-                //TODO: remove all modules on removing non-empty room
+            if (change.type == ChangeMessageTypes.REMOVED) { // ROOM was removed
             }
         }
         else if (change.level == DevicesTypes.MODULE) { // ZMĚNA NA ÚROVNI MODULU
@@ -753,7 +746,6 @@ class Firebase {
         }
         else if (change.level == DevicesTypes.DEVICE) { // ZMĚNA NA ÚROVNI ZAŘÍZENÍ
             if (change.type == ChangeMessageTypes.VALUE_CHANGED) {
-                console.log("Klient změnil hodnotu některého zařízení.");
                 if (change.data.ip && change.data.output && (change.data.value || change.data.value == 0))
                     this._communicationManager.putVal(change.data.ip, change.data.output, change.data.value);
             }
@@ -766,7 +758,6 @@ class Firebase {
             this._setAutomationTimeoutIfActive(change.data);
         }
         else if (change.level == DevicesTypes.SENSORS_AUTOMATIONS) { // ZMĚNA NA ÚROVNI AUTOMATIZACE SNÍMAČŮ
-            console.log("TODO ZMĚNA NA ÚROVNI AUTOMATIZACE SNÍMAČŮ");
         }
     }
     /**

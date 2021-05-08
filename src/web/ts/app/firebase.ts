@@ -76,70 +76,64 @@ export class Firebase extends Singleton {
 
     static login(username, pwd, persistence: string = AuthPersistence.LOCAL) {
         let fb = Firebase.getInstance();
-        if (false && fb.localAccess) {
-            
-        } else {
-            return new Promise((resolve, reject) => {
-                fb.auth.setPersistence(persistence)
-                    .then(() => {
-                        fb.auth.signInWithEmailAndPassword(username, pwd)
-                            .then((user: any) => {
-                                fb.uid = user.user.uid;
-                                fb.loggedIn = true;
-                                resolve(user);
+        return new Promise((resolve, reject) => {
+            fb.auth.setPersistence(persistence)
+                .then(() => {
+                    fb.auth.signInWithEmailAndPassword(username, pwd)
+                        .then((user: any) => {
+                            fb.uid = user.user.uid;
+                            fb.loggedIn = true;
+                            resolve(user);
 
-                            }).catch((error) => {
-                                fb.uid = undefined;
-                                fb.loggedIn = false;
-                                reject(error);
-                            });
+                        }).catch((error) => {
+                            fb.uid = undefined;
+                            fb.loggedIn = false;
+                            reject(error);
+                        });
 
-                    })
-                    .catch((error) => {
-                        fb.uid = undefined;
-                        fb.loggedIn = false;
-                        reject(error);
-                        var errorCode = error.code;
-                        var errorMessage = error.message;
-                        console.error("Chyba: " + errorMessage);
-                    });
+                })
+                .catch((error) => {
+                    fb.uid = undefined;
+                    fb.loggedIn = false;
+                    reject(error);
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    console.error("Chyba: " + errorMessage);
+                });
 
-            })
-        }
+        })
     }
 
     static register(username, pwd) {
         let fb = Firebase.getInstance();
-        if (false && fb.localAccess) {
-            
-        } else {
-            return new Promise((resolve, reject) => {
-                fb.auth.createUserWithEmailAndPassword(username, pwd)
-                    .then((userCredential: any) => {
-                        fb.uid = userCredential.user.uid;
-                        fb.loggedIn = true;
-                        resolve(userCredential);
+        return new Promise((resolve, reject) => {
+            fb.auth.createUserWithEmailAndPassword(username, pwd)
+                .then(async (userCredential: any) => {
+                    fb.uid = userCredential.user.uid;
+                    fb.loggedIn = true;
 
-                    }).catch((error) => {
-                        var errorCode = error.code;
-                        var errorMessage = error.message;
-                        fb.uid = undefined;
-                        fb.loggedIn = false;
-                        reject(error);
-                    });
-            })
-        }
+                    let lastTimePath = await Firebase.getFullPath("/", true);
+                    lastTimePath = lastTimePath.substring(0, lastTimePath.length - 1);
+                    if (!fb.localAccess && await fb.online) { // U registrace při lokálním přístupu nechceme vložit aktuální čas jako poslední změnu, jinak by se celá aktuální konfigurace systému smazala!
+                        await fb.database.ref(lastTimePath).update({ lastWriteTime: Date.now() });
+                    }
+
+                    resolve(userCredential);
+                }).catch((error) => {
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    fb.uid = undefined;
+                    fb.loggedIn = false;
+                    reject(error);
+                });
+        })
     }
 
     static async logout() {
         let fb = Firebase.getInstance();
-        if (fb.localAccess) {
-            //V lokální síti se neodhlašuje pomocí této funkce...
-        } else {
-            fb.loggedIn = false;
-            fb.uid = null;
-            await fb.auth.signOut();
-        }
+        fb.loggedIn = false;
+        fb.uid = null;
+        await fb.auth.signOut();
     }
 
     static async loggedIn() {
@@ -152,12 +146,12 @@ export class Firebase extends Singleton {
         }
     }
 
-    static async getFullPath(dbPath: string) {//Adds uid/ at start of dbPath parameter
+    static async getFullPath(dbPath: string, includeUIDInLocalAccess = false) {//Adds uid/ at start of dbPath parameter
         let path = (dbPath.indexOf("/") == 0) ? dbPath : "/" + dbPath;
         let slash = (path.lastIndexOf("/") == path.length - 1) ? "" : "/";
         path += slash;
         let fb = Firebase.getInstance();
-        if (fb.localAccess) {
+        if (fb.localAccess && !includeUIDInLocalAccess) {
             return path;
         } else {
             await fb.authInited;
