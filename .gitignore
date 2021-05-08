@@ -12,7 +12,7 @@ src/web/node_modules/
 src/server/.vscode/
 src/server/.VSCodeCounter/
 src/server/node_modules/
-src/server/config.json
+#src/server/config.json
 src/server/local-database.json
 src/esp/build/
 src/esp/esp_sInfo_in_mem/
