@@ -14,7 +14,7 @@ export class HomePage extends BasePage {
         Loader.show();
         Firebase.addDBListener("rooms/", (data)=>{      
             Loader.hide();      
-            if(Object.keys(data).length == 0){       
+            if(!data || Object.keys(data).length == 0){       
                 this.roomsCards = new Array();
                 this.roomsIndexes = new Array();         
                 this.innerHTML = `
