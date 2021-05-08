@@ -216,7 +216,7 @@ export class AutomationsPage extends AbstractConfigurationPage {
         this.sensorAutomationsList.initDefaultItem(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.SENSORS_AUTOMATIONS));
         this.allListComponents.push(this.sensorAutomationsList);
         this.timeoutAutomationsTabPanel.addTab("Časovače", this.timeoutAutomationsList);
-        this.sensorAutomationsTabPanel.addTab("Automatizace snímačů", this.sensorAutomationsList);
+        this.sensorAutomationsTabPanel.addTab("Automatizace", this.sensorAutomationsList);
         this.appendComponents([this.timeoutAutomationsTabPanel, this.sensorAutomationsTabPanel, this.detail]);
         try {
             Loader.show();
@@ -230,7 +230,6 @@ export class AutomationsPage extends AbstractConfigurationPage {
         let list = this.timeoutAutomationsList;
         list.clearItems();
         list.updateAddItemBtn("/automations/");
-        console.log('automations: ', automations);
         if (!automations.length) {
             //list.defaultItem.initialize(ListTypes.TEXT_ONLY, this.itemTypeToDefItmStr(ListTypes.TIMEOUT, true));
             list.defaultItem.initializeItem({
@@ -283,7 +282,6 @@ export class AutomationsPage extends AbstractConfigurationPage {
         let list = this.sensorAutomationsList;
         list.clearItems();
         list.updateAddItemBtn("/automations/");
-        console.log('sensor automations: ', automations);
         if (!automations.length) {
             list.defaultItem.initializeItem({
                 type: ListTypes.TEXT_ONLY,
@@ -335,7 +333,6 @@ export class AutomationsPage extends AbstractConfigurationPage {
      */
     async initPageFromDB() {
         let automations = await Firebase.getDBData("/automations/");
-        console.log('data: ', automations);
         let timeoutAutomations = new Array();
         let sensorAutomations = new Array();
         for (const automationID in automations) {

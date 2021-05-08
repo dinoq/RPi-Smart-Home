@@ -59,7 +59,7 @@ class CommunicationManager {
      */
     initCommunicationWithESP() {
         return new Promise((resolve, reject) => {
-            console.log('initCommunicationWithESP: ');
+            console.log('Pokus vyhledání nového modulu');
             this.coapRequest("224.0.1.187", "/hello-client", "", "GET", null, (response) => {
                 resolve({ espIP: response.rsinfo.address, boardType: response.payload.toString().substring("TYPE:".length) });
             }, (err) => {
@@ -204,8 +204,8 @@ class CommunicationManager {
      * @param ip IP adresa modulu.
      */
     resetModule(ip) {
-        console.log("RESET! STACK:");
-        console.log(new Error().stack);
+        /*console.log("RESET! STACK:");
+        console.log(new Error().stack);*/
         this.coapRequest(ip, "/reset-module", "", "DELETE", null, null, null, true);
     }
     /**
@@ -216,7 +216,6 @@ class CommunicationManager {
      * @param InOut Konfigurace vstupů a výstupů daného modulu.
      */
     setAllIO(ip, InOut) {
-        console.log('setAllIO: ', InOut);
         this.coapRequest(ip, "/set-all-IO-state", InOut, "PUT", null, null, (err) => {
             console.error('setAllIO err: ', err.message);
         }, false);

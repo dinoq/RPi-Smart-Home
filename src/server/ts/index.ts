@@ -86,7 +86,6 @@ class ServerApp {
                 })
             } else if (req.url.includes("CopyDatabase")) { // Požadavek na nahrazení jedné z databází (lokální/Firebase) tou druhou. Volá se po prvotním spárování s uživatelským účem, kde si uživatel vybírá, kteoru z databází zachovat (pro případy konfliktu)
                 //CopyDatabaseFromFirebase or CopyDatabaseToFirebase
-                console.log("REQ for copying db: " + req.url);
                 let fromFirebase = (req.url.includes("CopyDatabaseFromFirebase"));
                 this._firebase.copyDatabase(fromFirebase).then((value) => {
                     res.sendStatus(200);

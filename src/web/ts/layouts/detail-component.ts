@@ -217,7 +217,6 @@ export class DetailRow extends AbstractComponent {
             this.input = input.querySelector("input");
         }else if (type == DETAIL_FIELD_TYPES.THRESHOLD_INPUT) {
             this.innerHTML = "";
-            console.log("p c");
             AbstractComponent.appendComponentsToDOMElements(this, new ThresholdInput(id));
         } else {
             new BaseDialogError("Neznámý typ komponenty v detailu!", this);
@@ -333,7 +332,6 @@ export class DetailRow extends AbstractComponent {
 
         } else if (this.type == DETAIL_FIELD_TYPES.THRESHOLD_INPUT) {
             valueAlreadySet = true;
-            console.log('p initObject: ', initObject);
             (<ThresholdInput>this.querySelector("threshold-input")).initializeValues(initObject, onInputCallback, layoutChanged);
         } else {
             if (val == undefined) {

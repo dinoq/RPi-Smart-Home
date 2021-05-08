@@ -126,7 +126,6 @@ export class Firebase {
             if (actualTime < automation.expires) { // K timeoutu ještě skutečně (zatím) nedošlo...
                 let timeDiff = automation.expires - actualTime;
                 let timeout = setTimeout(() => {
-                    console.log("set because of timeout: ", automation.controlledOutput, ":::", automation.valueToSet);
                     this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.valueToSet } })
                     this.clientUpdateInDB({ path: "automations/" + automation.dbID, data: { expires: -1 } })
                     let thisTimeout = this.timeoutAutomations.find((a, index, array) => {
@@ -139,7 +138,6 @@ export class Firebase {
                     timeout: timeout
                 })
             } else {//Timeout už vypršel, okamžitě  nastavit výstup
-                console.log("set HNED because of timeout: ", automation.path, ":::", automation.valueToSet);
                 this.clientUpdateInDB({ path: automation.controlledOutput, data: { value: automation.valueToSet } })
                 this.clientUpdateInDB({ path: "automations/" + automation.dbID, data: { expires: -1 } })
             }
@@ -617,7 +615,6 @@ export class Firebase {
                 if (!oldModule) {// Module added                    
                     if (newModule.index != undefined) { // If module.index is undefined => module was actually deleted from db and only updated by server with ip and type
                         let path = "rooms/" + newRoomID + "/devices/" + newModuleID;
-                        console.log('new module path: ', path);
                         this._processDbChange({ type: ChangeMessageTypes.ADDED, level: DevicesTypes.MODULE, data: { id: newModuleID, path: path, ip: newModule.IP } });
                     }
                 }
@@ -780,7 +777,7 @@ export class Firebase {
             if (change.type == ChangeMessageTypes.ADDED) {// Snímač byl přidán => je potřeba, aby modul naslouchal novým hodnotám na daném vstupu
                 this._communicationManager.ObserveInput(change.data.ip, change.data.input)
                     .catch((err) => {
-                        console.log('listenTo err', err);
+                        console.log('ObserveInput err', err);
                     });
             } else if (change.type == ChangeMessageTypes.REPLACED) {// Sensor was added => listen to new values
                 this._communicationManager.changeObservedInput(change.data.ip, change.data.oldInput, change.data.newInput);
@@ -1036,8 +1033,6 @@ export class Firebase {
                 await this._fb.database().ref(uid + "/").update({ lastWriteTime: time });
             }
             await this._fb.database().ref(uid + "/" + path).update(updates);
-        } else {
-            console.log("zkontrolovat zda není problém s uid");
         }
 
         this.writeToLocalDB(path, updates, time, rewriteLastWriteTime);
@@ -1062,8 +1057,6 @@ export class Firebase {
             await this._fb.database().ref(uid).update({ lastWriteTime: time });
             randomKey = (await this._fb.database().ref().child(uid + "/" + path).push(data)).key;
         } else {
-            console.log("zkontrolovat zda není problém s uid!!");
-            console.log("prohodit online!");
             let charArr = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let i = 0; i < 20; i++) {
                 let newChar = charArr[Math.floor(Math.random() * charArr.length)];
