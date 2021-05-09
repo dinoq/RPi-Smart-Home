@@ -8,12 +8,16 @@ src/esp/build/
 src/web/.vscode/
 src/web/.VSCodeCounter/
 src/web/database/
+src/web/pokus/
+src/web/zaloha-fb/
 src/web/node_modules/
 src/server/.vscode/
 src/server/.VSCodeCounter/
 src/server/node_modules/
 #src/server/config.json
 src/server/local-database.json
+src/server/log.html 
+src/server/log.txt
 src/esp/build/
 src/esp/esp_sInfo_in_mem/
 src/esp/old/
