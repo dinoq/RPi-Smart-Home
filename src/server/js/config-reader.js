@@ -98,7 +98,7 @@ ConfigReader.CONFIG_EXAMPLE = {
     "password": "",
     "saveUserCredentialsOnLogin": true,
     "openBrowserToRegister": false,
-    "openBrowserOnStart": true,
+    "openBrowserOnStart": false,
     "clearLogFilesOnStart": false,
     "showLogFilesOnError": true,
     "firebase": {

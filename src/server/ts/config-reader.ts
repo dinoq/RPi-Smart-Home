@@ -14,7 +14,7 @@ export class ConfigReader {
         "password": "", // heslo k Firebase účtu
         "saveUserCredentialsOnLogin": true, // Rozhoduje, zda ukládat přihlašovací údaje uživatele do Firebase při každém případném přihlášení ve webovém klientovi (pokud k němu uživatel přistupuje lokálně)
         "openBrowserToRegister": false, // Rozhoduje, zda při startu serveru otevřít (na zařízení kde běží server) internetový prohlížeč s registrační stránkou, pokud uživatel nemá spárovaný lokální účet s Firebase účtem (tedy pokud nemá v configu nastavené klíče username a password)
-        "openBrowserOnStart": true, // Rozhoduje, zda se má automaticky (na zařízení kde běží server) otevřít internetový prohlížeč  s přihlašovací stránkou. Pokud má zařízení deplej a je určeno k tomu aby sloužilo jako prvek v domácnosti "na zdi", který bude zobrazovat snímače a zařízení v místnosti, je vhodné nastavit jej na hodnotu true
+        "openBrowserOnStart": false, // Rozhoduje, zda se má automaticky (na zařízení kde běží server) otevřít internetový prohlížeč  s přihlašovací stránkou. Pokud má zařízení deplej a je určeno k tomu aby sloužilo jako prvek v domácnosti "na zdi", který bude zobrazovat snímače a zařízení v místnosti, je vhodné nastavit jej na hodnotu true
         "clearLogFilesOnStart": false, // Rozhoduje, zda se mají při startu serveru smazat soubory, logující chyby (log.txt a log.html). Pokud je false, tak v souboru zůstávají staré logy (ale až po těch nových)
         "showLogFilesOnError": true, // Rozhoduje, zda se má v prohlížeči otevřít log s chybami v případě pádu aplikace.
         "firebase": { // Konfigurace Firebase aplikace, je nutné získat z Firebase účtu...         
