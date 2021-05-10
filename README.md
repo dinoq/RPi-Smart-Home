@@ -24,7 +24,8 @@ sudo npm start
 
 Od této chvíle je možné přistupovat k lokální verzi webové aplikace přes IP adresu Raspberry Pi (příp. i port, pokud je v souboru src/server/config.json definovaný jiný než 80)
 
-Nakonec je potřeba nahrát kód do modulů ESP8266. Nejlépe je k tomu využít Arduino IDE. Aby bylo možné přeložit zdrojové kódy pro tyto moduly, je nutné do projektu přidat všechny používané knihovny. 
+Nakonec je potřeba nahrát kód do modulů ESP8266. Nejlépe je k tomu využít Arduino IDE. Je potřeba v něm otevřít soubor src/esp/esp.ino. 
+Aby bylo možné přeložit zdrojové kódy pro tyto moduly, je nutné do projektu přidat všechny používané knihovny. 
 V Arduino IDE je to možné udělat tímto způsobem:
 přes menu-> Nástroje -> Spravovat knihovny...
 Následně je potřeba v manažeru knihoven vyhledat příslušné knihovny a každou nainstalovat. Knihovny, které je nutné nainstalovat:
