@@ -10,6 +10,7 @@ src/web/.VSCodeCounter/
 src/web/database/
 src/web/pokus/
 src/web/zaloha-fb/
+src/web/firebase-debug.log
 src/web/node_modules/
 src/server/.vscode/
 src/server/.VSCodeCounter/
