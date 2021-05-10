@@ -1,17 +1,13 @@
-#ifndef HEADER // Put these two lines at the top of your file.
-#define HEADER // (Use a suitable name, usually based on the file name.)
+#ifndef HLAVICKA 
+#define HLAVICKA 
 
 #include <coap-simple.h>
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
-//#include "user_interface.h"
 #include <Wire.h>
-#include <BH1750.h>
-//#include <Adafruit_Sensor.h>
-
+#include <BH1750.h> // BH1750 sensor library
 #include <Adafruit_BMP280.h> // BMP280 sensor library
 #include <Sodaq_SHT2x.h> // SHT21 sensor library
-#include <BH1750.h> // BH1750 sensor library
 
 #include "memory.h"
 
@@ -21,10 +17,11 @@
  */
 
 String boardType = "NodeMCU"; // Cokoli z [wemosD1R1, NodeMCU, esp01]
-const char *ssid = "sprintel_antlova";
-const char *password = "netis111";
+const char *ssid = "DOPLNIT";
+const char *password = "DOPLNIT";
 IPAddress moduleStaticIP(192, 168, 1, 103); // statická IP modulu, pokud ji uživatel chce používat
-//IPAddress moduleStaticIP; // Pokud uživatel nechce používat statickou IP, odkomentovat tento řídek a zakomentovat ten výše...
+// Pokud uživatel nechce používat statickou IP, odkomentovat řádek níže a zakomentovat ten výše...
+//IPAddress moduleStaticIP; 
 IPAddress gateway(192, 168, 1, 1);   //IP adresa výchozí brány (pro použití statické IP)
 IPAddress subnet(255, 255, 255, 0); // Maska podsítě (pro použití statické IP)
 /**
@@ -142,4 +139,4 @@ struct SInfo
     float val;
 };
 
-#endif // Put this line at the end of your file.
+#endif

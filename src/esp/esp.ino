@@ -164,21 +164,9 @@ void checkInValues()
                 Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));
             if (isDifferentEnough(newVal, watched[i].val, watched[i]))
             {
-                /*Serial.println("watched[i].IN");
-                Serial.println((byte)watched[i].IN);
-                Serial.println("val, newval: "+String(watched[i].val)+"," + String(newVal));*/
-
                 char payload[32];
                 float valToSend = (watched[i].val_type == DIGITAL && (newVal > 0)) ? 1023 : newVal; // if digital, map value from 0/1 to 0/1023 (because client interpret digital values this way). Else send newVal
-/*
-                if (watched[i].IN >= BMP280_TEMP && watched[i].IN <= SHT21_HUM)
-                {                                                                                         // sprintf %.1f in order to display only 1 digit after decimal point for specified inputs
-                    sprintf(payload, "in:%.1f%c%c", valToSend, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
-                }
-                else
-                {
-                    sprintf(payload, "in:%f%c%c", valToSend, watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
-                }*/
+
                 if(valToSend == INVALID_SENSOR_VALUE){ // send ?? instead of value
                     sprintf(payload, "in:??%c%c", watched[i].val_type, (watched[i].IN + 1)); // Add 1 to IN, because we use strlen(payload) later and we don't want to consider GPIO0 (=>0) as null terminator. We mus substract that 1 on receiving server...
                 }else{
