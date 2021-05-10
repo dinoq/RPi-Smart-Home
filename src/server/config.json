@@ -2,7 +2,7 @@
   "webAppPort": 80,
   "username": "",
   "password": "",
-  "saveUserCredentialsOnLogin": "true",
+  "saveUserCredentialsOnLogin": true,
   "openBrowserToRegister": false,
   "openBrowserOnStart": false,
   "clearLogFilesOnStart": false,
