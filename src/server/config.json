@@ -1,7 +1,7 @@
 {
   "webAppPort": 80,
-  "username": "",
-  "password": "",
+  "username": "marek.petr100@seznam.cz",
+  "password": "qwertz",
   "saveUserCredentialsOnLogin": true,
   "openBrowserToRegister": false,
   "openBrowserOnStart": false,
